@@ -1,23 +1,9 @@
 <?php
-// Session starten, um auf sie zugreifen zu können
-session_start();
-
-// Alle Session-Variablen löschen
-$_SESSION = array();
-
-// Falls ein Session-Cookie existiert, dieses im Browser ungültig machen
-if (ini_get("session.use_cookies")) {
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
-}
-
-// Die Session auf dem Server komplett zerstören
-session_destroy();
-
-// Nutzer sofort zur Startseite (Marktplatz) weiterleiten
-header("Location: ../marketplace/index.php");
-exit;
+declare(strict_types=1);
+require_once __DIR__ . '/../config/bootstrap.php';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { require_csrf(); auth_clear_session(); redirect('/marketplace/index.php'); }
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') { abort_request(405, 'Diese Methode wird nicht unterstützt.'); }
+$pageTitle = 'Abmelden'; require __DIR__ . '/../includes/header.php';
 ?>
+<main class="auth-shell container"><section class="panel"><h1>Abmelden?</h1><form method="post"><?= csrf_field() ?><button type="submit" class="button">Jetzt abmelden</button></form><p><a href="/user/dashboard.php">Zurück zum Konto</a></p></section></main>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -1,48 +1,11 @@
 <?php
-/**
- * DATENBANK-KONFIGURATION & VERBINDUNG (UTF-8mb4 Optimiert)
- */
-// In config/db.php ganz oben hinzufügen:
-require_once('security.php');
-// 1. Zugangsdaten
-$host    = 'localhost';
-$db      = 'thegunsite_db'; 
-$user    = 'root';      
-$pass    = 'CrackIt';   
-$charset = 'utf8mb4';
-
-// 2. Data Source Name
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-
-/**
- * 3. PDO OPTIONEN (WICHTIG FÜR DIE STABILITÄT & UMLAUTE)
- */
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES   => false, 
-    
-    // WICHTIG: Setzt nicht nur den Zeichensatz, sondern auch die Sortierreihenfolge (Collation)
-    // Dies behebt Fehler bei Sonderzeichen in SQL-Queries und Datenbank-Einträgen.
-    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
-];
-
-
-
-try {
-    // Verbindung herstellen
-    $pdo = new PDO($dsn, $user, $pass, $options);
-} catch (\PDOException $e) {
-    // Fehler abfangen
-    die("<div style='background:#111; color:#8A2BE2; padding:20px; border:1px solid #8A2BE2; font-family:monospace;'>
-            <h2 style='color:#fff'>KRITISCHER DATENBANK-FEHLER</h2>
-            Verbindung fehlgeschlagen: " . $e->getMessage() . "
-         </div>");
+declare(strict_types=1);
+require_once __DIR__.'/security.php';
+$database=getenv('DB_DATABASE');$username=getenv('DB_USERNAME');$password=getenv('DB_PASSWORD');
+if(!is_string($database)||!preg_match('/\A[a-zA-Z0-9_]+\z/',$database)||!is_string($username)||$username===''||!is_string($password)||$password===''){
+ if(PHP_SAPI==='cli'){fwrite(STDERR,"Database environment is incomplete.\n");exit(1);}http_response_code(503);exit('Die Anwendung ist noch nicht eingerichtet.');
 }
-
-/**
- * ZUSÄTZLICHE SICHERHEIT:
- */
-if (basename($_SERVER['PHP_SELF']) == 'db.php') {
-    die('Direkter Zugriff nicht gestattet.');
-}
+$socket=getenv('DB_SOCKET');
+$dsn=is_string($socket)&&$socket!==''?'mysql:unix_socket='.$socket:'mysql:host='.(getenv('DB_HOST')?:'127.0.0.1').';port='.(getenv('DB_PORT')?:'3306');
+try{$pdo=new PDO($dsn.';dbname='.$database.';charset=utf8mb4',$username,$password,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]);$pdo->exec("SET time_zone='+00:00'");}
+catch(PDOException $error){error_log('GunIndex database unavailable');if(PHP_SAPI==='cli'){fwrite(STDERR,"Database unavailable.\n");exit(1);}http_response_code(503);exit('Die Datenbank ist vorübergehend nicht erreichbar.');}

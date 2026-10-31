@@ -1,141 +1,24 @@
 <?php
-require_once('../config/db.php');
-require_once('../config/functions.php');
-
-if (session_status() === PHP_SESSION_NONE) session_start();
-
-/**
- * 1. ADMIN SICHERHEITS-CHECK
- */
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
-    header("Location: ../marketplace/index.php");
-    exit("Zugriff verweigert.");
+declare(strict_types=1);
+require_once __DIR__.'/../config/bootstrap.php';
+$admin=require_admin($pdo);$pageTitle='Bewertungen moderieren';$error='';
+if (isset($_GET['delete_id'])||isset($_GET['action'])) abort_request(405,'Moderation erfordert POST und CSRF.');
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+ require_csrf();$id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);$status=$_POST['status']??null;$reason=$_POST['reason']??null;
+ if ($id===false||!is_string($status)||!in_array($status,['active','hidden'],true)||!is_string($reason)||!preg_match('/\A.{10,1000}\z/us',trim($reason))) {http_response_code(422);$error='Bitte gib eine gültige Bewertung, einen Status und eine Begründung mit 10 bis 1000 Zeichen an.';}
+ else {
+  $pdo->beginTransaction();
+  try {
+   settings_assert_admin($pdo,(int)$admin['id']);$q=$pdo->prepare('SELECT id,status FROM market_ratings WHERE id=? FOR UPDATE');$q->execute([$id]);$rating=$q->fetch();
+   if (!$rating) {$pdo->rollBack();abort_request(404,'Bewertung nicht gefunden.');}
+   if ($rating['status']!==$status) {$pdo->prepare('UPDATE market_ratings SET status=? WHERE id=?')->execute([$status,$id]);audit_log($pdo,(int)$admin['id'],'rating.moderated',$id,['status'=>$status,'reason'=>trim($reason)]);}
+   $pdo->commit();redirect('/admin/ratings.php?saved=1');
+  } catch (Throwable $exception) {if ($pdo->inTransaction()) $pdo->rollBack();throw $exception;}
+ }
 }
-
-$admin_id = $_SESSION['user_id'];
-$success_msg = "";
-
-/**
- * 2. L�SCH-LOGIK
- */
-if (isset($_GET['delete_id'])) {
-    $del_id = (int)$_GET['delete_id'];
-    
-    // Log vor dem L�schen vorbereiten (um zu wissen, was gel�scht wurde)
-    $stmtData = $pdo->prepare("SELECT r.rating, u.username FROM ratings r JOIN users u ON r.from_user_id = u.id WHERE r.id = ?");
-    $stmtData->execute([$del_id]);
-    $ratingInfo = $stmtData->fetch();
-
-    $stmt = $pdo->prepare("DELETE FROM ratings WHERE id = ?");
-    if ($stmt->execute([$del_id])) {
-        // Logbuch Eintrag
-        if (function_exists('logAdminAction')) {
-            $details = "Bewertung von " . ($ratingInfo['username'] ?? 'Unbekannt') . " (" . ($ratingInfo['rating'] ?? '?') . " Sterne) entfernt.";
-            logAdminAction($pdo, $admin_id, 'DELETE_RATING', $del_id, $details);
-        }
-        $success_msg = "Bewertung wurde erfolgreich aus dem Protokoll getilgt.";
-    }
-}
-
-/**
- * 3. DATEN LADEN (Alle Bewertungen mit User-Informationen)
- */
-$sql = "SELECT r.*, 
-               u1.username as from_user, 
-               u2.username as to_user 
-        FROM ratings r
-        JOIN users u1 ON r.from_user_id = u1.id
-        JOIN users u2 ON r.to_user_id = u2.id
-        ORDER BY r.created_at DESC";
-$ratings = $pdo->query($sql)->fetchAll();
-
-include('../includes/header.php');
+$page=filter_var($_GET['page']??'1',FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>100000]])?:1;$total=(int)$pdo->query('SELECT COUNT(*) FROM market_ratings')->fetchColumn();$page=min($page,max(1,(int)ceil($total/25)));
+$q=$pdo->prepare('SELECT r.*,s.username AS sender_name,u.username AS receiver_name,l.title FROM market_ratings r JOIN users s ON s.id=r.sender_id JOIN users u ON u.id=r.receiver_id JOIN market_listings l ON l.id=r.listing_id ORDER BY r.id DESC LIMIT 25 OFFSET ?');$q->bindValue(1,($page-1)*25,PDO::PARAM_INT);$q->execute();$ratings=$q->fetchAll();
+include __DIR__.'/../includes/header.php';
 ?>
-
-<div class="max-w-[1600px] mx-auto px-4 lg:px-10 py-12">
-    
-    <div class="mb-12 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-10">
-        <div>
-            <a href="index.php" class="text-[10px] text-gray-500 hover:text-[#8A2BE2] font-black uppercase tracking-[0.4em] mb-4 block italic transition">
-                ? Return to Command Center
-            </a>
-            <h1 class="text-6xl font-black uppercase italic text-white tracking-tighter">
-                Reputation <span class="text-[#8A2BE2]">Audit</span>
-            </h1>
-            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mt-3 italic">�berwachung und Moderation des Feedback-Systems</p>
-        </div>
-        <div class="bg-white/5 px-8 py-4 rounded-[2rem] border border-white/10 text-right">
-            <p class="text-[10px] text-gray-500 font-black uppercase tracking-widest italic mb-1">Feedback-Eintr�ge</p>
-            <p class="text-2xl font-black text-white italic"><?= count($ratings) ?></p>
-        </div>
-    </div>
-
-    <?php if($success_msg): ?>
-        <div class="bg-red-600/10 border border-red-600/30 text-red-600 text-[10px] font-black uppercase p-5 rounded-2xl mb-12 italic tracking-widest animate-pulse">
-            SYSLOG: <?= $success_msg ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="glass-panel rounded-[3rem] border border-white/10 bg-white/[0.01] overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-white/5 text-[10px] text-gray-500 font-black uppercase tracking-widest italic border-b border-white/10 text-white">
-                        <th class="p-8 w-40">Datum</th>
-                        <th class="p-8 w-64">Sektor (Von ? Zu)</th>
-                        <th class="p-8 w-32 text-center">Bewertung</th>
-                        <th class="p-8">Kommentar / Log</th>
-                        <th class="p-8 text-right">Eingriff</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                    <?php if(empty($ratings)): ?>
-                        <tr><td colspan="5" class="p-24 text-center text-gray-700 font-black uppercase italic tracking-[0.4em]">Keine Reputationsdaten im System gefunden.</td></tr>
-                    <?php endif; ?>
-
-                    <?php foreach($ratings as $r): ?>
-                    <tr class="hover:bg-white/[0.02] transition-all group">
-                        <td class="p-8 text-[10px] font-mono text-gray-600 italic">
-                            <?= date('d.m.Y H:i', strtotime($r['created_at'])) ?>
-                        </td>
-                        <td class="p-8">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-white font-black uppercase italic text-xs tracking-tight"><?= h($r['from_user']) ?></span>
-                                <span class="text-gray-600 text-[9px] font-bold uppercase tracking-widest italic">An: <?= h($r['to_user']) ?></span>
-                            </div>
-                        </td>
-                        <td class="p-8 text-center">
-                            <div class="flex justify-center gap-1">
-                                <?php for($i=1; $i<=5; $i++): ?>
-                                    <div class="w-2 h-2 rounded-full <?= $i <= $r['rating'] ? 'bg-[#8A2BE2] shadow-[0_0_8px_rgba(138,43,226,0.6)]' : 'bg-white/5' ?>"></div>
-                                <?php endfor; ?>
-                            </div>
-                            <span class="text-[9px] font-black text-white mt-2 block italic"><?= $r['rating'] ?>.0 / 5</span>
-                        </td>
-                        <td class="p-8">
-                            <div class="bg-white/[0.03] p-5 rounded-2xl border border-white/5 group-hover:border-[#8A2BE2]/30 transition-all">
-                                <p class="text-gray-300 text-xs italic leading-relaxed">"<?= h($r['comment']) ?>"</p>
-                            </div>
-                        </td>
-                        <td class="p-8 text-right">
-                            <a href="ratings.php?delete_id=<?= $r['id'] ?>" 
-                               onclick="return confirm('Soll diese Bewertung permanent aus dem Reputationsverlauf entfernt werden?')" 
-                               class="inline-flex items-center justify-center p-4 bg-red-600/10 border border-red-600/20 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-lg group/del">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-12 opacity-30 text-center">
-        <p class="text-[8px] text-gray-500 font-black uppercase tracking-[0.6em] italic">Authorized Admin Oversight - Security Protocol Active</p>
-    </div>
-</div>
-
-<?php include('../includes/footer.php'); ?>
+<main class="container admin-page"><div class="page-heading"><div><p class="eyebrow">Vertrauen nachvollziehbar halten</p><h1>Bewertungen moderieren.</h1><p>Ein- und Ausblenden mit dokumentierter Begründung. Keine physische Löschung.</p></div></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php'; ?><div class="admin-content"><?php if ($error!==''): ?><p class="notice error" role="alert"><?= h($error) ?></p><?php endif; ?><?php if (($_GET['saved']??'')==='1'): ?><p class="notice success" role="status">Moderationsentscheidung gespeichert.</p><?php endif; ?><?php foreach ($ratings as $rating): ?><article class="panel"><p class="eyebrow">Bewertung #<?= (int)$rating['id'] ?> · <?= h($rating['status']==='hidden'?'Ausgeblendet':'Sichtbar') ?></p><h2><?= h($rating['title']) ?></h2><p><?= (int)$rating['stars'] ?> / 5 · <?= h($rating['sender_name']) ?> → <?= h($rating['receiver_name']) ?></p><blockquote><?= h($rating['comment']) ?></blockquote><p class="muted"><?= h($rating['created_at']) ?> UTC · Inserat #<?= (int)$rating['listing_id'] ?></p><form method="post" action="/admin/ratings.php"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$rating['id'] ?>"><input type="hidden" name="status" value="<?= $rating['status']==='hidden'?'active':'hidden' ?>"><div class="field"><label for="reason-<?= (int)$rating['id'] ?>">Begründung</label><textarea id="reason-<?= (int)$rating['id'] ?>" name="reason" minlength="10" maxlength="1000" required rows="2"></textarea></div><button class="button secondary" type="submit"><?= $rating['status']==='hidden'?'Wieder einblenden':'Ausblenden' ?></button></form></article><?php endforeach; ?><?php if ($ratings===[]): ?><section class="panel empty-state"><h2>Noch keine Bewertungen.</h2><p>Sobald abgeschlossene allgemeine Transaktionen bewertet werden, erscheinen sie hier.</p></section><?php endif; ?><nav class="pagination" aria-label="Bewertungsseiten"><?php if ($page>1): ?><a href="?page=<?= $page-1 ?>">← Zurück</a><?php endif; ?><span>Seite <?= $page ?> von <?= max(1,(int)ceil($total/25)) ?></span><?php if ($page*25<$total): ?><a href="?page=<?= $page+1 ?>">Weiter →</a><?php endif; ?></nav></div></div></main>
+<?php include __DIR__.'/../includes/footer.php'; ?>

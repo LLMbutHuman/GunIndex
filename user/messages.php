@@ -1,81 +1,26 @@
 <?php
-require_once('../config/db.php');
-require_once('../config/functions.php');
-
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../auth/login.php");
-    exit;
+declare(strict_types=1);
+require_once __DIR__ . '/../config/bootstrap.php';
+$user = require_login($pdo); $userId = (int)$user['id'];
+$query = $pdo->prepare("SELECT m.id,m.listing_id,m.sender_id,m.receiver_id,m.message_text,m.is_read,m.created_at,l.title,l.category_id,l.status,s.username AS sender_name,r.username AS receiver_name FROM market_messages m JOIN market_listings l ON l.id=m.listing_id JOIN users s ON s.id=m.sender_id JOIN users r ON r.id=m.receiver_id WHERE (m.sender_id=? OR m.receiver_id=?) AND l.status IN ('active','ended','sold') ORDER BY m.id DESC LIMIT 300");
+$query->execute([$userId,$userId]); $threads = [];
+foreach ($query->fetchAll() as $row) {
+    if (!catalog_category_allowed($pdo,(int)$row['category_id'])) continue;
+    $peerId = (int)$row['sender_id'] === $userId ? (int)$row['receiver_id'] : (int)$row['sender_id'];
+    $key = $row['listing_id'] . ':' . $peerId;
+    if (!isset($threads[$key])) {
+        $row['peer_id'] = $peerId; $row['peer_name'] = (int)$row['sender_id'] === $userId ? $row['receiver_name'] : $row['sender_name'];
+        $row['unread'] = false; $threads[$key] = $row;
+    }
+    if ((int)$row['receiver_id'] === $userId && !(bool)$row['is_read']) $threads[$key]['unread'] = true;
 }
-
-$my_id = $_SESSION['user_id'];
-
-// Alle Chats abrufen (Letzte Nachricht pro Gesprächspartner & Inserat)
-$sql = "SELECT m.*, l.title, u.username as partner_name, u.id as partner_id
-        FROM messages m
-        JOIN listings l ON m.listing_id = l.id
-        JOIN users u ON (u.id = m.sender_id OR u.id = m.receiver_id) AND u.id != ?
-        WHERE (m.sender_id = ? OR m.receiver_id = ?)
-        AND m.id IN (
-            SELECT MAX(id) FROM messages 
-            WHERE sender_id = ? OR receiver_id = ? 
-            GROUP BY listing_id, 
-                     CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END
-        )
-        ORDER BY m.created_at DESC";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$my_id, $my_id, $my_id, $my_id, $my_id, $my_id]);
-$chats = $stmt->fetchAll();
-
-include('../includes/header.php');
+$pageTitle = 'Meine Nachrichten'; require __DIR__ . '/../includes/header.php';
 ?>
-
-<div class="max-w-[1200px] mx-auto px-4 py-10">
-    <div class="mb-10">
-        <h1 class="text-3xl font-black uppercase tracking-tighter text-white">Deine <span class="text-[#8A2BE2]">Nachrichten</span></h1>
-        <p class="text-gray-500 text-xs uppercase font-bold tracking-widest mt-1 italic">Verhandlungen & Anfragen</p>
-    </div>
-
-    <div class="glass-panel rounded-[32px] overflow-hidden border border-white/5">
-        <?php if (empty($chats)): ?>
-            <div class="p-20 text-center">
-                <p class="text-gray-600 uppercase text-[10px] font-bold tracking-widest">Noch keine Nachrichten vorhanden.</p>
-                <a href="../marketplace/index.php" class="inline-block mt-4 text-[#8A2BE2] text-xs font-bold uppercase border-b border-[#8A2BE2]">Jetzt Marktplatz durchstöbern</a>
-            </div>
-        <?php else: ?>
-            <div class="divide-y divide-white/5">
-                <?php foreach ($chats as $chat): ?>
-                    <a href="chat.php?user_id=<?= $chat['partner_id'] ?>&listing_id=<?= $chat['listing_id'] ?>" class="flex items-center p-6 hover:bg-white/5 transition group">
-                        <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-[#8A2BE2] font-black border border-white/10 group-hover:border-[#8A2BE2] transition shadow-lg shadow-[#8A2BE2]/5">
-                            <?= strtoupper(substr($chat['partner_name'], 0, 1)) ?>
-                        </div>
-                        
-                        <div class="ml-6 flex-1">
-                            <div class="flex justify-between items-start">
-                                <h3 class="text-sm font-black text-white uppercase tracking-tight">
-                                    <?= h($chat['partner_name']) ?>
-                                    <?php if(!$chat['is_read'] && $chat['receiver_id'] == $my_id): ?>
-                                        <span class="inline-block w-2 h-2 bg-[#8A2BE2] rounded-full ml-2 animate-pulse"></span>
-                                    <?php endif; ?>
-                                </h3>
-                                <span class="text-[9px] text-gray-600 font-bold"><?= date('d.m. H:i', strtotime($m['created_at'] ?? $chat['created_at'])) ?></span>
-                            </div>
-                            <p class="text-[11px] text-[#8A2BE2] font-bold uppercase mt-1 italic"><?= h($chat['title']) ?></p>
-                            <p class="text-xs text-gray-500 mt-1 truncate max-w-md italic">
-                                <?= ($chat['sender_id'] == $my_id) ? 'Du: ' : '' ?><?= h($chat['message_text']) ?>
-                            </p>
-                        </div>
-
-                        <div class="ml-4 opacity-0 group-hover:opacity-100 transition translate-x-[-10px] group-hover:translate-x-0 transition-all">
-                            <svg class="w-5 h-5 text-[#8A2BE2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<?php include('../includes/footer.php'); ?>
+<main class="page-shell"><div class="page-heading"><p class="eyebrow">Im Gespräch bleiben</p><h1>Meine Nachrichten</h1><p>Deine persönlichen Unterhaltungen zu Angeboten.</p></div>
+<?php if (!$threads): ?><section class="panel"><h2>Hier beginnt der Austausch</h2><p>Kontaktiere einen Verkäufer direkt über sein Angebot.</p><a class="button" href="/marketplace/search.php">Angebote entdecken</a></section><?php endif; ?>
+<div class="form-grid">
+<?php foreach (array_slice($threads,0,100) as $thread): ?>
+<article class="panel"><p class="eyebrow"><?= h($thread['peer_name']) ?><?php if ($thread['unread']): ?> · Ungelesen<?php endif; ?></p><h2><a href="/user/chat.php?listing_id=<?= (int)$thread['listing_id'] ?>&amp;user_id=<?= (int)$thread['peer_id'] ?>"><?= h($thread['title']) ?></a></h2><p><?= h(mb_strimwidth($thread['message_text'],0,150,'…')) ?></p><small><?= h($thread['created_at']) ?> UTC</small></article>
+<?php endforeach; ?>
+</div></main>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

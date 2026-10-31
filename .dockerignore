@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+assets/uploads
+datenbank
+ZIP
+tests/.runtime
+node_modules
+var

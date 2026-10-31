@@ -1,0 +1,11 @@
+/.env
+/.env.*
+!/.env.example
+/tests/.runtime/
+/var/
+/vendor/
+/node_modules/
+/assets/uploads/
+/datenbank/*.sql
+__pycache__/
+*.log

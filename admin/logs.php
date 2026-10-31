@@ -1,67 +1,17 @@
 <?php
-require_once('../config/db.php');
-require_once('../config/functions.php');
-session_start();
-
-if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
-    header("Location: ../marketplace/index.php");
-    exit;
-}
-
-// Alle Logs laden mit Admin-Namen
-$sql = "SELECT al.*, u.username as admin_name 
-        FROM admin_logs al 
-        JOIN users u ON al.admin_id = u.id 
-        ORDER BY al.created_at DESC LIMIT 200";
-$logs = $pdo->query($sql)->fetchAll();
-
-include('../includes/header.php');
+declare(strict_types=1);
+require_once __DIR__ . '/../config/bootstrap.php';
+$admin = require_admin($pdo);
+$pageTitle = 'Änderungsprotokoll';
+if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') abort_request(405, 'Dieses Protokoll ist ausschließlich lesbar.');
+$page = filter_var($_GET['page'] ?? '1', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100000]]) ?: 1;
+$total = (int)$pdo->query('SELECT COUNT(*) FROM admin_logs')->fetchColumn();
+$page = min($page, max(1, (int)ceil($total / 40)));
+$statement = $pdo->prepare('SELECT l.id, l.action_type, l.target_id, l.details, l.created_at, u.username FROM admin_logs l JOIN users u ON u.id=l.admin_id ORDER BY l.id DESC LIMIT 40 OFFSET ?');
+$statement->bindValue(1, ($page - 1) * 40, PDO::PARAM_INT);
+$statement->execute();
+$logs = $statement->fetchAll();
+include __DIR__ . '/../includes/header.php';
 ?>
-
-<div class="max-w-[1400px] mx-auto px-4 py-12">
-    <div class="mb-10 flex justify-between items-end border-b border-white/10 pb-8">
-        <div>
-            <a href="index.php" class="text-[10px] text-gray-500 hover:text-[#8A2BE2] font-black uppercase tracking-[0.4em] mb-4 block">? Command Center</a>
-            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter">System <span class="text-[#8A2BE2]">Protocol</span></h1>
-            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mt-3 italic">Vollst�ndige Revisionsliste aller Admin-Eingriffe</p>
-        </div>
-    </div>
-
-    <div class="glass-panel rounded-[32px] border border-white/10 bg-white/[0.01] overflow-hidden">
-        <table class="w-full text-left">
-            <thead class="bg-white/5 text-[10px] text-gray-500 font-black uppercase tracking-widest italic">
-                <tr>
-                    <th class="p-6">Zeitstempel</th>
-                    <th class="p-6">Administrator</th>
-                    <th class="p-6">Aktion</th>
-                    <th class="p-6">Details</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-white/5 text-white">
-                <?php foreach($logs as $log): ?>
-                <tr class="hover:bg-white/[0.02] transition">
-                    <td class="p-6 text-[10px] font-mono text-gray-500">
-                        <?= date('d.m.Y H:i:s', strtotime($log['created_at'])) ?>
-                    </td>
-                    <td class="p-6">
-                        <span class="text-[#8A2BE2] font-black uppercase italic text-xs"><?= h($log['admin_name']) ?></span>
-                    </td>
-                    <td class="p-6">
-                        <span class="px-2 py-1 bg-white/5 border border-white/10 rounded text-[9px] font-black uppercase italic">
-                            <?= h($log['action_type']) ?>
-                        </span>
-                    </td>
-                    <td class="p-6">
-                        <p class="text-xs text-gray-400 italic"><?= h($log['details']) ?></p>
-                        <?php if($log['target_id']): ?>
-                            <span class="text-[8px] text-gray-600 font-bold uppercase tracking-widest">Objekt-ID: #<?= $log['target_id'] ?></span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<?php include('../includes/footer.php'); ?>
+<main class="container admin-page"><div class="page-heading"><div><p class="eyebrow">Nachvollziehbar handeln</p><h1>Was sich verändert hat.</h1><p>Website-, Kategorie- und Kontosicherheitsänderungen mit verantwortlichem Konto und Zeitpunkt.</p></div></div><div class="admin-layout"><?php include __DIR__ . '/../includes/admin-nav.php'; ?><div class="admin-content"><section class="panel"><div class="table-wrap"><table class="data-table"><thead><tr><th>Zeitpunkt (UTC)</th><th>Verantwortlich</th><th>Aktion</th><th>Bezug & Details</th></tr></thead><tbody><?php foreach ($logs as $event): ?><tr><td><?= h($event['created_at']) ?></td><td><?= h($event['username']) ?></td><td><?= h($event['action_type']) ?></td><td><?= $event['target_id'] === null ? 'Website' : '#' . h((string)$event['target_id']) ?><br><code><?= h($event['details']) ?></code></td></tr><?php endforeach; ?><?php if ($logs === []): ?><tr><td colspan="4">Noch keine Änderungen protokolliert.</td></tr><?php endif; ?></tbody></table></div></section><nav class="pagination" aria-label="Protokollseiten"><?php if ($page > 1): ?><a href="?page=<?= $page - 1 ?>">← Zurück</a><?php endif; ?><span>Seite <?= $page ?> von <?= max(1, (int)ceil($total / 40)) ?></span><?php if ($page * 40 < $total): ?><a href="?page=<?= $page + 1 ?>">Weiter →</a><?php endif; ?></nav><p class="muted">Die Oberfläche bietet keine Löschung oder Bearbeitung dieser Einträge. Für manipulationserschwerende Aufbewahrung sind zusätzlich getrennte Betriebslogs und passende Datenbankrechte nötig.</p></div></div></main>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

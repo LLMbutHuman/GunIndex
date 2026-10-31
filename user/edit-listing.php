@@ -1,58 +1,36 @@
 <?php
-require_once('../config/db.php');
-require_once('../config/functions.php');
-session_start();
-
-if (!isset($_SESSION['user_id'])) { header("Location: ../auth/login.php"); exit; }
-
-$user_id = $_SESSION['user_id'];
-$listing_id = $_GET['id'] ?? 0;
-
-// Prüfen, ob das Inserat dem User gehört
-$stmt = $pdo->prepare("SELECT * FROM listings WHERE id = ? AND seller_id = ?");
-$stmt->execute([$listing_id, $user_id]);
-$item = $stmt->fetch();
-
-if (!$item) { die("Inserat nicht gefunden oder keine Berechtigung."); }
-
-$success = "";
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $price = $_POST['price'];
-    $desc  = $_POST['description'];
-
-    $update = $pdo->prepare("UPDATE listings SET title = ?, price = ?, description = ? WHERE id = ?");
-    if ($update->execute([$title, $price, $desc, $listing_id])) {
-        $success = "Änderungen gespeichert!";
+declare(strict_types=1);
+require_once __DIR__.'/../config/bootstrap.php';
+$user=require_login($pdo);
+$raw=$_GET['id'] ?? null;
+if (!is_string($raw) || !ctype_digit($raw)) abort_request(404,'Angebot nicht gefunden.');
+$listingId=(int)$raw;
+$q=$pdo->prepare('SELECT * FROM market_listings WHERE id=? AND seller_id=?'); $q->execute([$listingId,$user['id']]);
+$listing=$q->fetch();
+if (!$listing) abort_request(404,'Angebot nicht gefunden.');
+if (!in_array($listing['status'],['draft','active','paused'],true) || market_has_bids($pdo,$listingId) || ($listing['type']==='auction' && $listing['status']==='active' && market_expired($listing))) abort_request(409,'Dieses Angebot kann nicht mehr bearbeitet werden.');
+$decimal=static fn(int $amount):string=>intdiv($amount,100).'.'.str_pad((string)($amount%100),2,'0',STR_PAD_LEFT);
+$values=array_map(static fn($value):string=>(string)($value ?? ''),$listing);
+$values['price']=$decimal((int)$listing['price_cents']);
+$values['buyout_price']=$listing['buyout_cents']===null?'':$decimal((int)$listing['buyout_cents']);
+$values['duration_days']='7'; $values['status']=$listing['status']==='draft'?'draft':'active';
+$pageTitle='Inserat bearbeiten'; $error='';
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+    require_csrf(); $values=$_POST;
+    $values['pickup']=$_POST['pickup'] ?? '0'; $values['shipping']=$_POST['shipping'] ?? '0';
+    try {
+        market_save_listing($pdo,(int)$user['id'],$_POST,$_FILES['images'] ?? [],$listingId);
+        redirect('/user/dashboard.php?saved='.$listingId);
+    } catch (InvalidArgumentException|MarketAccessException|MarketConflictException $exception) {
+        http_response_code(422); $error=$exception->getMessage();
     }
 }
-
-include('../includes/header.php');
+$q=$pdo->prepare('SELECT COUNT(*) FROM market_images WHERE listing_id=?'); $q->execute([$listingId]); $existingImageCount=(int)$q->fetchColumn();
+$categories=catalog_categories($pdo,true);
+include __DIR__.'/../includes/header.php';
 ?>
-
-<div class="max-w-2xl mx-auto px-4 py-20">
-    <div class="glass-panel p-10 rounded-[40px]">
-        <h1 class="text-2xl font-black text-white uppercase mb-8">Inserat <span class="text-[#8A2BE2]">bearbeiten</span></h1>
-        
-        <?php if($success): ?>
-            <div class="bg-green-500/10 border border-green-500/50 text-green-500 p-4 rounded-xl mb-6 text-xs font-bold uppercase tracking-widest text-center"><?= $success ?></div>
-        <?php endif; ?>
-
-        <form method="POST" class="space-y-6">
-            <div>
-                <label class="text-[10px] font-black text-gray-500 uppercase mb-2 block">Titel des Inserats</label>
-                <input type="text" name="title" value="<?= h($item['title']) ?>" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-[#8A2BE2]">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-gray-500 uppercase mb-2 block">Preis (€)</label>
-                <input type="number" step="0.01" name="price" value="<?= h($item['price']) ?>" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-[#8A2BE2]">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-gray-500 uppercase mb-2 block">Beschreibung</label>
-                <textarea name="description" rows="5" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-[#8A2BE2]"><?= h($item['description']) ?></textarea>
-            </div>
-            <button type="submit" class="w-full btn-action py-4 rounded-xl text-white font-black uppercase tracking-widest text-xs">Änderungen übernehmen</button>
-            <a href="dashboard.php" class="block text-center text-gray-600 text-[10px] font-black uppercase mt-4 hover:text-white transition">Abbrechen & Zurück</a>
-        </form>
-    </div>
-</div>
+<main class="page"><div class="page-heading"><p class="eyebrow">Dein Angebot</p><h1>Details, die den Unterschied machen.</h1></div>
+<?php if ($error!==''): ?><div class="notice notice-error" role="alert"><?= h($error) ?></div><?php endif; ?>
+<?php include __DIR__.'/../includes/market-form.php'; ?>
+</main>
+<?php include __DIR__.'/../includes/footer.php'; ?>
