@@ -20,4 +20,4 @@ return [
   'refunds' => 'Storno- und Rückerstattungsbedingungen',
   'allowed-products' => 'Regeln für zulässige und unzulässige Produkte',
   'account-suspension' => 'Regeln zur Kontoeinschränkung und Sperrung'
-]; 
+];
