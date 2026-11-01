@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-$admin=require_admin($pdo);
+$admin=require_permission($pdo,'content.moderate');
 $pageTitle='Inseratsübersicht';
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET','HEAD'], true) || isset($_GET['action']) || isset($_GET['delete_id'])) abort_request(405,'Diese Übersicht ist ausschließlich lesbar.');
 $states=['draft'=>'Entwurf','active'=>'Aktiv','paused'=>'Pausiert','ended'=>'Beendet','sold'=>'Verkauft','archived'=>'Archiviert','review'=>'Prüfung notwendig'];

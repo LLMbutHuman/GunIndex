@@ -1,0 +1,8 @@
+[Unit]
+Description=GunIndex minute health check
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Unit=gunindex-monitor.service
+[Install]
+WantedBy=timers.target

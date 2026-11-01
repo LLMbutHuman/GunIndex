@@ -1,13 +1,13 @@
 /* Real browser workflows, isolated synthetic accounts; no external payments. */
 const assert=require('assert');const crypto=require('crypto');const fs=require('fs');const {execFileSync}=require('child_process');
-let pw;try{pw=require('playwright');}catch(_){pw=require('/opt/codex/cua_node/lib/node_modules/playwright');}
+const {playwright:pw,launchOptions}=require('./browser_tools');
 const origin='http://127.0.0.1:8081';
 function fixture(operation,fields={}){return JSON.parse(execFileSync('docker',['--host=unix:///var/run/docker.sock','exec','-i','gunindex-rebuild-app','php','tests/fixture.php'],{input:JSON.stringify({operation,...fields}),stdio:['pipe','pipe','pipe']}).toString());}
 function account(admin=false){const username='test_'+crypto.randomBytes(8).toString('hex');const password='Synthetic '+crypto.randomBytes(20).toString('hex');return {username,password,...fixture('seed',{username,password,admin})};}
 async function login(page,user,admin=false){await page.goto(origin+'/auth/login.php');await page.locator('[name=login]').fill(user.username);await page.locator('[name=password]').fill(user.password);await Promise.all([page.waitForURL(admin?'**/auth/mfa.php':'**/user/dashboard.php'),page.getByRole('button',{name:'Anmelden',exact:true}).click()]);if(admin){await page.locator('[name=code]').fill(fixture('code',{username:user.username}).code);await Promise.all([page.waitForURL('**/admin/index.php'),page.getByRole('button',{name:'Sicher anmelden',exact:true}).click()]);}}
 (async()=>{
  fixture('reset_limits');const seller=account(),buyer=account(),admin=account(true);const category=fixture('categories').categories[0].id;
- const browser=await pw.chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+ const browser=await pw.chromium.launch(launchOptions());
  const desktop=await browser.newContext({viewport:{width:1440,height:1000}}),mobile=await browser.newContext({viewport:{width:390,height:844}});
  const errors=[],external=[],failures=[],journeys=[];
  const monitor=page=>{page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(!r.url().startsWith(origin+'/'))external.push(r.url())});page.on('response',r=>{if(r.status()>=500)failures.push(new URL(r.url()).pathname)});};
@@ -16,7 +16,7 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   await login(page,seller);journeys.push('login');
   await page.goto(origin+'/user/create-listing.php');const title='Fixture '+crypto.randomBytes(8).toString('hex')+' Browser Schreibtisch';
   await page.locator('[name=title]').fill(title);await page.locator('textarea[name=description]').fill('Synthetischer Testartikel für die echte Browserprüfung, ohne reale personenbezogene Daten.');await page.locator('[name=category_id]').selectOption(String(category));await page.locator('[name=price]').fill('45.00');await page.locator('[name=zip]').fill('10115');await page.locator('[name=city]').fill('Teststadt');await page.locator('[name=accept_rules]').check();
-  const picture=execFileSync('docker',['exec','gunindex-rebuild-app','php','-r',"$i=imagecreatetruecolor(200,160);imagefill($i,0,0,imagecolorallocate($i,46,160,130));imagepng($i);"]);
+  const picture=execFileSync('docker',['--host=unix:///var/run/docker.sock','exec','gunindex-rebuild-app','php','-r',"$i=imagecreatetruecolor(200,160);imagefill($i,0,0,imagecolorallocate($i,46,160,130));imagepng($i);"]);
   await page.locator('[name="images[]"]').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:picture});await Promise.all([page.waitForURL('**/user/dashboard.php?saved=*'),page.getByRole('button',{name:'Inserat speichern',exact:true}).click()]);
   const listing=Number(fixture('find_listing',{username:seller.username,title}).id);assert(listing>0);await page.goto(origin+'/marketplace/view-item.php?id='+listing);await page.waitForFunction(()=>{const i=document.querySelector('[data-gallery-main]');return i&&i.complete&&i.naturalWidth>0;});journeys.push('listing_image');
   await login(phone,buyer);await phone.goto(origin+'/marketplace/view-item.php?id='+listing);await phone.getByRole('button',{name:'Merkliste ändern'}).click();await phone.waitForURL('**/user/watchlist.php');assert((await phone.locator('main').innerText()).includes(title));journeys.push('watchlist');

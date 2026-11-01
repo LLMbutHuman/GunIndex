@@ -2,8 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
 $user=require_login($pdo);
-$pageTitle='Inserat erstellen';
-$values=['zip'=>(string)($user['zip'] ?? ''),'city'=>(string)($user['city'] ?? ''),'status'=>'active'];
+$pageTitle=t('Inserat erstellen');
+$values=['country_code'=>(string)($user['country_code']??geo_country()),'zip'=>(string)($user['zip'] ?? ''),'city'=>(string)($user['city'] ?? ''),'status'=>'active'];
 $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     require_csrf(); $values=$_POST;

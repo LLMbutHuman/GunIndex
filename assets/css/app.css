@@ -23,3 +23,6 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 .hero-art{overflow:clip}
 
 @media(max-width:640px){.admin-page .data-table{min-width:620px}.admin-page .table-wrap{max-width:100%;overflow-x:auto}}
+
+/* Clear keyboard/touch targets and recognizable inline authentication links. */
+.auth-shell .panel>p a{display:inline-flex;align-items:center;min-height:32px;padding:4px 2px;text-decoration:underline;text-underline-offset:3px;color:var(--ink)}

@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     try {
         $code = auth_input($_POST, 'code');
-        if (auth_verify_pending_mfa($pdo, $code)) { redirect('/admin/index.php'); }
+        if (($verified=auth_verify_pending_mfa($pdo, $code)) !== null) { redirect((int)$verified['is_admin']===1 ? '/admin/index.php' : '/user/dashboard.php'); }
         $error = 'Der Code ist ungültig, abgelaufen oder bereits verwendet. Bitte einen neuen Code versuchen.'; http_response_code(422);
     } catch (InvalidArgumentException $exception) { $error = $exception->getMessage(); http_response_code(422); }
 }

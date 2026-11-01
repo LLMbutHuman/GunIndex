@@ -1,0 +1,50 @@
+pid /tmp/nginx.pid;
+worker_processes auto;
+error_log /dev/stderr warn;
+events { worker_connections 1024; }
+http {
+  include /etc/nginx/mime.types;
+  server_tokens off;
+  log_format minimal '$remote_addr [$time_local] "$request_method $uri" $status $body_bytes_sent';
+  access_log /dev/stdout minimal;
+  client_body_temp_path /tmp/client;
+  proxy_temp_path /tmp/proxy;
+  fastcgi_temp_path /tmp/fastcgi;
+  uwsgi_temp_path /tmp/uwsgi;
+  scgi_temp_path /tmp/scgi;
+  limit_req_zone $binary_remote_addr zone=site:10m rate=15r/s;
+  server {
+    listen 8080 default_server;
+    server_name _;
+    location ^~ /.well-known/acme-challenge/ { root /run/acme; }
+    location / { return 444; }
+  }
+  server {
+    listen 8080;
+    server_name __DOMAIN__;
+    location ^~ /.well-known/acme-challenge/ { root /run/acme; }
+    location / { return 301 https://__DOMAIN__$request_uri; }
+  }
+  server {
+    listen 8443 ssl default_server;
+    server_name __DOMAIN__;
+    ssl_certificate /run/tls/fullchain.pem;
+    ssl_certificate_key /run/tls/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    client_max_body_size 28m;
+    if ($host != "__DOMAIN__") { return 444; }
+    location / {
+      limit_req zone=site burst=40 nodelay;
+      include fastcgi_params;
+      fastcgi_param SCRIPT_FILENAME /app/public/index.php;
+      fastcgi_param SCRIPT_NAME /index.php;
+      fastcgi_param DOCUMENT_ROOT /app/public;
+      fastcgi_param HTTPS on;
+      fastcgi_param HTTP_PROXY "";
+      fastcgi_pass php:9000;
+      fastcgi_read_timeout 70s;
+    }
+  }
+}

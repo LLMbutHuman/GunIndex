@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';$user=require_login($pdo);$id=filter_var($_GET['listing_id']??null,FILTER_VALIDATE_INT);$listing=$id?market_find($pdo,(int)$id,true):null;
-if(!$listing||$listing['type']!=='auction'||$listing['status']!=='ended'||!$listing['highest_bidder_id'])abort_request(404,'Abgeschlossene Auktion nicht gefunden.');
+if(!$listing||$listing['type']!=='auction'||!in_array($listing['status'],['ended','sold'],true)||!$listing['highest_bidder_id'])abort_request(404,'Abgeschlossene Auktion nicht gefunden.');
 $seller=(int)$listing['seller_id'];$winner=(int)$listing['highest_bidder_id'];$actor=(int)$user['id'];
 if($seller===$winner||!in_array($actor,[$seller,$winner],true))abort_request(403,'Nur die Parteien dieser Auktion können bewerten.');
 $recipient=$actor===$seller?$winner:$seller;$error='';$success=false;$comment='';

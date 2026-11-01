@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-$admin = require_admin($pdo);
+$admin = require_permission($pdo,'users.manage');
 $pageTitle = 'Benutzerkonten';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  require_csrf();
@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  if ($id === (int)$admin['id']) abort_request(422, 'Nutze für dein eigenes Konto die Sitzungsverwaltung im Profil.');
  $pdo->beginTransaction();
  try {
-  settings_assert_admin($pdo, (int)$admin['id']);
+  governance_assert_actor($pdo,(int)$admin['id'],'users.manage');
   $statement = $pdo->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');
   $statement->execute([$id]);
   if (!$statement->fetchColumn()) {

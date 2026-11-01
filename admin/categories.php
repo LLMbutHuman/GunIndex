@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-$admin = require_admin($pdo);
+$admin = require_permission($pdo,'categories.manage');
 $pageTitle = 'Kategorien verwalten';
 $error = '';
 $values = ['id' => '0', 'name' => '', 'slug' => '', 'parent_id' => '0', 'sort_order' => '0', 'is_active' => '1'];

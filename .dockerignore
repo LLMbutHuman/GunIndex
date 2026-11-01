@@ -6,4 +6,6 @@ datenbank
 ZIP
 tests/.runtime
 node_modules
+vendor
 var
+tests/browser-tools/node_modules

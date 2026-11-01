@@ -306,5 +306,5 @@ function payments_assert_automatic(PDO $pdo,int $invoiceId):void {
 }
 function payments_status_label(string $status,?string $mode=null):string {
  if($status==='paid'&&$mode==='sandbox')return 'Sandbox bestätigt · keine Echtzahlung';
- return ['draft'=>'Entwurf','issued'=>'Ausgestellt','pending'=>'Prüfung ausstehend','paid'=>'Bezahlt','manual_rejected'=>'Noch nicht bestätigt','refunded'=>'Erstattet','void'=>'Storniert'][$status]??'In Bearbeitung';
+ return ['draft'=>'Entwurf','issued'=>'Ausgestellt','pending'=>'Prüfung ausstehend','paid'=>'Bezahlt','manual_rejected'=>'Noch nicht bestätigt','partially_refunded'=>'Teilweise erstattet','refunded'=>'Erstattet','void'=>'Storniert'][$status]??'In Bearbeitung';
 }

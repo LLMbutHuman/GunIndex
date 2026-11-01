@@ -1,0 +1,10 @@
+{
+  "name": "gunindex-browser-checks",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Local-only browser and accessibility test dependencies",
+  "dependencies": {
+    "@axe-core/playwright": "4.11.0",
+    "playwright": "1.57.0"
+  }
+}

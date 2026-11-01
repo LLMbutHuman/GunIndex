@@ -62,7 +62,7 @@ function catalog_categories(PDO $pdo, bool $activeOnly = true): array
 
 function catalog_save_category(PDO $pdo, int $actorId, array $data): int
 {
-    settings_assert_admin($pdo, $actorId);
+    function_exists('governance_assert_actor')?governance_assert_actor($pdo,$actorId,'categories.manage'):settings_assert_admin($pdo,$actorId);
     $id = filter_var($data['id'] ?? '0', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
     $parent = filter_var($data['parent_id'] ?? '0', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
     $sort = filter_var($data['sort_order'] ?? '0', FILTER_VALIDATE_INT, ['options' => ['min_range' => -10000, 'max_range' => 10000]]);
@@ -82,7 +82,7 @@ function catalog_save_category(PDO $pdo, int $actorId, array $data): int
     if ((int)$statement->fetchColumn() !== 1) throw new RuntimeException('Der Kategoriebaum wird gerade bearbeitet. Bitte erneut versuchen.');
     try {
         $pdo->beginTransaction();
-        settings_assert_admin($pdo, $actorId);
+        function_exists('governance_assert_actor')?governance_assert_actor($pdo,$actorId,'categories.manage'):settings_assert_admin($pdo,$actorId);
         $rows = catalog_rows($pdo);
         if (($id !== 0 && !isset($rows[$id])) || ($parent !== 0 && !isset($rows[$parent]))) throw new InvalidArgumentException('Kategorie oder Oberkategorie ist nicht vorhanden.');
         if ($id === 0 && count($rows) >= 1000) throw new InvalidArgumentException('Das Limit von 1000 Kategorien ist erreicht.');

@@ -1,6 +1,20 @@
 <?php
-/**
- * RE-ROUTING ZUM NEUEN ADMIN DASHBOARD
- */
-header("Location: index.php");
-exit;
+declare(strict_types=1);
+require_once __DIR__.'/../config/bootstrap.php';require_once __DIR__.'/../config/governance.php';$admin=require_permission($pdo,'reports.read');$pageTitle='Moderation & Beschwerden';$error='';$evidence='';
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ require_csrf();try{$action=post_string('action');$id=(int)post_string('case_id');if($action==='evidence'){
+  governance_assert_actor($pdo,(int)$admin['id'],'reports.read');$reason=trim(post_string('reason',1000));if(mb_strlen($reason)<10)throw new InvalidArgumentException('Bitte den fallbezogenen Einsichtsgrund angeben.');
+  $q=$pdo->prepare('SELECT evidence_cipher FROM market_reports WHERE id=?');$q->execute([$id]);$cipher=$q->fetchColumn();if(!$cipher)throw new DomainException('Keine freiwilligen Zusatzangaben vorhanden.');
+  audit_log($pdo,(int)$admin['id'],'report.evidence_viewed',$id,['reason'=>$reason]);$evidence=crypto_decrypt('report',$cipher);
+ }else{governance_decide($pdo,(int)$admin['id'],$id,$action,post_string('reason',16000));redirect('/admin/moderation.php?id='.$id);}}
+ catch(InvalidArgumentException|DomainException $e){http_response_code(422);$error=$e->getMessage();}
+}
+$selected=null;$raw=$_GET['id']??$_POST['case_id']??null;if(is_string($raw)&&ctype_digit($raw)){$q=$pdo->prepare('SELECT * FROM market_reports WHERE id=?');$q->execute([(int)$raw]);$selected=$q->fetch();}
+$cases=$pdo->query("SELECT id,case_code,target_type,status,assigned_to,created_at FROM market_reports ORDER BY CASE status WHEN 'appealed' THEN 0 WHEN 'open' THEN 1 WHEN 'reviewing' THEN 2 ELSE 3 END,id DESC LIMIT 100")->fetchAll();
+include __DIR__.'/../includes/header.php';?>
+<main class="container admin-page"><div class="page-heading"><p class="eyebrow">Verhältnismäßig handeln</p><h1>Meldungen und Beschwerden.</h1><p>Erst prüfen, dann begründen. Technische Auktions- und Zahlungsdaten werden nicht verdeckt korrigiert.</p></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php';?><div class="admin-content">
+<?php if($error):?><p class="notice error"><?=h($error)?></p><?php endif;?>
+<?php if($selected):?><section class="panel"><h2><?=h($selected['case_code'])?></h2><p><?=h($selected['target_type'])?> #<?=(int)$selected['target_id']?> · <?=h($selected['status'])?> · zuständig #<?=(int)($selected['assigned_to']??0)?></p><h3>Meldegrund</h3><p><?=nl2br(h($selected['reason']))?></p><?php if($selected['appeal_text']):?><h3>Beschwerde</h3><p><?=nl2br(h($selected['appeal_text']))?></p><?php endif;?><?php if($selected['decision_reason']):?><h3>Frühere Entscheidung</h3><p><?=nl2br(h($selected['decision_reason']))?></p><?php endif;?>
+<form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="case_id" value="<?=(int)$selected['id']?>"><label class="field">Aktion<select name="action"><option value="assign">Mir zuweisen</option><option value="dismiss">Meldung zurückweisen</option><option value="warn">Verwarnung dokumentieren</option><option value="hide">Gemeldetes Angebot/Bewertung/Werbung ausblenden</option><option value="restrict">Betroffenes Konto einschränken</option><option value="appeal_upheld">Beschwerde geprüft · Entscheidung bestätigt</option><option value="appeal_reconsider">Beschwerde geprüft · erneute Sachprüfung erforderlich</option><?php if($selected['evidence_cipher']):?><option value="evidence">Freiwillige Zusatzangaben einsehen</option><?php endif;?></select></label><label class="field">Begründung / Einsichtsgrund<textarea name="reason" minlength="10" maxlength="4000" required></textarea></label><button class="button" type="submit">Fallentscheidung speichern</button></form><p>Ausblenden von Auktionen setzt den Prüfzustand und erhält alle Gebote. Eine Beschwerdeantwort schaltet ein Angebot nicht ungeprüft wieder frei.</p>
+<?php if($evidence!==''):?><div class="notice"><h3>Zweckgebundene Zusatzangaben</h3><p><?=nl2br(h($evidence))?></p></div><?php endif;?></section><?php endif;?>
+<section class="panel"><h2>Warteschlange</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>Fall</th><th>Art</th><th>Status</th><th>Datum</th></tr></thead><tbody><?php foreach($cases as $case):?><tr><td><a href="?id=<?=(int)$case['id']?>"><?=h($case['case_code'])?></a></td><td><?=h($case['target_type'])?></td><td><?=h($case['status'])?></td><td><?=h($case['created_at'])?> UTC</td></tr><?php endforeach;?></tbody></table></div><?php if(!$cases):?><p>Keine offenen oder abgeschlossenen Fälle vorhanden.</p><?php endif;?></section></div></div></main><?php include __DIR__.'/../includes/footer.php';?>

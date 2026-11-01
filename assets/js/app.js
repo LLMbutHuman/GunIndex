@@ -10,7 +10,7 @@
   if (visitorMotion === 'off') root.dataset.motion = 'off';
   if (motionToggle && adminMotion === 'full' && !reduced.matches) {
     motionToggle.hidden = false;
-    const updateMotionLabel = () => { motionToggle.textContent = root.dataset.motion === 'off' ? 'Animationen fortsetzen' : 'Animationen pausieren'; motionToggle.setAttribute('aria-pressed', String(root.dataset.motion === 'off')); };
+    const updateMotionLabel = () => { motionToggle.textContent = root.dataset.motion === 'off' ? (root.dataset.labelResumeMotion || 'Animationen fortsetzen') : (root.dataset.labelPauseMotion || 'Animationen pausieren'); motionToggle.setAttribute('aria-pressed', String(root.dataset.motion === 'off')); };
     updateMotionLabel();
     motionToggle.addEventListener('click', () => {
       root.dataset.motion = root.dataset.motion === 'off' ? adminMotion : 'off';
@@ -24,7 +24,7 @@
     root.dataset.theme = value === 'light' ? 'light' : 'dark';
     if (toggle) {
       toggle.setAttribute('aria-pressed', String(root.dataset.theme === 'light'));
-      toggle.setAttribute('aria-label', root.dataset.theme === 'light' ? 'Dunkles Farbschema aktivieren' : 'Helles Farbschema aktivieren');
+      toggle.setAttribute('aria-label', root.dataset.theme === 'light' ? (root.dataset.labelThemeDark || 'Dunkles Farbschema aktivieren') : (root.dataset.labelThemeLight || 'Helles Farbschema aktivieren'));
     }
   };
   let savedTheme;
@@ -96,12 +96,12 @@
       const end = Date.parse(element.dataset.countdown);
       if (!Number.isFinite(end)) continue;
       const remaining = Math.max(0, Math.ceil((end - Date.now()) / 1000));
-      if (remaining === 0) { element.textContent = 'Frist abgelaufen · Abschluss wird verarbeitet'; continue; }
+      if (remaining === 0) { element.textContent = root.dataset.labelCountdownExpired || 'Frist abgelaufen · Abschluss wird verarbeitet'; continue; }
       const days = Math.floor(remaining / 86400);
       const hours = Math.floor(remaining % 86400 / 3600);
       const minutes = Math.floor(remaining % 3600 / 60);
       const seconds = remaining % 60;
-      element.textContent = (days ? days + ' T · ' : '') + String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+      element.textContent = (days ? days + ' ' + (root.dataset.labelDays || 'Tage') + ' · ' : '') + String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     }
   };
   if (countdowns.length) { tick(); window.setInterval(tick, 1000); }

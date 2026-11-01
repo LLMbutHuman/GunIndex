@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
-$admin=require_admin($pdo);$pageTitle='Bewertungen moderieren';$error='';
+$admin=require_permission($pdo,'content.moderate');$pageTitle='Bewertungen moderieren';$error='';
 if (isset($_GET['delete_id'])||isset($_GET['action'])) abort_request(405,'Moderation erfordert POST und CSRF.');
 if ($_SERVER['REQUEST_METHOD']==='POST') {
  require_csrf();$id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);$status=$_POST['status']??null;$reason=$_POST['reason']??null;
@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
  else {
   $pdo->beginTransaction();
   try {
-   settings_assert_admin($pdo,(int)$admin['id']);$q=$pdo->prepare('SELECT id,status FROM market_ratings WHERE id=? FOR UPDATE');$q->execute([$id]);$rating=$q->fetch();
+   governance_assert_actor($pdo,(int)$admin['id'],'content.moderate');$q=$pdo->prepare('SELECT id,status FROM market_ratings WHERE id=? FOR UPDATE');$q->execute([$id]);$rating=$q->fetch();
    if (!$rating) {$pdo->rollBack();abort_request(404,'Bewertung nicht gefunden.');}
    if ($rating['status']!==$status) {$pdo->prepare('UPDATE market_ratings SET status=? WHERE id=?')->execute([$status,$id]);audit_log($pdo,(int)$admin['id'],'rating.moderated',$id,['status'=>$status,'reason'=>trim($reason)]);}
    $pdo->commit();redirect('/admin/ratings.php?saved=1');

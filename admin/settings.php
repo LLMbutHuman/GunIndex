@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-$admin = require_admin($pdo);
+$admin = require_permission($pdo,'site.manage');
 $pageTitle = 'Marke & Website';
 $definitions = site_setting_definitions();
 $values = site_settings($pdo);
@@ -37,6 +37,9 @@ $groups = [
     'Farben & Bewegung' => ['accent', 'secondary', 'animation_mode'],
     'Verfügbarkeit' => ['registration_enabled', 'maintenance_enabled'],
     'Manuelle PayPal-Prüfung' => ['manual_paypal_enabled','manual_paypal_recipient','manual_paypal_approved','manual_tax_reviewed','manual_tax_bps'],
+    'Regionale Geschäftsleistungen' => ['business_promotions_enabled','dealer_profiles_enabled','business_reservation_minutes'],
+    'Datenschutz & Identitätsprüfung' => ['verification_enabled','verification_review_approved','verification_retention_days','privacy_contact_email','legal_publication_enabled'],
+    'Rechnungen & Betreiberangaben' => ['finance_enabled','operator_legal_name','operator_address_line1','operator_address_line2','operator_postcode','operator_city','operator_country','operator_email','operator_vat_id','operator_tax_number','operator_registration','invoice_prefix'],
     'Geplante Plattformpreise' => ['fee_auction_listing_cents', 'fee_bump_single_cents', 'fee_bump_pack_cents', 'fee_category_top_cents', 'fee_home_top_cents', 'fee_banner_monthly_cents'],
 ];
 ?>
@@ -58,8 +61,10 @@ $groups = [
                             <?php else: ?>
                                 <label for="setting-<?= h($key) ?>"><?= h($definition['label']) ?></label>
                                 <?php if ($definition['type'] === 'animation'): ?><select id="setting-<?= h($key) ?>" name="<?= h($key) ?>"><?php foreach (['full' => 'Lebendig', 'reduced' => 'Dezent', 'off' => 'Aus'] as $mode => $label): ?><option value="<?= h($mode) ?>"<?= $values[$key] === $mode ? ' selected' : '' ?>><?= h($label) ?></option><?php endforeach; ?></select><small>Die Systemeinstellung „Bewegung reduzieren“ hat immer Vorrang.</small>
+                                <?php elseif ($definition['type'] === 'country'): ?><select id="setting-<?= h($key) ?>" name="<?= h($key) ?>"><?php foreach (geo_countries() as $code => $label): ?><option value="<?= h($code) ?>"<?= $values[$key] === $code ? ' selected' : '' ?>><?= h($label) ?></option><?php endforeach; ?></select>
+                                <?php elseif ($definition['type'] === 'integer'): ?><input id="setting-<?= h($key) ?>" name="<?= h($key) ?>" type="number" value="<?= h($values[$key]) ?>" min="<?= (int)($definition['min_value'] ?? 0) ?>" max="<?= (int)($definition['max_value'] ?? 10000) ?>" step="1" required><small><?= $key === 'business_reservation_minutes' ? 'Reservierungsdauer in Minuten. Danach wird ein unbezahlter Platz wieder frei.' : 'Aufbewahrungsdauer in Tagen. Die Identitätsprüfung bleibt ohne geprüfte Aufbewahrungsregeln deaktiviert.' ?></small>
                                 <?php elseif ($key === 'hero_text'): ?><textarea id="setting-<?= h($key) ?>" name="<?= h($key) ?>" rows="4" maxlength="500"><?= h($values[$key]) ?></textarea>
-                                <?php else: ?><input id="setting-<?= h($key) ?>" name="<?= h($key) ?>" type="<?= $definition['type'] === 'color' ? 'color' : ($definition['type'] === 'email' ? 'email' : (in_array($definition['type'], ['cents','tax'], true) ? 'number' : 'text')) ?>" value="<?= h($values[$key]) ?>"<?= isset($definition['max']) ? ' maxlength="' . (int)$definition['max'] . '"' : '' ?><?= in_array($definition['type'], ['cents','tax'], true) ? ' min="0" max="' . ($definition['type'] === 'tax' ? '10000' : '9999999') . '" step="1" inputmode="numeric"' : '' ?><?= ($definition['min'] ?? 0) > 0 ? ' required' : '' ?>><?php if (in_array($definition['type'], ['cents','tax'], true)): ?><small><?= $definition['type'] === 'tax' ? 'Basispunkte: 1900 entspricht 19 %. Nur den tatsächlich geprüften Steuersatz verwenden.' : 'Integer-Cent, beispielsweise 199 für 1,99 €.' ?></small><?php endif; ?>
+                                <?php else: ?><input id="setting-<?= h($key) ?>" name="<?= h($key) ?>" type="<?= $definition['type'] === 'color' ? 'color' : ($definition['type'] === 'email' ? 'email' : (in_array($definition['type'], ['cents','tax','integer'], true) ? 'number' : 'text')) ?>" value="<?= h($values[$key]) ?>"<?= isset($definition['max']) ? ' maxlength="' . (int)$definition['max'] . '"' : '' ?><?= in_array($definition['type'], ['cents','tax','integer'], true) ? ' min="0" max="' . ($definition['type'] === 'tax' ? '10000' : '9999999') . '" step="1" inputmode="numeric"' : '' ?><?= ($definition['min'] ?? 0) > 0 ? ' required' : '' ?>><?php if (in_array($definition['type'], ['cents','tax','integer'], true)): ?><small><?= $definition['type'] === 'tax' ? 'Basispunkte: 1900 entspricht 19 %. Nur den tatsächlich geprüften Steuersatz verwenden.' : 'Integer-Cent, beispielsweise 199 für 1,99 €.' ?></small><?php endif; ?>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>

@@ -1,19 +1,57 @@
 # Datenbank und Migration
 
-`sql/schema.sql` ist ein sauberes Schema für **leere** Datenbanken ohne privilegierte Beispieldaten. Es ist kein Importskript für vorhandene Produktivtabellen. Die alte `sql/structure.sql` enthält keinen vordefinierten Admin mehr und verweist auf die kontrollierte Installation.
+`sql/schema.sql` ist das Basisschema für **leere** Datenbanken ohne privilegierte Beispieldaten. Neue Installationen benötigen anschließend sämtliche versionierten Migrationen. Das Schema ist kein Importskript für bestehende Produktivtabellen. `sql/structure.sql` enthält keinen vordefinierten Admin und verweist auf die kontrollierte Installation.
 
-Der aktive Marktplatz verwendet eigene `market_*`-Tabellen für Inserate, Bilder, Proxygebote, öffentliche Gebotsereignisse, Merklisten, Nachrichten, Bewertungen, Gebührenforderungen, Zahlungsversuche und Zahlungsereignisse. Benutzer, Systemsettings und Auditprotokoll besitzen zentrale Tabellen. Geld wird in Integer-Cent gespeichert, Zeitwerte in UTC. Fremdschlüssel und eindeutige Kennungen schützen Zuordnungen und Deduplizierung.
+MySQL/InnoDB, UTF8MB4, UTC-Zeitwerte, Fremdschlüssel und eindeutige Referenzen sichern den aktiven allgemeinen Marktplatz. Geld wird in Integer-Cent gespeichert; Steuersätze verwenden Basispunkte. Auf Transaktionspfaden kommen Zeilensperren zum Einsatz. Die Legacy-Tabellen werden nicht automatisch als öffentliche Angebote eingebunden.
 
-`001_manual_billing.sql` ergänzt manuelle Zahlungsaufträge, Bump-Guthaben und Aktivierungsereignisse. Der CLI-Runner ergänzt `bumped_at` nur bei fehlender Spalte. Version/Prüfsumme werden unter einem MySQL-Migrationslock gespeichert; bereits ausgeführte Dateien dürfen nicht verändert werden.
+## Versionierte Änderungen
+
+| Migration | Ergänzung |
+| --- | --- |
+| `001_manual_billing.sql` | Manuelle Zahlungsaufträge, Bump-Guthaben und Aktivierungen |
+| `002_seed_encoding.sql` | Eng begrenzte Korrektur der bekannten ursprünglichen Kategorie-Fehlkodierungen |
+| `003_accounts_mail.sql` | E-Mail-Bestätigung, Kontotokens, Hinweise, Präferenzen und verschlüsselte Mailqueue |
+| `004_international_geo.sql` | Konten-/Angebotsländer, bevorzugte Sprache, Märkte, PLZ-Quellen/Punkte und Inhaltsübersetzungen |
+| `005_discovery.sql` | Gesuche, gespeicherte Suchen, Veröffentlichungsevents, Treffer und Digestdeduplizierung |
+| `006_business.sql` | Händlerprofile, Kampagnen, Länderinventar, Platzbuchungen und Werbemetriken |
+| `007_governance.sql` | Personalrollen, Meldungen/Beschwerden, Löschanträge, Identitätsdokumente und Rechtsversionen/-zustimmungen |
+| `008_finance.sql` | Rechnungsanschriften, Ländersteuerregeln, unveränderliche Snapshots/Belege, Sequenzen, Erstattungen und Finanzereignisse |
+| `009_chat_privacy.sql` | Nachrichten-Verschlüsselungsversion, Blockierungen und Gesprächsindex |
+| `010_legacy_import.sql` | Eindeutige Zuordnung kontrolliert übernommener Altkonten |
+
+Die Migrationen 003–010 wurden auf der isolierten synthetischen Entwicklungsdatenbank angewendet. Bereits ausgeführte Dateien sind unveränderlich; spätere Änderungen benötigen eine neue Migration. Das ist kein Nachweis einer ausgeführten Produktivmigration.
 
 ```sh
 php ops/migrate.php --backup-confirmed
 ```
 
-Dieser Schalter bestätigt einen zuvor tatsächlich geprüften verschlüsselten Backup- und Wiederherstellungsplan. Er erzeugt auf einer Produktivdatenbank selbst keinen Backupnachweis. Die Testumgebung übernimmt diese Sicherung automatisch und ausschließlich für ihre synthetische Datenbank.
+Version und Prüfsumme werden unter einem MySQL-Migrationslock gespeichert. Der Runner prüft vorhandene Strukturen; beispielsweise ergänzt er `bumped_at` nur bei fehlender Spalte. Migration 002 verändert nur exakt bekannte ursprüngliche Slug-/Hexwertkombinationen und überschreibt keine inzwischen bearbeiteten Kategorien.
 
-MySQL-DDL kann implizit committen. Ein Fehler erfordert Prüfung und Vorwärtskorrektur, keinen automatischen Reset. Bestehende Daten werden nicht gelöscht. Der Runner setzt bereits vorhandene Kernstrukturen voraus. Eine vollständige Migration aller widersprüchlichen historischen Benutzer-/Nachrichten-/Bewertungsschemata ist noch offen; das neue Bootstrap darf diese nicht überschreiben.
+`--backup-confirmed` bestätigt einen **zuvor tatsächlich geprüften** verschlüsselten Backup- und Wiederherstellungsplan. Der Schalter erzeugt selbst keinen Produktivbackupnachweis. Die Entwicklungsumgebung sichert ausschließlich ihre synthetische Testdatenbank automatisch. [Ubuntu-Betrieb](UBUNTU_22_04.md) und [Monitoring/Sicherungen](MONITORING.md) beschreiben die neu hinzugekommenen Betriebswerkzeuge.
 
-Historische Exporte und Uploads wurden aus der neuen Git-Indexversion genommen, die lokalen Dateien bleiben erhalten. Alte Git-History enthält diese weiter und wurde nicht umgeschrieben. Für Veröffentlichung/Retention/Rotation ist eine gesonderte Betreiberentscheidung notwendig.
+MySQL-DDL kann implizit committen. Ein unterbrochener Lauf erfordert Prüfung und gezielte Vorwärtskorrektur; es gibt keinen automatischen Reset einer Produktivdatenbank. Das Einspielen des leeren Basisschemas über einen bestehenden Bestand ist kein Rollbackverfahren.
 
-002_seed_encoding.sql korrigiert nur die exakt bekannten ursprünglichen Umlaut-Fehlkodierungen anhand von Slug und altem Hexwert. Neue Installationen setzen UTF8MB4 ausdrücklich am SQL-Client; geänderte Kategorien werden nicht überschrieben.
+## Aktive Datenbereiche
+
+Kernangebote, Bilder, Gebote, Merklisten, Nachrichten, Bewertungen und Zahlungen verwenden `market_*`; Benutzer, Settings und Auditlog sind gemeinsame Strukturen. Neue Tabellen begrenzen unter anderem:
+
+- Tokens auf Zweck, Adresse und Sessionversion; Hinweise auf Benutzer und Ereignisschlüssel.
+- Discovery-Treffer auf Suchprofil und Angebot sowie tägliche Hinweise auf Benutzer und UTC-Tag.
+- Werbeinventar auf Land, Dienst, Kategorie und tatsächlich vorhandenen Slot; Reservierung und Zahlung sind getrennte Zustände.
+- Rechnungsbelege auf feste Sequenz-/Dokumentkennungen, Hash und verschlüsselten Snapshot; Erstattungen auf eindeutige reale Rückzahlungsreferenzen.
+- Dokumentenzugänge auf berechtigte Prüfer, Fall und kurze Gültigkeit; Rechtszustimmungen auf konkrete Version und Hash.
+- PLZ-Punkte auf Land und normalisierte PLZ; Entfernungsabfragen verwenden nur aktivierte Quellen mit dokumentierter Rechteprüfung.
+
+Die automatische Auktionsgebührenforderung ist noch nicht vollständig integriert. Vorhandene Gebots-, Gebühren- und Finanztabellen allein erzeugen keine vollständige Auktionsabrechnung.
+
+## Bestehende Daten und Datenschutz
+
+Ein kontrolliertes CLI-Werkzeug für **Altkonten-Stammdaten** ist vorhanden: [LEGACY_MIGRATION.md](LEGACY_MIGRATION.md). Es liest eine getrennte Quelle ausschließlich mit SELECT, startet als Dry-run und führt Idempotenz-/Kollisionsprüfungen. Eine optionale ID-Neuzuordnung wird ausdrücklich protokolliert. Alte Adminrechte, Identitätsnachweise, Sitzungen und Passwörter werden nicht als vertrauenswürdige Berechtigungen übernommen.
+
+Die tatsächliche Bestandsprüfung und Produktivübernahme stehen aus. Historische spezialisierte Inserate, Gebote, Nachrichten, Dokumente und Geschäftsvorfälle benötigen jeweils gesonderte fachliche Zuordnung; sie werden nicht durch den Benutzerimport aktiviert. Widersprüchliche historische Schemata dürfen nicht mit dem neuen Bootstrap überschrieben werden.
+
+Vorhandene allgemeine Klartextnachrichten lassen sich mit `php ops/encrypt-chats.php --apply --backup-confirmed` kontrolliert in die neue AEAD-Ablage überführen; ohne `--apply` wird nur der noch offene Umfang gezählt. Migration 009 allein verschlüsselt keine bestehenden Texte. Schlüssel und Wiederherstellung sind vor dem Lauf zu prüfen.
+
+Datenexport und kontrollierte Anonymisierung sind implementiert. Unveränderliche Geschäfts-/Finanznachweise werden bei einer Kontolöschung nicht pauschal mitgelöscht; tatsächliche Fristen und gesetzliche Aufbewahrung bestimmt der Betreiber.
+
+Historische Exporte und Uploads wurden aus der neuen Git-Indexversion entfernt, lokale Dateien bleiben erhalten. Alte Git-History enthält diese weiterhin und wurde nicht umgeschrieben. Retention, Berechtigungen, bekannte Geheimnisse und eine mögliche koordinierte History-Bereinigung bleiben gesonderte Betreiberaufgaben.

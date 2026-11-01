@@ -1,26 +1,9 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../config/bootstrap.php';
-$user = require_login($pdo); $userId = (int)$user['id'];
-$query = $pdo->prepare("SELECT m.id,m.listing_id,m.sender_id,m.receiver_id,m.message_text,m.is_read,m.created_at,l.title,l.category_id,l.status,s.username AS sender_name,r.username AS receiver_name FROM market_messages m JOIN market_listings l ON l.id=m.listing_id JOIN users s ON s.id=m.sender_id JOIN users r ON r.id=m.receiver_id WHERE (m.sender_id=? OR m.receiver_id=?) AND l.status IN ('active','ended','sold') ORDER BY m.id DESC LIMIT 300");
-$query->execute([$userId,$userId]); $threads = [];
-foreach ($query->fetchAll() as $row) {
-    if (!catalog_category_allowed($pdo,(int)$row['category_id'])) continue;
-    $peerId = (int)$row['sender_id'] === $userId ? (int)$row['receiver_id'] : (int)$row['sender_id'];
-    $key = $row['listing_id'] . ':' . $peerId;
-    if (!isset($threads[$key])) {
-        $row['peer_id'] = $peerId; $row['peer_name'] = (int)$row['sender_id'] === $userId ? $row['receiver_name'] : $row['sender_name'];
-        $row['unread'] = false; $threads[$key] = $row;
-    }
-    if ((int)$row['receiver_id'] === $userId && !(bool)$row['is_read']) $threads[$key]['unread'] = true;
-}
-$pageTitle = 'Meine Nachrichten'; require __DIR__ . '/../includes/header.php';
-?>
-<main class="page-shell"><div class="page-heading"><p class="eyebrow">Im Gespräch bleiben</p><h1>Meine Nachrichten</h1><p>Deine persönlichen Unterhaltungen zu Angeboten.</p></div>
-<?php if (!$threads): ?><section class="panel"><h2>Hier beginnt der Austausch</h2><p>Kontaktiere einen Verkäufer direkt über sein Angebot.</p><a class="button" href="/marketplace/search.php">Angebote entdecken</a></section><?php endif; ?>
-<div class="form-grid">
-<?php foreach (array_slice($threads,0,100) as $thread): ?>
-<article class="panel"><p class="eyebrow"><?= h($thread['peer_name']) ?><?php if ($thread['unread']): ?> · Ungelesen<?php endif; ?></p><h2><a href="/user/chat.php?listing_id=<?= (int)$thread['listing_id'] ?>&amp;user_id=<?= (int)$thread['peer_id'] ?>"><?= h($thread['title']) ?></a></h2><p><?= h(mb_strimwidth($thread['message_text'],0,150,'…')) ?></p><small><?= h($thread['created_at']) ?> UTC</small></article>
-<?php endforeach; ?>
-</div></main>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+require_once __DIR__.'/../config/bootstrap.php';$user=require_login($pdo);$uid=(int)$user['id'];$pageTitle='Meine Nachrichten';
+$page=filter_var($_GET['page']??'1',FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>10000]])?:1;
+$q=$pdo->prepare('SELECT COUNT(*) FROM market_conversations WHERE buyer_id=? OR seller_id=?');$q->execute([$uid,$uid]);$total=(int)$q->fetchColumn();
+$q=$pdo->prepare('SELECT c.*,l.title,l.status,m.message_text,m.cipher_version,m.created_at,u.username AS peer_name,CASE WHEN c.buyer_id=? THEN c.seller_id ELSE c.buyer_id END AS peer_id,EXISTS(SELECT 1 FROM market_messages n WHERE n.listing_id=c.listing_id AND n.receiver_id=? AND n.sender_id=CASE WHEN c.buyer_id=? THEN c.seller_id ELSE c.buyer_id END AND n.is_read=0) AS unread FROM market_conversations c JOIN market_listings l ON l.id=c.listing_id JOIN market_messages m ON m.id=c.last_message_id JOIN users u ON u.id=CASE WHEN c.buyer_id=? THEN c.seller_id ELSE c.buyer_id END WHERE c.buyer_id=? OR c.seller_id=? ORDER BY c.last_message_id DESC LIMIT 25 OFFSET '.(($page-1)*25));$q->execute([$uid,$uid,$uid,$uid,$uid,$uid]);$threads=$q->fetchAll();
+include __DIR__.'/../includes/header.php';?>
+<main class="container"><div class="page-heading"><p class="eyebrow">Im Gespräch bleiben</p><h1>Meine Nachrichten</h1><p>Deine persönlichen Unterhaltungen, auch wenn ein Angebot archiviert wurde.</p></div>
+<?php if(!$threads):?><section class="panel"><p>Noch keine Unterhaltungen. Kontaktiere einen Verkäufer über sein Angebot.</p><a class="button" href="/marketplace/search.php">Angebote entdecken</a></section><?php endif;?><div class="form-grid"><?php foreach($threads as $thread):?><article class="panel"><p class="eyebrow"><?=h($thread['peer_name'])?><?=$thread['unread']?' · Ungelesen':''?></p><h2><a href="/user/chat.php?listing_id=<?=(int)$thread['listing_id']?>&amp;user_id=<?=(int)$thread['peer_id']?>"><?=h($thread['title'])?></a></h2><p><?=h(mb_strimwidth(chat_message_plain($thread['message_text'],(int)$thread['cipher_version']),0,150,'…'))?></p><small><?=h($thread['created_at'])?> UTC</small></article><?php endforeach;?></div><nav class="pagination"><?php if($page>1):?><a href="?page=<?=$page-1?>">Zurück</a><?php endif;?><span>Seite <?=$page?></span><?php if($page*25<$total):?><a href="?page=<?=$page+1?>">Weiter</a><?php endif;?></nav></main><?php include __DIR__.'/../includes/footer.php';?>

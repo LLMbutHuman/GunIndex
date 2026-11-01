@@ -14,7 +14,7 @@ $values=array_map(static fn($value):string=>(string)($value ?? ''),$listing);
 $values['price']=$decimal((int)$listing['price_cents']);
 $values['buyout_price']=$listing['buyout_cents']===null?'':$decimal((int)$listing['buyout_cents']);
 $values['duration_days']='7'; $values['status']=$listing['status']==='draft'?'draft':'active';
-$pageTitle='Inserat bearbeiten'; $error='';
+$pageTitle=t('Inserat bearbeiten'); $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     require_csrf(); $values=$_POST;
     $values['pickup']=$_POST['pickup'] ?? '0'; $values['shipping']=$_POST['shipping'] ?? '0';

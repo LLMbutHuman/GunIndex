@@ -61,7 +61,9 @@ function auth_ip(): string { return (string)($_SERVER['REMOTE_ADDR'] ?? 'local-c
 
 function auth_clear_session(): void
 {
-    $_SESSION = [];
+    $preferences = [];
+    foreach (['locale','market_country'] as $key) if (is_string($_SESSION[$key] ?? null)) $preferences[$key] = $_SESSION[$key];
+    $_SESSION = $preferences;
     if (session_status() === PHP_SESSION_ACTIVE) { session_regenerate_id(true); }
 }
 
@@ -85,6 +87,11 @@ function require_login(PDO $pdo): array
     $user = current_user($pdo); if ($user === null) { redirect('/auth/login.php'); } return $user;
 }
 
+function auth_requires_mfa(PDO $pdo, array $user): bool
+{
+    return (int)$user['is_admin'] === 1 || (function_exists('rbac_requires_mfa') && rbac_requires_mfa($pdo,(int)$user['id']));
+}
+
 function require_admin(PDO $pdo): array
 {
     $user = require_login($pdo);
@@ -101,7 +108,9 @@ function auth_issue_session(array $user, bool $mfa = false): void
     $_SESSION['user_id'] = (int)$user['id']; $_SESSION['username'] = (string)$user['username'];
     $_SESSION['auth_version'] = (int)$user['auth_version'];
     $_SESSION['auth_started_at'] = $_SESSION['auth_last_seen'] = time();
-    if ($mfa && (int)$user['is_admin'] === 1) { $_SESSION['admin_mfa_user_id'] = (int)$user['id']; }
+    if ($mfa) { $_SESSION['admin_mfa_user_id'] = (int)$user['id']; }
+    $_SESSION['locale'] ??= (string)($user['preferred_locale'] ?? 'de');
+    $_SESSION['market_country'] ??= (string)($user['country_code'] ?? 'DE');
 }
 
 function auth_authenticate(PDO $pdo, string $login, string $password): ?array
@@ -140,13 +149,20 @@ function auth_secret_encrypt(string $secret): string
 
 function auth_secret_decrypt(string $encrypted): string
 {
-    $key = auth_encryption_key();
-    if (!str_starts_with($encrypted, 'v1:')) { throw new RuntimeException('Invalid MFA data.'); }
-    $data = base64_decode(substr($encrypted, 3), true); $nonceSize = SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES;
-    if ($data === false || strlen($data) <= $nonceSize + SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES) { throw new RuntimeException('Invalid MFA data.'); }
-    $plain = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(substr($data, $nonceSize), 'GunIndex.admin-totp.v1', substr($data, 0, $nonceSize), $key);
-    if ($plain === false || strlen($plain) !== 20) { throw new RuntimeException('Invalid MFA data.'); }
-    return $plain;
+    $keys = [auth_encryption_key()];
+    $previous = getenv('APP_KEY_PREVIOUS');
+    if (is_string($previous) && $previous !== '') {
+        $decoded = base64_decode($previous,true);
+        if ($decoded !== false && strlen($decoded) === 32 && !hash_equals($keys[0],$decoded)) $keys[] = $decoded;
+    }
+    if (!str_starts_with($encrypted, 'v1:')) throw new RuntimeException('Invalid MFA data.');
+    $data = base64_decode(substr($encrypted,3),true); $nonceSize=SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES;
+    if ($data===false || strlen($data)<=$nonceSize+SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES) throw new RuntimeException('Invalid MFA data.');
+    foreach ($keys as $key) {
+        $plain=sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(substr($data,$nonceSize),'GunIndex.admin-totp.v1',substr($data,0,$nonceSize),$key);
+        if ($plain!==false && strlen($plain)===20) return $plain;
+    }
+    throw new RuntimeException('Invalid MFA data.');
 }
 
 /** RFC 4648 encoding for authenticator enrollment, not encryption. */
@@ -187,14 +203,15 @@ function auth_verify_pending_mfa(PDO $pdo, string $code): ?array
     auth_rate_limit('mfa-user', (string)$id, 8, 300); $pdo->beginTransaction();
     try {
         $query = $pdo->prepare('SELECT * FROM users WHERE id = ? FOR UPDATE'); $query->execute([$id]); $user = $query->fetch();
-        if (!$user || (int)$user['is_admin'] !== 1 || (int)$user['is_active'] !== 1 || empty($user['mfa_secret'])
+        if (!$user || !auth_requires_mfa($pdo,$user) || (int)$user['is_active'] !== 1 || empty($user['mfa_secret'])
             || (int)$user['auth_version'] !== ($_SESSION['pending_admin_version'] ?? null)) {
             $pdo->rollBack(); auth_clear_session(); return null;
         }
-        $counter = auth_totp_counter(auth_secret_decrypt((string)$user['mfa_secret']), $code,
+        $secret = auth_secret_decrypt((string)$user['mfa_secret']);
+        $counter = auth_totp_counter($secret, $code,
             $user['mfa_last_counter'] === null ? -1 : (int)$user['mfa_last_counter']);
         if ($counter === null) { $pdo->rollBack(); return null; }
-        $pdo->prepare('UPDATE users SET mfa_last_counter = ? WHERE id = ?')->execute([$counter, $id]);
+        $pdo->prepare('UPDATE users SET mfa_last_counter = ?,mfa_secret=? WHERE id = ?')->execute([$counter,auth_secret_encrypt($secret),$id]);
         $pdo->commit(); auth_issue_session($user, true); return $user;
     } catch (Throwable $error) { if ($pdo->inTransaction()) { $pdo->rollBack(); } throw $error; }
 }

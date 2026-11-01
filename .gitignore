@@ -5,6 +5,7 @@
 /var/
 /vendor/
 /node_modules/
+/tests/browser-tools/node_modules/
 /assets/uploads/
 /datenbank/*.sql
 __pycache__/

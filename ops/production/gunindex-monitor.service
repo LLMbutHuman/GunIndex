@@ -1,0 +1,12 @@
+[Unit]
+Description=GunIndex local health/worker/queue check
+Requires=docker.service
+After=docker.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=__DIRECTORY__/compose.sh exec -T php php ops/monitor.php
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectHome=read-only

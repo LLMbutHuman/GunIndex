@@ -1,0 +1,8 @@
+FROM debian:bookworm-slim@sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3
+RUN --mount=type=secret,id=proxy_ca,required=true \
+    apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca update \
+ && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca install -y --no-install-recommends postfix ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY ops/production/postfix-start.sh /usr/local/sbin/postfix-start
+RUN chmod 0755 /usr/local/sbin/postfix-start
+CMD ["/usr/local/sbin/postfix-start"]

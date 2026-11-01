@@ -18,7 +18,7 @@ $methods = payments_methods();
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="page-shell">
-  <div class="page-heading"><p class="eyebrow">Dein Konto</p><h1>Zahlungen &amp; Gebühren</h1><a class="button" href="/user/billing.php">Manuelle Zahlungsaufträge &amp; Bump-Guthaben</a><p>Klare Beträge. Nachvollziehbare Zustände.</p></div>
+  <div class="page-heading"><p class="eyebrow">Dein Konto</p><h1>Zahlungen &amp; Gebühren</h1><a class="button" href="/user/billing.php">Manuelle Zahlungsaufträge &amp; Bump-Guthaben</a><a class="button secondary" href="/user/invoices.php">Rechnungs-PDFs, Stornos &amp; Erstattungen</a><p>Klare Beträge. Nachvollziehbare Zustände.</p></div>
   <section class="panel">
     <h2>Aktueller Zahlungsstand</h2>
     <p>Die kostenpflichtigen Plattformleistungen befinden sich in Vorbereitung. Es werden derzeit keine automatischen Gebühren für neue Inserate gebucht. Der Kaufpreis eines Artikels wird nicht über das Plattformkonto eingezogen.</p>

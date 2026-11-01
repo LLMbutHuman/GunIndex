@@ -1,0 +1,17 @@
+[Unit]
+Description=GunIndex authenticated local backup
+Requires=docker.service
+After=docker.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+WorkingDirectory=__DIRECTORY__
+ExecStart=/usr/bin/python3 __DIRECTORY__/current/ops/production/backup.py --directory __DIRECTORY__ backup --maintenance
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-$admin = require_admin($pdo);
+$admin = require_permission($pdo,'site.manage');
 $pageTitle = 'Änderungsprotokoll';
 if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') abort_request(405, 'Dieses Protokoll ist ausschließlich lesbar.');
 $page = filter_var($_GET['page'] ?? '1', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100000]]) ?: 1;

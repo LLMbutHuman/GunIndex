@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = auth_authenticate($pdo, $login, $password);
         if ($user === null) {
             $error = 'Anmeldung fehlgeschlagen. Bitte prüfe deine Zugangsdaten.'; http_response_code(422);
-        } elseif ((int)$user['is_admin'] === 1) {
+        } elseif (auth_requires_mfa($pdo,$user)) {
             if (empty($user['mfa_secret'])) {
                 $error = 'Der Administrationszugang muss zuerst lokal mit einem zweiten Faktor eingerichtet werden.'; http_response_code(503);
             } else {
@@ -31,7 +31,8 @@ $pageTitle = 'Anmelden'; require __DIR__ . '/../includes/header.php';
 <?php if ($error !== ''): ?><p class="notice error" role="alert"><?= h($error) ?></p><?php endif; ?>
 <form method="post" class="form-grid"><?= csrf_field() ?>
 <label class="field">Benutzername oder E-Mail<input name="login" value="<?= h($login) ?>" maxlength="190" autocomplete="username" required></label>
-<label class="field">Passwort<input type="password" name="password" autocomplete="current-password" maxlength="1024" required></label>
-<button class="button" type="submit">Anmelden</button></form>
+<label class="field"><?=h(t('Passwort'))?><input type="password" name="password" autocomplete="current-password" maxlength="1024" required></label>
+<button class="button" type="submit"><?=h(t('Anmelden'))?></button></form>
+<p><a href="/auth/forgot-password.php"><?=h(t('Passwort vergessen?'))?></a></p>
 <p>Noch kein Konto? <a href="/auth/register.php">Kostenlos registrieren</a></p></section></main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

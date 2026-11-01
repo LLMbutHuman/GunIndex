@@ -1,58 +1,66 @@
-# Administration und konfigurierbarer Auftritt
+# Administration
 
-Bei jeder Anfrage werden der aktuelle Benutzer und seine Adminberechtigung
-einschließlich verpflichtender Mehrfaktor-Authentifizierung geprüft. Ein alter
-Sessionflag genügt nicht. Ein privilegierter Standardaccount wird nicht angelegt.
+Jede Personalansicht prüft die aktuellen Datenbankrechte und erfolgreiche MFA. Das initiale Superadministrationskonto entsteht durch das geschützte CLI-Verfahren; privilegierte Beispieldaten gibt es nicht. Die Navigation zeigt nur erlaubte Bereiche. Weiterführende Rollen- und Fallregeln stehen in [GOVERNANCE.md](GOVERNANCE.md).
 
-Unter **Marke & Website** sind Website-Name, Claim, Startseitenüberschrift und
--text, öffentliche Kontakt-E-Mail, zwei Akzentfarben, Animationsintensität,
-Registrierungsverfügbarkeit und ein Wartungshinweis änderbar. Farben akzeptieren
-nur sechsstellige Hexwerte. Es gibt keine Felder für ausführbaren Code, beliebige
-CSS-Regeln, Dateipfade oder Zahlungsgeheimnisse. Die Systemeinstellung für
-reduzierte Bewegung hat Vorrang. Ein Wartungshinweis sperrt keine laufenden
-Auktionen und beendet keine Sitzungen.
+| Bereich | Aufgabe |
+| --- | --- |
+| Übersicht | Tatsächliche Tabellen-/Betriebskennzahlen und offene Prüfungen |
+| Marke & Website | Name, Texte, Farben, Animationen, Registrierung und zentrale Geschäftsparameter |
+| Länder & Sprachen | Märkte, PLZ-Quellenstatus und ausgewählte Inhalts-/Kategorieübersetzungen |
+| Kategorien | Hierarchie, Namen, Kennungen, Sortierung und Aktivierung |
+| Benutzerkonten | Geschützte Kontenübersicht und Sitzungswiderruf |
+| Rollen & Rechte | Begrenzte Personalrollen vergeben/entziehen |
+| Inserate & Auktionen | Paginierte Angebote und öffentliche Gebotsereignisse |
+| Bewertungen | Begründetes Ein-/Ausblenden |
+| Meldungen & Beschwerden | Zuweisung, Entscheidung, Maßnahmen und Beschwerdebearbeitung |
+| Händler & Werbung | Händlerprofile/Banner prüfen und konkrete Platzbuchungen verwalten |
+| Zahlungseingänge | Manuelle PayPal-Aufträge anhand des tatsächlichen Eingangs prüfen |
+| Rechnungen & Erstattungen | Steuerregeln, unveränderliche Belege, Korrekturen und reale Rückzahlungen dokumentieren |
+| Datenschutzanfragen | Deaktivierungs-/Löschanträge und kontrollierte Anonymisierung |
+| Identitätsprüfung | Fallübernahme, begründete Dokumenteneinsicht und getrennte Identitäts-/Altersentscheidung |
+| Rechtstexte | Dokumentversionen, Prüfung, Gültigkeit und Veröffentlichung |
+| Änderungsprotokoll | Paginierte technische Auditereignisse |
 
-Eine Versionsprüfsumme schützt vor dem stillen Überschreiben paralleler
-Änderungen. Bei einem Konflikt bleiben die eigenen Formulareingaben sichtbar;
-der aktuelle Stand muss vor erneutem Speichern neu geladen werden. Änderungen
-und Protokolleintrag liegen in derselben Datenbanktransaktion. Das Protokoll
-enthält die geänderten Schlüsselnamen und keine Geheimniswerte.
+## Website und Kategorien
 
-Die konfigurierbaren Preise sind Integer-Cent und beschreiben zunächst geplante
-Plattformleistungen. Ihre Änderung aktiviert weder Checkout noch Premiumdienste.
-Historische verbindliche Buchungen dürfen nicht rückwirkend verändert werden.
+Unter **Marke & Website** sind Website-Name, Claim, Startseitentitel/-text, öffentliche Kontaktadresse, zwei Akzentfarben, Animationsintensität, Registrierungsverfügbarkeit und Wartungshinweis änderbar. Farben sind sechsstellige Hexwerte; ausführbarer Code, beliebiges CSS, Dateipfade und Providergeheimnisse sind keine Websitefelder. Die Systemeinstellung für reduzierte Bewegung hat Vorrang. Ein Wartungshinweis ist keine technische Schreibsperre für Auktionen.
 
-Haupt- und Unterkategorien sind ohne Codeänderung anlegbar. Name, eindeutige
-Kennung, Oberkategorie, Sortierung und Aktivierung sind bearbeitbar. Ein
-deaktivierter Vorfahr sperrt auch Nachfahren. Zyklische Zuordnungen, fehlende
-Eltern und doppelte Kennungen werden abgewiesen. Kategorien erteilen keine
-rechtliche Produktfreigabe. Der allgemeine Katalog enthält keine Waffenkategorien;
-historische spezialisierte Angebote werden nicht umetikettiert. Ein Baumlimit
-von 1000 Kategorien begrenzt Ressourcenverbrauch. Die zusätzliche Wortprüfung
-ist eine Plattformregel, keine vollständige Rechtsklassifizierung oder Moderation.
+Eine Versionsprüfsumme verhindert stilles Überschreiben paralleler Änderungen. Konflikte behalten die Formulareingaben; vor erneutem Speichern den aktuellen Stand laden. Änderungen und Audit liegen in einer Transaktion. Das Protokoll enthält Schlüsselnamen statt Geheimniswerten. Preise sind Integer-Cent; neue Preise aktivieren keinen Dienst und verändern keine verbindlichen Altbuchungen.
 
-Die paginierte Benutzerübersicht zeigt notwendige Kontaktdaten nur im geschützten
-Bereich. Fremde Kontositzungen können mit POST und CSRF widerrufen werden; dabei
-wird `auth_version` erhöht und ein Audit-Eintrag geschrieben. Es gibt keine freie
-Rollenvergabe, pauschale Verifikation oder physische Kontolöschung. Das eigene
-Profil besitzt seine separate Sitzungs- und Passwortverwaltung.
+Kategorien erlauben Oberkategorie, Kennung, Reihenfolge und Status. Deaktivierte Vorfahren sperren Nachfahren; Zyklen und doppelte Kennungen werden abgewiesen. Das Baumlimit beträgt 1.000 Kategorien. Der aktive allgemeine Katalog enthält keine Waffenkategorien. Kategorien und Wortprüfung ersetzen keine rechtliche Produktfreigabe.
 
-Das Änderungsprotokoll ist lesbar und paginiert. Es ist nicht automatisch
-unveränderlich oder revisionssicher: Getrennte Aufbewahrung, minimale DB-Rechte
-und Überwachung bleiben erforderlich. Die Kennzahlen stammen aus tatsächlichen
-Tabellen. Abschlusskonflikte aus `market_listings.status='review'` erscheinen als
-konkrete Zahl; bestehende Gebote werden nicht stillschweigend korrigiert.
+Unter **Länder & Sprachen** lassen sich elf Märkte sowie vorhandene PLZ-Quellen aktivieren/deaktivieren. Internationale Suche erweitert Angebote, mischt aber keine fremden Länderbanner ein. Quelle/Lizenz und Umfang lokaler PLZ-Daten sind sichtbar. Der eigentliche lizenzgeprüfte CSV-Import erfolgt kontrolliert per CLI; es wird kein unkontrollierter Web-Dateipfad ausgeführt. Markentexte und Kategorien können pro Sprache gepflegt werden. Unübersetzte Admin-/Geschäftstexte fallen auf Deutsch zurück.
 
-Zahlungsbetrieb und Dokumentensammlung werden nicht durch einen Adminlogin
-freigegeben. Vollständige Rollenverwaltung, DSA-Fallbearbeitung, Beschwerdeverfahren
-und ein Rechtstextredaktionssystem sind weitere Arbeitsschritte.
+## Personal, Inhalte und Beschwerden
 
-Die allgemeine Inseratsübersicht bietet paginierte Statusfilter und eine
-Detailansicht mit öffentlichen Auktionsereignissen. Private Maximalgebote werden
-nicht angezeigt; Quarantänefälle lassen sich hier nicht unkontrolliert wieder
-freischalten oder mit einem anderen Gewinner versehen. Bewertungen lassen sich
-mit einer dokumentierten Begründung ein- oder ausblenden. Eine endgültige Löschung
-ist nicht vorgesehen. Die Moderation benötigt POST, CSRF, Admin-MFA und aktuelle
-Datenbankrechte; die Entscheidung und das Audit liegen in derselben Transaktion.
+Nur berechtigte Superadministration vergibt begrenzte Personalrollen an aktive Konten mit bereits eingerichteter TOTP. Neue Rollen oder Entzug erhöhen die Sessionversion. Superadministratorrechte sind nicht durch ein beliebiges Formular vergebbar. Personal-MFA wird nötigenfalls lokal mit `php ops/enrol-staff-mfa.php BENUTZERNAME` eingerichtet; Secrets nie in Logs übernehmen.
 
-Unter **Zahlungseingänge** liegen die manuellen PayPal-Aufträge mit Betrag, Referenz und Status. Die Bestätigung benötigt eine tatsächliche Transaktionskennung und gleicht Betrag und Referenz ab. Empfänger, Verfügbarkeit und geprüfte Kontoeignung werden unter Marke & Website konfiguriert; API-Geheimnisse bleiben im Prozessumfeld. Siehe MANUAL_PAYMENTS.md.
+Fälle müssen vor einer Entscheidung zugewiesen werden. Entscheidungen brauchen Begründungen; zusätzlich erforderliche Benutzerrechte werden erneut geprüft. Eine ausgeblendete Auktion mit Geboten geht in Sachprüfung, statt einen Gewinner zu erfinden oder Gebote zu löschen. Meldende und Betroffene sehen nur berechtigte eigene Fälle und können begründet Beschwerde einlegen. Freiwillige vertrauliche Beweise erfordern begründeten, protokollierten Fallzugriff.
+
+Bewertungen werden dokumentiert ein-/ausgeblendet; private Proxy-Maximalgebote werden nicht angezeigt. Das Auditlog ist nicht automatisch unveränderlich: minimale DB-Rechte, getrennte Aufbewahrung und Überwachung bleiben Betriebsaufgaben.
+
+## Händler, Platzierungen und Zahlungseingänge
+
+Händlerprofile und Banner brauchen ausdrückliche Inhaltsprüfung. Eine spätere Profiländerung löst erneute Prüfung aus. Freigabe ist kein behördlicher Gewerbe- oder Identitätsnachweis. Premiuminventar ist je Land begrenzt: drei Kategorieplätze, zwei Startseitenplätze und zwei Bannerkunden pro Kategorie. Reservierungen, tatsächliche Zahlung, gewünschter Start und Laufzeit sind getrennte Zustände.
+
+Die Funktion bleibt standardmäßig mit `business_promotions_enabled=0` gesperrt. Zusätzlich gelten die manuellen Zahlungsfreigaben. Verspätet bestätigte Zahlung darf keinen belegten Platz verdrängen; der Fall bleibt bezahlt, aber unerfüllt, bis Erfüllung oder Erstattung geklärt ist. Keine Reichweiten-/Verkaufsgarantie geben.
+
+Unter **Zahlungseingänge** stehen Betrag, feste Referenz, Empfänger und Status. Vor Freigabe tatsächlich im Providerkonto Betrag, Empfänger und Referenz prüfen und die reale Transaktionskennung erfassen. Ein Nutzerhinweis oder Screenshot genügt nicht. `manual_paypal_enabled`, geprüfte Kontoeignung und Steuer-/Bestellbedingungen sind eigenständige Voraussetzungen; ein Adminlogin schaltet sie nicht frei. Keine Friends-&-Family-Umgehung. Siehe [MANUAL_PAYMENTS.md](MANUAL_PAYMENTS.md).
+
+## Finanzunterlagen
+
+Vor Aktivierung von `finance_enabled` müssen tatsächlicher Betreiber und erforderliche Anschrift-/Steuerangaben vollständig sein. Für jedes bediente Kundenland ist die Steuerbehandlung fachlich zu prüfen und im Finanzbereich zu hinterlegen. Eine eingetragene Kunden-USt-ID erzeugt nicht automatisch eine Steuerbefreiung.
+
+Neue Aufträge halten Betreiber, Käufer, Leistung, Gebührenversion und Beträge fest. Nach tatsächlicher Zahlungsfreigabe entstehen feste Rechnungsnummern/PDFs. Belege nicht rückwirkend umschreiben; Korrektur und Gutschrift bleiben verknüpft. Ein Erstattungsantrag führt keine Zahlung aus. Erst die tatsächlich beim Provider ausgeführte Rückzahlung mit eigener realer Referenz erfassen. Restbeträge, Teilrückzahlungen und nicht mehr nutzbare Leistungsrechte werden geprüft. Details: [FINANCE.md](FINANCE.md).
+
+## Datenschutz, Identität und Rechtstexte
+
+Löschanträge deaktivieren Konten und widerrufen Sitzungen. Vor Anonymisierung offene Verträge/Auktionen, andere Datensysteme und gesetzliche Aufbewahrung prüfen. Erhaltene Finanz-/Fallnachweise sind zweckgebunden zu behandeln; keine pauschale Sofortlöschung zusagen.
+
+Dokumentensammlung ist standardmäßig aus. Aktivierung erfordert `verification_enabled`, tatsächliche fachliche Freigabe über `verification_review_approved`, private Verschlüsselung und festgelegte `verification_retention_days`. Der technische Rahmen von 1–90 Tagen ist keine gesetzliche Erlaubnis. Einsicht verlangt Fallübernahme, konkreten Grund und kurz gültigen personengebundenen POST-Zugang. Identität und Alter getrennt entscheiden; eigene Freigabe ist gesperrt. Der Privacyworker muss zuverlässig laufen.
+
+Zwanzig deutsche Rechtsentwürfe können kontrolliert als unveröffentlichte Versionen importiert werden. Rechtsverwaltung benötigt Version, Hash, Pflichtangaben, verantwortliche Prüfung und Gültigkeitsbeginn. Neue Inhalte brauchen neue Versionen. `legal_publication_enabled` ist ein zusätzliches Gate; eine ausgefüllte Checkliste ersetzt keine tatsächliche anwaltliche Prüfung oder geprüfte Übersetzungen.
+
+## Betriebsaufgaben außerhalb der Website
+
+Geheimnisse, TLS/DNS, Mailzustellung, SSH/Firewall, lizenzgeprüfte PLZ-Importe, Migrationen und Sicherungs-/Restoreaufgaben bleiben kontrollierte Serveraufgaben. [UBUNTU_22_04.md](UBUNTU_22_04.md) enthält die Befehle und Installationsdatei. Vor Veröffentlichung die [Release-Checkliste](RELEASE_CHECKLIST.md) anhand des tatsächlichen Zielservers abarbeiten.

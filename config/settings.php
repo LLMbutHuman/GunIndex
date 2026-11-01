@@ -19,6 +19,26 @@ function site_setting_definitions(): array
         'manual_paypal_approved' => ['type'=>'boolean','default'=>'0','label'=>'Geschäftliche Zahlungen und Zahlungsbutton sind für mein Konto und diesen Zweck zulässig'],
         'manual_tax_reviewed' => ['type'=>'boolean','default'=>'0','label'=>'Steuerbehandlung und Bestellbedingungen sind fachlich geprüft'],
         'manual_tax_bps' => ['type'=>'tax','default'=>'0','label'=>'Geprüfter Umsatzsteuersatz in Basispunkten (1900 entspricht 19 %)'],
+        'business_promotions_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Premiumplätze und Händlerwerbung anbieten'],
+        'dealer_profiles_enabled'=>['type'=>'boolean','default'=>'1','label'=>'Händlerprofile erlauben'],
+        'business_reservation_minutes'=>['type'=>'integer','default'=>'1440','label'=>'Reservierungsdauer für manuelle Zahlungen (Minuten)','min_value'=>15,'max_value'=>2880],
+        'verification_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Identitätsprüfung anbieten'],
+        'verification_review_approved'=>['type'=>'boolean','default'=>'0','label'=>'Identitätsprüfung und Aufbewahrung sind fachlich freigegeben'],
+        'verification_retention_days'=>['type'=>'integer','default'=>'0','label'=>'Geprüfte Aufbewahrungsdauer der Identitätsbilder (Tage)','min_value'=>0,'max_value'=>90],
+        'privacy_contact_email'=>['type'=>'email','default'=>'','label'=>'Kontakt für Datenschutzanfragen'],
+        'legal_publication_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Explizit geprüfte Rechtsdokumente veröffentlichen'],
+        'finance_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Unveränderliche Rechnungsdokumente ausstellen'],
+        'operator_legal_name'=>['type'=>'text','default'=>'','label'=>'Rechtlicher Betreibername','min'=>0,'max'=>150],
+        'operator_address_line1'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Straße und Hausnummer','min'=>0,'max'=>150],
+        'operator_address_line2'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Zusatz','min'=>0,'max'=>150],
+        'operator_postcode'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Postleitzahl','min'=>0,'max'=>16],
+        'operator_city'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Ort','min'=>0,'max'=>100],
+        'operator_country'=>['type'=>'country','default'=>'DE','label'=>'Land des Betreibers'],
+        'operator_email'=>['type'=>'email','default'=>'','label'=>'Kontakt-E-Mail des Betreibers'],
+        'operator_vat_id'=>['type'=>'text','default'=>'','label'=>'Umsatzsteuer-ID (falls vorhanden)','min'=>0,'max'=>40],
+        'operator_tax_number'=>['type'=>'text','default'=>'','label'=>'Steuernummer für Rechnungen (falls erforderlich)','min'=>0,'max'=>50],
+        'operator_registration'=>['type'=>'text','default'=>'','label'=>'Registerangaben (falls erforderlich)','min'=>0,'max'=>150],
+        'invoice_prefix'=>['type'=>'code','default'=>'GI','label'=>'Rechnungsnummern-Präfix'],
         'fee_auction_listing_cents' => ['type' => 'cents', 'default' => '50', 'label' => 'Auktion einstellen'],
         'fee_bump_single_cents' => ['type' => 'cents', 'default' => '199', 'label' => 'Einzelner Bump'],
         'fee_bump_pack_cents' => ['type' => 'cents', 'default' => '499', 'label' => 'Drei Bumps'],
@@ -40,6 +60,9 @@ function site_setting_validate(string $key, mixed $value): string
         'animation' => in_array($value, ['full', 'reduced', 'off'], true),
         'color' => (bool)preg_match('/\A#[a-fA-F0-9]{6}\z/', $value),
         'email' => $value === '' || (strlen($value) <= 190 && !preg_match('/[\r\n]/', $value) && filter_var($value, FILTER_VALIDATE_EMAIL) !== false),
+        'integer' => (bool)preg_match('/\A(?:0|[1-9][0-9]{0,9})\z/', $value) && (int)$value >= $definition['min_value'] && (int)$value <= $definition['max_value'],
+        'country' => in_array($value,['DE','AT','CH','FR','BE','NL','LU','DK','PL','CZ','LI'],true),
+        'code' => (bool)preg_match('/\A[A-Z0-9][A-Z0-9-]{0,9}\z/',$value),
         'tax' => (bool)preg_match('/\A(?:0|[1-9][0-9]{0,4})\z/', $value) && (int)$value <= 10000,
         'cents' => (bool)preg_match('/\A(?:0|[1-9][0-9]{0,6})\z/', $value),
         'text' => !preg_match('/[\x00-\x1F\x7F]/u', $value)
@@ -91,6 +114,7 @@ function audit_log(PDO $pdo, int $adminId, string $action, ?int $targetId = null
 
 function settings_assert_admin(PDO $pdo, int $actorId): void
 {
+    if(function_exists('governance_assert_actor')){governance_assert_actor($pdo,$actorId,'site.manage');return;}
     $statement = $pdo->prepare('SELECT is_admin FROM users WHERE id = ? AND is_active=1');
     $statement->execute([$actorId]);
     if ((int)$statement->fetchColumn() !== 1) throw new DomainException('Diese Änderung benötigt aktuelle Adminrechte.');

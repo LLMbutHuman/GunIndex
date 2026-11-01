@@ -1,0 +1,9 @@
+[Unit]
+Description=GunIndex daily verified backup at03:15 Europe/Berlin
+[Timer]
+OnCalendar=*-*-* 03:15:00 Europe/Berlin
+RandomizedDelaySec=5m
+Persistent=true
+Unit=gunindex-backup.service
+[Install]
+WantedBy=timers.target
