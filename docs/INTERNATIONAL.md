@@ -47,8 +47,12 @@ gefiltert; Datumsgrenzen und Polnähe werden nicht fälschlich ausgeschlossen.
 `ZIP/PLZ.csv` enthält vier Semikolonspalten **ohne Header**:
 PLZ;Ort;Längengrad;Breitengrad. Manche deutschen PLZ haben verlorene führende
 Nullen, die ausschließlich im expliziten Legacy-DE-Import ergänzt werden. Die
-Datei belegt ihre Nutzungsrechte nicht. Sie wird daher nicht automatisch
-produktiv importiert. Der Betreiber muss Herkunft und zulässige Nutzung prüfen.
+Datei belegt ihre Nutzungsrechte nicht. Im Fortsetzungsauftrag hat der Nutzer
+ausdrücklich erklärt, die erforderlichen Rechte an diesem Bestand zu besitzen.
+Diese Nutzerangabe gilt nur für diese Datei und ersetzt keinen unabhängigen
+Lizenznachweis für andere Datenquellen. SHA-256 und aktueller Importstatus stehen
+in [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md). Ein tatsächlicher
+Import wurde in der lokalen Windows-Sitzung noch nicht durchgeführt.
 
 Standardformat für selbst bereitgestellte, rechtmäßig nutzbare UTF-8-Dateien:
 

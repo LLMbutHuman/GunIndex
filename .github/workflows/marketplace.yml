@@ -6,11 +6,23 @@ on:
 permissions:
   contents: read
 jobs:
+  windows-preflight:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Read-only Windows prerequisite checks
+        shell: powershell
+        run: ./tests/windows_preflight_test.ps1
+      - name: Reject native Windows runtime operations
+        run: python tests/runtime_platform_test.py
   integration:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Runtime platform guard
+        run: python3 tests/runtime_platform_test.py
       - name: Isolated PHP and MySQL checks
         run: python3 tests/environment.py test
       - name: Audit locked PHP dependencies

@@ -26,6 +26,9 @@ node tests/browser_smoke.js
 
 Voraussetzungen und Browserwerkzeuge stehen in [TESTING.md](docs/TESTING.md). Der Webroot ist ausschließlich `public/`; Konfiguration und vertrauliche Dateien bleiben außerhalb. Die isolierte Entwicklungsumgebung verwendet PHP 8.4 mit GD/mbstring/libsodium, einen privaten MySQL-Socket und unabhängige Worker. Historische Exporte nicht ungeprüft importieren.
 
+Unter Windows zuerst die [WSL2-Vorprüfung](docs/WINDOWS_DEVELOPMENT.md) ausführen;
+den Linux-Testrunner nicht nativ in Windows starten.
+
 - [Ubuntu 22.04: Befehle und Installationsdatei](docs/UBUNTU_22_04.md), [Installation](docs/INSTALLATION.md), [Deployment](docs/DEPLOYMENT.md)
 - [Implementierungsbericht](docs/IMPLEMENTATION_REPORT.md), [Architektur](docs/ARCHITECTURE.md), [Datenbank/Migrationen](docs/DATABASE.md)
 - [Administration](docs/ADMIN_GUIDE.md), [Authentifizierung](docs/AUTH.md), [E-Mail und Benachrichtigungen](docs/EMAIL_NOTIFICATIONS.md)

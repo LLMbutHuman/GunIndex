@@ -1,5 +1,8 @@
 # Entwicklungsinstallation
 
+Windows: zuerst [WSL2 und Docker prüfen](WINDOWS_DEVELOPMENT.md).
+Die folgenden Befehle setzen eine Linux-Shell voraus.
+
 Python 3.12, Docker mit lokalem Socket und Internetzugriff für die gepinnten Images werden benötigt. Das Skript baut PHP 8.4.27 mit PDO-MySQL, GD, mbstring und DOM; libsodium/cURL gehören zur Laufzeit. TLS und Paketsignaturen bleiben aktiv. Die öffentliche System-CA wird nur als BuildKit-Secret und Laufzeit-Read-only-Datei eingebunden.
 
 ```sh

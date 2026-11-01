@@ -9,8 +9,12 @@ ENV={k:v for k,v in os.environ.items() if k not in ('DOCKER_HOST','DOCKER_CONTEX
 DB='gunindex-rebuild-db';APP='gunindex-rebuild-app';WORKER='gunindex-rebuild-worker';IMAGE='gunindex-rebuild-php:local'
 MYSQL='mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b'
 def docker(*args,capture=False,data=None):
+ if sys.platform != 'linux':
+  raise RuntimeError('This runtime requires Linux. On Windows use Ubuntu WSL2 with Docker integration; see docs/WINDOWS_DEVELOPMENT.md. No Docker action was executed.')
  return subprocess.run(DOCKER+list(args),env=ENV,input=data,check=True,stdout=subprocess.PIPE if capture else None,stderr=subprocess.PIPE if capture else None)
 def exists(name):
+ if sys.platform != 'linux':
+  raise RuntimeError('Container inspection requires Linux; see docs/WINDOWS_DEVELOPMENT.md.')
  return subprocess.run(DOCKER+['inspect',name],env=ENV,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 def private(path,body):
  fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
@@ -90,6 +94,8 @@ def test():
  finally:docker('start',WORKER,capture=True)
 if __name__=='__main__':
  parser=argparse.ArgumentParser();parser.add_argument('action',choices=['up','test','stop'],default='test',nargs='?');action=parser.parse_args().action
+ if sys.platform != 'linux':
+  parser.exit(2,'Linux runtime required: use Ubuntu WSL2 with Docker integration. See docs/WINDOWS_DEVELOPMENT.md. No services or files were changed.\n')
  if action=='up':up()
  elif action=='test':test()
  else:

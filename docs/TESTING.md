@@ -1,5 +1,18 @@
 # Tatsächlicher Testnachweis
 
+## Lokale Fortsetzung am 2026-11-01
+
+Auf Windows PowerShell 5.1 bestanden die zehn Prüfungen in
+`tests/windows_preflight_test.ps1`: WSL2-/WSL1-Unterscheidung, Ubuntu-Auswahl,
+NUL-Ausgabe, Erfolgs-/Fehlerstatus, Prozesszeitlimit und fehlendes Programm.
+`ops/check-windows.ps1 -Json` meldete erwartungsgemäß Exitcode 1:
+Git und Node erreichbar, keine bestätigte Ubuntu-WSL2-/Linux-Docker-Laufzeit.
+Python ist lokal nur als nicht ausführbarer WindowsApps-Alias vorhanden.
+Die neuen Python-Plattformtests sind in CI eingebunden, lokal noch nicht ausgeführt.
+Backend-, PHP-, DB- und Browsertests wurden in dieser Sitzung nicht ausgeführt.
+
+## Historischer Nachweis vor der lokalen Fortsetzung
+
 Der vollständige Runner `python3 tests/environment.py test` wurde auf der isolierten
 synthetischen MySQL-Datenbank ausgeführt. Er pausiert alle fünf Hintergrundworker,
 führt die Suites nacheinander aus und startet die Dienste im `finally` wieder.
