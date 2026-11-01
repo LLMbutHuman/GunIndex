@@ -31,12 +31,13 @@ ohne Befund. Python-Plattformtests ergänzt, aber lokal mangels Interpreter
 nicht ausgeführt. CI-Lauf nach Push separat beobachten. Keine aktuellen
 Anwendungs-/Browser-/Providerergebnisse behauptet.
 
-Geplanter Commit: `build: add Windows development preflight and runtime guards`.
-Git hat den Commit wegen fehlender Autorenidentität abgewiesen; Name/E-Mail
-wurden beim Nutzer angefragt und anschließend ausdrücklich vorgegeben.
-Die lokale Repository-Identität ist jetzt gesetzt; die zehn PowerShell-Prüfungen
-bestanden erneut. Commit und Push werden mit diesem Stand erneut ausgeführt.
-Push-/Release-Nachweise werden in `RELEASE_OPERATIONS.md` festgehalten.
+Commit: `56d1158ab0aa9b79db5dcc0a12fc1d08e45af249`
+(`build: add Windows development preflight and runtime guards`).
+Nach der ausdrücklichen Vorgabe von Name/E-Mail ist die lokale Git-Identität
+gesetzt. Die zehn PowerShell-Prüfungen bestanden erneut. Git bestätigte den
+Push von `1636914` auf `56d1158` ausschließlich zum Entwicklungsbranch.
+Ein erfolgreicher CI-Lauf ist damit noch nicht nachgewiesen.
+Push-/Release-Nachweise stehen in `RELEASE_OPERATIONS.md`.
 
 ### Anforderungsabgleich und konkrete Restarbeiten
 

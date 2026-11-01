@@ -14,6 +14,10 @@
   Name und E-Mail wurden anschließend vom Nutzer vorgegeben und ausschließlich
   lokal für dieses Repository gesetzt. Zehn PowerShell-Prüfungen erneut bestanden.
 - Änderungen selektiv gestaged, Auftragsdatei bleibt unversioniert.
-  Noch kein neuer Commit und kein Push; SHA nach bestätigter Sicherung ergänzen.
+- Etappe committed als `56d1158ab0aa9b79db5dcc0a12fc1d08e45af249`
+  (`build: add Windows development preflight and runtime guards`).
+- Push auf `feature/general-marketplace-rebuild` erfolgreich bestätigt:
+  `1636914..56d1158`. Keine Änderung an `main`.
+- CI-Status noch nicht geprüft; die erfolgreiche Übertragung ist kein Testnachweis.
 - Rücknahme dieser Etappe benötigt nur einen gezielten späteren Git-Revert;
   es gibt keine Datenmigration oder Volumenänderung rückgängig zu machen.
