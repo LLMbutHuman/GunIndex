@@ -85,6 +85,9 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
    const invalidNotice=await phone.request.post(origin+'/user/notifications.php',{form:{csrf_token:csrf,id:'-1'}});assert.strictEqual(invalidNotice.status(),422);assert((await invalidNotice.text()).includes('lang="'+locale+'"'));
    await phone.goto(origin+'/user/notifications.php');assert.strictEqual(await phone.locator('h1').textContent(),noticeCopy[locale][2]);
    assert(!/account\.[a-z_]+/.test(await phone.locator('main').innerText()));assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Notifications mobile overflow '+locale);
+   await phone.goto(origin+'/user/dashboard.php');assert.strictEqual(await phone.locator('html').getAttribute('lang'),locale);
+   assert((await phone.locator('h1').innerText()).includes(buyer.username));assert(!/dashboard\.[a-z_]+/.test(await phone.locator('main').innerText()));
+   assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Dashboard mobile overflow '+locale);
   }journeys.push('profile_save_and_protected_action_eight_mobile_locales');
   journeys.push('notification_preferences_and_validation_eight_mobile_locales');
   await page.goto(origin+'/');for(const width of [1440,768,390]){await page.setViewportSize({width,height:1000});await page.goto(origin+'/',{waitUntil:'networkidle'});const size=await page.evaluate(()=>({inner:innerWidth,scroll:document.documentElement.scrollWidth}));assert(size.scroll<=size.inner,'Horizontal overflow at '+width);await page.evaluate(async()=>{document.documentElement.style.scrollBehavior='auto';for(let y=0;y<document.documentElement.scrollHeight;y+=500){scrollTo(0,y);await new Promise(r=>setTimeout(r,110));}scrollTo(0,0);});await page.waitForTimeout(350);await page.screenshot({path:__dirname+'/.runtime/browser-'+width+'.png',fullPage:true});}journeys.push('responsive');

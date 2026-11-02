@@ -1,5 +1,22 @@
 # Implementierungsfortschritt
 
+## Statusaufnahme und Sicherung, 2026-11-02
+
+Benutzer priorisiert jetzt Gesamtstatus und Sicherung vor weiteren Funktionen.
+`505ffa19f0f1b5f29089cfe69435e41f655f980b`: CI `41525630270` vollständig erfolgreich
+(Windows, PHP/MySQL, Browser einschließlich neuer Profil-/Recoveryfälle,
+Internationalisierung, Accessibility, Composer-Audit).
+`ad5ed5f95386005470c15c7db2e1b5c4c8efd5a2`: gepusht, Remote-SHA bestätigt;
+CI `41526420094` noch aktiv. Keine bekannten fehlgeschlagenen Anwendungstests
+dieser Etappen zum Zeitpunkt dieses Eintrags.
+
+Die bereits begonnene Dashboard-Lokalisierung ist im Arbeitsbaum erhalten und
+nun vollständig an das feste Sprachmodul angebunden (37 Schlüssel je Sprache).
+Zehn PHP-Syntaxprüfungen, sieben Geo-/Sprachprüfungen und Node-Syntax bestanden.
+Acht mobile Dashboardprüfungen ergänzt, deren CI-Ausführung steht noch aus.
+Keine weitere Funktionsetappe begonnen. Der verbindliche Wiederaufnahmepunkt
+und die Gesamtbewertung werden in PROJECT_STATUS.md dokumentiert.
+
 ## Folgende Etappe: Sprachwahl aus E-Mail und Benachrichtigungen
 
 Commit `505ffa19f0f1b5f29089cfe69435e41f655f980b` ist auf dem richtigen Branch
