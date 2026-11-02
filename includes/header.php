@@ -14,6 +14,12 @@ $unreadNotices=$viewer?notification_unread_count($pdo,(int)$viewer['id']):0;
 $marketCountry=geo_country();$marketCountryLabels=geo_countries();
 $pageTitle = isset($pageTitle) && is_string($pageTitle) ? $pageTitle : t('Entdecken');
 $pageDescription = isset($pageDescription) && is_string($pageDescription) ? $pageDescription : $tagline;
+$seoPage = ['index'=>false, 'canonical'=>null, 'structured'=>null];
+if (function_exists('seo_page') && in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET','HEAD'], true)
+    && (http_response_code() === false || http_response_code() === 200)) {
+    $seoPage = seo_page(site_settings($pdo), (string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), $seoListing ?? null);
+}
+header('X-Robots-Tag: ' . ($seoPage['index'] ? 'index, follow' : 'noindex, nofollow'));
 if (!function_exists('ui_icon')) {
     function ui_icon(string $name, string $class = ''): string {
         $paths = [
@@ -70,6 +76,9 @@ if (!function_exists('ui_icon')) {
     <meta name="color-scheme" content="dark light">
     <title><?= h($pageTitle) ?> · <?= h($brandName) ?></title>
     <meta name="description" content="<?= h($pageDescription) ?>">
+    <meta name="robots" content="<?= $seoPage['index'] ? 'index, follow' : 'noindex, nofollow' ?>">
+    <?php if ($seoPage['canonical'] !== null): ?><link rel="canonical" href="<?= h($seoPage['canonical']) ?>"><meta property="og:url" content="<?= h($seoPage['canonical']) ?>"><?php endif; ?>
+    <?php if ($seoPage['structured'] !== null): ?><script type="application/ld+json"><?= seo_json($seoPage['structured']) ?></script><?php endif; ?>
     <meta property="og:title" content="<?= h($pageTitle . ' · ' . $brandName) ?>">
     <meta property="og:description" content="<?= h($pageDescription) ?>">
     <meta property="og:type" content="website">

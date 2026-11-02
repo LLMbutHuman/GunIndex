@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Bildreihenfolge',
+    'image_order.help'=>'Jede Position einmal vergeben. Position 1 ist das Titelbild. Neue Uploads werden angehängt.',
+    'image_order.image'=>'Bild {number}',
+    'image_order.position'=>'Position für Bild {number}',
+    'image_order.changed'=>'Die Bilder wurden inzwischen geändert. Bitte die Seite neu laden.',
+    'image_order.invalid'=>'Bitte jedem Bild eine unterschiedliche gültige Position zuweisen.',
     'Entdecken'=>'Entdecken',
     'Auktionen'=>'Auktionen',
     'Auktion'=>'Auktion',

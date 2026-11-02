@@ -1,5 +1,39 @@
 # Tatsächlicher Testnachweis
 
+## Zweite lokale Etappe, 2026-11-02
+
+Offizielle portable PHP-CLI 8.4.27 mit geprüfter Download-SHA-256, ausschließlich
+Syntax-/Unitprüfungen unter Windows (keine native Ausführung des Linux-Runners):
+
+| Suite | Tatsächlich bestanden |
+| --- | ---: |
+| payments_unit.php, synthetische Transportantworten | 19 |
+| auth_test.php | 17 |
+| admin_unit.php | 7 |
+| image_order_test.php | 11 |
+| seo_test.php ohne Datenbank | 11 |
+| setup_test.php, einschließlich acht Sprachfassungen | 11 |
+| geo_test.php ohne Datenbank, einschließlich globaler Katalogparität | 7 |
+| **PHP-Einzelprüfungen** | **83** |
+
+157 Projekt-PHP-Dateien bestanden `php -n -l`; `git diff --check` ohne Fehler.
+Der zwischenzeitliche Paritätsfehler während des Schreibens der Setup-Kataloge
+ist nach vollständigen acht Katalogen behoben. Der Node-PLZ-Validator bestand
+zehn synthetische Testgruppen. Auch der bestehende PHP-Importer wurde tatsächlich
+mit `--country=DE --file=ZIP/PLZ.csv --format=legacy-de --dry-run` ausgeführt:
+8.289 Einträge, null Dubletten, erwarteter SHA-256; keine DB-Änderung.
+
+Zusätzlich erstellt und syntaktisch geprüft, aber lokal noch nicht ausgeführt:
+neun Setup-DB-/HTTP-Fälle, elf Bildreihenfolge-DB-/HTTP-Fälle und die SEO-
+MySQL-Prüfung mit mehrseitigen Sitemaps und Sichtbarkeitsfiltern. Diese laufen
+im bestehenden sequenziellen Linux-Runner. WSL meldet Neustartbedarf und bei
+der Folgeprüfung unzureichenden freien Speicher; Docker ist lokal nicht nutzbar.
+Kein aktueller Browser-/Provider-/Restore-Nachweis für diese neuen Änderungen.
+
+Die vorherige erste Etappe wurde hingegen nachträglich extern bestätigt:
+[GitHub-Actions-Lauf für 754adf1](https://github.com/LLMbutHuman/GunIndex/actions/runs/41356788528)
+meldet `completed/success`. Dies ist kein Erfolg für spätere lokale Änderungen.
+
 ## Lokale Fortsetzung am 2026-11-01
 
 Auf Windows PowerShell 5.1 bestanden die zehn Prüfungen in

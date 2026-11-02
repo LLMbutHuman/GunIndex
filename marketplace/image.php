@@ -20,6 +20,6 @@ $path=$root.'/'.$key.($size==='thumb'?'-thumb':'').'.webp';
 if (is_link($path) || !is_file($path) || realpath(dirname($path))!==$root) abort_request(404,'Bild nicht gefunden.');
 header('Content-Type: image/webp');
 header('Content-Length: '.filesize($path));
-header('Cache-Control: public, max-age=3600');
+header('Cache-Control: public, max-age=0, must-revalidate');
 header('X-Content-Type-Options: nosniff');
 if ($_SERVER['REQUEST_METHOD']!=='HEAD') readfile($path);

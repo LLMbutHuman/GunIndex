@@ -29,6 +29,11 @@ Voraussetzungen und Browserwerkzeuge stehen in [TESTING.md](docs/TESTING.md). De
 Unter Windows zuerst die [WSL2-Vorprüfung](docs/WINDOWS_DEVELOPMENT.md) ausführen;
 den Linux-Testrunner nicht nativ in Windows starten.
 
+Neue Module und genaue Prüfgrenzen: [Admin-Einrichtung](docs/ADMIN_SETUP.md),
+[Bildreihenfolge](docs/IMAGE_ORDER.md), [SEO](docs/SEO.md),
+[PLZ-Quellen](docs/POSTCODE_SOURCES.md). Aktuelle Etappen stehen in
+[IMPLEMENTATION_PROGRESS.md](docs/IMPLEMENTATION_PROGRESS.md).
+
 - [Ubuntu 22.04: Befehle und Installationsdatei](docs/UBUNTU_22_04.md), [Installation](docs/INSTALLATION.md), [Deployment](docs/DEPLOYMENT.md)
 - [Implementierungsbericht](docs/IMPLEMENTATION_REPORT.md), [Architektur](docs/ARCHITECTURE.md), [Datenbank/Migrationen](docs/DATABASE.md)
 - [Administration](docs/ADMIN_GUIDE.md), [Authentifizierung](docs/AUTH.md), [E-Mail und Benachrichtigungen](docs/EMAIL_NOTIFICATIONS.md)

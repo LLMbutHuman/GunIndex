@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-01",
+  "automatic_import_enabled": false,
+  "sources": [
+    {
+      "id": "operator-de-legacy",
+      "countries": ["DE"],
+      "path": "ZIP/PLZ.csv",
+      "origin": "Operator-provided file; original publisher and observation date unknown",
+      "dataset_date": null,
+      "format": "UTF-8 semicolon CSV without header: postcode, city, longitude, latitude",
+      "sha256": "3f8a041a81caceb948ba30b285ba80281d464cd22fc4a049eba4bebdd8aab59b",
+      "bytes": 497912,
+      "validated_rows": 8289,
+      "validated_unique_postcodes": 8289,
+      "identical_duplicates": 0,
+      "padded_postcodes": 686,
+      "coordinate_bounds": {
+        "min_latitude": 47.3754137477491,
+        "max_latitude": 55.0248003984965,
+        "min_longitude": 5.97270624609937,
+        "max_longitude": 14.9841912137216
+      },
+      "rights_basis": "User assertion in master instruction: necessary rights held for this exact file",
+      "independent_license_verification": false,
+      "accuracy_verified": false,
+      "complete_country_coverage_verified": false,
+      "status": "validated_read_only_not_imported"
+    },
+    {
+      "id": "geonames-postcodes",
+      "countries_listed_in_index": ["AT", "BE", "CH", "CZ", "DK", "FR", "LI", "LU", "NL", "PL"],
+      "source_url": "https://download.geonames.org/export/zip/",
+      "documentation_url": "https://download.geonames.org/export/zip/readme.txt",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "GeoNames; link to source and license; indicate transformations",
+      "format": "UTF-8 tab-separated records; country, postcode, place, administrative fields, WGS84 latitude/longitude, accuracy",
+      "archive_timestamp_observed": "2026-11-01",
+      "dataset_date": null,
+      "sha256": null,
+      "accuracy": "Source can estimate coordinates; accuracy varies by record",
+      "constraints": ["NL.zip contains partial postcodes; NL_full.csv.zip needs separate validation", "Conflicting places per postcode require reviewed mapping; no silent averaging"],
+      "status": "researched_not_downloaded_not_imported"
+    },
+    {
+      "id": "swisstopo-localities",
+      "countries": ["CH", "LI"],
+      "source_url": "https://www.swisstopo.admin.ch/en/official-directory-of-towns-and-cities",
+      "license": "swisstopo OGD terms",
+      "license_url": "https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices",
+      "attribution": "©swisstopo",
+      "format": "WGS84 CSV available; other formats use LV95",
+      "update_frequency": "Monthly, first day of month, according to publisher",
+      "dataset_date": null,
+      "sha256": null,
+      "constraints": ["Building-address locality codes; administrative/company/postbox codes excluded", "Multiple localities can share four-digit postcode"],
+      "status": "researched_not_downloaded_not_imported"
+    },
+    {
+      "id": "gisco-postal-points",
+      "country_scope": "EU, EFTA and candidate countries; selected release coverage not yet measured",
+      "source_url": "https://ec.europa.eu/eurostat/web/gisco/geodata/administrative-units/postal-codes",
+      "license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution_as_published": "© European Union - GISCO, 2024, postal code point dataset, Licence CC-BY-SA 4.0.",
+      "format": "Select release, format and CRS explicitly on source page",
+      "dataset_date": null,
+      "sha256": null,
+      "constraints": ["Non-geographic codes excluded; omissions and errors possible", "Review ShareAlike obligations before combining and redistributing derived data"],
+      "status": "researched_not_downloaded_not_imported"
+    },
+    {
+      "id": "laposte-postcodes",
+      "country_scope": "France including overseas territories and Monaco; must map to supported countries explicitly",
+      "source_url": "https://data.laposte.fr/datasets/laposte-hexasmal",
+      "license_label_as_published": "Licence Ouverte / Open Licence",
+      "license_review_complete": false,
+      "format": "CSV export with commune centroids available",
+      "update_frequency": "Twice a year, according to publisher",
+      "last_modified_as_published": "2026-10-08",
+      "dataset_date": null,
+      "sha256": null,
+      "constraints": ["Commune centroid is not an exact postcode centroid", "Review linked license version and required attribution before redistribution"],
+      "status": "researched_not_downloaded_not_imported"
+    }
+  ]
+}

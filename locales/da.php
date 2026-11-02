@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Billedrækkefølge',
+    'image_order.help'=>'Brug hver position én gang. Position 1 er hovedbilledet. Nye uploads tilføjes til sidst.',
+    'image_order.image'=>'Billede {number}',
+    'image_order.position'=>'Placering af billede {number}',
+    'image_order.changed'=>'Billederne er blevet ændret. Genindlæs siden.',
+    'image_order.invalid'=>'Giv hvert billede en forskellig gyldig placering.',
     'Entdecken'=>'Opdag',
     'Auktionen'=>'Auktioner',
     'Auktion'=>'Auktion',

@@ -12,6 +12,7 @@ function site_setting_definitions(): array
         'secondary' => ['type' => 'color', 'default' => '#ffb86c', 'label' => 'Zweite Akzentfarbe'],
         'animation_mode' => ['type' => 'animation', 'default' => 'full', 'label' => 'Bewegung und Animationen'],
         'maintenance_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'Wartungshinweis anzeigen'],
+        'seo_indexing_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'Öffentliche Suchmaschinenindexierung freigeben'],
         'registration_enabled' => ['type' => 'boolean', 'default' => '1', 'label' => 'Neue Registrierungen erlauben'],
         'contact_email' => ['type' => 'email', 'default' => '', 'label' => 'Öffentliche Kontakt-E-Mail'],
         'manual_paypal_enabled' => ['type'=>'boolean','default'=>'0','label'=>'Manuelle PayPal-Zahlungsaufträge anbieten'],

@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     }
 }
 $q=$pdo->prepare('SELECT COUNT(*) FROM market_images WHERE listing_id=?'); $q->execute([$listingId]); $existingImageCount=(int)$q->fetchColumn();
+$q=$pdo->prepare('SELECT id,position FROM market_images WHERE listing_id=? ORDER BY position'); $q->execute([$listingId]); $existingImageRows=$q->fetchAll();
 $categories=catalog_categories($pdo,true);
 include __DIR__.'/../includes/header.php';
 ?>

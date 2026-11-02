@@ -21,6 +21,20 @@ $field=static function(string $key,string $fallback='') use ($values):string { $
 <label class="field"> <?=h(t('Veröffentlichung'))?> <select name="status"><option value="active" <?= $field('status','active')==='active'?'selected':'' ?>> <?=h(t('Veröffentlichen'))?> </option><option value="draft" <?= $field('status')==='draft'?'selected':'' ?>> <?=h(t('Als Entwurf speichern'))?> </option></select></label>
 </div>
 <?php if (($existingImageCount ?? 0)>0): ?><p class="muted"><?= (int)$existingImageCount ?><?=h(t('Produktbild(er) bereits gespeichert.'))?></p><?php endif; ?>
+<?php if (!empty($existingImageRows)): ?>
+<fieldset class="panel"><legend><?=h(t('image_order.title'))?></legend>
+<p><?=h(t('image_order.help'))?></p>
+<input type="hidden" name="image_revision" value="<?=h(image_order_revision($existingImageRows))?>">
+<div class="form-grid">
+<?php foreach($existingImageRows as $imageRow): ?>
+<label class="field"><img src="/user/listing-image.php?id=<?=(int)$listingId?>&amp;position=<?=(int)$imageRow['position']?>" alt="<?=h(t('image_order.image',['number'=>(int)$imageRow['position']+1]))?>" width="160" height="120" loading="lazy">
+<?=h(t('image_order.position',['number'=>(int)$imageRow['position']+1]))?>
+<select name="image_positions[<?=(int)$imageRow['id']?>]">
+<?php for($imagePosition=1;$imagePosition<=count($existingImageRows);$imagePosition++): ?>
+<option value="<?=$imagePosition?>" <?=$imagePosition===(int)$imageRow['position']+1?'selected':''?>><?=$imagePosition?></option>
+<?php endfor; ?></select></label>
+<?php endforeach; ?></div></fieldset>
+<?php endif; ?>
 <p class="notice"><?=h(t('Nur allgemeine unregulierte Waren. Keine Waffen, Munition oder anderen gesperrten regulierten Artikel. Normale Inserate sind kostenlos; Zusatzleistungen werden separat gebucht. Der Warenkaufpreis wird nicht über die Plattform eingezogen.'))?></p>
 <label class="check"><input type="checkbox" name="accept_rules" value="1" required <?= $field('accept_rules')==='1'?'checked':'' ?>><?=h(t('Ich bestätige die allgemeinen Produktregeln (Version general-1.0), die Richtigkeit der Angaben und meine Berechtigung zum Verkauf.'))?></label>
 <div class="button-row"><button class="button" type="submit"><?= isset($listingId)?t('Änderungen speichern'):t('Inserat speichern') ?></button><a class="button button-ghost" href="/user/dashboard.php"> <?=h(t('Zum Dashboard'))?> </a></div>

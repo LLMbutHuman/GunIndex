@@ -185,6 +185,11 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             $q=$pdo->prepare('SELECT COUNT(*) FROM market_images WHERE listing_id=?');
             $q->execute([$listingId]);
             $existingImages=(int)$q->fetchColumn();
+            if (array_key_exists('image_positions',$input)) {
+                if (!is_array($input['image_positions'])) throw new InvalidArgumentException(t('image_order.invalid'));
+                image_order_apply($pdo,$listingId,$input['image_positions'],$input['image_revision']??null);
+                if (function_exists('audit_log')) audit_log($pdo,$sellerId,'listing.images_order_saved',$listingId,['positions'=>$input['image_positions']]);
+            }
         }
         $prepared = market_prepare_images($files, $existingImages);
         $ends = $data['type'] === 'auction' && $data['status'] === 'active' ? gmdate('Y-m-d H:i:s', time()+$data['duration_days']*86400) : null;

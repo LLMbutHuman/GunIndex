@@ -1,5 +1,23 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-02 – zweite Etappe zur CI-Prüfung
+
+Bestand bei `754adf1` erhalten. Neue Admin-Setup-, Bildreihenfolge-, SEO- und
+PLZ-Prüfmodule lokal implementiert und integriert. 83 PHP-Unitprüfungen,
+157 Syntaxprüfungen und zehn Node-PLZ-Testgruppen bestanden. Neue DB-/HTTP-Suites
+sind im sequenziellen Linux-Runner eingebunden; deren Ergebnis steht noch aus.
+GitHub Actions bestätigt die ältere Basis `754adf1` als erfolgreich.
+
+WSL-/Ubuntu-Installation angestoßen; Windows meldete nötigen Neustart. Folgeprüfung
+scheitert an fehlendem Speicher auf C: (benötigt 1.556.019 KB, frei ca. 465.096 KB).
+Kein Neustart, keine Löschung privater Dateien und keine DB-/Volumenänderung.
+Portable offizielle PHP-CLI samt Archiv liegt ausschließlich ignoriert unter
+`tests/.runtime/tools/`; kein Schlüssel oder Werkzeug-Binary wird versioniert.
+SEO-Indexierung standardmäßig gesperrt; Zahlungsfreigaben unverändert geschlossen.
+
+Commit-/Push-SHA und aktueller CI-Nachweis werden nach bestätigter Sicherung
+ergänzt. Die gesamte Plattform ist noch nicht technisch abgenommen.
+
 ## 2026-11-01 – lokale Entwicklung
 
 - Baseline lokal/remote bestätigt: `1636914f33f0e4495b92eec1936dc54e110d7576`.

@@ -1,5 +1,61 @@
 # Implementierungsfortschritt
 
+## 2026-11-02: Fortsetzung der begonnenen zweiten Etappe
+
+Gesicherte Ausgangsbasis: `754adf167823dbaf986a39a8a35f209686d2e5be`.
+Alle begonnenen lokalen Änderungen erhalten. Die erste Etappe ist inzwischen
+auch durch [GitHub Actions 41356788528](https://github.com/LLMbutHuman/GunIndex/actions/runs/41356788528)
+für `754adf1` mit `success` bestätigt; dies gilt noch nicht für die neuen Dateien.
+
+### Laufzeit
+
+WSL-Installer meldete Installation der Virtual Machine Platform, WSL und Ubuntu
+sowie einen erforderlichen Windows-Neustart. Kein Neustart ausgelöst.
+Anschließende WSL-Prüfung außerhalb der Sandbox scheitert am Speicherplatz:
+1.556.019 KB benötigt, etwa 465.096 KB frei auf C:, MSI-Fehler 1603.
+Vor dem nächsten Versuch Platz schaffen und ausstehende Windows-Aktion
+abschließen. Keine privaten Dateien oder Volumes zum Platzgewinn gelöscht.
+Docker-/Linux-Laufzeit lokal weiterhin nicht einsatzfähig. Linux-Runner nicht
+nativ unter Windows ausgeführt; neue DB-/HTTP-Suites für CI ergänzt.
+
+Offizielle portable PHP-CLI 8.4.27-1 im ignorierten `tests/.runtime/tools/`,
+geladen von `https://downloads.php.net/~windows/releases/php-8.4.27-1-nts-Win32-vs17-x64.zip`.
+SHA-256 gegen offizielle Release-Metadaten geprüft:
+`dbae154a0a89791f36c3d48e68bae797878333e7d6cb5721e74617de59b63ab7`.
+Nur für Syntax- und datenbankfreie PHP-Prüfungen verwendet.
+
+### Neue Funktionen, vollständige Integration noch zu bestätigen
+
+- MFA-/berechtigungsgebundene Admin-Einrichtungsübersicht mit 18 tatsächlichen
+  Konfigurations-/Betriebsdiagnosen und Links zu bestehenden Einstellungen.
+  Übersetzung aller neuen Texte in acht Sprachen. SMTP-Eingabeassistent und
+  tatsächliche Testzustellung bleiben eigenständige offene Anforderungen.
+- Bildreihenfolge im Inseratsspeicherprozess: Permutations-/Revisionsprüfung,
+  Listing-Sperre, atomare Positionswechsel, Besitz-/Gebots-/Ablaufschutz und
+  private Vorschaubilder. Sechs neue Texte in acht Sprachen. MySQL-/HTTP-
+  Regression mit elf Fällen ergänzt; keine Änderung bestehender Bilddateien.
+- SEO-Grundfunktionen mit standardmäßig geschlossenem Indexierungsgate,
+  Canonicals, öffentlichen Product-Daten, robots und begrenzten Sitemapseiten.
+  Versteckte Inserate, inaktive Länder/Kategorien/Verkäufer und abgelaufene
+  Auktionen ausgeschlossen. Mehrsprachige URLs/hreflang bleiben offen.
+- Lesender PLZ-Validator, synthetische Tests und belegtes Quellenregister für
+  Nachbarländer. Keine externen Daten oder historischen Datensätze importiert.
+
+### Ausgeführte Prüfungen und nächste Schritte
+
+19 Zahlungs-/Gebühren-Unitfälle mit synthetischem Transport, 17 Auth-, sieben
+Admin-, elf Bildreihenfolge-, elf SEO-, elf Setup- und sieben Geo-Unitfälle
+bestanden: insgesamt 83 PHP-Prüfungen. Alle 157 gefundenen Projekt-PHP-Dateien
+bestanden die Syntaxprüfung. Die nach vollständiger Lokalisierung erneut
+ausgeführte globale Schlüssel-/Platzhalterparität besteht für alle acht Sprachen;
+der vorübergehende Fehler des Zwischenstands ist behoben.
+Zehn Node-PLZ-Testgruppen bestanden. Bestehender PHP-Importer real im Dry-run:
+8.289 eindeutige Einträge, null Dubletten, SHA-256 wie unten dokumentiert.
+
+Neue Suites sind im sequenziellen Runner verbunden. Fortsetzung: selektiver
+Commit/Push, CI-Ergebnisse prüfen und Fehler beheben. Keine vollständige technische Abnahme
+dieser zweiten Etappe behaupten, bevor die neuen Integrationsprüfungen bestehen.
+
 ## 2026-11-01: lokale Bestandsaufnahme und Windows-Einstieg
 
 Arbeitsgrundlage: `GunIndex_Codex_Fortsetzung.md`, vollständig gelesen; dazu

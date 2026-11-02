@@ -21,6 +21,7 @@ $imageCount = max(1, min(5, (int)($item['image_count'] ?? 0)));
 $history = $isAuction ? market_public_bid_history($pdo, (int)$id, 20) : [];
 $pageTitle = $item['title'];
 $pageDescription = substr($item['description'], 0, 160);
+$seoListing = $item;
 include __DIR__ . '/../includes/header.php';
 ?>
 <main class="page-width page detail-page"><nav class="breadcrumbs" aria-label="Brotkrumennavigation"><a href="/marketplace/index.php"> <?=h(t('Entdecken'))?> </a><?= ui_icon('chevron') ?><a href="/marketplace/search.php?category_id=<?= (int)$item['category_id'] ?>"><?= h(i18n_category($pdo,$item)) ?></a><?= ui_icon('chevron') ?><span><?= $isAuction ? t('Auktion') : t('Festpreisangebot') ?></span></nav>

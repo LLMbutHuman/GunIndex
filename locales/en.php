@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Image order',
+    'image_order.help'=>'Use each position once. Position 1 is the cover image. New uploads are appended.',
+    'image_order.image'=>'Image {number}',
+    'image_order.position'=>'Position for image {number}',
+    'image_order.changed'=>'The images have changed. Please reload the page.',
+    'image_order.invalid'=>'Please assign each image a different valid position.',
     'Entdecken'=>'Explore',
     'Auktionen'=>'Auctions',
     'Auktion'=>'Auction',

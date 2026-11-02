@@ -23,6 +23,8 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Runtime platform guard
         run: python3 tests/runtime_platform_test.py
+      - name: Read-only postcode validator regressions
+        run: node tests/postcodes_validation_test.mjs
       - name: Isolated PHP and MySQL checks
         run: python3 tests/environment.py test
       - name: Audit locked PHP dependencies

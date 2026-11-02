@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Ordine delle immagini',
+    'image_order.help'=>'Usa ogni posizione una volta. La posizione 1 è la copertina. I nuovi file vengono aggiunti in fondo.',
+    'image_order.image'=>'Immagine {number}',
+    'image_order.position'=>'Posizione dell’immagine {number}',
+    'image_order.changed'=>'Le immagini sono state modificate. Ricarica la pagina.',
+    'image_order.invalid'=>'Assegna a ogni immagine una posizione valida diversa.',
     'Entdecken'=>'Esplora',
     'Auktionen'=>'Aste',
     'Auktion'=>'Asta',

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 $navUser=current_user($pdo);$permissions=$navUser?rbac_permissions($pdo,(int)$navUser['id']):[];
 $adminLinks=[
+ '/admin/setup.php'=>['setup.ui.nav_label','site.manage'],
  '/admin/index.php'=>['Übersicht','dashboard.read'],'/admin/settings.php'=>['Marke & Website','site.manage'],'/admin/geography.php'=>['Länder & Sprachen','site.manage'],
  '/admin/categories.php'=>['Kategorien','categories.manage'],'/admin/users.php'=>['Benutzerkonten','users.manage'],'/admin/roles.php'=>['Rollen & Rechte','roles.manage'],
  '/admin/listings.php'=>['Inserate & Auktionen','content.moderate'],'/admin/ratings.php'=>['Bewertungen','content.moderate'],'/admin/moderation.php'=>['Meldungen & Beschwerden','reports.read'],

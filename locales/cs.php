@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Pořadí obrázků',
+    'image_order.help'=>'Každou pozici použijte jednou. Pozice 1 je hlavní obrázek. Nové soubory se přidají na konec.',
+    'image_order.image'=>'Obrázek {number}',
+    'image_order.position'=>'Pozice obrázku {number}',
+    'image_order.changed'=>'Obrázky byly změněny. Načtěte stránku znovu.',
+    'image_order.invalid'=>'Přiřaďte každému obrázku jinou platnou pozici.',
     'Entdecken'=>'Objevovat',
     'Auktionen'=>'Aukce',
     'Auktion'=>'Aukce',

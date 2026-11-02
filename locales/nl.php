@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Volgorde van afbeeldingen',
+    'image_order.help'=>'Gebruik elke positie eenmaal. Positie 1 is de hoofdafbeelding. Nieuwe uploads komen achteraan.',
+    'image_order.image'=>'Afbeelding {number}',
+    'image_order.position'=>'Positie van afbeelding {number}',
+    'image_order.changed'=>'De afbeeldingen zijn gewijzigd. Laad de pagina opnieuw.',
+    'image_order.invalid'=>'Geef elke afbeelding een andere geldige positie.',
     'Entdecken'=>'Ontdekken',
     'Auktionen'=>'Veilingen',
     'Auktion'=>'Veiling',

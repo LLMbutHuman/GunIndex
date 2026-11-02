@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'image_order.title'=>'Kolejność zdjęć',
+    'image_order.help'=>'Użyj każdej pozycji raz. Pozycja 1 to zdjęcie główne. Nowe pliki są dodawane na końcu.',
+    'image_order.image'=>'Zdjęcie {number}',
+    'image_order.position'=>'Pozycja zdjęcia {number}',
+    'image_order.changed'=>'Zdjęcia zostały zmienione. Odśwież stronę.',
+    'image_order.invalid'=>'Przypisz każdemu zdjęciu inną prawidłową pozycję.',
     'Entdecken'=>'Odkrywaj',
     'Auktionen'=>'Aukcje',
     'Auktion'=>'Aukcja',
