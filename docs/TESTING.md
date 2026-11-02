@@ -1,5 +1,23 @@
 # Tatsächlicher Testnachweis
 
+## Vertragsbindung, 2026-11-02: lokal geprüft, CI noch ausstehend
+
+14 Consent-Unitfälle, sieben Admin- und sieben Geo-Prüfungen (einschließlich
+globaler Sprachparität) bestanden. 179 Projekt-PHP-Dateien bestanden Syntax.
+Der Browser-Smoke-Test besteht die Node-Syntaxprüfung. Neue synthetische
+DB-/HTTP-Prüfungen testen fehlende/veraltete/manipulierte Zustimmung, getrennte
+Auftragsbelege, Idempotenz und exakte historische Downloads. Ein neuer Browserfall
+konfiguriert ein synthetisches Dokument über die Admin-Oberfläche und registriert
+ein Konto mit ausdrücklicher Versionszustimmung bei mobiler Breite. Diese neuen
+Integrations-/Browserprüfungen sind vor dem nächsten CI-Lauf noch nicht ausgeführt.
+
+## Persönliche Listen: CI bestätigt
+
+Commit `126d4008df06f95be2892a280c33cebd776c6588`, [CI 41420258463](https://github.com/LLMbutHuman/GunIndex/actions/runs/41420258463):
+beide Jobs erfolgreich. Die nachfolgend ursprünglich als ausstehend beschriebenen
+vier MySQL-Prüfungen und Browserabläufe wurden inzwischen erfolgreich ausgeführt.
+Dies ist keine Provider-, Rechts- oder vollständige Produktionsabnahme.
+
 ## Persönliche Listen, lokale Prüfung am 2026-11-02
 
 15 datenbankfreie Prüfungen in `personal_test.php` bestanden (Opt-in, Limits,

@@ -14,7 +14,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
             $service=post_string('service',24);business_scope($service);
             $listing=post_string('listing_id',20);$campaign=post_string('campaign_id',20);
             if(!ctype_digit($listing)||($campaign!==''&&!ctype_digit($campaign)))throw new InvalidArgumentException('Ungültige Angebots- oder Kampagnenkennung.');
-            $id=manual_order($pdo,(int)$user['id'],(int)$listing,$service,$key,$campaign!==''?(int)$campaign:null);
+            $id=manual_order($pdo,(int)$user['id'],(int)$listing,$service,$key,$campaign!==''?(int)$campaign:null,$_POST);
             $_SESSION['promotion_order_key']=bin2hex(random_bytes(32));redirect('/user/billing.php?order='.$id);
         }elseif($action==='start'){
             business_start_booking($pdo,(int)$user['id'],(int)post_string('booking_id',20),post_string('immediate_start')==='1');$success='Die bezahlte Platzierung wurde gestartet.';
@@ -29,6 +29,7 @@ $page=filter_var($_GET['page']??'1',FILTER_VALIDATE_INT,['options'=>['min_range'
 $q=$pdo->prepare('SELECT COUNT(*) FROM market_premium_bookings WHERE user_id=?');$q->execute([$user['id']]);$total=(int)$q->fetchColumn();$page=min($page,max(1,(int)ceil($total/25)));
 $q=$pdo->prepare('SELECT b.*,i.invoice_number,i.gross_cents,l.title FROM market_premium_bookings b JOIN market_invoices i ON i.id=b.invoice_id JOIN market_listings l ON l.id=b.listing_id WHERE b.user_id=? ORDER BY b.id DESC LIMIT 25 OFFSET ?');$q->bindValue(1,(int)$user['id'],PDO::PARAM_INT);$q->bindValue(2,($page-1)*25,PDO::PARAM_INT);$q->execute();$bookings=$q->fetchAll();
 $reason=business_reason($pdo);
+try{$contractDocuments=consent_documents($pdo,'checkout',i18n_locale());}catch(InvalidArgumentException|DomainException $e){$reason=$e->getMessage();}
 include __DIR__.'/../includes/header.php';
 ?>
 <main class="container"><div class="page-heading"><p class="eyebrow">Sichtbarkeit mit festen Grenzen</p><h1>Dein Platz im richtigen Markt.</h1><p>Getrennte Kontingente je Land und Kategorie. Werbung bleibt als „Gesponsert“ erkennbar.</p><a class="button secondary" href="/user/dealer.php"><?=h(business_label('Händlerprofil'))?> &amp; <?=h(business_label('Banner'))?></a></div>
@@ -36,6 +37,7 @@ include __DIR__.'/../includes/header.php';
 <section class="panel"><h2>Platzierung reservieren</h2><p>Kategorie-Top: höchstens drei Plätze pro Land und Kategorie. Startseite: höchstens zwei pro Land. Händlerbanner: höchstens zwei pro Land und Kategorie.</p>
 <?php if($reason!==null):?><p class="notice"><?=h($reason)?></p><?php elseif(!$listings):?><p>Du benötigst zunächst ein eigenes aktives Angebot. Händlerbanner werden zusätzlich inhaltlich geprüft.</p><?php else:?>
 <form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="order"><input type="hidden" name="order_key" value="<?=h($_SESSION['promotion_order_key'])?>">
+<?php consent_form($contractDocuments,i18n_locale());?>
 <label class="field">Eigenes Angebot<select name="listing_id" required><?php foreach($listings as $listing):?><option value="<?=(int)$listing['id']?>"><?=h($listing['title'].' · '.$listing['country_code'].' · '.$listing['category_name'])?></option><?php endforeach;?></select></label>
 <label class="field">Leistung<select name="service"><?php foreach(['category_top','home_top','banner_monthly'] as $service):$quote=fees_quote($service,null,$pdo);?><option value="<?=h($service)?>"><?=h($quote['label'].' · '.money_eur($quote['gross_cents']))?></option><?php endforeach;?></select></label>
 <label class="field">Freigegebenes Banner <small>Nur für Händlerbanner erforderlich, Land und Kategorie müssen passen.</small><select name="campaign_id"><option value="">Kein Banner</option><?php foreach($campaigns as $campaign):?><option value="<?=(int)$campaign['id']?>"><?=h($campaign['title'].' · '.$campaign['country_code'])?></option><?php endforeach;?></select></label>

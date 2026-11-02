@@ -48,6 +48,38 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
    assert.strictEqual(await page.locator('html').getAttribute('lang'),locale);assert.strictEqual(await page.locator('section[id^=setup-]').count(),18);
    assert(!/setup\.[a-z]+\./.test(await page.locator('main').innerText()),'Untranslated setup key');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Setup mobile overflow '+locale);
   }journeys.push('admin_setup_eight_mobile_locales');
+  // Configure a synthetic required document through the real protected admin UI.
+  const legalCode='browser-'+crypto.randomBytes(8).toString('hex');
+  await page.goto(origin+'/admin/legal.php');const draft=page.locator('form:has([name=action][value=create])');
+  await draft.locator('[name=code]').fill(legalCode);await draft.locator('[name=title]').fill('Synthetic browser contract');
+  await draft.locator('[name=body]').fill('Synthetic browser document. No actual legal review or production approval. '.repeat(8));
+  await Promise.all([page.waitForURL('**/admin/legal.php?id=*'),draft.locator('button[type=submit]').click()]);
+  const approval=page.locator('form:has([name=action][value=approve])');await approval.locator('[name=reviewer]').fill('Synthetic isolated browser test only');
+  await approval.locator('[name=effective_at]').fill(new Date().toISOString().slice(0,10));
+  for(let n=1;n<=5;n++)await approval.locator('[name=check_'+n+']').check();
+  await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),approval.locator('button[type=submit]').click()]);
+  await page.goto(origin+'/admin/settings.php');const originalLegalCode=await page.locator('[name=legal_registration_documents]').inputValue();
+  const originalPublication=await page.locator('input[type=checkbox][name=legal_publication_enabled]').isChecked();
+  const registrationContext=await browser.newContext({viewport:{width:390,height:844}});
+  try{
+   await page.locator('[name=legal_registration_documents]').fill(legalCode);await page.locator('input[type=checkbox][name=legal_publication_enabled]').check();
+   await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');
+   const registration=await registrationContext.newPage();monitor(registration);await registration.goto(origin+'/auth/register.php');
+   const legalCheckbox=registration.locator('[name=legal_confirm]');assert.strictEqual(await legalCheckbox.isChecked(),false);
+   const documentLink=registration.locator('a[href*="version_id="]').first();assert((await documentLink.getAttribute('href')).includes(legalCode));
+   const username='test_'+crypto.randomBytes(8).toString('hex');const password='Synthetic browser '+crypto.randomBytes(16).toString('hex');
+   await registration.locator('[name=username]').fill(username);await registration.locator('[name=email]').fill(username+'@example.invalid');
+   await registration.locator('[name=zip]').fill('10115');await registration.locator('[name=city]').fill('Synthetic city');
+   await registration.locator('[name=password]').fill(password);await registration.locator('[name=password_confirm]').fill(password);
+   assert.strictEqual(await legalCheckbox.evaluate(node=>node.checkValidity()),false);
+   assert(await registration.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Registration consent mobile overflow');
+   await legalCheckbox.check();await Promise.all([registration.waitForURL('**/user/dashboard.php'),registration.getByRole('button',{name:'Konto erstellen',exact:true}).click()]);
+   journeys.push('version_bound_registration');
+  }finally{
+   await registrationContext.close();await page.goto(origin+'/admin/settings.php');await page.locator('[name=legal_registration_documents]').fill(originalLegalCode);
+   await page.locator('input[type=checkbox][name=legal_publication_enabled]').setChecked(originalPublication);
+   await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');
+  }
   await page.goto(origin+'/admin/settings.php');const previous=await page.locator('[name=brand_name]').inputValue();
   const name='Testmarkt '+crypto.randomBytes(4).toString('hex');await page.locator('[name=brand_name]').fill(name);await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');await phone.goto(origin+'/');assert((await phone.locator('title').textContent()).includes(name));
   await page.goto(origin+'/admin/settings.php');await page.locator('[name=brand_name]').fill(previous);await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');await page.goto(origin+'/admin/categories.php');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Admin table must scroll inside its panel');await page.screenshot({path:__dirname+'/.runtime/admin-categories.png',fullPage:true});journeys.push('admin_brand_categories');

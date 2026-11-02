@@ -28,6 +28,8 @@ function site_setting_definitions(): array
         'verification_retention_days'=>['type'=>'integer','default'=>'0','label'=>'Geprüfte Aufbewahrungsdauer der Identitätsbilder (Tage)','min_value'=>0,'max_value'=>90],
         'privacy_contact_email'=>['type'=>'email','default'=>'','label'=>'Kontakt für Datenschutzanfragen'],
         'legal_publication_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Explizit geprüfte Rechtsdokumente veröffentlichen'],
+        'legal_registration_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.registration_codes','max'=>809],
+        'legal_checkout_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.checkout_codes','max'=>809],
         'finance_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Unveränderliche Rechnungsdokumente ausstellen'],
         'operator_legal_name'=>['type'=>'text','default'=>'','label'=>'Rechtlicher Betreibername','min'=>0,'max'=>150],
         'operator_address_line1'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Straße und Hausnummer','min'=>0,'max'=>150],
@@ -56,6 +58,10 @@ function site_setting_validate(string $key, mixed $value): string
         throw new InvalidArgumentException('Ungültiger Einstellungswert.');
     }
     $value = trim($value);
+    if($definition['type']==='document_codes'){
+        require_once __DIR__.'/consent.php';
+        return implode(',',consent_codes($value));
+    }
     $valid = match ($definition['type']) {
         'boolean' => in_array($value, ['0', '1'], true),
         'animation' => in_array($value, ['full', 'reduced', 'off'], true),

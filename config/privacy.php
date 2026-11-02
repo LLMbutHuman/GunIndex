@@ -159,6 +159,7 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'ratings'=>['market_ratings','(sender_id=? OR receiver_id=?)',[$userId,$userId],['id','listing_id','sender_id','receiver_id','stars','comment','status','created_at']],
             'invoices'=>['market_invoices','user_id=?',[$userId],['id','invoice_number','service_code','fee_version','gross_cents','currency','status','created_at']],
             'legal_acceptances'=>['market_legal_acceptances','user_id=?',[$userId],['id','document_id','content_hash','acceptance_type','created_at']],
+            'contract_receipts'=>['market_contract_receipts','user_id=?',[$userId],['id','scope','context_key','invoice_id','document_id','content_hash','created_at']],
         ];
         $sources += [
             'blocked_users'=>['market_user_blocks','user_id=?',[$userId],['blocked_id','created_at'],'blocked_id'],

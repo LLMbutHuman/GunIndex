@@ -148,8 +148,14 @@ function governance_decide(PDO $pdo,int $actor,int $id,string $action,string $re
 function legal_accept(PDO $pdo,int $userId,int $documentId,string $type): void
 {
     if(!in_array($type,['registration','checkout','updated_terms'],true))throw new InvalidArgumentException('Ungültige Zustimmungsart.');
-    $q=$pdo->prepare("SELECT content_hash FROM market_legal_documents WHERE id=? AND status='approved' AND effective_at<=UTC_TIMESTAMP()");$q->execute([$documentId]);$hash=$q->fetchColumn();if(!$hash)throw new DomainException('Dieses Dokument ist nicht zur Zustimmung freigegeben.');
-    $pdo->prepare('INSERT IGNORE INTO market_legal_acceptances(user_id,document_id,content_hash,acceptance_type) VALUES (?,?,?,?)')->execute([$userId,$documentId,$hash,$type]);
+    $own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();
+    try{
+        $q=$pdo->prepare("SELECT content_hash,body_text FROM market_legal_documents WHERE id=? AND status='approved' AND effective_at<=UTC_TIMESTAMP() FOR SHARE");$q->execute([$documentId]);$document=$q->fetch();if(!$document||!hash_equals(hash('sha256',$document['body_text']),$document['content_hash']))throw new DomainException('Dieses Dokument ist nicht zur Zustimmung freigegeben.');$hash=$document['content_hash'];
+        $q=$pdo->prepare('SELECT content_hash FROM market_legal_acceptances WHERE user_id=? AND document_id=? AND acceptance_type=?');$q->execute([$userId,$documentId,$type]);$previous=$q->fetchColumn();
+        if($previous!==false&&!hash_equals($previous,$hash))throw new DomainException('Die gespeicherte Zustimmung stimmt nicht mit dieser Fassung überein.');
+        $pdo->prepare('INSERT IGNORE INTO market_legal_acceptances(user_id,document_id,content_hash,acceptance_type) VALUES (?,?,?,?)')->execute([$userId,$documentId,$hash,$type]);
+        if($own)$pdo->commit();
+    }catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
 
 function legal_create(PDO $pdo,int $actor,string $code,string $version,string $language,string $title,string $body): int

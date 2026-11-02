@@ -1,5 +1,15 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-02 – dritte Etappe gesichert, Vertragsbindung in Arbeit
+
+Persönliche Listen: `126d4008df06f95be2892a280c33cebd776c6588` gepusht,
+Remote-SHA identisch. CI `41420258463` vollständig erfolgreich einschließlich
+neuer MySQL-/Browserprüfungen. Folgeetappe implementiert dokumentgebundene
+Registrierung und bestehende Leistungsbestellungen. Migration 011 ist additiv;
+keine Bestandszustimmungen oder Gebühren werden nachträglich erfunden.
+Pflichtdokumentkonfiguration und fachliche Freigaben bleiben Betreiberaufgabe.
+Für diese neue Folgeetappe steht der vollständige CI-Nachweis noch aus.
+
 ## 2026-11-02 – zweite Etappe zur CI-Prüfung
 
 Bestand bei `754adf1` erhalten. Neue Admin-Setup-, Bildreihenfolge-, SEO- und

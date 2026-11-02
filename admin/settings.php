@@ -35,10 +35,10 @@ include __DIR__ . '/../includes/header.php';
 $groups = [
     'Marke & Startseite' => ['brand_name', 'tagline', 'hero_title', 'hero_text', 'contact_email'],
     'Farben & Bewegung' => ['accent', 'secondary', 'animation_mode'],
-    'Verfügbarkeit' => ['registration_enabled', 'maintenance_enabled'],
+    'Verfügbarkeit' => ['registration_enabled', 'maintenance_enabled','seo_indexing_enabled'],
     'Manuelle PayPal-Prüfung' => ['manual_paypal_enabled','manual_paypal_recipient','manual_paypal_approved','manual_tax_reviewed','manual_tax_bps'],
     'Regionale Geschäftsleistungen' => ['business_promotions_enabled','dealer_profiles_enabled','business_reservation_minutes'],
-    'Datenschutz & Identitätsprüfung' => ['verification_enabled','verification_review_approved','verification_retention_days','privacy_contact_email','legal_publication_enabled'],
+    'Datenschutz & Identitätsprüfung' => ['verification_enabled','verification_review_approved','verification_retention_days','privacy_contact_email','legal_publication_enabled','legal_registration_documents','legal_checkout_documents'],
     'Rechnungen & Betreiberangaben' => ['finance_enabled','operator_legal_name','operator_address_line1','operator_address_line2','operator_postcode','operator_city','operator_country','operator_email','operator_vat_id','operator_tax_number','operator_registration','invoice_prefix'],
     'Geplante Plattformpreise' => ['fee_auction_listing_cents', 'fee_bump_single_cents', 'fee_bump_pack_cents', 'fee_category_top_cents', 'fee_home_top_cents', 'fee_banner_monthly_cents'],
 ];
@@ -59,7 +59,8 @@ $groups = [
                                 <input type="hidden" name="<?= h($key) ?>" value="0"><label class="checkbox"><input type="checkbox" name="<?= h($key) ?>" value="1"<?= $values[$key] === '1' ? ' checked' : '' ?>> <?= h($definition['label']) ?></label>
                                 <?php if ($key === 'maintenance_enabled'): ?><small>Zeigt einen Hinweis. Laufende Sitzungen oder Auktionen werden nicht automatisch unterbrochen.</small><?php endif; ?>
                             <?php else: ?>
-                                <label for="setting-<?= h($key) ?>"><?= h($definition['label']) ?></label>
+                                <label for="setting-<?= h($key) ?>"><?= h(t($definition['label'])) ?></label>
+                                <?php if($definition['type']==='document_codes'):?><small><?=h(t('consent.configuration_help'))?></small><?php endif;?>
                                 <?php if ($definition['type'] === 'animation'): ?><select id="setting-<?= h($key) ?>" name="<?= h($key) ?>"><?php foreach (['full' => 'Lebendig', 'reduced' => 'Dezent', 'off' => 'Aus'] as $mode => $label): ?><option value="<?= h($mode) ?>"<?= $values[$key] === $mode ? ' selected' : '' ?>><?= h($label) ?></option><?php endforeach; ?></select><small>Die Systemeinstellung „Bewegung reduzieren“ hat immer Vorrang.</small>
                                 <?php elseif ($definition['type'] === 'country'): ?><select id="setting-<?= h($key) ?>" name="<?= h($key) ?>"><?php foreach (geo_countries() as $code => $label): ?><option value="<?= h($code) ?>"<?= $values[$key] === $code ? ' selected' : '' ?>><?= h($label) ?></option><?php endforeach; ?></select>
                                 <?php elseif ($definition['type'] === 'integer'): ?><input id="setting-<?= h($key) ?>" name="<?= h($key) ?>" type="number" value="<?= h($values[$key]) ?>" min="<?= (int)($definition['min_value'] ?? 0) ?>" max="<?= (int)($definition['max_value'] ?? 10000) ?>" step="1" required><small><?= $key === 'business_reservation_minutes' ? 'Reservierungsdauer in Minuten. Danach wird ein unbezahlter Platz wieder frei.' : 'Aufbewahrungsdauer in Tagen. Die Identitätsprüfung bleibt ohne geprüfte Aufbewahrungsregeln deaktiviert.' ?></small>

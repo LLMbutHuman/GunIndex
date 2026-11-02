@@ -26,3 +26,6 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 
 /* Clear keyboard/touch targets and recognizable inline authentication links. */
 .auth-shell .panel>p a{display:inline-flex;align-items:center;min-height:32px;padding:4px 2px;text-decoration:underline;text-underline-offset:3px;color:var(--ink)}
+
+/* Version-bound document forms must fit narrow account and checkout columns. */
+.contract-documents{min-width:0;max-width:100%;overflow-wrap:anywhere}.contract-documents legend{max-width:100%}

@@ -66,8 +66,16 @@ function setup_collect(PDO $pdo, int $actor): array
         'paypal_ready'=>payments_paypal_reason() === null,
         'finance_enabled'=>($settings['finance_enabled'] ?? '0') === '1',
         'legal_enabled'=>($settings['legal_publication_enabled'] ?? '0') === '1',
+        'legal_binding'=>false,
         'storage'=>true, 'workers'=>[]];
     try { $facts['database'] = (int)$pdo->query('SELECT 1')->fetchColumn() === 1; } catch (Throwable) {}
+    if($facts['legal_enabled']){
+        try{
+            $ready=true;
+            foreach(['registration','checkout'] as $scope)foreach(array_keys(i18n_locales()) as $locale){if(consent_documents($pdo,$scope,$locale)===[])$ready=false;}
+            $facts['legal_binding']=$ready;
+        }catch(Throwable){}
+    }
     try { finance_operator($pdo); $facts['operator'] = true; } catch (Throwable) {}
     try { $origin = mail_origin(); $facts['origin'] = true; $facts['https'] = str_starts_with($origin, 'https://'); } catch (Throwable) {}
     try { $facts['mail_ready'] = mail_transport_reason() === null; } catch (Throwable) {}
@@ -133,7 +141,7 @@ function setup_steps(array $facts): array
     $finance = !$yes('finance_enabled') ? 'disabled'
         : (!$yes('operator') || $count('countries_without_tax') === null || $count('countries_without_tax') > 0 ? 'error' : 'external');
     $add('finance', $finance, ['rules'=>$count('tax_countries') ?? t('setup.unknown')], '/admin/finance.php', 'finance.manage');
-    $add('legal', !$yes('legal_enabled')?'disabled':(($count('legal_approved') ?? 0)>0?'external':'error'),
+    $add('legal', !$yes('legal_enabled')?'disabled':(!$yes('legal_binding')?'missing':(($count('legal_approved') ?? 0)>0?'external':'error')),
         ['documents'=>$count('legal_approved') ?? t('setup.unknown')], '/admin/legal.php', 'legal.manage');
     $add('security', $yes('keys')&&$yes('secure_cookies')?'configured':'error', [], '/admin/users.php', 'users.manage');
     $add('storage', $yes('storage')?'configured':'error');

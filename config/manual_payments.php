@@ -11,7 +11,7 @@ function manual_payment_reason(PDO $pdo):?string {
 function manual_terms(int $quantity):string {
  return 'Bump-Guthaben: '.$quantity.' Aktivierung(en). Ein Bump pro Inserat alle 72 Stunden; verändert nur die Sortieraktualität. Keine Reichweiten- oder Verkaufsgarantie. Zahlung wird vom Betreiber anhand des tatsächlichen PayPal-Eingangs geprüft. Guthaben entsteht erst nach Prüfung und wird vom Nutzer gesondert aktiviert. Gesetzliche Verbraucherrechte bleiben bestehen. Kein vorzeitiger Leistungsbeginn wird mit der Bestellung erklärt. Version manual-bump-1.0.';
 }
-function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string $requestKey,?int $campaignId=null):int {
+function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string $requestKey,?int $campaignId=null,array $consent=[]):int {
  if(manual_payment_reason($pdo)!==null)throw new PaymentUnavailable(manual_payment_reason($pdo));
  if(!in_array($service,['bump_single','bump_pack','category_top','home_top','banner_monthly'],true)||!preg_match('/\A[a-f0-9]{64}\z/',$requestKey))throw new InvalidArgumentException('Ungültige Bestellung.');
  $listing=market_find($pdo,$listingId,false);if(!$listing||(int)$listing['seller_id']!==$userId||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict('Nur eigene aktive Angebote können beworben werden.');
@@ -24,6 +24,7 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
  try{
   $q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new PaymentConflict('Konto nicht verfügbar.');
   $q=$pdo->prepare('SELECT invoice_id FROM market_manual_orders WHERE request_key=? AND user_id=?');$q->execute([$requestKey,$userId]);$previous=$q->fetchColumn();if($previous){$pdo->commit();return(int)$previous;}
+  $contractDocuments=consent_check($pdo,'checkout',$consent,i18n_locale());
   $q=$pdo->prepare('SELECT COUNT(*) FROM market_manual_orders WHERE user_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 HOUR');$q->execute([$userId]);if((int)$q->fetchColumn()>=10)throw new PaymentConflict('Bitte später erneut bestellen. Das Stundenlimit ist erreicht.');
   $reference='GI-'.strtoupper(bin2hex(random_bytes(10)));
   $q=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,?,?,?,'issued')");$q->execute([$userId,$reference,$service,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
@@ -31,6 +32,7 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
   $q->execute([$id,$userId,$listingId,$reference,site_setting($pdo,'manual_paypal_recipient'),$quantity,$tax['net_cents'],$tax['tax_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),hash('sha256',$terms),$terms,$requestKey]);
   if($promotion)business_reserve_order($pdo,$id,$userId,$listing,$service,$campaignId);
   if(function_exists('finance_prepare_order'))finance_prepare_order($pdo,$id,$userId);
+  consent_record($pdo,$userId,'checkout',$id,$contractDocuments);
   audit_log($pdo,$userId,'payment.manual_ordered',$id,['fee_version'=>$quote['version'],'terms_hash'=>hash('sha256',$terms)]);
   $pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}

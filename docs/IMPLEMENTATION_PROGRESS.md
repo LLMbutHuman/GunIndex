@@ -83,6 +83,36 @@ Lokaler Nachweis der dritten Etappe: 15 Personal-Unitprüfungen, sieben Geo-
 Prüfungen inklusive globaler Sprachparität und 168 PHP-Syntaxprüfungen bestanden.
 Node-Syntaxprüfung des erweiterten Browsertests ebenfalls erfolgreich.
 
+Bestätigte Sicherung: `126d4008df06f95be2892a280c33cebd776c6588`, Remote identisch.
+[CI 41420258463](https://github.com/LLMbutHuman/GunIndex/actions/runs/41420258463)
+hat beide Jobs erfolgreich abgeschlossen. Die neuen vier DB-Prüfungen für
+persönliche Listen sowie Browserabläufe für Bildsortierung, Verlauf/Vergleich
+und acht mobile Setup-Sprachen sind damit tatsächlich geprüft.
+Im anschließenden Review wurde die Kartenklasse des Verlaufs auf das bestehende
+responsive `cards` korrigiert; diese Änderung gehört zur nächsten Etappe.
+
+### Vierte Etappe: Rechtsdokumentbindung als Gebührenvoraussetzung
+
+Konfigurierbare Pflichtdokumente für Registrierung und bestehende Leistungs-
+bestellungen, exakte Sprach-/ID-/Hash-Prüfung, erneute Prüfung unter Datenbank-
+sperre, atomare Konto-/Auftragsbelege und exakte Versionslinks implementiert.
+Neue additive Migration 011, eigene Belege im geschützten Datenauszug und in der
+Zahlungsauftragsansicht. Acht Übersetzungen für die neue Bedienung. Leere
+Pflichtdokumentlisten bleiben ausdrücklich „nicht eingerichtet“; keine erfundenen
+Rechtsfreigaben oder nachträglichen Zustimmungen. Setup prüft beide Vorgänge in
+allen acht Sprachen. Details und Grenzen: CONTRACT_BINDING.md.
+
+Lokal bisher: 14 Consent-Unitfälle, sieben Admin- und sieben Geo-/Sprachprüfungen
+sowie 179 PHP-Syntaxprüfungen erfolgreich. Neue DB-/HTTP-Fälle und Browserablauf
+sind ergänzt; deren tatsächliche Ausführung steht bis zum CI-Lauf noch aus.
+
+Gebührenanalyse bestätigt zusätzliche offene Abhängigkeiten: unveränderlicher
+Auftrag je Auktionsdurchlauf; Rechnungsmodell für entstandene, unbezahlte Forderungen;
+Stornoschutz bereits erbrachter Leistungen; gemeinsame idempotente Finanzbuchung
+nach automatischer Capture-/Webhook-Verifikation. Bestehende Auktionen dürfen
+ohne vorherigen Gebührenauftrag nicht rückwirkend belastet werden. Finanzsnapshots
+bei späterer Aktivierung der Rechnungsstellung müssen gesondert behandelt werden.
+
 ## 2026-11-01: lokale Bestandsaufnahme und Windows-Einstieg
 
 Arbeitsgrundlage: `GunIndex_Codex_Fortsetzung.md`, vollständig gelesen; dazu

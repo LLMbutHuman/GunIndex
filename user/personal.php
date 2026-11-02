@@ -33,7 +33,7 @@ include __DIR__.'/../includes/header.php';
 <?php if($error!==''):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?>
 <section class="panel"><h2><?=h(t('personal.recent'))?></h2>
 <form method="post"><?=csrf_field()?><input type="hidden" name="action" value="<?=$state['recent_enabled']?'disable':'enable'?>"><button class="button secondary" type="submit"><?=h(t($state['recent_enabled']?'personal.disable':'personal.enable'))?></button></form>
-<?php if($recent):?><div class="listing-grid"><?php foreach($recent as $listing):ui_listing_card($listing);endforeach;?></div>
+<?php if($recent):?><div class="cards"><?php foreach($recent as $listing):ui_listing_card($listing);endforeach;?></div>
 <form method="post"><?=csrf_field()?><input type="hidden" name="action" value="clear_recent"><button class="button secondary" type="submit"><?=h(t('personal.clear_recent'))?></button></form>
 <?php else:?><p><?=h(t('personal.empty'))?></p><?php endif;?></section>
 <section class="panel"><h2><?=h(t('personal.compare'))?></h2>
