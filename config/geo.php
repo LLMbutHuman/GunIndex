@@ -7,7 +7,7 @@ function geo_countries(): array {
 }
 function geo_country(?string $country=null): string {
     $country=$country??($_SESSION['market_country']??'DE');
-    if(!is_string($country)||!preg_match('/\A[A-Za-z]{2}\z/',$country)||!array_key_exists(strtoupper($country),geo_countries()))throw new InvalidArgumentException('Bitte ein unterstütztes Land auswählen.');
+    if(!is_string($country)||!preg_match('/\A[A-Za-z]{2}\z/',$country)||!array_key_exists(strtoupper($country),geo_countries()))throw new InvalidArgumentException(function_exists('t')?t('account.country_invalid'):'Bitte ein unterstütztes Land auswählen.');
     return strtoupper($country);
 }
 function geo_normalize_postcode(string $country,string $postal): string {

@@ -1,5 +1,12 @@
 # Tatsächlicher Testnachweis
 
+## Registrierungsübersetzungen: lokal geprüft
+
+42 Konto-Schlüssel in allen acht Sprachen vorhanden; globale Sprach-/Platzhalter-
+parität bestanden. Geänderte Registrierung besteht PHP-Syntax, erweiterte Browser-
+regression Node-Syntax. Acht neue mobile Registrierungs-/Validierungsabläufe
+ergänzt. Ausführung bis zum folgenden CI-Lauf ausstehend.
+
 ## Kontozugang in acht Sprachen – lokale Prüfung
 
 17 Auth-Prüfungen mit Sodium, sieben Geo-/Sprachprüfungen, 14 Consent-Prüfungen

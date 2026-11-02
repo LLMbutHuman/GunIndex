@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'Nieuwe registraties zijn tijdelijk uitgeschakeld.',
+    'account.registration_uploads' => 'Bij registratie worden geen documenten geaccepteerd.',
+    'account.username_invalid' => 'De gebruikersnaam moet 3–50 letters, cijfers, onderstrepingstekens of koppeltekens bevatten.',
+    'account.email_invalid' => 'Voer een geldig e-mailadres in.',
+    'account.location_invalid' => 'Voer een postcode in die bij het land hoort en een plaats.',
+    'account.locale_invalid' => 'Kies een ondersteunde taal.',
+    'account.password_mismatch' => 'De wachtwoorden komen niet overeen.',
+    'account.registration_duplicate' => 'Met deze gegevens kan geen account worden aangemaakt. Gebruik andere gegevens of meld je aan.',
+    'account.registration_failed' => 'Het account kon nu niet worden aangemaakt. Probeer het later opnieuw.',
+    'account.registration_title' => 'Registreren',
+    'account.registration_label' => 'Doe mee',
+    'account.registration_heading' => 'Eén account. Nieuwe mogelijkheden.',
+    'account.registration_privacy' => 'Voor registratie hebben we geen identiteitsdocumenten nodig.',
+    'account.password_help' => 'Minstens twaalf tekens. Een lange, unieke wachtwoordzin is geschikt.',
+    'account.already_registered' => 'Al geregistreerd?',
+    'account.country_invalid' => 'Kies een ondersteund land.',
     'account.login_error' => 'Aanmelden mislukt. Controleer je inloggegevens.',
     'account.mfa_setup' => 'Beheerderstoegang moet eerst lokaal met een tweede factor worden ingesteld.',
     'account.login_intro_label' => 'Je toegang',

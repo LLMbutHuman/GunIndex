@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'Nové registrace jsou dočasně vypnuté.',
+    'account.registration_uploads' => 'Při registraci nepřijímáme žádné dokumenty.',
+    'account.username_invalid' => 'Uživatelské jméno musí obsahovat 3–50 písmen, číslic, podtržítek nebo spojovníků.',
+    'account.email_invalid' => 'Zadejte platnou e-mailovou adresu.',
+    'account.location_invalid' => 'Zadejte poštovní směrovací číslo odpovídající zemi a obec.',
+    'account.locale_invalid' => 'Vyberte podporovaný jazyk.',
+    'account.password_mismatch' => 'Hesla se neshodují.',
+    'account.registration_duplicate' => 'S těmito údaji nelze vytvořit účet. Použijte jiné údaje nebo se přihlaste.',
+    'account.registration_failed' => 'Účet nyní nelze vytvořit. Zkuste to později.',
+    'account.registration_title' => 'Registrace',
+    'account.registration_label' => 'Přidejte se',
+    'account.registration_heading' => 'Jeden účet. Nové možnosti.',
+    'account.registration_privacy' => 'K registraci nevyžadujeme doklady totožnosti.',
+    'account.password_help' => 'Alespoň dvanáct znaků. Vhodná je dlouhá, jedinečná heslová fráze.',
+    'account.already_registered' => 'Již jste registrováni?',
+    'account.country_invalid' => 'Vyberte podporovanou zemi.',
     'account.login_error' => 'Přihlášení se nezdařilo. Zkontrolujte přihlašovací údaje.',
     'account.mfa_setup' => 'Přístup ke správě je nejprve nutné místně nastavit s druhým faktorem.',
     'account.login_intro_label' => 'Váš přístup',

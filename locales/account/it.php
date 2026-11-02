@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'Le nuove registrazioni sono temporaneamente disattivate.',
+    'account.registration_uploads' => 'Non si accettano documenti durante la registrazione.',
+    'account.username_invalid' => 'Il nome utente deve contenere 3–50 lettere, numeri, trattini bassi o trattini.',
+    'account.email_invalid' => 'Inserisci un indirizzo e-mail valido.',
+    'account.location_invalid' => 'Inserisci un codice postale adatto al paese e una città.',
+    'account.locale_invalid' => 'Seleziona una lingua supportata.',
+    'account.password_mismatch' => 'Le password non corrispondono.',
+    'account.registration_duplicate' => 'Non è possibile creare un account con questi dati. Usa dati diversi oppure accedi.',
+    'account.registration_failed' => 'Non è stato possibile creare l’account al momento. Riprova più tardi.',
+    'account.registration_title' => 'Registrazione',
+    'account.registration_label' => 'Unisciti a noi',
+    'account.registration_heading' => 'Un account. Nuove possibilità.',
+    'account.registration_privacy' => 'Non richiediamo documenti d’identità per la registrazione.',
+    'account.password_help' => 'Almeno dodici caratteri. È adatta una frase segreta lunga e unica.',
+    'account.already_registered' => 'Sei già registrato?',
+    'account.country_invalid' => 'Seleziona un paese supportato.',
     'account.login_error' => 'Accesso non riuscito. Controlla le credenziali.',
     'account.mfa_setup' => 'L’accesso amministrativo deve prima essere configurato localmente con un secondo fattore.',
     'account.login_intro_label' => 'Il tuo accesso',

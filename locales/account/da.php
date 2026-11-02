@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'Nye registreringer er midlertidigt deaktiveret.',
+    'account.registration_uploads' => 'Dokumenter accepteres ikke under registrering.',
+    'account.username_invalid' => 'Brugernavnet skal indeholde 3–50 bogstaver, tal, understregninger eller bindestreger.',
+    'account.email_invalid' => 'Indtast en gyldig e-mailadresse.',
+    'account.location_invalid' => 'Indtast et postnummer, der passer til landet, og en by.',
+    'account.locale_invalid' => 'Vælg et understøttet sprog.',
+    'account.password_mismatch' => 'Adgangskoderne stemmer ikke overens.',
+    'account.registration_duplicate' => 'Der kan ikke oprettes en konto med disse oplysninger. Brug andre oplysninger, eller log ind.',
+    'account.registration_failed' => 'Kontoen kunne ikke oprettes lige nu. Prøv igen senere.',
+    'account.registration_title' => 'Registrering',
+    'account.registration_label' => 'Vær med',
+    'account.registration_heading' => 'Én konto. Nye muligheder.',
+    'account.registration_privacy' => 'Vi kræver ikke identitetsdokumenter ved registrering.',
+    'account.password_help' => 'Mindst tolv tegn. En lang, unik adgangssætning er velegnet.',
+    'account.already_registered' => 'Allerede registreret?',
+    'account.country_invalid' => 'Vælg et understøttet land.',
     'account.login_error' => 'Login mislykkedes. Kontrollér dine loginoplysninger.',
     'account.mfa_setup' => 'Administratoradgang skal først konfigureres lokalt med en anden faktor.',
     'account.login_intro_label' => 'Din adgang',

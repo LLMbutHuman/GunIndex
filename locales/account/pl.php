@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'Nowe rejestracje są tymczasowo wyłączone.',
+    'account.registration_uploads' => 'Podczas rejestracji nie przyjmujemy dokumentów.',
+    'account.username_invalid' => 'Nazwa użytkownika musi zawierać 3–50 liter, cyfr, podkreśleń lub łączników.',
+    'account.email_invalid' => 'Wpisz prawidłowy adres e-mail.',
+    'account.location_invalid' => 'Wpisz kod pocztowy odpowiedni dla kraju oraz miejscowość.',
+    'account.locale_invalid' => 'Wybierz obsługiwany język.',
+    'account.password_mismatch' => 'Hasła nie są identyczne.',
+    'account.registration_duplicate' => 'Nie można utworzyć konta z tymi danymi. Użyj innych danych lub zaloguj się.',
+    'account.registration_failed' => 'Nie można teraz utworzyć konta. Spróbuj ponownie później.',
+    'account.registration_title' => 'Rejestracja',
+    'account.registration_label' => 'Dołącz do nas',
+    'account.registration_heading' => 'Jedno konto. Nowe możliwości.',
+    'account.registration_privacy' => 'Do rejestracji nie wymagamy dokumentów tożsamości.',
+    'account.password_help' => 'Co najmniej dwanaście znaków. Odpowiednia będzie długa, unikalna fraza hasła.',
+    'account.already_registered' => 'Masz już konto?',
+    'account.country_invalid' => 'Wybierz obsługiwany kraj.',
     'account.login_error' => 'Logowanie nie powiodło się. Sprawdź dane logowania.',
     'account.mfa_setup' => 'Dostęp administracyjny wymaga najpierw lokalnego skonfigurowania drugiego składnika.',
     'account.login_intro_label' => 'Dostęp do konta',

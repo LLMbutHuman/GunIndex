@@ -1,5 +1,21 @@
 # Implementierungsfortschritt
 
+## Registrierung: weitere Übersetzungsumsetzung
+
+Registrierungsseite, zugehörige Validierungen und Fehler in acht Sprachen
+implementiert. Die voreingestellte Kontosprache folgt jetzt der gewählten
+Oberflächensprache. Dokumente und Benutzereingaben werden nicht übersetzt.
+Der Kontokatalog umfasst jetzt 42 neue Schlüssel pro Sprache. Globale
+Schlüssel-/Platzhalterparität, PHP-Syntax der Änderung und Node-Syntax bestanden.
+Der internationale Browserlauf prüft zusätzlich alle acht Registrierungsseiten,
+die voreingestellte Sprache, eine echte ungültige Anmeldung zum Konto und mobile
+Breiten. Vollständiger CI-Nachweis für diese Registrierungserweiterung ausstehend.
+
+Login-/MFA-Lokalisierung ist bereits als `b5677bd8f15c0ee71b9e9f05d6dd0c72ca2defb4`
+gepusht (Remote-SHA bestätigt), CI `41483417303` zum Zeitpunkt dieses Eintrags
+noch in Arbeit. Wiederherstellung, E-Mail-Verifikation und Profilseiten bleiben
+im vollständigen Übersetzungsauftrag offen.
+
 ## Neue Etappe: lokalisierter Kontozugang
 
 Anmeldung und bestehende MFA-Seite vollständig auf Übersetzungsschlüssel

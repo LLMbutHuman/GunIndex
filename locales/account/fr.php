@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'Les nouvelles inscriptions sont temporairement désactivées.',
+    'account.registration_uploads' => 'Aucun document n’est accepté lors de l’inscription.',
+    'account.username_invalid' => 'Le nom d’utilisateur doit contenir 3 à 50 lettres, chiffres, traits de soulignement ou traits d’union.',
+    'account.email_invalid' => 'Veuillez saisir une adresse e-mail valide.',
+    'account.location_invalid' => 'Veuillez saisir un code postal adapté au pays et une ville.',
+    'account.locale_invalid' => 'Veuillez sélectionner une langue prise en charge.',
+    'account.password_mismatch' => 'Les mots de passe ne correspondent pas.',
+    'account.registration_duplicate' => 'Un compte ne peut pas être créé avec ces informations. Utilisez d’autres informations ou connectez-vous.',
+    'account.registration_failed' => 'Le compte n’a pas pu être créé pour le moment. Réessayez plus tard.',
+    'account.registration_title' => 'Inscription',
+    'account.registration_label' => 'Rejoignez-nous',
+    'account.registration_heading' => 'Un compte. De nouvelles possibilités.',
+    'account.registration_privacy' => 'Nous ne demandons pas de documents d’identité pour l’inscription.',
+    'account.password_help' => 'Au moins douze caractères. Une phrase de passe longue et unique convient.',
+    'account.already_registered' => 'Déjà inscrit ?',
+    'account.country_invalid' => 'Veuillez sélectionner un pays pris en charge.',
     'account.login_error' => 'Échec de la connexion. Vérifiez vos identifiants.',
     'account.mfa_setup' => 'L’accès à l’administration doit d’abord être configuré localement avec un second facteur.',
     'account.login_intro_label' => 'Votre accès',

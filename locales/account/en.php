@@ -1,6 +1,22 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.registration_unavailable' => 'New registrations are temporarily disabled.',
+    'account.registration_uploads' => 'Documents are not accepted during registration.',
+    'account.username_invalid' => 'The username must contain 3–50 letters, numbers, underscores or hyphens.',
+    'account.email_invalid' => 'Please enter a valid email address.',
+    'account.location_invalid' => 'Please enter a postal code matching the country and a city.',
+    'account.locale_invalid' => 'Please select a supported language.',
+    'account.password_mismatch' => 'The passwords do not match.',
+    'account.registration_duplicate' => 'An account cannot be created with these details. Please use different details or sign in.',
+    'account.registration_failed' => 'The account could not be created right now. Please try again later.',
+    'account.registration_title' => 'Register',
+    'account.registration_label' => 'Join us',
+    'account.registration_heading' => 'One account. New possibilities.',
+    'account.registration_privacy' => 'We do not require identity documents for registration.',
+    'account.password_help' => 'At least twelve characters. A long, unique passphrase is suitable.',
+    'account.already_registered' => 'Already registered?',
+    'account.country_invalid' => 'Please select a supported country.',
     'account.login_error' => 'Sign-in failed. Please check your credentials.',
     'account.mfa_setup' => 'Administrative access must first be configured locally with a second factor.',
     'account.login_intro_label' => 'Your account access',
