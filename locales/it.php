@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'L’ordine di pagamento non corrisponde ai dati di fatturazione salvati.',
     'image_order.title'=>'Ordine delle immagini',
     'image_order.help'=>'Usa ogni posizione una volta. La posizione 1 è la copertina. I nuovi file vengono aggiunti in fondo.',
     'image_order.image'=>'Immagine {number}',

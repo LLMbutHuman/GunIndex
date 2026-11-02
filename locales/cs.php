@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'Platební příkaz neodpovídá uloženým údajům faktury.',
     'image_order.title'=>'Pořadí obrázků',
     'image_order.help'=>'Každou pozici použijte jednou. Pozice 1 je hlavní obrázek. Nové soubory se přidají na konec.',
     'image_order.image'=>'Obrázek {number}',

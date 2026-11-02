@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/i18n.php';
 
 function finance_enabled(PDO $pdo): bool { return site_setting($pdo,'finance_enabled','0')==='1'; }
 function finance_text(array $values,string $key,int $max,bool $required=true): string {
@@ -53,12 +54,12 @@ function finance_snapshot(PDO $pdo,int $invoiceId):array {
 }
 /** Compare a previously committed contract snapshot; never reconstruct it from today's settings. */
 function finance_assert_invoice_snapshot(array $invoice,array $snapshot):void {
- foreach(['service_code','fee_version','currency'] as $key)if(($snapshot[$key]??null)!==($invoice[$key]??null))throw new PaymentConflict('Der Zahlungsauftrag stimmt nicht mit dem gespeicherten Rechnungsstand überein.');
+ foreach(['service_code','fee_version','currency'] as $key)if(($snapshot[$key]??null)!==($invoice[$key]??null))throw new PaymentConflict(t('finance.snapshot_mismatch'));
  if(($snapshot['order_reference']??null)!==($invoice['invoice_number']??null)
   ||!is_int($snapshot['gross_cents']??null)||$snapshot['gross_cents']!==(int)($invoice['gross_cents']??0)
   ||(int)($snapshot['buyer']['user_id']??0)!==(int)($invoice['user_id']??-1)
   ||!is_int($snapshot['net_cents']??null)||!is_int($snapshot['tax_cents']??null)
-  ||$snapshot['net_cents']<0||$snapshot['tax_cents']<0||$snapshot['net_cents']+$snapshot['tax_cents']!==$snapshot['gross_cents'])throw new PaymentConflict('Der Zahlungsauftrag stimmt nicht mit dem gespeicherten Rechnungsstand überein.');
+  ||$snapshot['net_cents']<0||$snapshot['tax_cents']<0||$snapshot['net_cents']+$snapshot['tax_cents']!==$snapshot['gross_cents'])throw new PaymentConflict(t('finance.snapshot_mismatch'));
 }
 function finance_assert_payable(PDO $pdo,array $invoice,string $mode):void {
  if($mode==='live'&&finance_enabled($pdo))finance_assert_invoice_snapshot($invoice,finance_snapshot($pdo,(int)$invoice['id']));

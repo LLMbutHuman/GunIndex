@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'Betalingsordren stemmer ikke overens med de gemte fakturaoplysninger.',
     'image_order.title'=>'Billedrækkefølge',
     'image_order.help'=>'Brug hver position én gang. Position 1 er hovedbilledet. Nye uploads tilføjes til sidst.',
     'image_order.image'=>'Billede {number}',

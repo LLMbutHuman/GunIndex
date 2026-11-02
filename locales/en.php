@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'The payment order does not match the saved invoice details.',
     'image_order.title'=>'Image order',
     'image_order.help'=>'Use each position once. Position 1 is the cover image. New uploads are appended.',
     'image_order.image'=>'Image {number}',

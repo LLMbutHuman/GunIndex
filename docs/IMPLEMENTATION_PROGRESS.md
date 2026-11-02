@@ -130,7 +130,18 @@ Datenbank-/Adapterfälle ergänzt, noch nicht ausgeführt. Keine echten Provider
 Weiterhin offen: Forderungsmodell/Auktionsgebühren, historische Auftragsbehandlung,
 automatische Leistungserfüllung für neue Diensttypen und externe Providerabnahme.
 
-## Historische Bestandsaufnahme vom 2026-11-01
+### Bestätigter Finanzabschluss und Parallelprüfung
+
+`699c35beb69fc29356f44cc22dc7fdd4c475fb6a` erfolgreich gepusht, Remote identisch.
+[CI 41480002310](https://github.com/LLMbutHuman/GunIndex/actions/runs/41480002310)
+vollständig erfolgreich: fünf neue Capture-/Webhook-/Finanzfälle, bestehende
+Regressionen, Browser und Accessibility. Keine externen Provideraufrufe.
+Zusätzlich nun echte Konkurrenz zwischen zwei getrennten PHP-Prozessen ergänzt;
+dieser sechste Fall steht vor dem nächsten CI-Lauf noch aus. Neue Snapshot-
+Fehlermeldung in allen acht Sprachen vorhanden, lokale Zahlungs-/Sprachtests bestanden.
+Aktueller Abgleich sämtlicher Masterpunkte: TECHNICAL_ACCEPTANCE.md.
+
+## Historischer Einstieg, 2026-11-01
 
 
 Arbeitsgrundlage: `GunIndex_Codex_Fortsetzung.md`, vollständig gelesen; dazu

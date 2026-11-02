@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'Zlecenie płatności nie odpowiada zapisanym danym faktury.',
     'image_order.title'=>'Kolejność zdjęć',
     'image_order.help'=>'Użyj każdej pozycji raz. Pozycja 1 to zdjęcie główne. Nowe pliki są dodawane na końcu.',
     'image_order.image'=>'Zdjęcie {number}',

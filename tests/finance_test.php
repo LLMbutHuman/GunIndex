@@ -65,6 +65,18 @@ function fin_request(CurlHandle $c,string $path,?array $fields=null):array{
 function fin_csrf(string $body):string{fin_assert((bool)preg_match('/name="csrf_token"\s+value="([a-f0-9]{64})"/',$body,$m));return$m[1];}
 function fin_login(CurlHandle $browser,array $user):void{[$code,$body]=fin_request($browser,'/auth/login.php');fin_assert($code===200);[$code]=fin_request($browser,'/auth/login.php',['csrf_token'=>fin_csrf($body),'login'=>$user['email'],'password'=>$user['password']]);fin_assert($code===303);}
 
+if(($argv[1]??'')==='--automatic-race'){
+ try{
+  $request=json_decode(stream_get_contents(STDIN,16001),true,12,JSON_THROW_ON_ERROR);
+  fin_assert(is_array($request)&&in_array($request['channel']??null,['capture','webhook'],true)&&is_int($request['invoice_id']??null)&&is_int($request['user_id']??null)&&is_int($request['start']??null));
+  fin_assert(is_string($request['capture']??null)&&preg_match('/\ACAPTURE[A-F0-9]{20}\z/',$request['capture'])===1);
+  $q=$pdo->prepare("SELECT 1 FROM users WHERE id=? AND full_name='Synthetic finance fixture' AND email LIKE '%@example.invalid'");$q->execute([$request['user_id']]);fin_assert((bool)$q->fetchColumn());
+  $invoice=payments_invoice($pdo,$request['invoice_id'],$request['user_id']);$q=$pdo->prepare("SELECT provider_order_id FROM market_payment_attempts WHERE invoice_id=? AND provider='paypal' AND mode='live' ORDER BY id DESC LIMIT 1");$q->execute([$invoice['id']]);$order=$q->fetchColumn();fin_assert(is_string($order)&&preg_match('/\AORDER[A-F0-9]{20}\z/',$order)===1);
+  $fixture=['invoice'=>$invoice,'order'=>$order,'capture'=>$request['capture']];$delay=$request['start']-(int)(microtime(true)*1000);fin_assert($delay>=-5000&&$delay<=5000);if($delay>0)usleep($delay*1000);
+  fin_provider_mode('live',static function()use($pdo,$request,$fixture):void{$calls=[];$client=fin_auto_client($fixture,$calls);if($request['channel']==='capture')payments_capture($pdo,$request['invoice_id'],$request['user_id'],$client);else fin_assert(payments_webhook($pdo,fin_auto_headers(),fin_auto_event($fixture),$client));});
+  echo json_encode(['status'=>fin_status($pdo,$request['invoice_id']),'document'=>fin_document_id($pdo,$request['invoice_id'])],JSON_THROW_ON_ERROR);exit;
+ }catch(Throwable $e){fwrite(STDERR,'Synthetic concurrent finance operation failed: '.get_class($e)."\n");exit(2);}
+}
 $configured=['manual_paypal_enabled'=>'1','manual_paypal_approved'=>'1','manual_paypal_recipient'=>'merchant@example.invalid','manual_tax_reviewed'=>'1','manual_tax_bps'=>'1900','finance_enabled'=>'1','operator_legal_name'=>'Synthetic fixture operator','operator_address_line1'=>'Teststraße 9','operator_address_line2'=>'No actual operator identity','operator_postcode'=>'10115','operator_city'=>'Testort','operator_country'=>'DE','operator_email'=>'operator@example.invalid','operator_vat_id'=>'SYNTHETIC-NOT-VALID','operator_tax_number'=>'','operator_registration'=>'Synthetic fixture only','invoice_prefix'=>'TEST','fee_bump_single_cents'=>'199'];
 $saved=[];$q=$pdo->prepare('SELECT setting_value FROM system_settings WHERE setting_key=?');foreach($configured as $key=>$value){$q->execute([$key]);$saved[$key]=$q->fetchColumn();}
 $taxes=$pdo->query("SELECT * FROM market_tax_rules WHERE country_code IN ('DE','AT')")->fetchAll();$country=$pdo->query("SELECT is_active FROM market_countries WHERE code='DE'")->fetchColumn();
@@ -74,6 +86,12 @@ try{
  $admin=fin_user($pdo,true);finance_save_tax($pdo,$admin['id'],'DE',1900,'Synthetic reviewed tax treatment for isolated tests only.');
  $pdo->prepare('INSERT INTO market_categories(name,slug) VALUES (?,?)')->execute(['Finance test '.bin2hex(random_bytes(5)),'finance-test-'.bin2hex(random_bytes(8))]);$category=(int)$pdo->lastInsertId();
  $tests=[
+  'concurrent_capture_and_webhook_create_exactly_one_financial_booking'=>static function()use($pdo):void{
+   $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$start=(int)(microtime(true)*1000)+1500;$children=[];
+   foreach(['capture','webhook'] as $channel){$pipes=[];$process=proc_open([PHP_BINARY,__FILE__,'--automatic-race'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);fin_assert(is_resource($process));fwrite($pipes[0],json_encode(['channel'=>$channel,'invoice_id'=>$id,'user_id'=>$user['id'],'start'=>$start,'capture'=>$fixture['capture']],JSON_THROW_ON_ERROR));fclose($pipes[0]);$children[]=[$process,$pipes];}
+   $documents=[];foreach($children as [$process,$pipes]){$body=stream_get_contents($pipes[1]);$errors=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);fin_assert(proc_close($process)===0&&$errors==='');$response=json_decode($body,true,8,JSON_THROW_ON_ERROR);fin_assert($response['status']==='paid'&&$response['document']>0);$documents[]=$response['document'];}
+   fin_assert(count(array_unique($documents))===1);$q=$pdo->prepare("SELECT COUNT(*),SUM(amount_cents) FROM market_finance_events WHERE invoice_id=? AND kind='cash_in'");$q->execute([$id]);$row=$q->fetch(PDO::FETCH_NUM);fin_assert((int)$row[0]===1&&(int)$row[1]===199);
+  },
   'automatic_capture_and_webhook_share_one_financial_booking'=>static function()use($pdo):void{fin_provider_mode('live',static function()use($pdo):void{
    $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$calls=[];$client=fin_auto_client($fixture,$calls,true,false);
    payments_capture($pdo,$id,$user['id'],$client);fin_assert(in_array('/v2/checkout/orders/'.$fixture['order'].'/capture',$calls,true));$document=fin_document_id($pdo,$id);fin_assert($document>0&&fin_status($pdo,$id)==='paid');

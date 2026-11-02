@@ -1,5 +1,22 @@
 # Tatsächlicher Testnachweis
 
+## Finanzabschluss: vollständige CI bestätigt
+
+`699c35beb69fc29356f44cc22dc7fdd4c475fb6a`, [CI 41480002310](https://github.com/LLMbutHuman/GunIndex/actions/runs/41480002310):
+Windows- und Linux-Job erfolgreich, einschließlich fünf neuer Adapter-/Datenbank-
+Finanzfälle sowie bestehender Browser-/Accessibilityprüfungen. Die nachfolgende
+zusätzliche echte Parallelprüfung gehört zum nächsten Commit und ist davon noch
+nicht erfasst. 20 lokale Zahlungs-Unitfälle und sieben Geo-/Sprachfälle bestehen
+auch nach Übersetzung der neuen Snapshot-Fehlermeldung in alle acht Sprachen.
+
+## Ergänzung: echte Parallelverarbeitung
+
+Zusätzlich zu den fünf neuen Finanzfällen ist ein sechster Test implementiert:
+getrennte PHP-Prozesse verarbeiten denselben synthetischen Capture gleichzeitig
+über Capture- und Webhook-Einstieg. Erwartet werden dieselbe Dokument-ID und
+genau eine Cash-Buchung. Native PHP-Syntaxprüfung bestanden; Linux-/MySQL-
+Ausführung dieses zusätzlichen Falls bis zum folgenden CI-Lauf noch ausstehend.
+
 ## Vertragsbindung: vollständige CI bestätigt
 
 `dc046aed7cb3232386c186ced3ff15c95d7c0713`, [CI 41478575081](https://github.com/LLMbutHuman/GunIndex/actions/runs/41478575081):

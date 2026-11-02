@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'De betaalopdracht komt niet overeen met de opgeslagen factuurgegevens.',
     'image_order.title'=>'Volgorde van afbeeldingen',
     'image_order.help'=>'Gebruik elke positie eenmaal. Positie 1 is de hoofdafbeelding. Nieuwe uploads komen achteraan.',
     'image_order.image'=>'Afbeelding {number}',

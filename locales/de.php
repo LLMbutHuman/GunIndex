@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'finance.snapshot_mismatch'=>'Der Zahlungsauftrag stimmt nicht mit dem gespeicherten Rechnungsstand überein.',
     'image_order.title'=>'Bildreihenfolge',
     'image_order.help'=>'Jede Position einmal vergeben. Position 1 ist das Titelbild. Neue Uploads werden angehängt.',
     'image_order.image'=>'Bild {number}',
