@@ -1,7 +1,28 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/i18n.php';
 
 function account_email_hash(string $email): string { return hash('sha256', strtolower($email)); }
+
+function account_supported_locale(mixed $locale): ?string
+{
+    return is_string($locale) && isset(i18n_locales()[$locale]) ? $locale : null;
+}
+
+/** Language is a display hint, never part of the token's authority. */
+function account_token_query(string $token, mixed $locale): string
+{
+    if (!preg_match('/\A[a-f0-9]{64}\z/', $token)) throw new InvalidArgumentException('Invalid account token format.');
+    return http_build_query(['token'=>$token,'locale'=>account_supported_locale($locale) ?? 'de'], '', '&', PHP_QUERY_RFC3986);
+}
+
+/** Initialize only an unset/invalid display preference; no token or account is read. */
+function account_apply_link_locale(mixed $locale): void
+{
+    if (account_supported_locale($_SESSION['locale'] ?? null) !== null) return;
+    $supported = account_supported_locale($locale);
+    if ($supported !== null) $_SESSION['locale'] = $supported;
+}
 
 /** Canonical security templates, selected by the recipient rather than sender. */
 function account_mail_text(string $locale, string $purpose): array
@@ -78,8 +99,9 @@ function account_token_request(PDO $pdo, string $email, string $purpose): void
         $token = bin2hex(random_bytes(32)); $hash = hash('sha256',$token); $seconds = $purpose === 'verify' ? 86400 : 1800;
         $query = $pdo->prepare('INSERT INTO market_auth_tokens(user_id,purpose,token_hash,email_hash,auth_version,expires_at) VALUES (?,?,?,?,?,DATE_ADD(UTC_TIMESTAMP(),INTERVAL ? SECOND))');
         $query->execute([$user['id'],$purpose,$hash,account_email_hash($user['email']),(int)$user['auth_version'],$seconds]);
-        $url = $origin . '/auth/' . ($purpose === 'verify' ? 'verify-email' : 'reset-password') . '.php?token=' . $token;
-        $copy=account_mail_text((string)($user['preferred_locale']??'de'),$purpose);
+        $locale = account_supported_locale($user['preferred_locale'] ?? null) ?? 'de';
+        $url = $origin . '/auth/' . ($purpose === 'verify' ? 'verify-email' : 'reset-password') . '.php?' . account_token_query($token, $locale);
+        $copy=account_mail_text($locale,$purpose);
         $body=$copy['body']."\n\n".$url."\n\n".$copy['footer'];
         mail_enqueue($pdo, (int)$user['id'], $user['email'], $copy['subject'], $body, 'account:'.$purpose.':'.$hash);
         if ($ownsTransaction) $pdo->commit();

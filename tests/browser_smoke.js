@@ -49,6 +49,16 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
    it:['Tutto al suo posto.','Il tuo profilo è stato salvato.','Inserisci correttamente la password attuale.'],
    de:['Alles an seinem Platz.','Dein Profil wurde gespeichert.','Bitte dein aktuelles Passwort korrekt eingeben.']
   };
+  const noticeCopy={
+   en:['You choose what reaches you.','Your preferences were saved.','Your updates.','Please select valid notification preferences.'],
+   fr:['Vous choisissez ce que vous recevez.','Vos préférences ont été enregistrées.','Vos actualités.','Veuillez choisir des préférences de notification valides.'],
+   nl:['Jij kiest wat je ontvangt.','Je instellingen zijn opgeslagen.','Je updates.','Kies geldige meldingsinstellingen.'],
+   pl:['Ty decydujesz, co otrzymujesz.','Twoje ustawienia zostały zapisane.','Twoje aktualności.','Wybierz prawidłowe ustawienia powiadomień.'],
+   cs:['Vy rozhodujete, co dostáváte.','Vaše nastavení bylo uloženo.','Vaše novinky.','Vyberte platné nastavení oznámení.'],
+   da:['Du vælger, hvad du modtager.','Dine indstillinger er gemt.','Dine nyheder.','Vælg gyldige indstillinger for notifikationer.'],
+   it:['Scegli tu cosa ricevere.','Le impostazioni sono state salvate.','Le tue novità.','Seleziona impostazioni valide per le notifiche.'],
+   de:['Du bestimmst, was ankommt.','Die Einstellungen wurden gespeichert.','Deine Neuigkeiten.','Bitte gültige Benachrichtigungseinstellungen wählen.']
+  };
   for(const [locale,copy] of Object.entries(profileCopy)){
    await phone.goto(origin+'/user/profile.php');const profileForm=phone.locator('form:has([name=action][value=save])');
    await profileForm.locator('[name=preferred_locale]').selectOption(locale);
@@ -60,7 +70,23 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
    const denied=await Promise.all([phone.waitForNavigation({waitUntil:'networkidle'}),revoke.locator('button[type=submit]').click()]);
    assert.strictEqual(denied[0].status(),422);assert.strictEqual(await phone.locator('[role=alert]').textContent(),copy[2]);
    assert(!/account\.[a-z_]+/.test(await phone.locator('main').innerText()));assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Profile mobile overflow '+locale);
+   await phone.goto(origin+'/user/notification-settings.php');assert.strictEqual(await phone.locator('h1').textContent(),noticeCopy[locale][0]);
+   const preferences=phone.locator('main form'),inapp=locale!=='en'&&locale!=='pl',mail=locale==='fr'||locale==='it';
+   await preferences.locator('input[type=checkbox][name=inapp_enabled]').setChecked(inapp);await preferences.locator('input[type=checkbox][name=mail_enabled]').setChecked(mail);
+   await Promise.all([phone.waitForNavigation({waitUntil:'networkidle'}),preferences.locator('button[type=submit]').click()]);
+   assert.strictEqual(await phone.locator('[role=status]').textContent(),noticeCopy[locale][1]);
+   assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Notification preferences mobile overflow '+locale);
+   await phone.reload();assert.strictEqual(await preferences.locator('input[type=checkbox][name=inapp_enabled]').isChecked(),inapp);assert.strictEqual(await preferences.locator('input[type=checkbox][name=mail_enabled]').isChecked(),mail);
+   const csrf=await preferences.locator('[name=csrf_token]').inputValue();
+   const invalidPreferences=await phone.request.post(origin+'/user/notification-settings.php',{form:{csrf_token:csrf,inapp_enabled:'invalid',mail_enabled:'1'}});
+   assert.strictEqual(invalidPreferences.status(),422);assert((await invalidPreferences.text()).includes(noticeCopy[locale][3]));
+   const missingCsrf=await phone.request.post(origin+'/user/notification-settings.php',{form:{inapp_enabled:'1',mail_enabled:'1'}});assert.strictEqual(missingCsrf.status(),403);
+   await phone.reload();assert.strictEqual(await preferences.locator('input[type=checkbox][name=inapp_enabled]').isChecked(),inapp);assert.strictEqual(await preferences.locator('input[type=checkbox][name=mail_enabled]').isChecked(),mail);
+   const invalidNotice=await phone.request.post(origin+'/user/notifications.php',{form:{csrf_token:csrf,id:'-1'}});assert.strictEqual(invalidNotice.status(),422);assert((await invalidNotice.text()).includes('lang="'+locale+'"'));
+   await phone.goto(origin+'/user/notifications.php');assert.strictEqual(await phone.locator('h1').textContent(),noticeCopy[locale][2]);
+   assert(!/account\.[a-z_]+/.test(await phone.locator('main').innerText()));assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Notifications mobile overflow '+locale);
   }journeys.push('profile_save_and_protected_action_eight_mobile_locales');
+  journeys.push('notification_preferences_and_validation_eight_mobile_locales');
   await page.goto(origin+'/');for(const width of [1440,768,390]){await page.setViewportSize({width,height:1000});await page.goto(origin+'/',{waitUntil:'networkidle'});const size=await page.evaluate(()=>({inner:innerWidth,scroll:document.documentElement.scrollWidth}));assert(size.scroll<=size.inner,'Horizontal overflow at '+width);await page.evaluate(async()=>{document.documentElement.style.scrollBehavior='auto';for(let y=0;y<document.documentElement.scrollHeight;y+=500){scrollTo(0,y);await new Promise(r=>setTimeout(r,110));}scrollTo(0,0);});await page.waitForTimeout(350);await page.screenshot({path:__dirname+'/.runtime/browser-'+width+'.png',fullPage:true});}journeys.push('responsive');
   await page.locator('.theme-toggle').click();const theme=await page.locator('html').getAttribute('data-theme');await page.reload();assert.strictEqual(await page.locator('html').getAttribute('data-theme'),theme);journeys.push('theme');
   await desktop.clearCookies();await login(page,admin,true);journeys.push('admin_mfa');

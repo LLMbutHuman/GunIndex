@@ -14,6 +14,8 @@ const origin='http://127.0.0.1:8081';
    await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),form.locator('button[type=submit]').click()]);
    assert.strictEqual(await page.locator('html').getAttribute('lang'),locale);assert.strictEqual(await page.locator('[name=market_country]').inputValue(),country);
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile overflow for '+locale);checks.push('locale_'+locale+'_'+country);
+   const footerCopy={de:'Ein neuer Anfang',en:'A fresh start',fr:'Un nouveau départ',nl:'Een nieuw begin',pl:'Nowy początek',cs:'Nový začátek',da:'En ny begyndelse',it:'Un nuovo inizio'};
+   assert.strictEqual(await page.locator('.footer-invite .eyebrow').textContent(),footerCopy[locale]);assert(!/shared\.[a-z_]+/.test(await page.locator('footer').innerText()));
    await page.goto(origin+'/auth/login.php',{waitUntil:'networkidle'});assert.strictEqual(await page.locator('h1').textContent(),loginCopy[locale][0]);
    await page.locator('[name=login]').fill('nonexistent-synthetic-'+locale);await page.locator('[name=password]').fill('Synthetic invalid password');
    const response=await Promise.all([page.waitForResponse(r=>r.url()===origin+'/auth/login.php'&&r.request().method()==='POST'),page.locator('main button[type=submit]').click()]);

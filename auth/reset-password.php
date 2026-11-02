@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
+account_apply_link_locale($_GET['locale'] ?? null);
 header('Referrer-Policy: no-referrer');
 $token = is_string($_GET['token']??null) ? $_GET['token'] : '';
 $error='';$success=false;

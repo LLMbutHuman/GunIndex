@@ -21,6 +21,16 @@ function am_token(PDO $pdo,array $user,string $purpose):string{
     $payload=json_decode(crypto_decrypt('mail',$cipher),true,8,JSON_THROW_ON_ERROR);am_assert((bool)preg_match('/[?&]token=([a-f0-9]{64})/',$payload['body'],$match));
     am_assert(hash_equals($hash,hash('sha256',$match[1]))&&!str_contains($cipher,$match[1]));return $match[1];
 }
+function am_mail_link(PDO $pdo,string $token,string $purpose,string $locale):string{
+    $q=$pdo->prepare('SELECT payload_ciphertext FROM market_mail_queue WHERE dedupe_key=?');$q->execute(['account:'.$purpose.':'.hash('sha256',$token)]);
+    $payload=json_decode(crypto_decrypt('mail',$q->fetchColumn()),true,8,JSON_THROW_ON_ERROR);
+    am_assert($payload['subject']===account_mail_text($locale,$purpose)['subject']);
+    am_assert((bool)preg_match('~https?://[^\s]+~',$payload['body'],$match));$parts=parse_url($match[0]);
+    am_assert($parts['scheme']==='http'&&$parts['host']==='127.0.0.1'&&(int)$parts['port']===8081);
+    parse_str($parts['query'],$query);am_assert($query===['token'=>$token,'locale'=>$locale]);
+    am_assert($parts['path']==='/auth/'.($purpose==='verify'?'verify-email':'reset-password').'.php');
+    return $parts['path'].'?'.$parts['query'];
+}
 function am_browser():CurlHandle{
     $handle=curl_init();curl_setopt_array($handle,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_COOKIEFILE=>'',CURLOPT_PROXY=>'',CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>15,CURLOPT_USERAGENT=>'GunIndex-Account-Regression']);return $handle;
 }
@@ -137,6 +147,49 @@ $tests=[
  'localized_account_mail_uses_the_recipient_language'=>static function()use($pdo):void{
     foreach(['de','en','fr','nl','pl','cs','da','it'] as $locale){$copy=account_mail_text($locale,'verify');am_assert($copy['subject']!==''&&preg_match('//u',$copy['subject'].$copy['body'].$copy['footer'])===1);}
     $user=am_user($pdo);$pdo->prepare("UPDATE users SET preferred_locale='en' WHERE id=?")->execute([$user['id']]);$token=am_token($pdo,$user,'reset');$q=$pdo->prepare('SELECT payload_ciphertext FROM market_mail_queue WHERE dedupe_key=?');$q->execute(['account:reset:'.hash('sha256',$token)]);$payload=json_decode(crypto_decrypt('mail',$q->fetchColumn()),true,8,JSON_THROW_ON_ERROR);am_assert($payload['subject']==='Reset your password'&&str_contains($payload['body'],'30 minutes'));
+ },
+ 'recipient_links_initialize_all_eight_fresh_browser_languages_without_consuming'=>static function()use($pdo):void{
+    $user=am_user($pdo);$snapshot=$pdo->prepare('SELECT password_hash,auth_version,email_verified_at,preferred_locale FROM users WHERE id=?');
+    $used=$pdo->prepare('SELECT used_at FROM market_auth_tokens WHERE token_hash=?');
+    foreach(array_keys(i18n_locales()) as $locale){
+        $pdo->prepare('UPDATE users SET preferred_locale=? WHERE id=?')->execute([$locale,$user['id']]);
+        foreach(['reset','verify'] as $purpose){
+            $token=am_token($pdo,$user,$purpose);$path=am_mail_link($pdo,$token,$purpose,$locale);$browser=am_browser();
+            $snapshot->execute([$user['id']]);$before=$snapshot->fetch();
+            try{
+                [$status,$body]=am_request($browser,$path);am_assert($status===200&&str_contains($body,'<html lang="'.$locale.'"'));
+                $heading=i18n_dictionary($locale)[$purpose==='reset'?'account.reset_heading':'account.verify_heading'];am_assert(str_contains($body,h($heading)));
+                $snapshot->execute([$user['id']]);am_assert($before===$snapshot->fetch());$used->execute([hash('sha256',$token)]);am_assert($used->fetchColumn()===null);
+                [$status,$next]=am_request($browser,'/auth/login.php');am_assert($status===200&&str_contains($next,'<html lang="'.$locale.'"'));
+            }finally{curl_close($browser);}
+        }
+    }
+ },
+ 'email_link_does_not_override_an_explicit_browser_language'=>static function()use($pdo):void{
+    $user=am_user($pdo);$pdo->prepare("UPDATE users SET preferred_locale='fr' WHERE id=?")->execute([$user['id']]);$browser=am_browser();
+    $country=$pdo->query('SELECT code FROM market_countries WHERE is_active=1 ORDER BY code LIMIT 1')->fetchColumn();am_assert(is_string($country));
+    try{
+        [$status,$body]=am_request($browser,'/auth/login.php');am_assert($status===200);
+        [$status]=am_request($browser,'/user/language.php',['csrf_token'=>am_csrf($body),'locale'=>'pl','market_country'=>$country,'return_path'=>'/auth/login.php']);am_assert($status===303);
+        foreach(['reset','verify'] as $purpose){
+            $token=am_token($pdo,$user,$purpose);$path=am_mail_link($pdo,$token,$purpose,'fr');
+            [$status,$body]=am_request($browser,$path);am_assert($status===200&&str_contains($body,'<html lang="pl"'));
+            $q=$pdo->prepare('SELECT used_at FROM market_auth_tokens WHERE token_hash=?');$q->execute([hash('sha256',$token)]);am_assert($q->fetchColumn()===null);
+        }
+        $q=$pdo->prepare('SELECT preferred_locale FROM users WHERE id=?');$q->execute([$user['id']]);am_assert($q->fetchColumn()==='fr');
+    }finally{curl_close($browser);}
+ },
+ 'legacy_array_and_unknown_link_languages_keep_default_behavior'=>static function()use($pdo):void{
+    $user=am_user($pdo);
+    foreach(['reset','verify'] as $purpose){
+        $token=am_token($pdo,$user,$purpose);$base='/auth/'.($purpose==='verify'?'verify-email':'reset-password').'.php?token='.$token;
+        foreach(['','&locale%5B%5D=fr','&locale=unknown','&locale=..%2F..%2Fetc%2Fpasswd'] as $hint){
+            $browser=am_browser();
+            try{[$status,$body]=am_request($browser,$base.$hint);am_assert($status===200&&str_contains($body,'<html lang="de"'));
+                $q=$pdo->prepare('SELECT used_at FROM market_auth_tokens WHERE token_hash=?');$q->execute([hash('sha256',$token)]);am_assert($q->fetchColumn()===null);
+            }finally{curl_close($browser);}
+        }
+    }
  },
  'verification_http_get_is_read_only_and_post_requires_csrf'=>static function()use($pdo):void{
     $user=am_user($pdo);$token=am_token($pdo,$user,'verify');$browser=am_browser();$path='/auth/verify-email.php?token='.$token;

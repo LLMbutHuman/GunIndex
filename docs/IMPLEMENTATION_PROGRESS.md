@@ -1,5 +1,32 @@
 # Implementierungsfortschritt
 
+## Folgende Etappe: Sprachwahl aus E-Mail und Benachrichtigungen
+
+Commit `505ffa19f0f1b5f29089cfe69435e41f655f980b` ist auf dem richtigen Branch
+gesichert; Remote-SHA bestätigt. CI `41525630270` läuft noch. Der frühere
+Freigabe-/Kontingentblocker ist behoben, ohne die Prüfung zu umgehen.
+
+Neu lokal umgesetzt: Verifikations-/Resetlinks enthalten die erlaubte
+Empfängersprache. Nur eine fehlende oder ungültige Session-Sprachwahl wird
+initialisiert; vorhandene bewusste Auswahl bleibt erhalten. Kein Tokenverbrauch
+oder Kontowechsel durch GET. Alte Links und manipulierte Sprachparameter sind
+weiterhin sicher behandelbar. Sieben neue reine PHP-Fälle bestanden; drei neue
+DB-/HTTP-Fälle für alle acht Sprachen sind in den vorhandenen Runner eingebunden
+und bis zur CI-Ausführung noch offen.
+
+Benachrichtigungsübersicht und -einstellungen vollständig auf 15 zusätzliche
+Konto-Schlüssel umgestellt (jetzt 97 je Sprache), einschließlich Fehlern,
+Lesestatus und Paginierung. Bestehende gespeicherte Ereignistexte werden nicht
+nachträglich umgeschrieben. Ungültige negative Benachrichtigungs-IDs werden
+abgewiesen. Browserfälle prüfen Speichern/Wiederladen der Präferenzen, CSRF,
+ungültige Eingaben und mobile Breite in allen acht Sprachen.
+
+Gemeinsamer Footer mit fünf neuen Texten je Sprache lokalisiert; individuelle
+Betreibertexte bleiben unverändert. Lokale PHP-Syntax, sieben globale Sprach-/
+Geo-Fälle und Node-Syntax bestanden. Python-Runnersyntax konnte lokal nicht
+ausgeführt werden: `python` verweist auf einen nicht eingerichteten Windows-
+Store-Alias. Keine vollständige lokale Linux-/MySQL- oder Browserprüfung behauptet.
+
 ## Kontowiederherstellung und Profil: lokaler Stand, 2026-11-02
 
 Wiederherstellung, E-Mail-Verifikation und Profil einschließlich Validierungen

@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Veuillez choisir des préférences de notification valides.',
+    'account.preferences_heading' => 'Vous choisissez ce que vous recevez.',
+    'account.preferences_saved' => 'Vos préférences ont été enregistrées.',
+    'account.inapp_notifications' => 'Afficher les notifications dans votre compte',
+    'account.email_notifications' => 'Recevoir des notifications supplémentaires par e-mail',
+    'account.notification_preferences_help' => 'Les notifications facultatives par e-mail nécessitent une adresse confirmée et un service d’envoi configuré. Les messages de sécurité nécessaires et les liens de confirmation ou de récupération explicitement demandés sont indépendants de ces préférences. Le texte des conversations privées n’est pas inclus dans les e-mails de notification.',
+    'account.notifications_link' => 'Voir vos notifications',
+    'account.notification_invalid' => 'Notification invalide.',
+    'account.notifications_heading' => 'Vos actualités.',
+    'account.notifications_empty' => 'Aucune notification pour le moment.',
+    'account.notification_new' => 'Nouveau',
+    'account.notification_read' => 'Lu',
+    'account.notification_view' => 'Voir',
+    'account.notification_mark_read' => 'Marquer comme lu',
+    'account.notification_pages' => 'Pages de notifications',
     'account.profile_action' => 'Action de profil inconnue.',
     'account.profile_location' => 'Vérifiez le code postal, la ville et la longueur du nom.',
     'account.session_changed' => 'Votre session a changé. Reconnectez-vous.',

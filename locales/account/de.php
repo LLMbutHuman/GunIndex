@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Bitte gültige Benachrichtigungseinstellungen wählen.',
+    'account.preferences_heading' => 'Du bestimmst, was ankommt.',
+    'account.preferences_saved' => 'Die Einstellungen wurden gespeichert.',
+    'account.inapp_notifications' => 'Hinweise im Konto anzeigen',
+    'account.email_notifications' => 'Zusätzliche E-Mail-Benachrichtigungen erhalten',
+    'account.notification_preferences_help' => 'Optionaler E-Mail-Versand setzt eine bestätigte Adresse und einen eingerichteten Versand voraus. Notwendige Sicherheitsnachrichten und ausdrücklich angeforderte Bestätigungs- oder Wiederherstellungslinks sind davon unabhängig. Private Chattexte werden nicht in Benachrichtigungs-E-Mails übernommen.',
+    'account.notifications_link' => 'Zu deinen Benachrichtigungen',
+    'account.notification_invalid' => 'Ungültige Benachrichtigung.',
+    'account.notifications_heading' => 'Deine Neuigkeiten.',
+    'account.notifications_empty' => 'Noch keine Benachrichtigungen vorhanden.',
+    'account.notification_new' => 'Neu',
+    'account.notification_read' => 'Gelesen',
+    'account.notification_view' => 'Ansehen',
+    'account.notification_mark_read' => 'Als gelesen markieren',
+    'account.notification_pages' => 'Benachrichtigungsseiten',
     'account.profile_action' => 'Unbekannte Profilaktion.',
     'account.profile_location' => 'Bitte Postleitzahl, Ort und Namenslänge prüfen.',
     'account.session_changed' => 'Deine Sitzung hat sich geändert. Bitte erneut anmelden.',

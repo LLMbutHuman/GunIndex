@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Wybierz prawidłowe ustawienia powiadomień.',
+    'account.preferences_heading' => 'Ty decydujesz, co otrzymujesz.',
+    'account.preferences_saved' => 'Twoje ustawienia zostały zapisane.',
+    'account.inapp_notifications' => 'Pokazuj powiadomienia na koncie',
+    'account.email_notifications' => 'Otrzymuj dodatkowe powiadomienia e-mail',
+    'account.notification_preferences_help' => 'Opcjonalne powiadomienia e-mail wymagają potwierdzonego adresu i skonfigurowanej wysyłki poczty. Niezbędne wiadomości dotyczące bezpieczeństwa oraz wyraźnie zamówione linki potwierdzające lub odzyskiwania dostępu nie zależą od tych ustawień. Treść prywatnych rozmów nie jest dołączana do powiadomień e-mail.',
+    'account.notifications_link' => 'Przejdź do powiadomień',
+    'account.notification_invalid' => 'Nieprawidłowe powiadomienie.',
+    'account.notifications_heading' => 'Twoje aktualności.',
+    'account.notifications_empty' => 'Nie ma jeszcze powiadomień.',
+    'account.notification_new' => 'Nowe',
+    'account.notification_read' => 'Przeczytane',
+    'account.notification_view' => 'Zobacz',
+    'account.notification_mark_read' => 'Oznacz jako przeczytane',
+    'account.notification_pages' => 'Strony powiadomień',
     'account.profile_action' => 'Nieznana operacja profilu.',
     'account.profile_location' => 'Sprawdź kod pocztowy, miejscowość i długość imienia i nazwiska.',
     'account.session_changed' => 'Twoja sesja uległa zmianie. Zaloguj się ponownie.',

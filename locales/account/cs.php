@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Vyberte platné nastavení oznámení.',
+    'account.preferences_heading' => 'Vy rozhodujete, co dostáváte.',
+    'account.preferences_saved' => 'Vaše nastavení bylo uloženo.',
+    'account.inapp_notifications' => 'Zobrazovat oznámení v účtu',
+    'account.email_notifications' => 'Dostávat další oznámení e-mailem',
+    'account.notification_preferences_help' => 'Volitelná e-mailová oznámení vyžadují potvrzenou adresu a nastavené odesílání pošty. Nezbytné bezpečnostní zprávy a výslovně vyžádané odkazy pro potvrzení nebo obnovení přístupu na tomto nastavení nezávisí. Text soukromých konverzací není součástí e-mailových oznámení.',
+    'account.notifications_link' => 'Přejít na oznámení',
+    'account.notification_invalid' => 'Neplatné oznámení.',
+    'account.notifications_heading' => 'Vaše novinky.',
+    'account.notifications_empty' => 'Zatím nemáte žádná oznámení.',
+    'account.notification_new' => 'Nové',
+    'account.notification_read' => 'Přečtené',
+    'account.notification_view' => 'Zobrazit',
+    'account.notification_mark_read' => 'Označit jako přečtené',
+    'account.notification_pages' => 'Stránky oznámení',
     'account.profile_action' => 'Neznámá akce profilu.',
     'account.profile_location' => 'Zkontrolujte poštovní směrovací číslo, obec a délku jména.',
     'account.session_changed' => 'Vaše relace se změnila. Přihlaste se znovu.',

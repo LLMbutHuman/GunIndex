@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Vælg gyldige indstillinger for notifikationer.',
+    'account.preferences_heading' => 'Du vælger, hvad du modtager.',
+    'account.preferences_saved' => 'Dine indstillinger er gemt.',
+    'account.inapp_notifications' => 'Vis notifikationer på din konto',
+    'account.email_notifications' => 'Modtag ekstra notifikationer via e-mail',
+    'account.notification_preferences_help' => 'Valgfrie e-mailnotifikationer kræver en bekræftet adresse og konfigureret mailafsendelse. Nødvendige sikkerhedsbeskeder og udtrykkeligt anmodede bekræftelses- eller gendannelseslinks er uafhængige af disse indstillinger. Privat chattekst medtages ikke i e-mailnotifikationer.',
+    'account.notifications_link' => 'Gå til dine notifikationer',
+    'account.notification_invalid' => 'Ugyldig notifikation.',
+    'account.notifications_heading' => 'Dine nyheder.',
+    'account.notifications_empty' => 'Ingen notifikationer endnu.',
+    'account.notification_new' => 'Ny',
+    'account.notification_read' => 'Læst',
+    'account.notification_view' => 'Vis',
+    'account.notification_mark_read' => 'Markér som læst',
+    'account.notification_pages' => 'Notifikationssider',
     'account.profile_action' => 'Ukendt profilhandling.',
     'account.profile_location' => 'Kontrollér postnummer, by og navnets længde.',
     'account.session_changed' => 'Din session er ændret. Log ind igen.',

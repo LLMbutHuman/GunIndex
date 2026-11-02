@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Seleziona impostazioni valide per le notifiche.',
+    'account.preferences_heading' => 'Scegli tu cosa ricevere.',
+    'account.preferences_saved' => 'Le impostazioni sono state salvate.',
+    'account.inapp_notifications' => 'Mostra le notifiche nel tuo account',
+    'account.email_notifications' => 'Ricevi ulteriori notifiche via e-mail',
+    'account.notification_preferences_help' => 'Le notifiche e-mail facoltative richiedono un indirizzo confermato e un servizio di invio configurato. I messaggi di sicurezza necessari e i link di conferma o recupero espressamente richiesti sono indipendenti da queste impostazioni. Il testo delle chat private non viene incluso nelle e-mail di notifica.',
+    'account.notifications_link' => 'Vai alle tue notifiche',
+    'account.notification_invalid' => 'Notifica non valida.',
+    'account.notifications_heading' => 'Le tue novità.',
+    'account.notifications_empty' => 'Non ci sono ancora notifiche.',
+    'account.notification_new' => 'Nuova',
+    'account.notification_read' => 'Letta',
+    'account.notification_view' => 'Visualizza',
+    'account.notification_mark_read' => 'Segna come letta',
+    'account.notification_pages' => 'Pagine delle notifiche',
     'account.profile_action' => 'Azione del profilo sconosciuta.',
     'account.profile_location' => 'Controlla il codice postale, la città e la lunghezza del nome.',
     'account.session_changed' => 'La sessione è cambiata. Accedi di nuovo.',

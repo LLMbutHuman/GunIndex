@@ -1,5 +1,20 @@
 # Tatsächlicher Testnachweis
 
+## Sprachwahl per E-Mail, Benachrichtigungen und Footer: lokal geprüft
+
+Sieben neue `account_link_locale_test.php`-Fälle erfolgreich; im Linux-Runner
+registriert. Drei zusätzliche DB-/HTTP-Fälle in `accounts_mail_test.php` prüfen
+echte generierte Links in frischen Sessions, bereits gewählte Sprachen und
+alte/manipulierte Parameter. Ihre Ausführung steht vor dem folgenden CI-Lauf aus.
+PHP-Syntax aller 25 neuen/geänderten PHP-Dateien und sieben Geo-/Sprachfälle
+erfolgreich. Node-Syntax beider Browserregressionen bestanden. Python-Runnersyntax
+lokal nicht ausführbar (Windows-Store-Alias ohne installierten Interpreter).
+
+Browserprüfungen ergänzt: Präferenzspeicherung und Persistenz, CSRF-Ablehnung,
+ungültige Formularwerte/Benachrichtigungs-IDs, übersetzter Footer und mobile Breite
+in acht Sprachen. Noch nicht ausgeführt. Vorherige Kontoetappe `505ffa1` ist gepusht,
+[CI 41525630270](https://github.com/LLMbutHuman/GunIndex/actions/runs/41525630270) noch aktiv.
+
 ## Kontoübersetzungen: aktueller Stand, 2026-11-02
 
 Letzter vollständiger CI-Nachweis: Registrierung `35b99fe89c07ba88b499edcf05abe0958b488ab8`,

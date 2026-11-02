@@ -1,6 +1,21 @@
 <?php
 declare(strict_types=1);
 return [
+    'account.preferences_invalid' => 'Kies geldige meldingsinstellingen.',
+    'account.preferences_heading' => 'Jij kiest wat je ontvangt.',
+    'account.preferences_saved' => 'Je instellingen zijn opgeslagen.',
+    'account.inapp_notifications' => 'Meldingen in je account tonen',
+    'account.email_notifications' => 'Extra meldingen per e-mail ontvangen',
+    'account.notification_preferences_help' => 'Optionele e-mailmeldingen vereisen een bevestigd adres en ingestelde e-mailverzending. Noodzakelijke beveiligingsberichten en uitdrukkelijk aangevraagde bevestigings- of herstellinks staan los van deze instellingen. Privéchatteksten worden niet opgenomen in meldingen per e-mail.',
+    'account.notifications_link' => 'Naar je meldingen',
+    'account.notification_invalid' => 'Ongeldige melding.',
+    'account.notifications_heading' => 'Je updates.',
+    'account.notifications_empty' => 'Er zijn nog geen meldingen.',
+    'account.notification_new' => 'Nieuw',
+    'account.notification_read' => 'Gelezen',
+    'account.notification_view' => 'Bekijken',
+    'account.notification_mark_read' => 'Markeren als gelezen',
+    'account.notification_pages' => 'Meldingspagina’s',
     'account.profile_action' => 'Onbekende profielactie.',
     'account.profile_location' => 'Controleer de postcode, plaats en lengte van de naam.',
     'account.session_changed' => 'Je sessie is gewijzigd. Meld je opnieuw aan.',
