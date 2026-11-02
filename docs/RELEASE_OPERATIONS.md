@@ -1,5 +1,14 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-02 – Vertragsbindung erfolgreich geprüft
+
+`dc046aed7cb3232386c186ced3ff15c95d7c0713` erfolgreich gepusht, Remote identisch.
+CI `41478575081` vollständig erfolgreich (Windows, Linux/MySQL/Migration,
+Vertragsfälle, Browser und Accessibility). Nächste Finanzkorrektur verbindet den
+verifizierten automatischen Zahlungseingang mit einmaliger Rechnung/Cash-Buchung;
+ihre zusätzlichen DB-Adaptertests stehen noch aus. Sämtliche Live-Gates bleiben
+unverändert geschlossen.
+
 ## 2026-11-02 – dritte Etappe gesichert, Vertragsbindung in Arbeit
 
 Persönliche Listen: `126d4008df06f95be2892a280c33cebd776c6588` gepusht,

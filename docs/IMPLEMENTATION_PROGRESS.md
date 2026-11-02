@@ -113,7 +113,25 @@ nach automatischer Capture-/Webhook-Verifikation. Bestehende Auktionen dürfen
 ohne vorherigen Gebührenauftrag nicht rückwirkend belastet werden. Finanzsnapshots
 bei späterer Aktivierung der Rechnungsstellung müssen gesondert behandelt werden.
 
-## 2026-11-01: lokale Bestandsaufnahme und Windows-Einstieg
+### Bestätigte Vertragsbindung und nächste Finanzetappe
+
+Vierte Etappe gesichert als `dc046aed7cb3232386c186ced3ff15c95d7c0713`,
+Remote-SHA identisch. [CI 41478575081](https://github.com/LLMbutHuman/GunIndex/actions/runs/41478575081)
+vollständig erfolgreich: beide Jobs, Migration 011, elf neue Vertrags-DB-/HTTP-
+Prüfungen, 14 Consent-Unitfälle, Registrierung über echte Admin-/Browserabläufe,
+bestehende Regressionen und Accessibilityprüfungen bestanden.
+
+Nächste kleine Finanzetappe: gemeinsame idempotente Rechnung/Cash-Buchung nach
+verifiziertem Capture/Webhook sowie Identitäts-/Referenz-/Tarif-/Summenbindung an
+den unveränderlichen Snapshot implementiert. Vor automatischem Live-Auftrag oder
+Capture werden fehlende/beschädigte Snapshots blockiert. Sandbox erzeugt keine
+echte Finanzbuchung. Lokal 20 Zahlungs-Unitfälle bestanden; fünf zusätzliche
+Datenbank-/Adapterfälle ergänzt, noch nicht ausgeführt. Keine echten Provideraufrufe.
+Weiterhin offen: Forderungsmodell/Auktionsgebühren, historische Auftragsbehandlung,
+automatische Leistungserfüllung für neue Diensttypen und externe Providerabnahme.
+
+## Historische Bestandsaufnahme vom 2026-11-01
+
 
 Arbeitsgrundlage: `GunIndex_Codex_Fortsetzung.md`, vollständig gelesen; dazu
 README, IMPLEMENTATION_REPORT, TESTING, RELEASE_CHECKLIST, ARCHITECTURE,

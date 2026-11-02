@@ -3,6 +3,7 @@ declare(strict_types=1);
 /** Synthetic integration/PDF/HTTP regression; never runs against a production DB. */
 if(PHP_SAPI!=='cli'||getenv('DB_DATABASE')!=='gunindex_rebuild_test'){if(PHP_SAPI!=='cli')http_response_code(404);exit(2);}
 require_once __DIR__.'/../config/bootstrap.php';
+if($pdo->query('SELECT DATABASE()')->fetchColumn()!=='gunindex_rebuild_test')exit(2);
 
 function fin_assert(bool $condition):void{if(!$condition)throw new RuntimeException('Finance assertion failed.');}
 function fin_reject(callable $operation,string $class=Throwable::class):void{try{$operation();}catch(Throwable $e){if($e instanceof $class)return;throw$e;}throw new RuntimeException('Expected financial rejection.');}
@@ -24,6 +25,36 @@ function fin_pay(PDO $pdo,int $admin,int $invoice,?string $transaction=null):str
  $q=$pdo->prepare('SELECT o.reference,i.gross_cents FROM market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id WHERE o.invoice_id=?');$q->execute([$invoice]);$order=$q->fetch();fin_assert((bool)$order);
  $transaction??='FINPAY'.strtoupper(bin2hex(random_bytes(12)));manual_review($pdo,$admin,$invoice,$transaction,$order['reference'],(int)$order['gross_cents'],'approve','Synthetic direct account verification, not an actual payment.');return$transaction;
 }
+/** Only synthetic adapters below; no network transport or provider credentials are used. */
+function fin_provider_mode(string $mode,callable $run):void{
+ $values=['PAYPAL_ENABLED'=>'1','PAYPAL_MODE'=>$mode,'PAYPAL_ACCOUNT_TYPE'=>'business','PAYPAL_BUSINESS_SCOPE'=>'general_only','PLATFORM_BILLING_APPROVED'=>'1','PAYPAL_LIVE_APPROVED'=>'1','PAYPAL_CLIENT_ID'=>'synthetic-client','PAYPAL_CLIENT_SECRET'=>'synthetic-secret','PAYPAL_MERCHANT_ID'=>'SYNTHETICMERCH','PAYPAL_WEBHOOK_ID'=>'SYNTHETICHOOK','APP_URL'=>'https://synthetic.example.invalid'];$before=[];
+ foreach($values as $key=>$value){$before[$key]=getenv($key);putenv($key.'='.$value);}try{$run();}finally{foreach($before as $key=>$value)putenv($value===false?$key:$key.'='.$value);}
+}
+function fin_auto_order(PDO $pdo,array $user,string $mode):array{
+ fin_profile($pdo,$user['id']);$pdo->beginTransaction();
+ try{$quote=fees_quote('bump_single',null,$pdo);$ref='AUTO-'.strtoupper(bin2hex(random_bytes(10)));
+  $pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,'bump_single',?,?,'issued')")->execute([$user['id'],$ref,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
+  finance_prepare_order($pdo,$id,$user['id']);$order='ORDER'.strtoupper(bin2hex(random_bytes(10)));$capture='CAPTURE'.strtoupper(bin2hex(random_bytes(10)));
+  $pdo->prepare("INSERT INTO market_payment_attempts(invoice_id,provider,status,provider_order_id,idempotency_key,mode) VALUES (?,'paypal','pending',?,?,?)")->execute([$id,$order,bin2hex(random_bytes(16)),$mode]);
+  $pdo->commit();return ['invoice'=>payments_invoice($pdo,$id,$user['id']),'order'=>$order,'capture'=>$capture];
+ }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
+}
+function fin_auto_client(array $fixture,array &$calls,bool $signature=true,bool $initiallyCompleted=true):MarketPayPal{
+ $completed=$initiallyCompleted;
+ return new MarketPayPal(payments_config(),static function($method,$url,$headers,$body)use($fixture,&$calls,$signature,&$completed):array{
+  $path=parse_url($url,PHP_URL_PATH);$calls[]=$path;
+  if($path==='/v1/oauth2/token')return ['status'=>200,'body'=>['access_token'=>'synthetic-token']];
+  if($path==='/v1/notifications/verify-webhook-signature')return ['status'=>200,'body'=>['verification_status'=>$signature?'SUCCESS':'FAILURE']];
+  if($path==='/v2/checkout/orders/'.$fixture['order'].'/capture'){$completed=true;return ['status'=>201,'body'=>['status'=>'COMPLETED']];}
+  if($path!=='/v2/checkout/orders/'.$fixture['order']||$method!=='GET')throw new RuntimeException('Unexpected synthetic provider operation.');
+  $i=$fixture['invoice'];$amount=['currency_code'=>'EUR','value'=>payments_decimal((int)$i['gross_cents'])];
+  $unit=['reference_id'=>'invoice:'.$i['id'],'custom_id'=>(string)$i['id'],'invoice_id'=>$i['invoice_number'],'payee'=>['merchant_id'=>'SYNTHETICMERCH'],'amount'=>$amount];
+  if($completed)$unit['payments']=['captures'=>[['id'=>$fixture['capture'],'status'=>'COMPLETED','final_capture'=>true,'amount'=>$amount]]];
+  return ['status'=>200,'body'=>['id'=>$fixture['order'],'intent'=>'CAPTURE','status'=>$completed?'COMPLETED':'APPROVED','purchase_units'=>[$unit]]];
+ });
+}
+function fin_auto_event(array $fixture):array{return ['id'=>'EVENT-'.strtoupper(bin2hex(random_bytes(10))),'event_type'=>'PAYMENT.CAPTURE.COMPLETED','resource'=>['id'=>$fixture['capture'],'amount'=>['currency_code'=>'EUR','value'=>payments_decimal((int)$fixture['invoice']['gross_cents'])],'supplementary_data'=>['related_ids'=>['order_id'=>$fixture['order']]]]];}
+function fin_auto_headers():array{return ['paypal-auth-algo'=>'SHA256withRSA','paypal-cert-url'=>'https://api.paypal.com/v1/notifications/certs/SYNTHETIC','paypal-transmission-id'=>'SYNTHETIC','paypal-transmission-sig'=>'SYNTHETIC','paypal-transmission-time'=>gmdate('c')];}
 function fin_status(PDO $pdo,int $invoice):string{$q=$pdo->prepare('SELECT status FROM market_invoices WHERE id=?');$q->execute([$invoice]);return(string)$q->fetchColumn();}
 function fin_document_id(PDO $pdo,int $invoice):int{$q=$pdo->prepare('SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?');$q->execute([$invoice]);return(int)$q->fetchColumn();}
 function fin_browser():CurlHandle{$c=curl_init();curl_setopt_array($c,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_COOKIEFILE=>'',CURLOPT_PROXY=>'',CURLOPT_TIMEOUT=>15,CURLOPT_CONNECTTIMEOUT=>3]);return$c;}
@@ -43,6 +74,27 @@ try{
  $admin=fin_user($pdo,true);finance_save_tax($pdo,$admin['id'],'DE',1900,'Synthetic reviewed tax treatment for isolated tests only.');
  $pdo->prepare('INSERT INTO market_categories(name,slug) VALUES (?,?)')->execute(['Finance test '.bin2hex(random_bytes(5)),'finance-test-'.bin2hex(random_bytes(8))]);$category=(int)$pdo->lastInsertId();
  $tests=[
+  'automatic_capture_and_webhook_share_one_financial_booking'=>static function()use($pdo):void{fin_provider_mode('live',static function()use($pdo):void{
+   $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$calls=[];$client=fin_auto_client($fixture,$calls,true,false);
+   payments_capture($pdo,$id,$user['id'],$client);fin_assert(in_array('/v2/checkout/orders/'.$fixture['order'].'/capture',$calls,true));$document=fin_document_id($pdo,$id);fin_assert($document>0&&fin_status($pdo,$id)==='paid');
+   $event=fin_auto_event($fixture);fin_assert(payments_webhook($pdo,fin_auto_headers(),$event,$client));fin_assert(payments_webhook($pdo,fin_auto_headers(),$event,$client));payments_capture($pdo,$id,$user['id'],$client);
+   fin_assert(fin_document_id($pdo,$id)===$document);$q=$pdo->prepare("SELECT COUNT(*),SUM(amount_cents) FROM market_finance_events WHERE invoice_id=? AND kind='cash_in'");$q->execute([$id]);$row=$q->fetch(PDO::FETCH_NUM);fin_assert((int)$row[0]===1&&(int)$row[1]===199);
+   $q=$pdo->prepare('SELECT COUNT(*) FROM market_payment_events e JOIN market_payment_attempts a ON a.id=e.attempt_id WHERE a.invoice_id=?');$q->execute([$id]);fin_assert((int)$q->fetchColumn()===2);
+  });},
+  'sandbox_confirmation_never_creates_real_invoice_or_cash_entry'=>static function()use($pdo):void{fin_provider_mode('sandbox',static function()use($pdo):void{
+   $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'sandbox');$id=(int)$fixture['invoice']['id'];$calls=[];payments_capture($pdo,$id,$user['id'],fin_auto_client($fixture,$calls));fin_assert(fin_status($pdo,$id)==='paid'&&fin_document_id($pdo,$id)===0);$q=$pdo->prepare('SELECT COUNT(*) FROM market_finance_events WHERE invoice_id=?');$q->execute([$id]);fin_assert((int)$q->fetchColumn()===0);
+  });},
+  'invalid_signature_or_amount_cannot_create_payment_or_invoice'=>static function()use($pdo):void{fin_provider_mode('live',static function()use($pdo):void{
+   $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$calls=[];$event=fin_auto_event($fixture);fin_assert(!payments_webhook($pdo,fin_auto_headers(),$event,fin_auto_client($fixture,$calls,false)));
+   $event['resource']['amount']['value']='2.00';fin_reject(fn()=>payments_webhook($pdo,fin_auto_headers(),$event,fin_auto_client($fixture,$calls)),PaymentConflict::class);fin_assert(fin_status($pdo,$id)==='issued'&&fin_document_id($pdo,$id)===0);
+  });},
+  'snapshot_tampering_blocks_capture_before_any_provider_call'=>static function()use($pdo):void{fin_provider_mode('live',static function()use($pdo):void{
+   $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$pdo->prepare('UPDATE market_invoice_snapshots SET payload_hash=? WHERE invoice_id=?')->execute([str_repeat('0',64),$id]);$calls=[];$client=fin_auto_client($fixture,$calls);fin_reject(fn()=>payments_capture($pdo,$id,$user['id'],$client),RuntimeException::class);fin_assert($calls===[]&&fin_status($pdo,$id)==='issued'&&fin_document_id($pdo,$id)===0);
+   fin_reject(fn()=>payments_webhook($pdo,fin_auto_headers(),fin_auto_event($fixture),$client),RuntimeException::class);$q=$pdo->prepare('SELECT COUNT(*) FROM market_payment_events e JOIN market_payment_attempts a ON a.id=e.attempt_id WHERE a.invoice_id=?');$q->execute([$id]);fin_assert((int)$q->fetchColumn()===0&&fin_status($pdo,$id)==='issued');
+  });},
+  'changed_invoice_amount_cannot_override_original_contract'=>static function()use($pdo):void{fin_provider_mode('live',static function()use($pdo):void{
+   $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$pdo->prepare('UPDATE market_invoices SET gross_cents=200 WHERE id=?')->execute([$id]);$calls=[];$client=fin_auto_client($fixture,$calls);fin_reject(fn()=>payments_capture($pdo,$id,$user['id'],$client),PaymentConflict::class);fin_assert($calls===[]&&fin_status($pdo,$id)==='issued');
+  });},
   'disabled_finance_never_claims_an_issued_document'=>static function()use($pdo,$admin,$category):void{
    fin_setting($pdo,'finance_enabled','0');try{$user=fin_user($pdo);$invoice=fin_order($pdo,$user,$category,false);fin_pay($pdo,$admin['id'],$invoice);fin_assert(fin_document_id($pdo,$invoice)===0&&finance_issue_invoice($pdo,$invoice)===0);}finally{fin_setting($pdo,'finance_enabled','1');}
   },

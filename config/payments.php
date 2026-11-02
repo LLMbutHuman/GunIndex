@@ -216,6 +216,7 @@ function payments_begin(PDO $pdo, int $invoiceId, int $userId, string $provider)
     $pdo->beginTransaction();
     try {
         $invoice = payments_invoice($pdo, $invoiceId, $userId, true); payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
+        if(function_exists('finance_assert_payable'))finance_assert_payable($pdo,$invoice,$config['mode']);
         $query = $pdo->prepare('SELECT * FROM market_payment_attempts WHERE invoice_id=? ORDER BY id DESC LIMIT 1 FOR UPDATE'); $query->execute([$invoiceId]); $attempt = $query->fetch();
         if ($attempt && ($attempt['provider'] !== 'paypal' || !in_array($attempt['status'], ['created', 'pending'], true))) throw new PaymentConflict('Der letzte Zahlungsversuch muss zuerst geprüft werden.');
         if (!$attempt) {
@@ -254,17 +255,20 @@ function payments_record_paid(PDO $pdo, array $invoice, array $attempt, string $
     $query = $pdo->prepare('SELECT attempt_id FROM market_payment_events WHERE provider_event_id=?'); $query->execute([$eventId]); $existing = $query->fetchColumn();
     if ($existing !== false && (int)$existing !== (int)$attempt['id']) throw new PaymentConflict('Zahlungsereignis ist bereits anderweitig zugeordnet.');
     if ($existing === false) { $query = $pdo->prepare("INSERT INTO market_payment_events(attempt_id,provider_event_id,kind,payload_hash,created_at) VALUES (?,?,'capture.completed',?,UTC_TIMESTAMP())"); $query->execute([$attempt['id'], $eventId, $payloadHash]); }
+    // Both capture and verified webhook use this same transaction and idempotent issuer.
+    if(function_exists('finance_issue_invoice'))finance_issue_invoice($pdo,(int)$invoice['id']);
 }
 
-function payments_capture(PDO $pdo, int $invoiceId, int $userId): void
+function payments_capture(PDO $pdo, int $invoiceId, int $userId, ?MarketPayPal $client=null): void
 {
-    $config = payments_config(); payments_assert_provider('paypal', $config); $client = new MarketPayPal($config);
+    $config = payments_config(); payments_assert_provider('paypal', $config); $client ??= new MarketPayPal($config);
     $pdo->beginTransaction();
     try {
         $invoice = payments_invoice($pdo, $invoiceId, $userId, true);
         if ($invoice['status'] !== 'paid') payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
         $query = $pdo->prepare("SELECT * FROM market_payment_attempts WHERE invoice_id=? AND provider='paypal' ORDER BY id DESC LIMIT 1 FOR UPDATE"); $query->execute([$invoiceId]); $attempt = $query->fetch();
         if (!$attempt || !$attempt['provider_order_id'] || $attempt['mode'] !== $config['mode'] || !in_array($attempt['status'], ['created', 'pending', 'paid'], true)) throw new PaymentConflict('Kein bestätigbarer Zahlungsversuch.');
+        if(function_exists('finance_assert_payable'))finance_assert_payable($pdo,$invoice,$attempt['mode']);
         if ($invoice['status'] === 'paid' && $attempt['status'] !== 'paid') throw new PaymentConflict('Eine andere Zahlung ist bereits zugeordnet.');
         $order = $client->order($attempt['provider_order_id']);
         if (($order['status'] ?? '') !== 'COMPLETED') {
@@ -279,9 +283,9 @@ function payments_capture(PDO $pdo, int $invoiceId, int $userId): void
     } catch (Throwable $error) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $error; }
 }
 
-function payments_webhook(PDO $pdo, array $headers, array $event): bool
+function payments_webhook(PDO $pdo, array $headers, array $event, ?MarketPayPal $client=null): bool
 {
-    $config = payments_config(); payments_assert_provider('paypal', $config); $client = new MarketPayPal($config);
+    $config = payments_config(); payments_assert_provider('paypal', $config); $client ??= new MarketPayPal($config);
     if (!$client->verifyWebhook($headers, $event)) return false;
     if (($event['event_type'] ?? '') !== 'PAYMENT.CAPTURE.COMPLETED') return true;
     $eventId = $event['id'] ?? null; $orderId = $event['resource']['supplementary_data']['related_ids']['order_id'] ?? null;

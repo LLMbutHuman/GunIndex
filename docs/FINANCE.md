@@ -1,5 +1,29 @@
 # Rechnungen, Korrekturen und Erstattungen
 
+## Automatisch verifizierte Zahlungen
+
+Capture und erfolgreich verifizierter Webhook verwenden dieselbe Transaktion
+für Zahlungsstatus, Providerereignis und `finance_issue_invoice()`. Bei aktivierter
+Rechnungsfunktion werden Rechnung und `cash_in` genau einmal angelegt, auch wenn
+beide Eingangskanäle mehrfach denselben Capture bestätigen. Sandbox-Versuche
+erzeugen weiterhin weder eine echte Rechnung noch eine Cash-Buchung.
+
+Vor einem neuen automatischen Live-Auftrag beziehungsweise Capture muss bei
+aktiver Rechnungsfunktion ein unveränderlicher, integritätsgeprüfter Snapshot
+vorliegen. Konto, Referenz, Leistung, Tarifversion, Währung und centgenaue Summen
+müssen übereinstimmen. Es wird kein fehlender historischer Snapshot aus heutigen
+Angaben erfunden. Bereits extern eingezogene, lokal wegen beschädigter Unterlagen
+nicht buchbare Zahlungen benötigen Wiederherstellung/Abgleich; ein lokaler Fehler
+macht eine externe Zahlung nicht rückgängig. Alte Aufträge ohne Snapshot bleiben
+bis zu einer gesonderten, nachvollziehbaren Bestandsbehandlung gesperrt.
+
+Die zusätzlichen Capture-/Webhook-Tests verwenden explizit injizierte synthetische
+REST-Antworten im isolierten Testschema. Es wird keine Verbindung zu PayPal geöffnet.
+Produktive HTTP-Endpunkte erlauben keine Auswahl eines Testadapters. Diese Tests
+ersetzen weder reale Sandbox-/Providerabnahme noch Live-Freigaben. Die Änderung
+aktiviert keine automatische Bestellung oder Erfüllung weiterer Leistungsarten;
+manuelle Werbeaufträge behalten ihren getrennten, bestehenden Freigabeablauf.
+
 Die Rechnungsfunktion wird erst mit `finance_enabled=1` aktiviert. Betreiberangaben
 werden in der Administration gepflegt; ohne Steuer- oder Umsatzsteuerkennung wird
 keine Rechnungsausstellung freigegeben. Für jedes bediente Rechnungsland muss eine

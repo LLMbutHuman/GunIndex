@@ -51,6 +51,18 @@ function finance_snapshot(PDO $pdo,int $invoiceId):array {
  $json=crypto_decrypt('finance',$row['payload_ciphertext']);if(!hash_equals($row['payload_hash'],hash('sha256',$json)))throw new RuntimeException('Invoice snapshot integrity failed.');
  return json_decode($json,true,32,JSON_THROW_ON_ERROR);
 }
+/** Compare a previously committed contract snapshot; never reconstruct it from today's settings. */
+function finance_assert_invoice_snapshot(array $invoice,array $snapshot):void {
+ foreach(['service_code','fee_version','currency'] as $key)if(($snapshot[$key]??null)!==($invoice[$key]??null))throw new PaymentConflict('Der Zahlungsauftrag stimmt nicht mit dem gespeicherten Rechnungsstand überein.');
+ if(($snapshot['order_reference']??null)!==($invoice['invoice_number']??null)
+  ||!is_int($snapshot['gross_cents']??null)||$snapshot['gross_cents']!==(int)($invoice['gross_cents']??0)
+  ||(int)($snapshot['buyer']['user_id']??0)!==(int)($invoice['user_id']??-1)
+  ||!is_int($snapshot['net_cents']??null)||!is_int($snapshot['tax_cents']??null)
+  ||$snapshot['net_cents']<0||$snapshot['tax_cents']<0||$snapshot['net_cents']+$snapshot['tax_cents']!==$snapshot['gross_cents'])throw new PaymentConflict('Der Zahlungsauftrag stimmt nicht mit dem gespeicherten Rechnungsstand überein.');
+}
+function finance_assert_payable(PDO $pdo,array $invoice,string $mode):void {
+ if($mode==='live'&&finance_enabled($pdo))finance_assert_invoice_snapshot($invoice,finance_snapshot($pdo,(int)$invoice['id']));
+}
 function finance_write_document(PDO $pdo,array $invoice,array $payload,string $type,int $amount,?int $actor,?int $related=null):int {
  if(!$pdo->inTransaction())throw new LogicException('Document issuance requires a transaction.');
  if(!in_array($type,['invoice','credit_note','cancellation'],true)||$amount<1||$amount>9999999999)throw new InvalidArgumentException('Ungültiges Rechnungsdokument.');
@@ -70,7 +82,7 @@ function finance_issue_invoice(PDO $pdo,int $invoiceId,?int $actor=null):int {
   $q=$pdo->prepare('SELECT * FROM market_invoices WHERE id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice||$invoice['status']!=='paid')throw new PaymentConflict('Nur bestätigte Zahlungen können hier abgerechnet werden.');
   $q=$pdo->prepare('SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?');$q->execute([$invoiceId]);if($id=$q->fetchColumn()){if($own)$pdo->commit();return(int)$id;}
   $q=$pdo->prepare('SELECT mode FROM market_payment_attempts WHERE invoice_id=? ORDER BY id DESC LIMIT 1');$q->execute([$invoiceId]);if($q->fetchColumn()==='sandbox'){if($own)$pdo->commit();return 0;}
-  $payload=finance_snapshot($pdo,$invoiceId);$id=finance_write_document($pdo,$invoice,$payload,'invoice',(int)$invoice['gross_cents'],$actor);
+  $payload=finance_snapshot($pdo,$invoiceId);finance_assert_invoice_snapshot($invoice,$payload);$id=finance_write_document($pdo,$invoice,$payload,'invoice',(int)$invoice['gross_cents'],$actor);
   $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'cash_in',?,?)")->execute([$invoiceId,$actor,$invoice['gross_cents'],'paid:'.$invoiceId]);
   if($actor)audit_log($pdo,$actor,'finance.invoice_issued',$invoiceId,['document_id'=>$id]);
   if(function_exists('notify_user'))notify_user($pdo,(int)$invoice['user_id'],'invoice:'.$id,i18n_user_text($pdo,(int)$invoice['user_id'],'notification.invoice_issued.title'),i18n_user_text($pdo,(int)$invoice['user_id'],'notification.invoice_issued.body',['reference'=>$invoice['invoice_number']]),'/user/invoices.php',true);

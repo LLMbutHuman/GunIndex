@@ -1,5 +1,21 @@
 # Tatsächlicher Testnachweis
 
+## Vertragsbindung: vollständige CI bestätigt
+
+`dc046aed7cb3232386c186ced3ff15c95d7c0713`, [CI 41478575081](https://github.com/LLMbutHuman/GunIndex/actions/runs/41478575081):
+beide Jobs erfolgreich. Migration 011, elf neue Vertrags-DB-/HTTP-Fälle,
+14 Consent-Unitfälle und neuer mobiler Registrierungsablauf durch die tatsächliche
+Admin-Oberfläche bestanden, ebenso bestehende Browser-/Accessibilityregressionen.
+
+## Automatischer Finanzabschluss: lokale Prüfung
+
+20 Zahlungs-Unitfälle bestanden einschließlich neuer Snapshot-Identitäts-/Tarif-/
+Summenprüfung. Fünf zusätzliche Fälle in finance_test.php prüfen Capture/Webhook-
+Wiederholungen, Sandbox-Abgrenzung, ungültige Signatur/Beträge, beschädigte Snapshots
+und nachträgliche Betragsänderung. Ausschließlich synthetische injizierte REST-
+Antworten, kein Netzwerk/kein echtes Geld. DB-Ausführung bis zum nächsten CI-Lauf
+ausstehend; keine reale Providerabnahme behauptet.
+
 ## Vertragsbindung, 2026-11-02: lokal geprüft, CI noch ausstehend
 
 14 Consent-Unitfälle, sieben Admin- und sieben Geo-Prüfungen (einschließlich

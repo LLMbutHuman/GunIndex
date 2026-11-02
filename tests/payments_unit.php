@@ -3,6 +3,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit(1); }
 require_once __DIR__ . '/../config/fees.php';
 require_once __DIR__ . '/../config/payments.php';
+require_once __DIR__ . '/../config/finance.php';
 
 $passed = 0;
 function same(mixed $expected, mixed $actual): void { if ($expected !== $actual) throw new RuntimeException('Assertion failed.'); }
@@ -22,6 +23,12 @@ function test_config(array $replace = []): array
     return array_replace(['enabled'=>true,'mode'=>'sandbox','scope'=>'general_only','account_type'=>'business','billing_approved'=>true,'live_approved'=>false,'client_id'=>'synthetic-client','client_secret'=>'synthetic-secret','merchant_id'=>'SYNTHETICMERCH','webhook_id'=>'SYNTHETICHOOK','app_url'=>'https://market.example.invalid'], $replace);
 }
 function test_invoice(): array { return ['id'=>42,'invoice_number'=>'GI-42','gross_cents'=>1650,'currency'=>'EUR','status'=>'issued']; }
+test_payment('invoice_snapshot_binds_identity_reference_tariff_and_exact_tax',static function():void{
+ $invoice=test_invoice()+['service_code'=>'bump_single','fee_version'=>'synthetic-fixed-1','user_id'=>7];
+ $snapshot=['service_code'=>'bump_single','fee_version'=>'synthetic-fixed-1','currency'=>'EUR','order_reference'=>'GI-42','gross_cents'=>1650,'net_cents'=>1387,'tax_cents'=>263,'buyer'=>['user_id'=>7]];
+ finance_assert_invoice_snapshot($invoice,$snapshot);
+ foreach(['service_code'=>'different','fee_version'=>'later','currency'=>'USD','order_reference'=>'OTHER','gross_cents'=>1651,'net_cents'=>1386,'tax_cents'=>264,'buyer'=>['user_id'=>8]] as $key=>$value){$changed=array_replace($snapshot,[$key=>$value]);rejected(fn()=>finance_assert_invoice_snapshot($invoice,$changed),PaymentConflict::class);}
+});
 function test_order(bool $completed = false): array
 {
     $order = ['id'=>'ORDER123456','intent'=>'CAPTURE','status'=>$completed?'COMPLETED':'APPROVED','purchase_units'=>[['reference_id'=>'invoice:42','custom_id'=>'42','invoice_id'=>'GI-42','payee'=>['merchant_id'=>'SYNTHETICMERCH'],'amount'=>['currency_code'=>'EUR','value'=>'16.50']]],'links'=>[['rel'=>'payer-action','href'=>'https://www.sandbox.paypal.com/checkoutnow?token=ORDER123456']]];
