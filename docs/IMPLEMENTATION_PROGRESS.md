@@ -1,5 +1,20 @@
 # Implementierungsfortschritt
 
+## Neue Etappe: lokalisierter Kontozugang
+
+Anmeldung und bestehende MFA-Seite vollständig auf Übersetzungsschlüssel
+umgestellt. 26 neue Texte in acht Sprachen. Auch Auth-Eingabe-/Passwort-/Rate-
+Limitmeldungen und allgemeine Formular-/CSRF-Fehler verwenden die gewählte
+Sprache; Fehlerdokumente erhalten das passende HTML-Sprachattribut.
+Keine Änderungen an MFA-Protokoll, Zugriffsschutz oder Ratelimits.
+
+Lokal bestanden: 17 Auth-Unitfälle mit Sodium, sieben Geo-/Sprachfälle, 14 Consent-
+Fälle, 187 PHP-Syntaxprüfungen und Node-Syntaxprüfung. Internationaler Browsertest
+prüft nun je Sprache echte fehlgeschlagene Anmeldung, lokalisierte Fehlermeldung,
+CSRF-Ablehnung und mobile Breite. Diese neuen Browserfälle bis zum folgenden
+CI-Lauf noch ausstehend. Registrierung, Wiederherstellung und weitere Konto-
+seiten bleiben im vollständigen Übersetzungsauftrag separat offen.
+
 ## Zuletzt vollständig geprüfter Code: 0194d59
 
 Stand 2026-11-02: Branch `feature/general-marketplace-rebuild`, Repository

@@ -4,6 +4,7 @@ const {playwright,launchOptions}=require('./browser_tools');
 const origin='http://127.0.0.1:8081';
 (async()=>{
  const browser=await playwright.chromium.launch(launchOptions());const checks=[];const errors=[];
+ const loginCopy={de:['Willkommen zurück.','Anmeldung fehlgeschlagen.'],en:['Welcome back.','Sign-in failed.'],fr:['Bon retour.','Échec de la connexion.'],nl:['Welkom terug.','Aanmelden mislukt.'],pl:['Witaj ponownie.','Logowanie nie powiodło się.'],cs:['Vítejte zpět.','Přihlášení se nezdařilo.'],da:['Velkommen tilbage.','Login mislykkedes.'],it:['Bentornato.','Accesso non riuscito.']};
  try{
   const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   for(const [locale,country] of [['de','DE'],['en','AT'],['fr','FR'],['nl','NL'],['pl','PL'],['cs','CZ'],['da','DK'],['it','CH']]){
@@ -11,6 +12,12 @@ const origin='http://127.0.0.1:8081';
    await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),form.locator('button[type=submit]').click()]);
    assert.strictEqual(await page.locator('html').getAttribute('lang'),locale);assert.strictEqual(await page.locator('[name=market_country]').inputValue(),country);
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile overflow for '+locale);checks.push('locale_'+locale+'_'+country);
+   await page.goto(origin+'/auth/login.php',{waitUntil:'networkidle'});assert.strictEqual(await page.locator('h1').textContent(),loginCopy[locale][0]);
+   await page.locator('[name=login]').fill('nonexistent-synthetic-'+locale);await page.locator('[name=password]').fill('Synthetic invalid password');
+   const response=await Promise.all([page.waitForResponse(r=>r.url()===origin+'/auth/login.php'&&r.request().method()==='POST'),page.locator('main button[type=submit]').click()]);
+   assert.strictEqual(response[0].status(),422);await page.waitForLoadState('networkidle');assert((await page.locator('[role=alert]').innerText()).startsWith(loginCopy[locale][1]));
+   assert(!/account\.[a-z_]+/.test(await page.locator('main').innerText()));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Login mobile overflow '+locale);
+   const denied=await page.request.post(origin+'/auth/login.php',{form:{login:'synthetic-missing-csrf',password:'Synthetic invalid password'}});assert.strictEqual(denied.status(),403);const deniedBody=await denied.text();assert(deniedBody.includes('lang="'+locale+'"')&&!deniedBody.includes('account.csrf'));checks.push('localized_login_and_errors_'+locale);
   }
   await page.goto(origin+'/marketplace/search.php',{waitUntil:'networkidle'});const search=page.locator('form.search-toolbar');await search.locator('[name=scope]').selectOption('international');await search.locator('[name=country_code]').selectOption('DE');
   await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),search.locator('button[type=submit]').click()]);assert.strictEqual(new URL(page.url()).searchParams.get('scope'),'international');assert.strictEqual(await page.locator('form.search-toolbar [name=scope]').inputValue(),'international');checks.push('international_search_control');

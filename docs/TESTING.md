@@ -1,5 +1,12 @@
 # Tatsächlicher Testnachweis
 
+## Kontozugang in acht Sprachen – lokale Prüfung
+
+17 Auth-Prüfungen mit Sodium, sieben Geo-/Sprachprüfungen, 14 Consent-Prüfungen
+und 187 PHP-Syntaxprüfungen bestanden. Node-Syntaxprüfung erfolgreich. Neue
+internationale Browserfälle für Login, Fehler, CSRF und mobile Breite sind
+implementiert; deren tatsächliche CI-Ausführung steht noch aus.
+
 ## Letzter vollständiger Code-/CI-Nachweis
 
 `0194d59cac1bad2cd42ab67d409f2ceccdf5d7be`, [CI 41481388425](https://github.com/LLMbutHuman/GunIndex/actions/runs/41481388425):

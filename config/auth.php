@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/i18n.php';
 
 function auth_input(array $source, string $key, bool $trim = true): string
 {
     $value = $source[$key] ?? '';
-    if (!is_string($value)) { throw new InvalidArgumentException('Bitte nur einzelne Textwerte eingeben.'); }
+    if (!is_string($value)) { throw new InvalidArgumentException(t('account.scalar_input')); }
     return $trim ? trim($value) : $value;
 }
 
@@ -12,7 +13,7 @@ function auth_password_check(string $password): void
 {
     $max = defined('PASSWORD_ARGON2ID') ? 1024 : 72;
     if (strlen($password) > $max || str_contains($password, "\0") || preg_match_all('/./us', $password) < 12) {
-        throw new InvalidArgumentException('Das Passwort benötigt mindestens zwölf Zeichen und darf nicht zu lang sein.');
+        throw new InvalidArgumentException(t('account.password_policy'));
     }
 }
 
@@ -28,14 +29,14 @@ function auth_rate_limit(string $kind, string $subject, int $limit, int $seconds
     $directory = getenv('AUTH_RATE_LIMIT_DIR') ?: dirname(__DIR__) . '/var/auth-limits';
     if (is_link($directory) || (!is_dir($directory) && !@mkdir($directory, 0700, true))
         || !is_dir($directory) || !@chmod($directory, 0700)) {
-        abort_request(503, 'Die Anmeldung ist vorübergehend nicht verfügbar.');
+        abort_request(503, t('account.unavailable'));
     }
     $path = $directory . '/' . hash('sha256', $kind . "\0" . $subject) . '.json';
-    if (is_link($path)) { abort_request(503, 'Die Anmeldung ist vorübergehend nicht verfügbar.'); }
+    if (is_link($path)) { abort_request(503, t('account.unavailable')); }
     $file = @fopen($path, 'c+b');
     if ($file === false || !@chmod($path, 0600) || !flock($file, LOCK_EX)) {
         if (is_resource($file)) { fclose($file); }
-        abort_request(503, 'Die Anmeldung ist vorübergehend nicht verfügbar.');
+        abort_request(503, t('account.unavailable'));
     }
     try {
         $raw = stream_get_contents($file, 4097);
@@ -47,13 +48,13 @@ function auth_rate_limit(string $kind, string $subject, int $limit, int $seconds
         if ($state['start'] + $seconds <= $now) { $state = ['start' => $now, 'count' => 0]; }
         if ($state['count'] >= $limit) {
             header('Retry-After: ' . max(1, $state['start'] + $seconds - $now));
-            abort_request(429, 'Zu viele Anmeldeversuche. Bitte später erneut versuchen.');
+            abort_request(429, t('account.rate_limit'));
         }
         ++$state['count']; $next = json_encode($state, JSON_THROW_ON_ERROR); rewind($file);
         if (!ftruncate($file, 0) || fwrite($file, $next) !== strlen($next) || !fflush($file)) {
             throw new RuntimeException('Rate storage write failed');
         }
-    } catch (Throwable $error) { abort_request(503, 'Die Anmeldung ist vorübergehend nicht verfügbar.'); }
+    } catch (Throwable $error) { abort_request(503, t('account.unavailable')); }
     finally { flock($file, LOCK_UN); fclose($file); }
 }
 
@@ -95,9 +96,9 @@ function auth_requires_mfa(PDO $pdo, array $user): bool
 function require_admin(PDO $pdo): array
 {
     $user = require_login($pdo);
-    if ((int)$user['is_admin'] !== 1) { abort_request(403, 'Dieser Bereich benötigt Administrationsrechte.'); }
+    if ((int)$user['is_admin'] !== 1) { abort_request(403, t('account.admin_required')); }
     if (empty($user['mfa_secret']) || ($_SESSION['admin_mfa_user_id'] ?? null) !== (int)$user['id']) {
-        abort_request(403, 'Für die Administration ist eine Anmeldung mit zweitem Faktor erforderlich.');
+        abort_request(403, t('account.mfa_required'));
     }
     return $user;
 }

@@ -8,14 +8,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $code = auth_input($_POST, 'code');
         if (($verified=auth_verify_pending_mfa($pdo, $code)) !== null) { redirect((int)$verified['is_admin']===1 ? '/admin/index.php' : '/user/dashboard.php'); }
-        $error = 'Der Code ist ungültig, abgelaufen oder bereits verwendet. Bitte einen neuen Code versuchen.'; http_response_code(422);
+        $error = t('account.mfa_error'); http_response_code(422);
     } catch (InvalidArgumentException $exception) { $error = $exception->getMessage(); http_response_code(422); }
 }
-$pageTitle = 'Zweiter Faktor'; require __DIR__ . '/../includes/header.php';
+$pageTitle = t('account.mfa_title'); require __DIR__ . '/../includes/header.php';
 ?>
-<main class="auth-shell container"><section class="panel"><p class="eyebrow">Geschützter Verwaltungszugang</p><h1>Ein zweiter Schritt.</h1>
-<p>Gib den aktuellen sechsstelligen Code deiner Authenticator-App ein.</p>
+<main class="auth-shell container"><section class="panel"><p class="eyebrow"><?=h(t('account.mfa_label'))?></p><h1><?=h(t('account.mfa_heading'))?></h1>
+<p><?=h(t('account.mfa_help'))?></p>
 <?php if ($error !== ''): ?><p class="notice error" role="alert"><?= h($error) ?></p><?php endif; ?>
-<form method="post" class="form-grid"><?= csrf_field() ?><label class="field">Einmalcode<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus></label><button type="submit" class="button">Sicher anmelden</button></form>
-<p><a href="/auth/login.php">Zur Anmeldung</a></p></section></main>
+<form method="post" class="form-grid"><?= csrf_field() ?><label class="field"><?=h(t('account.mfa_code'))?><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus></label><button type="submit" class="button"><?=h(t('account.mfa_submit'))?></button></form>
+<p><a href="/auth/login.php"><?=h(t('Zur Anmeldung'))?></a></p></section></main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
