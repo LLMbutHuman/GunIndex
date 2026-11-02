@@ -1,5 +1,24 @@
 # Tatsächlicher Testnachweis
 
+## Abschließender Nachweis dieser Sitzung, 2026-11-02
+
+Code `2042549d5cec2bc39f713ebc18a76f8ab30fc3af`,
+[CI 41527131692](https://github.com/LLMbutHuman/GunIndex/actions/runs/41527131692):
+Windows- und Linuxjob vollständig erfolgreich, einschließlich PHP/MySQL,
+Installer-/Backupregression, Composer-Audit, Browser/Internationalisierung und
+automatisierter öffentlicher Accessibility. Sieben Sprachlink-Unitfälle,
+28 Konto-/Mailfälle, 21 Finanzfälle sowie neue achtsprachige Profil-/Recovery-/
+Benachrichtigungs-/Dashboard-/Footerfälle bestanden. Browser meldet keine
+JavaScript-/Serverfehler und keine externen Requests.
+
+Auch die direkten Vorgänger `505ffa1` (CI 41525630270) und `ad5ed5f`
+(CI 41526420094) haben erfolgreiche eigene Läufe. Keine bekannten roten
+Anwendungsprüfungen dieser drei Etappen. Lokaler Python-Store-Alias und WSL-
+Speicherblocker bleiben Umgebungsprobleme. Frühere Ausstehend-Vermerke unten
+beschreiben Zwischenstände. Kein Test belegt E2EE, Treuhand oder reale Provider-
+abnahmen; diese Funktionen/Nachweise sind weiterhin offen. Gesamtbewertung:
+[PROJECT_STATUS.md](PROJECT_STATUS.md).
+
 ## Sprachwahl per E-Mail, Benachrichtigungen und Footer: lokal geprüft
 
 Sieben neue `account_link_locale_test.php`-Fälle erfolgreich; im Linux-Runner

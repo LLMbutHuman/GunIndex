@@ -9,6 +9,13 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
 
 ## Belegte Teilfunktionen
 
+- **A:** Lokalisierte Konto-/Recovery-/Profil-/Benachrichtigungs-/Dashboard-
+  und Footerabläufe in acht Sprachen; Empfängersprache in Mail-Links für frische
+  Browser. `2042549`, CI 41527131692 vollständig erfolgreich. Kein Nachweis
+  einer vollständigen Übersetzung sämtlicher Plattformseiten.
+
+Aktuelle Gesamt- und Aufwandsbewertung: [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
 - **A:** Admin-Setup-Diagnosen (18 Bereiche), Bildsortierung mit Revisions-/
   Eigentümerschutz, SEO-Grundfunktionen und PLZ-Validator: `2d496a8`, CI 41418425597.
 - **A:** Sitzungsspezifischer Opt-in-Verlauf und Produktvergleich: `126d400`,
