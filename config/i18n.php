@@ -7,9 +7,11 @@ function i18n_dictionary(?string $locale=null):array {
     if(!isset($cache[$locale])){
         $path=dirname(__DIR__).'/locales/'.$locale.'.php';$loaded=is_file($path)?require $path:[];$cache[$locale]=is_array($loaded)?$loaded:[];
         // Explicit trusted modules only; never discover PHP catalogs from user-controlled paths.
-        $modulePath=dirname(__DIR__).'/locales/setup/'.$locale.'.php';
-        $module=is_file($modulePath)?require $modulePath:[];
-        if(is_array($module))$cache[$locale]=array_replace($cache[$locale],$module);
+        foreach (['setup','personal'] as $moduleName) {
+            $modulePath=dirname(__DIR__).'/locales/'.$moduleName.'/'.$locale.'.php';
+            $module=is_file($modulePath)?require $modulePath:[];
+            if(is_array($module))$cache[$locale]=array_replace($cache[$locale],$module);
+        }
     }return $cache[$locale];
 }
 /** Explicit interface strings only. Never call this on listing descriptions or messages. */

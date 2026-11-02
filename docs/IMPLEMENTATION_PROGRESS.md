@@ -56,6 +56,33 @@ Neue Suites sind im sequenziellen Runner verbunden. Fortsetzung: selektiver
 Commit/Push, CI-Ergebnisse prüfen und Fehler beheben. Keine vollständige technische Abnahme
 dieser zweiten Etappe behaupten, bevor die neuen Integrationsprüfungen bestehen.
 
+### Bestätigte Sicherung und CI-Abnahme der zweiten Etappe
+
+Commit `2d496a880b6e8ebb431f258646359adf858395ba` wurde auf den vereinbarten
+Entwicklungsbranch gepusht; Remote-SHA bestätigt. [CI-Lauf 41418425597](https://github.com/LLMbutHuman/GunIndex/actions/runs/41418425597)
+hat beide Jobs erfolgreich abgeschlossen: Windows-Vorprüfung, Linux-PHP-/MySQL-
+Suites einschließlich neuer neun Setup-HTTP-/DB-Fälle, elf Bildsortierungs-HTTP-/DB-
+Fälle und SEO-Sichtbarkeits-/Paginationstest, Composer-Audit sowie die bisherigen
+Browser-, internationalen und automatisierten Accessibilityprüfungen.
+Die lokale WSL-Speicherplatz-/Neustartvoraussetzung bleibt davon unberührt.
+
+### Dritte Etappe: persönliche Listen
+
+Neu implementiert: `/user/personal.php` mit explizit aktivierbarem Verlauf und
+Vergleich von maximal vier Angeboten. Sitzung an Benutzer gebunden, keine Kopie
+von Angebotsinhalten, Verlauf auf 20 Einträge begrenzt, sechs Stunden logische
+Gültigkeit, Lösch-/Abschaltfunktionen und Bereinigung bei Konto-/Sitzungswechsel.
+Öffentliche Sichtbarkeit bei jeder Anzeige neu geprüft. Alle neuen Texte in acht
+Sprachen; Dokumentation in PERSONAL_LISTS.md. Neue DB- und Browserprüfungen sind
+ergänzt und werden nach lokalen Unit-/Syntaxprüfungen durch CI bestätigt.
+Der erweiterte Browsertest prüft zusätzlich echte Bildsortierung und alle acht
+Sprachen der Setup-Seite bei mobiler Breite. Diese Erweiterungen sind noch
+nicht vom erfolgreichen CI-Lauf für `2d496a8` abgedeckt.
+
+Lokaler Nachweis der dritten Etappe: 15 Personal-Unitprüfungen, sieben Geo-
+Prüfungen inklusive globaler Sprachparität und 168 PHP-Syntaxprüfungen bestanden.
+Node-Syntaxprüfung des erweiterten Browsertests ebenfalls erfolgreich.
+
 ## 2026-11-01: lokale Bestandsaufnahme und Windows-Einstieg
 
 Arbeitsgrundlage: `GunIndex_Codex_Fortsetzung.md`, vollständig gelesen; dazu

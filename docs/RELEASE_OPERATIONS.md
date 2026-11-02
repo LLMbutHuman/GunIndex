@@ -18,6 +18,11 @@ SEO-Indexierung standardmäßig gesperrt; Zahlungsfreigaben unverändert geschlo
 Commit-/Push-SHA und aktueller CI-Nachweis werden nach bestätigter Sicherung
 ergänzt. Die gesamte Plattform ist noch nicht technisch abgenommen.
 
+Bestätigt: `2d496a880b6e8ebb431f258646359adf858395ba` erfolgreich gepusht,
+Remote identisch. GitHub-Actions-Lauf `41418425597` erfolgreich: Windows- und
+Linux-Jobs einschließlich neuer DB-/HTTP-Suites, Audit und vorhandenem Browserumfang.
+Persönliche Listen und zusätzliche Browserfälle werden als eigene Etappe entwickelt.
+
 ## 2026-11-01 – lokale Entwicklung
 
 - Baseline lokal/remote bestätigt: `1636914f33f0e4495b92eec1936dc54e110d7576`.

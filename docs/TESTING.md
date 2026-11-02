@@ -1,6 +1,21 @@
 # Tatsächlicher Testnachweis
 
+## Persönliche Listen, lokale Prüfung am 2026-11-02
+
+15 datenbankfreie Prüfungen in `personal_test.php` bestanden (Opt-in, Limits,
+Deduplizierung, Fristen, Kontowechsel, Abmeldung, ungültige Aktionen). Globale
+Sprach-/Platzhalterparität besteht weiterhin; 168 PHP-Dateien ohne Syntaxfehler.
+Erweiterter Browser-Smoke-Test besteht die Node-Syntaxprüfung. Vier neue MySQL-
+Sichtbarkeitsprüfungen und Browserabläufe für persönliche Listen, Bildsortierung
+und mobile Setup-Seiten in acht Sprachen sind ergänzt, aber noch nicht ausgeführt.
+
 ## Zweite lokale Etappe, 2026-11-02
+
+Nachtrag: [CI-Lauf für 2d496a8](https://github.com/LLMbutHuman/GunIndex/actions/runs/41418425597)
+ist vollständig erfolgreich abgeschlossen. Damit sind die unten als lokal offen
+aufgeführten neuen DB-/HTTP-Suites nun in der isolierten GitHub-Linux-Laufzeit
+erfolgreich ausgeführt, ebenso der vorhandene Browserumfang und Composer-Audit.
+Spätere persönliche Listen und erweiterte Browserfälle benötigen einen eigenen Lauf.
 
 Offizielle portable PHP-CLI 8.4.27 mit geprüfter Download-SHA-256, ausschließlich
 Syntax-/Unitprüfungen unter Windows (keine native Ausführung des Linux-Runners):
