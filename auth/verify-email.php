@@ -11,17 +11,17 @@ if (($_SERVER['REQUEST_METHOD']??'')==='POST') {
             account_token_request($pdo,$viewer['email'],'verify');$requested=true;
         } else {
             $token=post_string('token',64);
-            if (!account_token_consume($pdo,$token,'verify')) {http_response_code(422);$error='Der Link ist ungültig, abgelaufen oder bereits verwendet.';}
+            if (!account_token_consume($pdo,$token,'verify')) {http_response_code(422);$error=t('account.token_invalid');}
             else $success=true;
         }
     }catch(InvalidArgumentException $exception){http_response_code(422);$error=$exception->getMessage();}
-    catch(Throwable){http_response_code(503);$error='Die Bestätigung ist gerade nicht möglich. Bitte später erneut versuchen.';}
+    catch(Throwable){http_response_code(503);$error=t('account.verify_unavailable');}
 }
-$pageTitle='E-Mail bestätigen';include __DIR__.'/../includes/header.php';?>
-<main class="auth-shell container"><section class="panel"><h1>Deine E-Mail bestätigen.</h1>
+$pageTitle=t('account.verify_title');include __DIR__.'/../includes/header.php';?>
+<main class="auth-shell container"><section class="panel"><h1><?=h(t('account.verify_heading'))?></h1>
 <?php if($error):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?>
-<?php if($success):?><p class="notice success">Die E-Mail-Adresse wurde bestätigt. Dies bestätigt keine Identität oder rechtliche Erwerbsberechtigung.</p><a class="button" href="/user/profile.php">Zum Profil</a>
-<?php elseif(preg_match('/\A[a-f0-9]{64}\z/',$token)):?><p>Bestätige den Link ausdrücklich. Das bloße Öffnen dieser Seite verändert dein Konto nicht.</p><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="confirm"><input type="hidden" name="token" value="<?=h($token)?>"><button class="button"><?=h(t('E-Mail-Adresse bestätigen'))?></button></form>
-<?php elseif($viewer):?><p><?= $viewer['email_verified_at']!==null?'Deine aktuelle E-Mail-Adresse ist bestätigt.':'Deine aktuelle E-Mail-Adresse ist noch nicht bestätigt.' ?></p><?php if($requested):?><p class="notice">Wenn der Versand eingerichtet ist, wurde ein neuer Link vorbereitet.</p><?php endif;?><?php if($viewer['email_verified_at']===null):?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="request"><button class="button"><?=h(t('Bestätigungslink erneut anfordern'))?></button></form><?php endif;?>
-<?php else:?><a class="button" href="/auth/login.php">Anmelden und neuen Link anfordern</a><?php endif;?></section></main>
+<?php if($success):?><p class="notice success"><?=h(t('account.verify_success'))?></p><a class="button" href="/user/profile.php"><?=h(t('account.profile_link'))?></a>
+<?php elseif(preg_match('/\A[a-f0-9]{64}\z/',$token)):?><p><?=h(t('account.verify_help'))?></p><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="confirm"><input type="hidden" name="token" value="<?=h($token)?>"><button class="button"><?=h(t('E-Mail-Adresse bestätigen'))?></button></form>
+<?php elseif($viewer):?><p><?=h(t($viewer['email_verified_at']!==null?'account.email_verified':'account.email_unverified'))?></p><?php if($requested):?><p class="notice"><?=h(t('account.verify_requested'))?></p><?php endif;?><?php if($viewer['email_verified_at']===null):?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="request"><button class="button"><?=h(t('Bestätigungslink erneut anfordern'))?></button></form><?php endif;?>
+<?php else:?><a class="button" href="/auth/login.php"><?=h(t('account.sign_in_request_link'))?></a><?php endif;?></section></main>
 <?php include __DIR__.'/../includes/footer.php'; ?>

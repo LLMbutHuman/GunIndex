@@ -18,9 +18,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $elapsed = (int)((hrtime(true)-$started)/1000);
     usleep(max(0,300000-$elapsed)+random_int(0,30000));
 }
-$pageTitle='Passwort vergessen'; include __DIR__.'/../includes/header.php';
+$pageTitle=t('Passwort vergessen?'); include __DIR__.'/../includes/header.php';
 ?>
-<main class="auth-shell container"><section class="panel"><p class="eyebrow">Wieder Zugang bekommen</p><h1><?=h(t('Passwort vergessen?'))?></h1>
-<?php if ($complete): ?><p class="notice" role="status">Wenn für diese Adresse ein aktives Konto besteht und der Versand eingerichtet ist, wird ein Wiederherstellungslink vorbereitet. Bitte prüfe auch deinen Spamordner.</p><?php else: ?><p>Du erhältst einen kurzzeitig gültigen Link. Dein Passwort bleibt bis zur bestätigten Änderung unverändert.</p><?php endif; ?>
+<main class="auth-shell container"><section class="panel"><p class="eyebrow"><?=h(t('account.recovery_label'))?></p><h1><?=h(t('Passwort vergessen?'))?></h1>
+<?php if ($complete): ?><p class="notice" role="status"><?=h(t('account.recovery_notice'))?></p><?php else: ?><p><?=h(t('account.recovery_help'))?></p><?php endif; ?>
 <form method="post" class="form-grid"><?=csrf_field()?><label class="field"><?=h(t('E-Mail'))?><input type="email" name="email" maxlength="190" autocomplete="email" required value="<?=h($email)?>"></label><button class="button" type="submit"><?=h(t('Wiederherstellungslink anfordern'))?></button></form><p><a href="/auth/login.php"><?=h(t('Zur Anmeldung'))?></a></p></section></main>
 <?php include __DIR__.'/../includes/footer.php'; ?>

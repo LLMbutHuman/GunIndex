@@ -39,6 +39,28 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   await phone.goto(origin+'/marketplace/view-item.php?id='+listing);await phone.getByRole('link',{name:'Verkäufer kontaktieren'}).click();await phone.locator('[name=message]').fill('Synthetische Browsernachricht: Ist der Schreibtisch verfügbar?');await phone.getByRole('button',{name:'Nachricht senden',exact:true}).click();await phone.waitForLoadState('networkidle');assert((await phone.locator('main').innerText()).includes('Synthetische Browsernachricht'));journeys.push('private_chat');
   const auction=fixture('seed_listing',{username:seller.username,title:'Fixture '+crypto.randomBytes(8).toString('hex')+' Browser Bücherpaket',category_id:Number(category)}).id;
   await phone.goto(origin+'/marketplace/view-auction.php?id='+auction);await phone.locator('[name=max_bid]').fill('60.00');await phone.getByRole('button',{name:'Gebot abgeben'}).click();await phone.waitForLoadState('networkidle');assert.strictEqual(Number(fixture('state',{listing_id:Number(auction)}).highest_bidder_id),Number(buyer.id));journeys.push('proxy_bid');
+  const profileCopy={
+   en:['Everything in its place.','Your profile was saved.','Please enter your current password correctly.'],
+   fr:['Tout à sa place.','Votre profil a été enregistré.','Veuillez saisir correctement votre mot de passe actuel.'],
+   nl:['Alles op zijn plek.','Je profiel is opgeslagen.','Voer je huidige wachtwoord correct in.'],
+   pl:['Wszystko na swoim miejscu.','Twój profil został zapisany.','Wpisz poprawne aktualne hasło.'],
+   cs:['Vše na svém místě.','Váš profil byl uložen.','Zadejte správně své aktuální heslo.'],
+   da:['Alt på sin plads.','Din profil er gemt.','Indtast din nuværende adgangskode korrekt.'],
+   it:['Tutto al suo posto.','Il tuo profilo è stato salvato.','Inserisci correttamente la password attuale.'],
+   de:['Alles an seinem Platz.','Dein Profil wurde gespeichert.','Bitte dein aktuelles Passwort korrekt eingeben.']
+  };
+  for(const [locale,copy] of Object.entries(profileCopy)){
+   await phone.goto(origin+'/user/profile.php');const profileForm=phone.locator('form:has([name=action][value=save])');
+   await profileForm.locator('[name=preferred_locale]').selectOption(locale);
+   const saved=await Promise.all([phone.waitForNavigation({waitUntil:'networkidle'}),profileForm.locator('button[type=submit]').click()]);
+   assert.strictEqual(saved[0].status(),200);assert.strictEqual(await phone.locator('html').getAttribute('lang'),locale);
+   assert.strictEqual(await phone.locator('h1').textContent(),copy[0]);assert.strictEqual(await phone.locator('[role=status]').textContent(),copy[1]);
+   // A rejected sensitive action must retain the session and selected language.
+   const revoke=phone.locator('form:has([name=action][value=revoke])');await revoke.locator('[name=current_password]').fill('Incorrect synthetic password');
+   const denied=await Promise.all([phone.waitForNavigation({waitUntil:'networkidle'}),revoke.locator('button[type=submit]').click()]);
+   assert.strictEqual(denied[0].status(),422);assert.strictEqual(await phone.locator('[role=alert]').textContent(),copy[2]);
+   assert(!/account\.[a-z_]+/.test(await phone.locator('main').innerText()));assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Profile mobile overflow '+locale);
+  }journeys.push('profile_save_and_protected_action_eight_mobile_locales');
   await page.goto(origin+'/');for(const width of [1440,768,390]){await page.setViewportSize({width,height:1000});await page.goto(origin+'/',{waitUntil:'networkidle'});const size=await page.evaluate(()=>({inner:innerWidth,scroll:document.documentElement.scrollWidth}));assert(size.scroll<=size.inner,'Horizontal overflow at '+width);await page.evaluate(async()=>{document.documentElement.style.scrollBehavior='auto';for(let y=0;y<document.documentElement.scrollHeight;y+=500){scrollTo(0,y);await new Promise(r=>setTimeout(r,110));}scrollTo(0,0);});await page.waitForTimeout(350);await page.screenshot({path:__dirname+'/.runtime/browser-'+width+'.png',fullPage:true});}journeys.push('responsive');
   await page.locator('.theme-toggle').click();const theme=await page.locator('html').getAttribute('data-theme');await page.reload();assert.strictEqual(await page.locator('html').getAttribute('data-theme'),theme);journeys.push('theme');
   await desktop.clearCookies();await login(page,admin,true);journeys.push('admin_mfa');

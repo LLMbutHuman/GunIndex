@@ -91,7 +91,7 @@ function account_token_consume(PDO $pdo, string $token, string $purpose, ?string
     if (!preg_match('/\A[a-f0-9]{64}\z/',$token) || !in_array($purpose,['verify','reset'],true)) return false;
     $newHash = null;
     if ($purpose === 'reset') {
-        if ($newPassword === null) throw new InvalidArgumentException('Ein neues Passwort ist erforderlich.');
+        if ($newPassword === null) throw new InvalidArgumentException(t('account.password_policy'));
         $newHash = auth_hash($newPassword);
     }
     $hash = hash('sha256',$token);

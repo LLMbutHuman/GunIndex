@@ -1,5 +1,57 @@
 # Implementierungsfortschritt
 
+## Kontowiederherstellung und Profil: lokaler Stand, 2026-11-02
+
+Wiederherstellung, E-Mail-Verifikation und Profil einschließlich Validierungen
+in acht Sprachen umgesetzt; Kontokatalog jetzt 82 Schlüssel je Sprache. Mobile
+Browserfälle prüfen pro Sprache echte Formularantworten, ungültige Reset-/
+Verifikationslinks sowie Profilspeicherung und abgewiesene Sitzungswiderrufe
+mit falschem Passwort. PHP-Syntax, sieben Geo-/Sprachprüfungen, 17 Auth-Prüfungen
+und Node-Syntax beider Browserdateien bestanden. Die neuen Browserfälle müssen
+noch in der isolierten Linux-CI ausgeführt werden.
+
+Zusätzliche lesende Codeprüfung ohne blockierende Regression. Nächste konkrete
+Sprachlücke: E-Mail-Links übernehmen in einem neuen Browser die Empfängersprache
+noch nicht. Gemeinsamer Footer und weitere Konto-/Finanz-/Adminseiten sind offen.
+
+Die reguläre Freigabeprüfung ist wieder verfügbar (Node-Syntaxprüfung erfolgreich).
+Der nachfolgende Kontingentfehler beschreibt den vorherigen Zwischenstand; bis
+zum tatsächlichen Commit/Push bleiben die aktuellen Änderungen nur lokal gesichert.
+
+## Vorübergehender Sicherungsblocker, 2026-11-02
+
+Die automatische Freigabeprüfung für den angeforderten `git add`-Schritt konnte
+wegen ihres ausgeschöpften Nutzungskontingents nicht abgeschlossen werden.
+Der Aufruf wurde **nicht ausgeführt**; es liegt keine Unsicherheitsentscheidung
+über die Änderungen vor. Kein Umgehen der Prüfung. Wiederherstellungs-/E-Mail-
+Übersetzungen sind lokal erhalten, nicht gestagt, nicht committed und nicht gepusht.
+Zusätzliche lokale Patchsicherung unter dem ignorierten `tests/.runtime/checkpoints/`.
+Schreibzugriff auf den Arbeitsbaum und lokale PHP-Prüfungen sind weiterhin möglich.
+
+Letzter gesicherter Code: `35b99fe89c07ba88b499edcf05abe0958b488ab8`.
+[CI 41484172147](https://github.com/LLMbutHuman/GunIndex/actions/runs/41484172147)
+ist inzwischen vollständig erfolgreich: auch alle acht mobilen Registrierungs-
+und Validierungsabläufe. `b5677bd` besitzt ebenfalls erfolgreichen eigenen CI-Lauf.
+Git-Mutationen dürfen ausschließlich mit regulärer Freigabeprüfung erfolgen.
+
+## Wiederherstellung und E-Mail-Verifikation lokalisiert
+
+Passwortanfrage, Passwortreset und E-Mail-Bestätigung einschließlich Erfolgs-,
+Fehler- und Zustandsmeldungen jetzt in acht Sprachen umgesetzt. Der Kontokatalog
+enthält 63 Schlüssel pro Sprache. Verifikations-/Resetlinks bleiben unverändert
+an ausdrückliche POST-/CSRF-Verarbeitung gebunden. Es wird keine erfolgreiche
+Posteingangszustellung oder Identitätsprüfung behauptet.
+
+PHP-Syntax aller vier betroffenen Dateien, sieben Geo-/Sprachprüfungen und
+Node-Syntax bestanden. Der Browser prüft je Sprache die mobile Anfrageansicht,
+einheitliche Wiederherstellungsantwort sowie echte Ablehnung ungültiger Reset-
+und Verifikationslinks. Diese Erweiterung ist vor dem folgenden CI-Lauf noch
+nicht vollständig ausgeführt. Profil-/Finanz-/Admin-Altseiten bleiben offen.
+
+Login-/MFA-Commit `b5677bd` ist durch CI `41483417303` vollständig erfolgreich
+bestätigt. Registrierungscommit `35b99fe89c07ba88b499edcf05abe0958b488ab8` wurde
+gepusht, Remote-SHA stimmt überein; CI `41484172147` ist noch in Arbeit.
+
 ## Registrierung: weitere Übersetzungsumsetzung
 
 Registrierungsseite, zugehörige Validierungen und Fehler in acht Sprachen

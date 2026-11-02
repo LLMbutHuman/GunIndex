@@ -1,5 +1,26 @@
 # Tatsächlicher Testnachweis
 
+## Kontoübersetzungen: aktueller Stand, 2026-11-02
+
+Letzter vollständiger CI-Nachweis: Registrierung `35b99fe89c07ba88b499edcf05abe0958b488ab8`,
+[CI 41484172147](https://github.com/LLMbutHuman/GunIndex/actions/runs/41484172147),
+beide Jobs erfolgreich. Auch Login/MFA `b5677bd` hat einen eigenen erfolgreichen Lauf.
+
+Neue lokale Ergänzung: Wiederherstellung, Verifikation und Profil in acht Sprachen,
+82 Konto-Schlüssel pro Sprache. Sieben Geo-/Sprach- und 17 Auth-Prüfungen mit Sodium
+bestanden; PHP-Syntax und Node-Syntax beider geänderter Browserdateien erfolgreich.
+Die neuen mobilen Profil-/Reset-/Verifikationsabläufe sind noch nicht ausgeführt.
+Nachfolgende ältere Ausstehend-Vermerke dokumentieren jeweils Zwischenstände.
+
+## Wiederherstellung/Verifikation: lokale Prüfung
+
+63 Konto-Schlüssel je Sprache; globale Schlüssel-/Platzhalterparität bestanden.
+Vier geänderte PHP-Dateien ohne Syntaxfehler, Browserregression syntaktisch gültig.
+Neue mobile Tests prüfen Anfrageantwort sowie ungültige Reset-/Verifikationslinks
+in acht Sprachen. Deren CI-Ausführung steht noch aus.
+Login-/MFA-Commit `b5677bd`, CI `41483417303`: vollständig erfolgreich, auch die
+acht neuen mobilen Login-/Fehler-/CSRF-Fälle. Registrierung separat in CI.
+
 ## Registrierungsübersetzungen: lokal geprüft
 
 42 Konto-Schlüssel in allen acht Sprachen vorhanden; globale Sprach-/Platzhalter-
