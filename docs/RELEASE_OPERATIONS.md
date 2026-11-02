@@ -1,5 +1,13 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-02 – Parallelregression und Übergabestand
+
+`0194d59cac1bad2cd42ab67d409f2ceccdf5d7be` gepusht, Remote identisch;
+CI `41481388425` vollständig erfolgreich einschließlich echtem konkurrierendem
+Capture/Webhook. TECHNICAL_ACCEPTANCE.md bildet die 26 Anforderungen ab.
+LEGAL_HANDOFF.md beschreibt den aktuellen, ausdrücklich unfertigen Prüfgegenstand.
+Folgende Änderungen dieses Übergabeschritts betreffen ausschließlich Dokumentation.
+
 ## 2026-11-02 – automatischer Finanzabschluss geprüft
 
 `699c35beb69fc29356f44cc22dc7fdd4c475fb6a` erfolgreich gepusht, Remote identisch.

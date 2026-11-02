@@ -1,5 +1,46 @@
 # Implementierungsfortschritt
 
+## Zuletzt vollständig geprüfter Code: 0194d59
+
+Stand 2026-11-02: Branch `feature/general-marketplace-rebuild`, Repository
+`LLMbutHuman/GunIndex`, letzter Codecommit
+`0194d59cac1bad2cd42ab67d409f2ceccdf5d7be`. Push und identische Remote-SHA bestätigt.
+[CI 41481388425](https://github.com/LLMbutHuman/GunIndex/actions/runs/41481388425)
+vollständig erfolgreich: Windows und Linux, PHP/MySQL, sechs neue automatische
+Finanzfälle einschließlich zwei konkurrierender Prozesse, bestehende Vertrags-/
+Browser-/internationalen-/Accessibilityprüfungen und Composer-Audit.
+Die nachfolgenden älteren „noch ausstehend“-Vermerke dokumentieren Zwischenstände.
+
+Seit der letzten Wiederaufnahme gesichert: `126d400` persönliche Listen;
+`dc046ae` Rechtsdokumentbindung; `699c35b` automatischer Finanzabschluss;
+`0194d59` echte Parallelregression, Übersetzung und Abnahmeliste.
+Alle vier Codestände besitzen erfolgreiche eigene CI-Läufe. Keine Live-Zahlungen.
+Aktuelle Gesamtbewertung: TECHNICAL_ACCEPTANCE.md; fachliche Übergabe als
+unfertiger Entwicklungsstand: LEGAL_HANDOFF.md. Gesamtauftrag bleibt offen.
+
+### Konkrete Fortsetzung
+
+1. Auktionsgebühren: unveränderlicher Gebührenauftrag/Tarif je neuer Auktion,
+   Vorabzustimmung und ursprüngliche Rechnungsdaten sichern; keine nachträgliche
+   Belastung bestehender Auktionen. Dann Gebühren in Veröffentlichung und beide
+   Abschlusswege atomar verbinden. Unbezahlte Forderungen und Korrekturen benötigen
+   ein eigenes Modell; normales Nutzerstorno darf erbrachte Gebühren nicht löschen.
+2. `finance_prepare_order()` benötigt für Erfolgsgebühren eine tatsächliche
+   Verkaufsgrundlage statt `fees_quote(service, null)`. Bestehende Altaufträge ohne
+   Snapshot dürfen nicht stillschweigend mit heutigen Rechnungsdaten ergänzt werden.
+3. Automatische Erfüllung neuer Leistungsarten, Wiedereinstellung/Gratisanspruch
+   und vollständige Transaktionsabläufe anschließen; aktuelle Prüfungen erhalten.
+4. Übrige Masterpunkte gemäß TECHNICAL_ACCEPTANCE.md modular umsetzen. E2EE,
+   vollständige Altseitenübersetzungen, Wartung, Installer und SMTP-Assistent sind
+   weiterhin echte Entwicklungsaufgaben, keine allein externen Freigaben.
+5. Lokal muss vor weiteren WSL-/Docker-Installationen ausreichend Speicherplatz
+   vorhanden sein und die ausstehende Windows-Aktion abgeschlossen werden.
+   Keine Dateien/Volumes ungefragt löschen oder den Rechner neu starten.
+
+Die private Auftragsdatei `GunIndex_Codex_Fortsetzung.md` bleibt absichtlich
+unversioniert. Portable Testwerkzeuge liegen ignoriert in `tests/.runtime/`.
+Keine Resets, Änderungen an `main`, historischen Imports oder alten Cloud-Workspaces.
+
 ## 2026-11-02: Fortsetzung der begonnenen zweiten Etappe
 
 Gesicherte Ausgangsbasis: `754adf167823dbaf986a39a8a35f209686d2e5be`.

@@ -19,8 +19,9 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
 - **B:** PayPal-REST-Anbindung; synthetische Adaptertests vorhanden, echte
   Sandbox-/Providerabnahme und Live-Freigabe fehlen.
 - **A:** Automatischer Finanzabschluss mit synthetischem Provideradapter:
-  `699c35b`, CI 41480002310 vollständig erfolgreich. Zusätzlicher echter
-  Paralleltest noch ausstehend; keine reale Providerabnahme.
+  `699c35b`, CI 41480002310 vollständig erfolgreich. Auch der echte Paralleltest
+  mit zwei getrennten Prozessen besteht: `0194d59`, CI 41481388425.
+  Keine reale Providerabnahme.
 - **C:** Lokale WSL-/Docker-Laufzeit: Speicherplatz/Neustart ausstehend.
   Die externe Linux-CI ist funktionsfähig.
 
@@ -69,3 +70,6 @@ Fachliche Rechts-/Steuer-/Länderprüfung, Providerzulassung, echte DNS-/Postein
 zustellung und produktive Backup-/Restoreziele können synthetische Tests nicht
 beweisen. Details: CONTRACT_BINDING.md, FINANCE.md, POSTCODE_SOURCES.md,
 IMPLEMENTATION_PROGRESS.md und RELEASE_OPERATIONS.md.
+
+Fachlicher Übergabestand: [LEGAL_HANDOFF.md](LEGAL_HANDOFF.md). Er beschreibt
+vorhandene Implementierungen und Grenzen, nicht eine fertige Plattform.

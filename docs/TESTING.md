@@ -1,5 +1,15 @@
 # Tatsächlicher Testnachweis
 
+## Letzter vollständiger Code-/CI-Nachweis
+
+`0194d59cac1bad2cd42ab67d409f2ceccdf5d7be`, [CI 41481388425](https://github.com/LLMbutHuman/GunIndex/actions/runs/41481388425):
+beide Jobs erfolgreich. Zusätzlich besteht der echte Capture-/Webhook-Paralleltest
+mit getrennten PHP-Prozessen, genau einer Rechnung und genau einer Cash-Buchung.
+Damit sind alle sechs neuen Finanzfälle, die übrigen PHP-/MySQL-/Vertragsfälle,
+Browser-/internationalen-/Accessibilityprüfungen und Composer-Audit erfolgreich.
+Alle Providerantworten dabei synthetisch; keine tatsächliche Providerabnahme.
+Ältere Ausstehend-Vermerke unten beziehen sich auf die jeweiligen Zwischenstände.
+
 ## Finanzabschluss: vollständige CI bestätigt
 
 `699c35beb69fc29356f44cc22dc7fdd4c475fb6a`, [CI 41480002310](https://github.com/LLMbutHuman/GunIndex/actions/runs/41480002310):
