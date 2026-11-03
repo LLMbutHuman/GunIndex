@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Nové zpoplatněné aukce vyžadují schválenou konfiguraci plateb, financí, daní a právních dokumentů. Stávající bezplatné aukce nebudou zpětně zpoplatněny.',
     'auction_billing.publish' => 'Zveřejnit aukci s povinností platby',
     'auction_billing.goods_notice' => 'Pouze běžné neregulované zboží. Zbraně, střelivo a jiné zakázané regulované položky jsou vyloučeny.',
+    'auction_billing.assessed_title'=>'Nový aukční poplatek',
+    'auction_billing.assessed_body'=>'Za aukci #{listing} byl účtován poplatek {amount}. Reference platby: {reference}. Částku a stav zkontrolujte v platebním příkazu.',
+    'auction_billing.waived_title'=>'Aukční poplatek prominut',
+    'auction_billing.waived_body'=>'Nezaplacený poplatek {amount} s referencí {reference} byl zcela prominut. Žádné peníze nebyly vyplaceny.',
 ];

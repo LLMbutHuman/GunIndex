@@ -1,5 +1,20 @@
 # Implementierungsfortschritt
 
+## Gebührenhinweise und Abschlussprüfung, 2026-11-03
+
+CI `41664657641` für Wartungscommit `de42a91` vollständig erfolgreich, einschließlich
+zwölf Regel-, acht DB-/Worker- und 14 HTTP-/RBAC-Gruppen sowie gesamter Browser-
+regression. `2c070d6fa60a39ac42288285e2cab34ae486aea3` gesichert; CI `41665892946`
+bestätigt bereits PHP/MySQL samt zusätzlicher neunter Wartungsgruppe und Healthcheck,
+Browserlauf noch aktiv.
+
+Neue Gebührenhinweise für Forderung und vollständigen Erlass in acht Sprachen
+ergänzt, atomar und dedupliziert mit dem Finanzereignis. Kanaleinstellungen und
+verifizierte Mailadresse werden respektiert; Nullgebühren erzeugen keine Aufforderung.
+Zwei DB-Gruppen für Sprache, verschlüsselte Queue, Wiederholung und Präferenzen
+ergänzt (Gebührensuite jetzt 26 Gruppen). PHP-Syntax, 16 reine Gebührenfälle und
+sieben Sprach-/Geo-Gruppen lokal bestanden; neue DB-/Queue-Fälle noch ausstehend.
+
 ## Ergänzte Betriebsdiagnose und bestätigte Browserfälle, 2026-11-03
 
 `9303510e59cf67eb4465a17acffaa75c0211b40f`: CI `41663795718` vollständig erfolgreich.

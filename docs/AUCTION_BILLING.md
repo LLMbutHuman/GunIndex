@@ -50,6 +50,13 @@ Referenz und exakten Betrag. Wiederholte Bestätigung erzeugt keine zweite
 Rechnung, kein zweites `cash_in` und kein Bump-/Premiumguthaben. Rechnungs-PDFs
 entstehen im bestehenden Modell erst nach bestätigter Zahlung.
 
+Positive neue Forderungen und vollständige Erlasse erzeugen transaktionale,
+deduplizierte Hinweise in der gespeicherten Empfängersprache mit direktem Link
+zum eigenen Zahlungsauftrag. Die vorhandenen In-App-/Mailpräferenzen gelten;
+Mail wird nur für bestätigte Adressen und als verschlüsselte Queue-Nachricht
+angelegt. Nullgebühren erzeugen keine Zahlungsaufforderung. Erzeugung eines
+Hinweises bedeutet weder Zahlungseingang noch bewiesene E-Mail-Zustellung.
+
 Verkäufer können entstandene Gebühren nicht selbst als unbenutzte Bestellung
 stornieren. `finance.manage` kann eine geprüfte unbezahlte Forderung vollständig
 erlassen; Begründung, Gegenbuchung und Audit bleiben erhalten. Behauptete, noch

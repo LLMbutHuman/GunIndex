@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Nye auktioner med gebyr kræver godkendt konfiguration af betalinger, økonomi, skat og juridiske dokumenter. Eksisterende gratis auktioner pålægges ikke gebyrer med tilbagevirkende kraft.',
     'auction_billing.publish' => 'Offentliggør auktion med betalingspligt',
     'auction_billing.goods_notice' => 'Kun almindelige varer uden særlige reguleringskrav. Våben, ammunition og andre forbudte regulerede varer er udelukket.',
+    'auction_billing.assessed_title'=>'Nyt auktionsgebyr',
+    'auction_billing.assessed_body'=>'Der er beregnet {amount} for auktion #{listing}. Betalingsreference: {reference}. Se beløb og status i betalingsordren.',
+    'auction_billing.waived_title'=>'Auktionsgebyr eftergivet',
+    'auction_billing.waived_body'=>'Det ubetalte gebyr på {amount} med referencen {reference} er eftergivet fuldt ud. Der er ikke udbetalt penge.',
 ];

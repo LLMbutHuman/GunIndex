@@ -131,6 +131,10 @@ function auction_billing_charge(PDO $pdo,int $listingId,string $kind,?int $sale)
     }
     $pdo->prepare('INSERT INTO market_auction_fee_charges(listing_id,kind,invoice_id,gross_cents,sale_cents) VALUES (?,?,?,?,?)')->execute([$listingId,$kind,$invoiceId,$gross,$sale]);
     audit_log($pdo,$seller,'auction.fee_assessed',$listingId,['initiator'=>'system','kind'=>$kind,'invoice_id'=>$invoiceId,'gross_cents'=>$gross,'sale_cents'=>$sale]);
+    if($invoiceId!==null)notify_user($pdo,$seller,'auction-fee-due:'.$listingId.':'.$kind,
+        i18n_user_text($pdo,$seller,'auction_billing.assessed_title'),
+        i18n_user_text($pdo,$seller,'auction_billing.assessed_body',['amount'=>money_eur($gross),'listing'=>(string)$listingId,'reference'=>$reference]),
+        '/user/billing.php?order='.$invoiceId,true);
     return $invoiceId;
 }
 function auction_billing_verify_payment(PDO $pdo,array $invoice): void {
@@ -155,7 +159,12 @@ function auction_billing_waive(PDO $pdo,int $actor,int $invoiceId,string $reason
         $pdo->prepare("UPDATE market_invoices SET status='void' WHERE id=?")->execute([$invoiceId]);
         $pdo->prepare('UPDATE market_auction_fee_charges SET waived_by=?,waiver_reason=?,waived_at=UTC_TIMESTAMP() WHERE id=?')->execute([$actor,$reason,$charge['id']]);
         $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'fee_waived',?,?)")->execute([$invoiceId,$actor,-(int)$charge['gross_cents'],'auction-waiver:'.$charge['id']]);
-        audit_log($pdo,$actor,'auction.fee_waived',(int)$charge['listing_id'],['invoice_id'=>$invoiceId,'reason'=>$reason]);$pdo->commit();
+        audit_log($pdo,$actor,'auction.fee_waived',(int)$charge['listing_id'],['invoice_id'=>$invoiceId,'reason'=>$reason]);
+        $seller=(int)$invoice['user_id'];
+        notify_user($pdo,$seller,'auction-fee-waived:'.$charge['id'],i18n_user_text($pdo,$seller,'auction_billing.waived_title'),
+            i18n_user_text($pdo,$seller,'auction_billing.waived_body',['amount'=>money_eur((int)$charge['gross_cents']),'reference'=>$invoice['invoice_number']]),
+            '/user/billing.php?order='.$invoiceId,true);
+        $pdo->commit();
     }catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw $error;}
 }
 

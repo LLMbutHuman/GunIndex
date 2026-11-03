@@ -84,7 +84,7 @@ function abt_no_publication(PDO $pdo, int $seller): void
 {
     foreach (['market_listings'=>'seller_id','market_auction_fee_contracts'=>'seller_id','market_invoices'=>'user_id',
         'market_manual_orders'=>'user_id','market_invoice_snapshots'=>'user_id','market_contract_receipts'=>'user_id',
-        'market_legal_acceptances'=>'user_id'] as $table=>$column) {
+        'market_legal_acceptances'=>'user_id','market_notifications'=>'user_id','market_mail_queue'=>'user_id'] as $table=>$column) {
         abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM '.$table.' WHERE '.$column.'=?',[$seller])===0,'Rejected publication left a row in '.$table.'.');
     }
     abt_check(!$pdo->inTransaction(),'Rejected publication left an open transaction.');
@@ -440,6 +440,7 @@ try {
                 abt_check((int)$charge['gross_cents']===0&&$charge['invoice_id']===null,'Rounded zero success fee created an invoice.');
                 abt_charge_count($pdo,$tiny['id'],2);
                 abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_invoices WHERE user_id=?',[$seller['id']])===0,'Zero fees created a payment order.');
+                abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_notifications WHERE user_id=? AND event_key IN (?,?)',[$seller['id'],'auction-fee-due:'.$tiny['id'].':listing','auction-fee-due:'.$tiny['id'].':success'])===0,'Zero fee generated a payment request notification.');
                 $large=abt_publish($pdo,$seller['id'],$category,['buyout_price'=>'100000.00']); market_buy_now($pdo,$large['id'],$buyer['id']);
                 abt_check((int)abt_scalar($pdo,"SELECT gross_cents FROM market_auction_fee_charges WHERE listing_id=? AND kind='success'",[$large['id']])===2990,'Success fee cap was exceeded.');
             } finally { abt_setting($pdo,'fee_auction_listing_cents','50'); }
@@ -551,6 +552,49 @@ try {
             abt_check((int)abt_scalar($pdo,"SELECT COUNT(*) FROM market_invoice_documents WHERE invoice_id=? AND document_type='credit_note'",[$invoice])===2,'Refund generated duplicate credit documents.');
             abt_check((int)abt_scalar($pdo,"SELECT SUM(amount_cents) FROM market_finance_events WHERE invoice_id=? AND kind IN ('cash_in','cash_refund')",[$invoice])===0,'Refund cash balance is not zero.');
             abt_check((int)abt_scalar($pdo,'SELECT gross_cents FROM market_auction_fee_charges WHERE invoice_id=?',[$invoice])===50,'Refund rewrote original assessment.');
+        },
+        'fee_notifications_use_recipient_language_and_enqueue_only_once'=>static function()use($pdo,$category,$admin):void{
+            foreach(array_keys(i18n_locales()) as $locale){
+                $seller=abt_user($pdo);$buyer=abt_user($pdo);
+                $pdo->prepare('UPDATE users SET preferred_locale=?,email_verified_at=UTC_TIMESTAMP() WHERE id=?')->execute([$locale,$seller['id']]);
+                $pdo->prepare('INSERT INTO market_notification_preferences(user_id,inapp_enabled,mail_enabled) VALUES (?,1,1)')->execute([$seller['id']]);
+                $fixture=abt_publish($pdo,$seller['id'],$category);$listing=$fixture['id'];$invoice=$fixture['invoice'];
+                abt_retry_charge($pdo,$listing,'listing',null);
+                market_buy_now($pdo,$listing,$buyer['id']);abt_retry_charge($pdo,$listing,'success',10000);
+                foreach(['listing'=>50,'success'=>300] as $kind=>$amount){
+                    $key='auction-fee-due:'.$listing.':'.$kind;
+                    $notice=abt_row($pdo,'SELECT * FROM market_notifications WHERE user_id=? AND event_key=?',[$seller['id'],$key]);
+                    $order=abt_row($pdo,'SELECT i.id,i.invoice_number FROM market_invoices i JOIN market_auction_fee_charges c ON c.invoice_id=i.id WHERE c.listing_id=? AND c.kind=?',[$listing,$kind]);
+                    abt_check($notice['title']===i18n_user_text($pdo,$seller['id'],'auction_billing.assessed_title')&&$notice['target_url']==='/user/billing.php?order='.$order['id'],'Localized fee notice or owner link missing.');
+                    $expected=i18n_user_text($pdo,$seller['id'],'auction_billing.assessed_body',['amount'=>money_eur($amount),'listing'=>(string)$listing,'reference'=>$order['invoice_number']]);
+                    abt_check($notice['body']===$expected,'Fee notice did not use the recipient language.');
+                    $mail=abt_row($pdo,'SELECT * FROM market_mail_queue WHERE user_id=? AND dedupe_key=?',[$seller['id'],'notification:'.$seller['id'].':'.$key]);
+                    $payload=json_decode(crypto_decrypt('mail',$mail['payload_ciphertext']),true,8,JSON_THROW_ON_ERROR);
+                    abt_check($payload['subject']===$notice['title']&&str_starts_with($payload['body'],$expected)&&$mail['status']==='pending','Mail was not an encrypted pending notification.');
+                    abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_notifications WHERE user_id=? AND event_key=?',[$seller['id'],$key])===1,'Repeated fee generated duplicate notices.');
+                    abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_mail_queue WHERE user_id=? AND dedupe_key=?',[$seller['id'],'notification:'.$seller['id'].':'.$key])===1,'Repeated fee generated duplicate mail.');
+                }
+                auction_billing_waive($pdo,$admin['id'],$invoice,'Synthetic notification waiver without real payment.');
+                auction_billing_waive($pdo,$admin['id'],$invoice,'Synthetic repeated notification waiver.');
+                $charge=(int)abt_scalar($pdo,'SELECT id FROM market_auction_fee_charges WHERE invoice_id=?',[$invoice]);$key='auction-fee-waived:'.$charge;
+                $notice=abt_row($pdo,'SELECT * FROM market_notifications WHERE user_id=? AND event_key=?',[$seller['id'],$key]);
+                abt_check($notice['title']===i18n_user_text($pdo,$seller['id'],'auction_billing.waived_title'),'Waiver notice language mismatch.');
+                abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_mail_queue WHERE user_id=? AND dedupe_key=?',[$seller['id'],'notification:'.$seller['id'].':'.$key])===1,'Waiver mail duplicated.');
+                abt_check(abt_status($pdo,$invoice)==='void','Waiver notification incorrectly claims paid status.');
+            }
+        },
+        'fee_notifications_respect_disabled_channels_and_verified_email'=>static function()use($pdo,$category):void{
+            $seller=abt_user($pdo);
+            $pdo->prepare('INSERT INTO market_notification_preferences(user_id,inapp_enabled,mail_enabled) VALUES (?,0,0)')->execute([$seller['id']]);
+            abt_publish($pdo,$seller['id'],$category);
+            abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_notifications WHERE user_id=?',[$seller['id']])===0,'Disabled channels were ignored.');
+            $pdo->prepare('UPDATE market_notification_preferences SET mail_enabled=1 WHERE user_id=?')->execute([$seller['id']]);
+            abt_publish($pdo,$seller['id'],$category);
+            abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_mail_queue WHERE user_id=?',[$seller['id']])===0,'Unverified address received fee mail.');
+            $pdo->prepare('UPDATE users SET email_verified_at=UTC_TIMESTAMP() WHERE id=?')->execute([$seller['id']]);
+            $fixture=abt_publish($pdo,$seller['id'],$category);$key='auction-fee-due:'.$fixture['id'].':listing';
+            $notice=abt_row($pdo,'SELECT is_visible FROM market_notifications WHERE user_id=? AND event_key=?',[$seller['id'],$key]);
+            abt_check((int)$notice['is_visible']===0&&(int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_mail_queue WHERE user_id=?',[$seller['id']])===1,'Mail-only preference was not preserved.');
         },
         'http_publication_uses_actual_form_quote_and_csrf_then_preserves_ownership'=>static function() use($pdo,$category): void {
             $seller=abt_user($pdo); $other=abt_user($pdo); $browser=abt_browser(); $foreign=abt_browser();

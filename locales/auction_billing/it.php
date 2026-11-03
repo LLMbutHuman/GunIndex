@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Le nuove aste a pagamento richiedono una configurazione approvata per pagamenti, contabilità, imposte e documenti legali. Le aste gratuite esistenti non saranno addebitate retroattivamente.',
     'auction_billing.publish' => 'Pubblica asta con obbligo di pagamento',
     'auction_billing.goods_notice' => 'Solo merci comuni non regolamentate. Sono escluse armi, munizioni e altri articoli regolamentati vietati.',
+    'auction_billing.assessed_title'=>'Nuova commissione d’asta',
+    'auction_billing.assessed_body'=>'Per l’asta #{listing} è stata addebitata una commissione di {amount}. Riferimento del pagamento: {reference}. Controlla importo e stato nell’ordine di pagamento.',
+    'auction_billing.waived_title'=>'Commissione d’asta annullata',
+    'auction_billing.waived_body'=>'La commissione non pagata di {amount}, riferimento {reference}, è stata interamente annullata. Non è stato versato denaro.',
 ];

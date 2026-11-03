@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Nieuwe betaalde veilingen vereisen goedgekeurde instellingen voor betalingen, financiën, belastingen en juridische documenten. Bestaande gratis veilingen worden niet met terugwerkende kracht belast.',
     'auction_billing.publish' => 'Veiling publiceren met betalingsverplichting',
     'auction_billing.goods_notice' => 'Alleen algemene, niet-gereguleerde goederen. Wapens, munitie en andere verboden gereguleerde artikelen zijn uitgesloten.',
+    'auction_billing.assessed_title'=>'Nieuwe veilingkosten',
+    'auction_billing.assessed_body'=>'Voor veiling #{listing} is {amount} in rekening gebracht. Betalingsreferentie: {reference}. Controleer het bedrag en de status in de betaalopdracht.',
+    'auction_billing.waived_title'=>'Veilingkosten kwijtgescholden',
+    'auction_billing.waived_body'=>'De onbetaalde kosten van {amount} met referentie {reference} zijn volledig kwijtgescholden. Er is geen geld uitbetaald.',
 ];

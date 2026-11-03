@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'New auctions subject to fees require approved payment, financial, tax and legal configuration. Existing free auctions will not be charged retroactively.',
     'auction_billing.publish' => 'Publish auction with obligation to pay',
     'auction_billing.goods_notice' => 'General unregulated goods only. Weapons, ammunition and other prohibited regulated items are excluded.',
+    'auction_billing.assessed_title'=>'New auction fee',
+    'auction_billing.assessed_body'=>'A fee of {amount} was assessed for auction #{listing}. Payment reference: {reference}. Check the amount and status in the payment order.',
+    'auction_billing.waived_title'=>'Auction fee waived',
+    'auction_billing.waived_body'=>'The unpaid fee of {amount} with reference {reference} was waived in full. No money was paid out.',
 ];

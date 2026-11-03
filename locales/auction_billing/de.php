@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Neue gebührenpflichtige Auktionen benötigen freigegebene Zahlungs-, Finanz-, Steuer- und Rechtskonfiguration. Bestehende gebührenfreie Auktionen werden nicht nachträglich belastet.',
     'auction_billing.publish' => 'Auktion kostenpflichtig veröffentlichen',
     'auction_billing.goods_notice' => 'Nur allgemeine unregulierte Waren. Waffen, Munition und andere gesperrte regulierte Artikel sind ausgeschlossen.',
+    'auction_billing.assessed_title'=>'Neue Auktionsgebühr',
+    'auction_billing.assessed_body'=>'Für Auktion #{listing} wurden {amount} berechnet. Zahlungsreferenz: {reference}. Prüfe Betrag und Status im Zahlungsauftrag.',
+    'auction_billing.waived_title'=>'Auktionsgebühr erlassen',
+    'auction_billing.waived_body'=>'Die unbezahlte Gebühr von {amount} mit Referenz {reference} wurde vollständig erlassen. Es wurde kein Geld ausgezahlt.',
 ];

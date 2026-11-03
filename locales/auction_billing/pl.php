@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Nowe płatne aukcje wymagają zatwierdzonej konfiguracji płatności, finansów, podatków i dokumentów prawnych. Istniejące bezpłatne aukcje nie będą obciążane wstecz.',
     'auction_billing.publish' => 'Opublikuj aukcję z obowiązkiem zapłaty',
     'auction_billing.goods_notice' => 'Tylko zwykłe towary nieregulowane. Broń, amunicja i inne zabronione towary regulowane są wykluczone.',
+    'auction_billing.assessed_title'=>'Nowa opłata aukcyjna',
+    'auction_billing.assessed_body'=>'Za aukcję #{listing} naliczono {amount}. Numer referencyjny płatności: {reference}. Sprawdź kwotę i status w zleceniu płatności.',
+    'auction_billing.waived_title'=>'Opłata aukcyjna umorzona',
+    'auction_billing.waived_body'=>'Niezapłacona opłata {amount}, numer referencyjny {reference}, została w całości umorzona. Nie wypłacono żadnych środków.',
 ];

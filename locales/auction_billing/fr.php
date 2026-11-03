@@ -27,4 +27,8 @@ return [
     'auction_billing.setup_help' => 'Les nouvelles enchères payantes nécessitent une configuration approuvée des paiements, des finances, de la fiscalité et des documents juridiques. Les enchères gratuites existantes ne seront pas facturées rétroactivement.',
     'auction_billing.publish' => 'Publier l’enchère avec obligation de paiement',
     'auction_billing.goods_notice' => 'Uniquement des biens ordinaires non réglementés. Les armes, munitions et autres articles réglementés interdits sont exclus.',
+    'auction_billing.assessed_title'=>'Nouveaux frais d’enchère',
+    'auction_billing.assessed_body'=>'Des frais de {amount} ont été calculés pour l’enchère #{listing}. Référence de paiement : {reference}. Consultez le montant et le statut dans l’ordre de paiement.',
+    'auction_billing.waived_title'=>'Frais d’enchère annulés',
+    'auction_billing.waived_body'=>'Les frais impayés de {amount}, référence {reference}, ont été entièrement annulés. Aucun argent n’a été versé.',
 ];
