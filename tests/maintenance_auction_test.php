@@ -2,6 +2,7 @@
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'||PHP_OS_FAMILY==='Windows'||getenv('DB_DATABASE')!=='gunindex_rebuild_test')exit(2);
 require_once __DIR__.'/../config/bootstrap.php';
+define('GUNINDEX_HEALTH_LIBRARY',true);require_once __DIR__.'/../ops/health.php';
 if($pdo->query('SELECT DATABASE()')->fetchColumn()!=='gunindex_rebuild_test')exit(2);
 function ma_check(bool $value,string $reason):void{if(!$value)throw new RuntimeException($reason);}
 function ma_scalar(PDO $pdo,string $sql,array $args=[]):mixed{$q=$pdo->prepare($sql);$q->execute($args);return $q->fetchColumn();}
@@ -41,6 +42,7 @@ try{
    ma_set($pdo,$admin,'1');$window=(int)ma_scalar($pdo,'SELECT window_id FROM market_maintenance_state WHERE id=1');
    foreach([$active,$paused,$expired,$ended,$fixed] as $id){$expected=in_array($id,[$active,$paused],true)?1:0;ma_check((int)ma_scalar($pdo,'SELECT COUNT(*) FROM market_maintenance_auctions WHERE window_id=? AND listing_id=?',[$window,$id])===$expected,'Incorrect deadline snapshot eligibility.');}
    ma_check(maintenance_acquire_lease()===null,'Active maintenance granted a new lease.');
+   $health=ops_health($pdo);ma_check($health['checks']['maintenance_state']&&$health['maintenance']['active']&&$health['maintenance']['window_id']===$window,'Monitoring does not identify the active pause.');
    ma_set($pdo,$admin,'1');ma_check((int)ma_scalar($pdo,'SELECT window_id FROM market_maintenance_state WHERE id=1')===$window,'Repeated activation opened a second window.');
   },
   'direct_market_calls_and_close_worker_cannot_trade_while_paused'=>static function()use($pdo,$active,$seller,$buyer):void{
@@ -60,6 +62,7 @@ try{
    ma_set($pdo,$admin,'0');$seconds=(int)ma_scalar($pdo,'SELECT duration_seconds FROM market_maintenance_windows WHERE id=?',[$window]);ma_check($seconds>=61&&$seconds<=65,'Unexpected synthetic duration.');
    foreach([$active,$paused,$expired,$ended,$fixed] as $id){$actual=ma_scalar($pdo,'SELECT ends_at FROM market_listings WHERE id=?',[$id]);$expected=in_array($id,[$active,$paused],true)?gmdate('Y-m-d H:i:s',strtotime($before[$id].' UTC')+$seconds):$before[$id];ma_check($actual===$expected,'Deadline extended incorrectly.');}
    $after=ma_scalar($pdo,'SELECT ends_at FROM market_listings WHERE id=?',[$active]);ma_set($pdo,$admin,'0');ma_check(ma_scalar($pdo,'SELECT ends_at FROM market_listings WHERE id=?',[$active])===$after,'Repeated resume extended twice.');
+   ma_check(ops_health($pdo)['maintenance']['active']===false,'Monitoring still reports a pause after resume.');
    ma_check((int)ma_scalar($pdo,"SELECT COUNT(*) FROM admin_logs WHERE action_type='maintenance.ended' AND target_id=?",[$window])===1,'Missing/duplicate close audit.');
   },
   'a_mismatched_raw_flag_fails_closed'=>static function()use($pdo):void{
@@ -70,6 +73,13 @@ try{
   },
   'normal_trading_resumes_without_changing_existing_bids'=>static function()use($pdo,$active,$buyer):void{
    market_bid($pdo,$active,$buyer,1500);ma_check((int)ma_scalar($pdo,'SELECT COUNT(*) FROM market_proxy_bids WHERE listing_id=?',[$active])===1,'Trading did not resume.');
+  },
+  'an_open_window_cannot_masquerade_as_resumed'=>static function()use($pdo):void{
+   $pdo->beginTransaction();try{
+    $pdo->exec('UPDATE market_maintenance_windows SET ended_at=NULL WHERE id=(SELECT window_id FROM market_maintenance_state WHERE id=1)');$rejected=false;
+    try{maintenance_state($pdo);}catch(MaintenanceStateConflict){$rejected=true;}
+    ma_check($rejected&&ops_health($pdo)['checks']['maintenance_state']===false,'Inconsistent open window was accepted by guard or monitoring.');
+   }finally{$pdo->rollBack();}
   },
  ];
  foreach($tests as $name=>$run){$run();$passed++;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}fwrite(STDOUT,'Maintenance auction checks passed: '.$passed.PHP_EOL);

@@ -1,4 +1,4 @@
-# Technischer Abnahmestand – 2026-11-02
+# Technischer Abnahmestand – 2026-11-03
 
 Gesamtplattform **nicht fertig und nicht produktiv abgenommen**.
 Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
@@ -8,6 +8,15 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
 **C:** Gesamtanforderung offen, teilweise implementiert oder nicht vollständig geprüft.
 
 ## Belegte Teilfunktionen
+
+- **A:** Auktions-Gebührenverträge, Einstell-/Erfolgsforderungen, Zuschlagsbindung,
+  Wiederholungsschutz, manuelle Zahlungsprüfung, vollständiger Erlass unbezahlter
+  Forderungen und verifizierte Erstattung: `7d5b25a`, CI 41662133685, 16 Unit- und
+  24 DB-/HTTP-Gruppen einschließlich paralleler Sofortkäufe. Zehn zusätzliche
+  Gebühren-Browser-Journeys in `9303510`, CI 41663795718, einschließlich acht mobiler
+  Sprachen bestanden. Freigaben standardmäßig aus.
+- **C:** Wartungszugriff, Worker-Barriere und Auktionsfrist-Pause implementiert in
+  `de42a91`; zwölf reine Tests lokal bestanden, DB-/HTTP-/Betriebsnachweis ausstehend.
 
 - **A:** Lokalisierte Konto-/Recovery-/Profil-/Benachrichtigungs-/Dashboard-
   und Footerabläufe in acht Sprachen; Empfängersprache in Mail-Links für frische
@@ -39,9 +48,9 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 
 | Nr. | Anforderung | Stand | Restumfang |
 | --- | --- | --- | --- |
-| 1 | Auktions-Einstellgebühr | C | Verbindlicher Auftrag je Durchlauf und automatische Forderung |
-| 2 | Auktions-Erfolgsprovision | C | Zuschlag/Sofortkauf, Buchung und Wiederholungsschutz |
-| 3 | Gebühren, Korrekturen, Rechnungen | C | Unbezahlte Forderungen, Gegenbuchungen, Bestandsaufträge |
+| 1 | Auktions-Einstellgebühr | A | Neuer bestätigter Durchlauf atomar berechnet; Aktivierungsfreigaben und tatsächliche Zahlungen extern |
+| 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
+| 3 | Gebühren, Korrekturen, Rechnungen | C | Voller unbezahlter Erlass und verifizierte Erstattungen geprüft; unbezahlte Teilkorrektur, Wiedereinstellung und Bestandsbehandlung offen |
 | 4 | Rechtsdokumentbindung | C | Bestehende Registrierungs-/Leistungsabläufe geprüft; neue Transaktionsarten und Pflichtzustimmung für Bestandskonten offen |
 | 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
 | 6 | Kategorieattribute | C | Typisierte Verwaltung und Validierung |
@@ -60,7 +69,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |
 | 20 | Händlerfunktionen | C | Mitarbeiterrollen, Abos, Warenwirtschaft und API |
 | 21 | Vollständiges SEO | C | Internationale URL-/hreflang-Strategie und vollständige Abnahme |
-| 22 | Wartungsmodus | C | HTTP-/API-/Worker-Sperre und faire Auktionsfortsetzung |
+| 22 | Wartungsmodus | C | Sperre/Fristfortsetzung implementiert, Integrationsnachweis ausstehend; Behandlung längerer Ausfälle und Werbezeiten offen |
 | 23 | Automatische Rückerstattungen | C | Vollständiger Workflow, Statusabgleich und Providerabnahme |
 | 24 | Bitcoin | C | Node-Anbindung, Bestätigungen, Reorganisationen und Infrastruktur |
 | 25 | Banküberweisung | C | Kontenabgleich und verifizierte zuordenbare Eingänge |

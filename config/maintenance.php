@@ -13,6 +13,10 @@ function maintenance_state(PDO $pdo,bool $exclusive=false): array {
     $value=$value===false?'0':$value;
     if(!$row||!in_array($value,['0','1'],true)||(int)$row['active']!==(int)$value)
         throw new MaintenanceStateConflict('Maintenance state and configuration disagree.');
+    if($row['window_id']!==null){
+        $q=$pdo->prepare('SELECT ended_at FROM market_maintenance_windows WHERE id=? FOR SHARE');$q->execute([$row['window_id']]);$window=$q->fetch();
+        if(!$window||((int)$row['active']===1)!==($window['ended_at']===null))throw new MaintenanceStateConflict('Maintenance window and state disagree.');
+    }elseif((int)$row['active']!==0)throw new MaintenanceStateConflict('Active maintenance window missing.');
     return $row;
 }
 

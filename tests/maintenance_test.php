@@ -90,7 +90,7 @@ $tests = [
     },
     'all_eight_locales_have_complete_valid_catalogs_and_rendered_text' => static function (): void {
         $base = maintenance_dictionary('de');
-        mt_assert(count($base) === 6 && count(i18n_locales()) === 8, 'Unexpected language coverage.');
+        mt_assert(count($base) === 8 && count(i18n_locales()) === 8, 'Unexpected language coverage.');
         foreach (i18n_locales() as $locale=>$name) {
             $catalog = maintenance_dictionary($locale); $response = maintenance_response($locale);
             mt_assert(array_keys($catalog) === array_keys($base), 'Translation keys differ in '.$locale);
@@ -101,7 +101,8 @@ $tests = [
                 preg_match_all('/\{[a-z_]+\}/',$source,$expected); preg_match_all('/\{[a-z_]+\}/',$text,$actual);
                 sort($expected[0]); sort($actual[0]);
                 mt_assert($expected[0] === $actual[0], 'Translation placeholder mismatch.');
-                mt_assert(str_contains($response['body'],htmlspecialchars($text,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8')), 'Localized text was not rendered: '.$key);
+                if(!in_array($key,['maintenance.enable','maintenance.help'],true))mt_assert(str_contains($response['body'],htmlspecialchars($text,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8')), 'Localized text was not rendered: '.$key);
+                else mt_assert(i18n_dictionary($locale)[$key]===$text,'Admin translation is unavailable.');
             }
         }
     },

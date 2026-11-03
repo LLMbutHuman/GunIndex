@@ -59,7 +59,7 @@ $groups = [
                             <?php if ($definition['type'] === 'boolean'): ?>
                                 <input type="hidden" name="<?= h($key) ?>" value="0"><label class="checkbox"><input type="checkbox" name="<?= h($key) ?>" value="1"<?= $values[$key] === '1' ? ' checked' : '' ?>> <?= h(t($definition['label'])) ?></label>
                                 <?php if ($key === 'auction_fees_enabled'): ?><small><?=h(t('auction_billing.setup_help'))?></small><?php endif; ?>
-                                <?php if ($key === 'maintenance_enabled'): ?><small>Sperrt öffentliche Zugriffe und pausiert Worker. Laufende Anfragen werden vor der Aktivierung abgeschlossen. Noch nicht abgelaufene Auktionsfristen werden beim Ausschalten um die Wartungszeit verlängert. Administration mit MFA und Zahlungsabgleich bleiben erreichbar. Kein vollständiger Backup-Schreibstopp.</small><?php endif; ?>
+                                <?php if ($key === 'maintenance_enabled'): ?><small><?=h(t('maintenance.help'))?></small><?php endif; ?>
                             <?php else: ?>
                                 <label for="setting-<?= h($key) ?>"><?= h(t($definition['label'])) ?></label>
                                 <?php if($definition['type']==='document_codes'):?><small><?=h(t('consent.configuration_help'))?></small><?php endif;?>

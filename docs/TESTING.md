@@ -1,5 +1,17 @@
 # Tatsächlicher Testnachweis
 
+## Achtsprachiger Gebühren-Browserlauf bestätigt
+
+CI [41663795718](https://github.com/LLMbutHuman/GunIndex/actions/runs/41663795718)
+für `9303510` vollständig erfolgreich. Alle zehn neuen Gebühren-Browser-Journeys
+bestanden, einschließlich acht mobiler Sprachabläufe; keine JavaScriptfehler
+und keine externen Requests. Vorheriger Testselektorfehler behoben.
+
+CI `41664657641` bestätigt inzwischen Linux-PHP/MySQL für die ursprünglichen
+Wartungsfälle; Browserregression noch aktiv. Danach Healthcheck, Fensterintegrität
+und neunte Wartungs-DB-Gruppe ergänzt: Syntax sowie zwölf reine Wartungs- und sieben
+Sprach-/Geo-Prüfungen lokal bestanden, neue DB-Ausführung ausstehend.
+
 ## Bestätigter Gebührenlauf und nächste Wartungsprüfung, 2026-11-03
 
 CI [41662133685](https://github.com/LLMbutHuman/GunIndex/actions/runs/41662133685)

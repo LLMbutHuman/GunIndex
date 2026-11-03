@@ -1,5 +1,20 @@
 # Implementierungsfortschritt
 
+## Ergänzte Betriebsdiagnose und bestätigte Browserfälle, 2026-11-03
+
+`9303510e59cf67eb4465a17acffaa75c0211b40f`: CI `41663795718` vollständig erfolgreich.
+Zehn zusätzliche Browser-Journeys bestanden: kostenlose Festpreis-/Entwurfsanlage
+und Veröffentlichung/Bearbeitung/Zahlungsansicht in allen acht mobilen Sprachen;
+keine JavaScriptfehler oder externen Requests. Der frühere Selektorfehler ist behoben.
+
+`de42a9139ba56868b89b8d27e81eb58ef7c895bf` auf Entwicklungsbranch gesichert, Remote-SHA
+bestätigt. CI `41664657641`: Windows und Linux-PHP/MySQL inklusive neuer Wartungs-
+tests bestanden; vollständige Browserregression noch aktiv. Anschließend ergänzt:
+Healthcheck meldet aktive Pause und Worker-Modus; inkonsistente offene Fenster
+sperren Zugriff und werden als fehlerhaft diagnostiziert. Einstellungsbeschreibung
+jetzt in allen acht Sprachen. Neunte DB-Testgruppe für widersprüchliche Fenster
+ergänzt; diese Ergänzungen bisher nur syntax-/sprachgeprüft, nächster CI-Lauf nötig.
+
 ## Wartungssperre und Auktionsfristen: nächste lokale Etappe, 2026-11-03
 
 HTTP-Gate jetzt mit Frontcontroller verbunden; Migration 013 und persistente

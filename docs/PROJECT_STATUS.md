@@ -1,5 +1,13 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
+**Fortschreibung 3. November:** Dieser Bericht bleibt die datierte Gesamtbewertung
+vom 2. November; seine Prozent-/Aufwandsspannen wurden nicht neu geschätzt.
+Inzwischen sind Auktions-Gebührenverträge und automatische Forderungen geprüft
+hinzugekommen (CI 41662133685). Wartungssperre und Fristfortsetzung sind implementiert,
+deren Integrationstest läuft noch. Aktueller Nachweis und verbleibende Einschränkungen:
+[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md),
+[TECHNICAL_ACCEPTANCE.md](TECHNICAL_ACCEPTANCE.md).
+
 Stand: 2. November 2026, 22:25 Uhr, Europe/Berlin. Bewertet wird der vollständige Ultimate-
 Masterauftrag für einen allgemeinen Warenmarktplatz, einschließlich E2EE,
 Einrichtung und Betriebsabnahme. Keine Produktivfreigabe.

@@ -15,7 +15,7 @@ Die folgenden Punkte sind vor einem jeweiligen Produktivbetrieb tatsächlich nac
 
 - [ ] Historische Geheimnisse rotiert; Datenherkunft, Retention, Zugriff und alte Git-History bewertet.
 - [ ] Verschlüsseltes Backup von Datenbank und privaten Dateien vorhanden; Schlüssel getrennt gesichert und Wiederherstellung überprüft.
-- [ ] Basisschema ausschließlich für leere Datenbank verwendet; unveränderte Migrationen bis 011 kontrolliert angewendet.
+- [ ] Basisschema ausschließlich für leere Datenbank verwendet; unveränderte Migrationen bis 013 kontrolliert angewendet.
 - [ ] Tatsächliches Altkontenschema per Dry-run und Staging geprüft; Kollisionen/ID-Zuordnung und Passwortresetprozess abgenommen.
 - [ ] Historische Angebote, Gebote, Nachrichten, Dokumente und Finanzen getrennt zugeordnet; keine ungeprüfte Übernahme.
 - [ ] Vorhandene allgemeine Klartextchats nach geprüftem Backup kontrolliert verschlüsselt; Schlüsselrotation/Recovery geprobt.

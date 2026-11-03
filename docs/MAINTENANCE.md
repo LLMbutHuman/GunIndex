@@ -33,6 +33,9 @@ manuelle Neubestellungen/Bumps, Werbestart und automatischer Checkout haben zus�
 eine Sperre innerhalb der Transaktion für direkte Aufrufe. Diese Sperre wird vor
 anderen Geschäftszeilen genommen. Abweichungen zwischen Konfigurationsflag und
 persistiertem Zustand sperren Zugriffe und verlangen eine kontrollierte Reparatur.
+Der vollständige Healthcheck meldet Wartungsfenster und pausierten Worker-Modus
+ausdrücklich; ein widersprüchlicher Zustand ist nicht gesund. Frische Heartbeats
+während Wartung belegen die laufende Zurückstellungsprüfung, keine Verarbeitung.
 
 ## Auktionsfristen
 
@@ -56,6 +59,6 @@ werden nicht durch eine lokale Pause verändert. Rohes SQL, zusätzliche selbst
 installierte Worker und direkte PHP-Datei-Exposition umgehen die vorgesehenen
 Einstiege und sind keine unterstützte Betriebsart. Webroot bleibt `public/`.
 
-Tests: zwölf reine Regel-/Darstellungsgruppen, acht zusätzliche Datenbank-/Worker-
+Tests: zwölf reine Regel-/Darstellungsgruppen, neun zusätzliche Datenbank-/Worker-
 gruppen und 14 HTTP-/RBAC-Gruppen. Verbindliche tatsächlich ausgeführte Resultate
 stehen in `IMPLEMENTATION_PROGRESS.md`, nicht in dieser Testumfangbeschreibung.

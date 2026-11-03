@@ -1,4 +1,4 @@
-# Arbeitsstand für die fachliche Prüfung – 2026-11-02
+# Arbeitsstand für die fachliche Prüfung – 2026-11-03
 
 Dies ist eine Übergabe des tatsächlich implementierten Entwicklungsstands,
 **keine abschließende Rechtsfreigabe**. Die Plattform ist noch nicht fertig.
@@ -39,10 +39,17 @@ Die aktuell konfigurierbaren Standardpreise sind Bump 1,99 EUR, drei Bumps
 19,90 EUR und Händlerbanner ein Monat 129,00 EUR. Maßgeblich ist der tatsächliche
 unveränderliche Auftragssnapshot, nicht ein später geänderter Standardpreis.
 
-Auktions-Einstellpreis und progressive Erfolgsprovision werden bisher berechnet,
-aber noch nicht automatisch als Auktionsforderungen gebucht. Die technische
-Verbindung zu Veröffentlichung, Zuschlag, Wiedereinstellung und Korrektur fehlt.
-Es findet keine rückwirkende Belastung bestehender Auktionen statt.
+Auktions-Einstellpreis und progressive Erfolgsprovision sind jetzt mit neuer
+Veröffentlichung, Zuschlag und Sofortkauf verbunden, standardmäßig deaktiviert.
+Der verschlüsselte Durchlaufvertrag bindet Tarif, Steuern, Empfänger, Anschriften
+und konkret bestätigte Rechtsfassungen. Gebühren-/Leistungsbeginnbestätigung und
+kostenpflichtiger Veröffentlichen-Button sind ausdrücklich erforderlich.
+Bestehende gebührenfreie Auktionen werden nicht rückwirkend belastet. Forderung
+und tatsächlicher Zahlungseingang sind getrennt; Rechnungs-PDF nach verifizierter
+Zahlung. Unbezahlter vollständiger Erlass mit Begründung und verifizierte bezahlte
+Erstattungen sind vorhanden. Wiedereinstellung, unbezahlte Teilkorrekturen und
+automatischer Provider-Einzug dieser Forderungen bleiben offen.
+Details: [AUCTION_BILLING.md](AUCTION_BILLING.md).
 
 Bestehende Leistungsaufträge speichern Referenz, Betrag, Tarif-/Bedingungsfassung
 und bei aktivierter Rechnungsfunktion verschlüsselte Rechnungsdaten samt geprüfter

@@ -7,4 +7,6 @@ return [
     'maintenance.retry'=>'Wacht minstens vijf minuten voordat je het opnieuw probeert. Het is nog niet bekend wanneer het onderhoud klaar is.',
     'maintenance.login'=>'Aanmelden voor beheerders',
     'maintenance.administration'=>'Naar de beheerinstellingen',
+    'maintenance.enable'=>'Onderhoudsmodus inschakelen',
+    'maintenance.help'=>'Blokkeert openbare toegang en pauzeert achtergrondtaken. Lopende verzoeken worden eerst afgerond. Nog niet verstreken veilingtermijnen worden na onderhoud met de uitvaltijd verlengd. Beheer met meervoudige authenticatie en betalingscontrole blijven beschikbaar. Dit blokkeert niet alle schrijfacties voor back-ups.',
 ];
