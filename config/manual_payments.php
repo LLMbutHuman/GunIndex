@@ -58,6 +58,7 @@ function manual_review(PDO $pdo,int $actorId,int $invoiceId,string $transaction,
    $pdo->prepare("INSERT INTO market_payment_events(attempt_id,provider_event_id,kind,payload_hash) VALUES (?,?,'manual_verified',?)")->execute([$attempt,'manual:'.$transaction,hash('sha256',$reference.':'.$received.':'.$invoice['recipient'])]);
    $pdo->prepare("UPDATE market_invoices SET status='paid' WHERE id=?")->execute([$invoiceId]);
    if(in_array($invoice['service_code'],['bump_single','bump_pack'],true))$pdo->prepare('INSERT INTO market_bump_credits(invoice_id,user_id,quantity,remaining) VALUES (?,?,?,?)')->execute([$invoiceId,$invoice['user_id'],$invoice['quantity'],$invoice['quantity']]);
+   elseif(auction_billing_service($invoice['service_code']))auction_billing_verify_payment($pdo,$invoice);
    elseif(function_exists('business_fulfill_manual'))business_fulfill_manual($pdo,$invoiceId);
    else throw new PaymentConflict('Die gebuchte Leistung ist nicht zur Freigabe verfügbar.');
    if(function_exists('finance_issue_invoice'))finance_issue_invoice($pdo,$invoiceId,$actorId);

@@ -1,5 +1,35 @@
 # Implementierungsfortschritt
 
+## Auktionsgebühren: Integration zur Linux-Prüfung, 2026-11-03
+
+Ausgangspunkt `784a9871139195a78c103c6c49ae7badaf7ecdad` unverändert erhalten.
+Neue additive Migration 012, verschlüsselter Gebührenvertrag je Auktionsdurchlauf,
+exakte Preis-/Rechtszustimmung und eigener kostenpflichtiger Veröffentlichen-Button.
+Atomare Einstell- und Erfolgsforderungen bei Veröffentlichung, Zuschlag bzw.
+Sofortkauf; vorhandene gebührenfreie Durchläufe bleiben gebührenfrei. Einmalige
+Zahlungsbestätigung, Rechnungsbeleg und Bargeldbuchung über bestehenden manuellen
+Prüfweg; kein Bump-/Premiumguthaben für Gebühren. Unbezahlte Gebühren sind nur mit
+Finanzberechtigung und Begründung vollständig erlassbar. Umfang und verbleibende
+Korrektur-/Providerarbeiten: [AUCTION_BILLING.md](AUCTION_BILLING.md).
+
+Tatsächlich lokal bestanden: 16 neue reine Gebühren-Testgruppen, 14 bestehende
+Zustimmungsfälle, sieben Geo-/Sprachfälle, PHP-Syntax der betroffenen Dateien
+und Node-Syntax des Formularskripts. Datenbank-/HTTP-Testdatei ergänzt, darunter
+zwei tatsächlich parallel gestartete Sofortkaufprozesse und der SQL-NULL-Fall.
+Diese DB-/HTTP-Fälle sind noch NICHT ausgeführt; nächste Prüfung ist die isolierte
+Linux-CI nach Entwicklungs-Push. Kein Gebühren-/Zahlungsschalter live aktiviert.
+
+Unabhängige Wartungsarbeiten liegen weiterhin unversioniert vor: HTTP-Gate,
+acht Sprachkataloge sowie Unit-/Integrationstests. Noch keine Routenverdrahtung,
+Worker-Barriere oder Auktionsuhr-Pause; nicht als fertiger Wartungsmodus verwenden.
+Die parallelen Agenten haben ihr Nutzungslimit erreicht. Ihre vorhandenen Dateien
+bleiben erhalten; die Root-Fortsetzung prüft und integriert sie.
+
+Wiederaufnahme: zuerst neuen CI-Lauf und etwaige Fehler prüfen; dann bezahlte
+Veröffentlichung im echten mobilen Browser testen. Danach Wartungsfenster mit
+transaktionaler Marktbarriere und einmaliger Fristverlängerung implementieren,
+HTTP-Gate/Worker anbinden und testen. Private Fortsetzungsdatei bleibt unversioniert.
+
 ## Verbindlicher Gesamtbericht und Wiederaufnahme, 2026-11-02, 22:25 Uhr
 
 Aktueller Gesamtstatus mit allen 26 Anforderungen, gewichteten Schätzbereichen,

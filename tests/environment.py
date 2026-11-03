@@ -89,6 +89,8 @@ def test():
    subprocess.run([sys.executable,str(ROOT/'tests'/suite)],cwd=ROOT,env=ENV,check=True)
   for suite,arguments in (('payments_unit.php',[]),('auth_test.php',[]),('account_link_locale_test.php',[]),('admin_unit.php',[]),('setup_test.php',[]),('setup_integration_test.php',[]),('image_order_test.php',[]),('image_order_integration_test.php',[]),('seo_test.php',['--database']),('personal_test.php',['--database']),('accounts_mail_test.php',[]),('geo_test.php',['--database']),('discovery_test.php',['--database']),('business_test.php',[]),('governance_test.php',[]),('consent_test.php',[]),('consent_integration_test.php',[]),('finance_test.php',[]),('chat_test.php',[])):
    docker('exec',APP,'php','tests/'+suite,*arguments)
+  for suite in ('auction_billing_test.php','auction_billing_integration_test.php'):
+   docker('exec',APP,'php','tests/'+suite)
   for suite in ('legacy_import_test.py','chat_migration_test.py','production_manifest_test.py','backup_test.py'):
    subprocess.run([sys.executable,str(ROOT/'tests'/suite)],cwd=ROOT,env=ENV,check=True)
  finally:docker('start',WORKER,capture=True)

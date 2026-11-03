@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     try {
         market_save_listing($pdo,(int)$user['id'],$_POST,$_FILES['images'] ?? [],$listingId);
         redirect('/user/dashboard.php?saved='.$listingId);
-    } catch (InvalidArgumentException|MarketAccessException|MarketConflictException $exception) {
+    } catch (InvalidArgumentException|DomainException|PaymentUnavailable|MarketAccessException|MarketConflictException $exception) {
         http_response_code(422); $error=$exception->getMessage();
     }
 }

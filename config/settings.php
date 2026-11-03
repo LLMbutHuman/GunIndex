@@ -31,6 +31,8 @@ function site_setting_definitions(): array
         'legal_registration_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.registration_codes','max'=>809],
         'legal_checkout_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.checkout_codes','max'=>809],
         'finance_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Unveränderliche Rechnungsdokumente ausstellen'],
+        'auction_fees_enabled'=>['type'=>'boolean','default'=>'0','label'=>'auction_billing.enabled'],
+        'auction_fees_approved'=>['type'=>'boolean','default'=>'0','label'=>'auction_billing.approved'],
         'operator_legal_name'=>['type'=>'text','default'=>'','label'=>'Rechtlicher Betreibername','min'=>0,'max'=>150],
         'operator_address_line1'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Straße und Hausnummer','min'=>0,'max'=>150],
         'operator_address_line2'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Zusatz','min'=>0,'max'=>150],

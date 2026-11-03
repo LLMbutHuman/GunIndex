@@ -1,6 +1,23 @@
 /* Local progressive enhancement. Every core workflow also uses native forms. */
 (() => {
   'use strict';
+  document.querySelectorAll('[data-listing-form]').forEach(form => {
+    const paid = form.querySelector('[data-auction-publish]');
+    if (!paid) return;
+    const save = form.querySelector('[data-listing-save]');
+    const update = () => {
+      const publishing = form.elements.type.value === 'auction' && form.elements.status.value === 'active';
+      paid.hidden = paid.disabled = !publishing;
+      save.hidden = save.disabled = publishing;
+      for (const name of ['accept_auction_fees', 'legal_confirm']) {
+        const input = form.elements.namedItem(name);
+        if (input) input.required = publishing;
+      }
+    };
+    form.elements.type.addEventListener('change', update);
+    form.elements.status.addEventListener('change', update);
+    update();
+  });
   const root = document.documentElement;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const adminMotion = root.dataset.motion;

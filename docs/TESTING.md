@@ -1,5 +1,18 @@
 # Tatsächlicher Testnachweis
 
+## Auktionsgebühren, 2026-11-03: lokal bestanden, Linux-Ausführung ausstehend
+
+`auction_billing_test.php`: 16 Testgruppen, einschließlich 25 unabhängiger
+Cent-Erwartungswerte, Tarifgrenzen, Rundung, Deckel und expliziter Preis-/Dokument-
+zustimmung. Dazu 14 bestehende Consent-Fälle und sieben Geo-/Sprachfälle bestanden;
+betroffene PHP-Dateien und `assets/js/app.js` syntaxgeprüft.
+
+Neue sequenzielle MySQL-/HTTP-Suite `auction_billing_integration_test.php` im
+Linux-Runner registriert, einschließlich echter konkurrierender Sofortkäufe,
+Nullgebühren, Preisänderungen, Rollbacks, Zahlung, Erlass, Erstattungen und
+Berechtigung/CSRF. Bis zum CI-Ergebnis ist dies Testumfang, kein Erfolgsnachweis.
+Keine Providerzahlung und keine lokale Windows-Ausführung des Linux-Runners.
+
 ## Abschließender Nachweis dieser Sitzung, 2026-11-02
 
 Code `2042549d5cec2bc39f713ebc18a76f8ab30fc3af`,

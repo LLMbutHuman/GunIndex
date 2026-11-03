@@ -124,6 +124,7 @@ function finance_record_refund(PDO $pdo,int $actor,int $invoiceId,int $amount,st
 function finance_cancel(PDO $pdo,int $invoiceId,int $userId):void {
  $pdo->beginTransaction();try{
   $q=$pdo->prepare("SELECT * FROM market_invoices WHERE id=? AND user_id=? FOR UPDATE");$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice||!in_array($invoice['status'],['issued','pending','manual_rejected'],true))throw new PaymentConflict('Nur unbezahlte Aufträge können hier storniert werden.');
+  if(auction_billing_service($invoice['service_code']))throw new PaymentConflict(t('auction_billing.due'));
   if(function_exists('business_cancel_invoice'))business_cancel_invoice($pdo,$invoiceId);
   $q=$pdo->prepare('SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?');$q->execute([$invoiceId]);$original=$q->fetchColumn();
   if($original)finance_write_document($pdo,$invoice,finance_snapshot($pdo,$invoiceId),'cancellation',(int)$invoice['gross_cents'],$userId,(int)$original);
@@ -147,7 +148,9 @@ function finance_pdf(array $document):string {
  $html.='<p>'.h($p['tax_explanation']).'</p><p class="small">Auftrag / Reference: '.h($p['order_reference']).'<br>Bestelldatum: '.h(substr($p['ordered_at'],0,10)).'<br>'.h($operator['vat_id']!==''?'USt-ID: '.$operator['vat_id']:'Steuernummer: '.$operator['tax_number']).'<br>'.h($operator['registration']).'</p>';
  if(isset($p['related_document_id']))$html.='<p>Bezug zum ursprünglichen Dokument / Related document: #'.(int)$p['related_document_id'].'</p>';
  if(isset($p['correction_reason']))$html.='<p>'.h($p['correction_reason']).'</p>';
- $html.='<p class="small">Vorauszahlung für Guthaben oder reservierte Plattformleistung. Der tatsächliche Leistungsbeginn wird gesondert in der Aktivierungshistorie dokumentiert.</p></body></html>';
+ $html.='<p class="small">'.h($p['service_description']??'Vorauszahlung für Guthaben oder reservierte Plattformleistung. Der tatsächliche Leistungsbeginn wird gesondert in der Aktivierungshistorie dokumentiert.').'</p>';
+ if(isset($p['auction_listing_id']))$html.='<p class="small">Auction #'.(int)$p['auction_listing_id'].($p['sale_cents']!==null?' · '.h(money_eur((int)$p['sale_cents'])):'').'</p>';
+ $html.='</body></html>';
  $private=rtrim(getenv('GENERAL_PRIVATE_DIR')?:'/var/lib/gunindex/private','/').'/pdf-fonts';if(!is_dir($private)&&!mkdir($private,0700,true))throw new RuntimeException('Private font cache unavailable.');
  $pdf=new \Dompdf\Dompdf(['isRemoteEnabled'=>false,'isPhpEnabled'=>false,'isJavascriptEnabled'=>false,'defaultFont'=>'DejaVu Sans','fontCache'=>$private,'tempDir'=>$private,'chroot'=>dirname(__DIR__).'/vendor/dompdf']);$pdf->loadHtml($html,'UTF-8');$pdf->setPaper('A4');$pdf->render();return$pdf->output();
 }

@@ -71,7 +71,7 @@ function consent_record(PDO $pdo,int $userId,string $scope,?int $invoiceId,array
 }
 
 /** Render only validated, explicitly approved versions; no preselected consent. */
-function consent_form(array $documents,string $locale): void
+function consent_form(array $documents,string $locale,bool $required=true): void
 {
     if(!$documents)return;
     echo '<fieldset class="panel span-2 contract-documents"><legend>'.h(t('consent.title')).'</legend><p>'.h(t('consent.help')).'</p>';
@@ -80,7 +80,7 @@ function consent_form(array $documents,string $locale): void
         echo '<p><a href="'.h($url).'" target="_blank" rel="noopener">'.h($doc['title'].' · '.$doc['version'].' / '.$doc['language']).'</a></p>';
         echo '<input type="hidden" name="legal_documents['.(int)$doc['id'].']" value="'.h($doc['content_hash']).'">';
     }
-    echo '<input type="hidden" name="legal_language" value="'.h($locale).'"><label class="check"><input type="checkbox" name="legal_confirm" value="1" required> '.h(t('consent.accept')).'</label></fieldset>';
+    echo '<input type="hidden" name="legal_language" value="'.h($locale).'"><label class="check"><input type="checkbox" name="legal_confirm" value="1"'.($required?' required':'').'> '.h(t('consent.accept')).'</label></fieldset>';
 }
 
 function consent_order_links(PDO $pdo,int $userId,int $invoiceId): void

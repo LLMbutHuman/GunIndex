@@ -21,7 +21,7 @@ require __DIR__ . '/../includes/header.php';
   <div class="page-heading"><p class="eyebrow">Dein Konto</p><h1>Zahlungen &amp; Gebühren</h1><a class="button" href="/user/billing.php">Manuelle Zahlungsaufträge &amp; Bump-Guthaben</a><a class="button secondary" href="/user/invoices.php">Rechnungs-PDFs, Stornos &amp; Erstattungen</a><p>Klare Beträge. Nachvollziehbare Zustände.</p></div>
   <section class="panel">
     <h2>Aktueller Zahlungsstand</h2>
-    <p>Die kostenpflichtigen Plattformleistungen befinden sich in Vorbereitung. Es werden derzeit keine automatischen Gebühren für neue Inserate gebucht. Der Kaufpreis eines Artikels wird nicht über das Plattformkonto eingezogen.</p>
+    <p><?=h(t('auction_billing.fixed_notice'))?></p>
     <p>Mit einem privaten PayPal-Konto kannst du bei einem freigegebenen Händler bezahlen. Für den automatischen Empfang über PayPal Checkout wird hier ein geeignetes Händlerkonto benötigt. Ein Privatkonto wird nicht durch einen technischen Umweg freigeschaltet.</p>
     <div class="form-grid">
     <?php foreach ($methods as $key => $method): ?>
@@ -35,7 +35,8 @@ require __DIR__ . '/../includes/header.php';
   <?php if ($selected): ?>
   <section class="panel"><h2><?= h($selected['invoice_number'] ?: 'Rechnungsentwurf') ?></h2>
     <p><?= h($selected['service_code']) ?> · <?= h(money_eur((int)$selected['gross_cents'])) ?> · <?= h(payments_status_label($selected['status'],$selected['payment_mode']??null)) ?></p>
-    <?php if (in_array($selected['status'], ['issued', 'pending'], true) && empty($selected['is_manual']) && $methods['paypal']['available']): ?>
+    <?php if (!empty($selected['is_manual'])):?><p><a class="button" href="/user/billing.php?order=<?=(int)$selected['id']?>"><?=h(t('auction_billing.open'))?></a></p>
+    <?php elseif (in_array($selected['status'], ['issued', 'pending'], true) && $methods['paypal']['available']): ?>
     <form action="/actions/payment-checkout.php" method="post"><?= csrf_field() ?><input type="hidden" name="invoice_id" value="<?= (int)$selected['id'] ?>"><input type="hidden" name="provider" value="paypal"><p>Du wirst zur sicheren Bestätigung an PayPal weitergeleitet.</p><button class="button" type="submit">Zahlungspflichtig mit PayPal fortfahren</button></form>
     <?php else: ?><p>Für diesen Datensatz steht aktuell kein Checkout zur Verfügung.</p><?php endif; ?>
   </section>

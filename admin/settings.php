@@ -41,6 +41,7 @@ $groups = [
     'Datenschutz & Identitätsprüfung' => ['verification_enabled','verification_review_approved','verification_retention_days','privacy_contact_email','legal_publication_enabled','legal_registration_documents','legal_checkout_documents'],
     'Rechnungen & Betreiberangaben' => ['finance_enabled','operator_legal_name','operator_address_line1','operator_address_line2','operator_postcode','operator_city','operator_country','operator_email','operator_vat_id','operator_tax_number','operator_registration','invoice_prefix'],
     'Geplante Plattformpreise' => ['fee_auction_listing_cents', 'fee_bump_single_cents', 'fee_bump_pack_cents', 'fee_category_top_cents', 'fee_home_top_cents', 'fee_banner_monthly_cents'],
+    t('auction_billing.heading') => ['auction_fees_enabled','auction_fees_approved'],
 ];
 ?>
 <main class="container admin-page">
@@ -56,7 +57,8 @@ $groups = [
                     <?php foreach ($keys as $key): $definition = $definitions[$key]; ?>
                         <div class="field<?= in_array($key, ['hero_text', 'hero_title'], true) ? ' full-width' : '' ?>">
                             <?php if ($definition['type'] === 'boolean'): ?>
-                                <input type="hidden" name="<?= h($key) ?>" value="0"><label class="checkbox"><input type="checkbox" name="<?= h($key) ?>" value="1"<?= $values[$key] === '1' ? ' checked' : '' ?>> <?= h($definition['label']) ?></label>
+                                <input type="hidden" name="<?= h($key) ?>" value="0"><label class="checkbox"><input type="checkbox" name="<?= h($key) ?>" value="1"<?= $values[$key] === '1' ? ' checked' : '' ?>> <?= h(t($definition['label'])) ?></label>
+                                <?php if ($key === 'auction_fees_enabled'): ?><small><?=h(t('auction_billing.setup_help'))?></small><?php endif; ?>
                                 <?php if ($key === 'maintenance_enabled'): ?><small>Zeigt einen Hinweis. Laufende Sitzungen oder Auktionen werden nicht automatisch unterbrochen.</small><?php endif; ?>
                             <?php else: ?>
                                 <label for="setting-<?= h($key) ?>"><?= h(t($definition['label'])) ?></label>

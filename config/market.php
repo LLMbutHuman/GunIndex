@@ -191,21 +191,24 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
                 if (function_exists('audit_log')) audit_log($pdo,$sellerId,'listing.images_order_saved',$listingId,['positions'=>$input['image_positions']]);
             }
         }
+        $feeQuote=auction_billing_prepare($pdo,$sellerId,$data,$input,$existing);
         $prepared = market_prepare_images($files, $existingImages);
         $ends = $data['type'] === 'auction' && $data['status'] === 'active' ? gmdate('Y-m-d H:i:s', time()+$data['duration_days']*86400) : null;
         if ($existing && $existing['type']==='auction' && $data['type']==='auction' && $existing['status']==='active' && $data['status']==='active') {
             $ends=$existing['ends_at'];
         }
+        if(!empty($feeQuote['existing']))$ends=$existing['ends_at'];
         $point=geo_postcode($pdo,$data['country_code'],$data['zip']);
         $values=[$data['country_code'],$point['latitude']??null,$point['longitude']??null,$data['category_id'],$data['title'],$data['description'],$data['type'],$data['price_cents'],$data['buyout_cents'],$data['status'],$ends,$data['zip'],$data['city'],$data['pickup'],$data['shipping'],$data['condition_label']];
         if ($listingId === null) {
-            $q=$pdo->prepare('INSERT INTO market_listings(seller_id,country_code,latitude,longitude,category_id,title,description,type,price_cents,buyout_cents,status,ends_at,zip,city,pickup,shipping,condition_label,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP())');
+            $q=$pdo->prepare('INSERT INTO market_listings(seller_id,country_code,latitude,longitude,category_id,title,description,type,price_cents,buyout_cents,status,ends_at,zip,city,pickup,shipping,condition_label,created_at,updated_at,auction_fee_eligible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1)');
             $q->execute(array_merge([$sellerId],$values));
             $listingId=(int)$pdo->lastInsertId();
         } else {
             $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
             $q->execute(array_merge($values,[$listingId]));
         }
+        if($data['type']==='auction'&&$data['status']==='active')auction_billing_publish($pdo,$listingId,$sellerId,$feeQuote);
         foreach ($prepared as $index=>$image) {
             $q=$pdo->prepare('INSERT INTO market_images(listing_id,storage_key,position,width,height,created_at) VALUES (?,?,?,?,?,UTC_TIMESTAMP())');
             $q->execute([$listingId,$image['key'],$existingImages+$index,$image['width'],$image['height']]);
@@ -371,6 +374,7 @@ function market_buy_now(PDO $pdo, int $listingId, int $userId): array
         $q->execute([$userId,$amount,$listingId]);
         $q=$pdo->prepare("INSERT INTO market_bids(listing_id,user_id,amount_cents,event_type,idempotency_key,created_at) VALUES (?,?,?,'buyout',?,UTC_TIMESTAMP(6))");
         $q->execute([$listingId,$userId,$amount,'buyout-'.$listingId]);
+        auction_billing_charge($pdo,$listingId,'success',$amount);
         if(function_exists('notify_user')){
             foreach(['buyout_buyer'=>$userId,'buyout_seller'=>(int)$listing['seller_id']] as $event=>$recipient)notify_user($pdo,$recipient,'buyout:'.$listingId.':'.$event,i18n_user_text($pdo,$recipient,'notification.'.$event.'.title'),i18n_user_text($pdo,$recipient,'notification.'.$event.'.body',['listing'=>$listing['title']]),'/marketplace/view-auction.php?id='.$listingId,true);
         }
@@ -443,6 +447,7 @@ function market_close_due(PDO $pdo, int $limit = 100): int
             $q->execute([$winner,$price,$id]);
             $q=$pdo->prepare('INSERT INTO market_bids(listing_id,user_id,amount_cents,event_type,idempotency_key,created_at) VALUES (?,?,?,?,?,UTC_TIMESTAMP(6))');
             $q->execute([$id,$winner,$price,$winner===null?'close_no_bid':'close','close-'.$id]);
+            if($winner!==null)auction_billing_charge($pdo,(int)$id,'success',$price);
             if(function_exists('notify_user')){
                 notify_user($pdo,(int)$listing['seller_id'],'auction-close:'.$id.':seller',i18n_user_text($pdo,(int)$listing['seller_id'],'notification.auction_seller_closed.title'),i18n_user_text($pdo,(int)$listing['seller_id'],'notification.auction_seller_closed.body',['listing'=>$listing['title']]),'/marketplace/view-auction.php?id='.(int)$id,true);
                 if($winner!==null)notify_user($pdo,$winner,'auction-close:'.$id.':winner',i18n_user_text($pdo,$winner,'notification.auction_won.title'),i18n_user_text($pdo,$winner,'notification.auction_won.body',['listing'=>$listing['title']]),'/marketplace/view-auction.php?id='.(int)$id,true);
