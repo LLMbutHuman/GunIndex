@@ -36,6 +36,7 @@ jobs:
       - name: Browser, international controls and automated accessibility
         run: |
           node tests/browser_smoke.js
+          node tests/auction_billing_browser.js
           node tests/international_smoke.js
           node tests/accessibility_smoke.js
       - name: Stop test services and retain their data

@@ -2,6 +2,13 @@
 
 ## Auktionsgebühren: Integration zur Linux-Prüfung, 2026-11-03
 
+Commit `7d5b25ad380d987231bcafe6b43d718d0e6c714c` auf Entwicklungsbranch gepusht,
+Remote-SHA bestätigt. CI `41662133685` läuft; Windows-Prüfung bereits erfolgreich,
+Linux/MySQL noch aktiv. Zusätzlich echte Browserfälle für die neue Oberfläche
+ergänzt: kostenlose Festpreis-/Entwurfsanlage, gebührenpflichtige Veröffentlichung,
+Bearbeitung ohne zweite Gebühr und Zahlungsansicht in acht mobilen Sprachen.
+Fixture und Browserdatei lokal syntaxgeprüft; tatsächlicher Browserlauf steht aus.
+
 Ausgangspunkt `784a9871139195a78c103c6c49ae7badaf7ecdad` unverändert erhalten.
 Neue additive Migration 012, verschlüsselter Gebührenvertrag je Auktionsdurchlauf,
 exakte Preis-/Rechtszustimmung und eigener kostenpflichtiger Veröffentlichen-Button.

@@ -13,6 +13,11 @@ Nullgebühren, Preisänderungen, Rollbacks, Zahlung, Erlass, Erstattungen und
 Berechtigung/CSRF. Bis zum CI-Ergebnis ist dies Testumfang, kein Erfolgsnachweis.
 Keine Providerzahlung und keine lokale Windows-Ausführung des Linux-Runners.
 
+`auction_billing_browser.js` ergänzt echte Chromium-Journeys für alle acht Sprachen
+mit eigener synthetischer CLI-Fixture. Verändert Testkonfiguration nur bei gestopptem
+Worker und stellt vorherige Werte/Steuer/Länderstatus im `finally` wieder her.
+PHP-/Node-Syntax bestanden; Ausführung erst im folgenden CI-Lauf.
+
 ## Abschließender Nachweis dieser Sitzung, 2026-11-02
 
 Code `2042549d5cec2bc39f713ebc18a76f8ab30fc3af`,
