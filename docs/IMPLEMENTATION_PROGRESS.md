@@ -2,6 +2,13 @@
 
 ## Auktionsgebühren: Integration zur Linux-Prüfung, 2026-11-03
 
+Update: CI `41662133685` für `7d5b25a` vollständig erfolgreich: 16 Gebühren-Unit-
+und 24 Integrationsgruppen inklusive echter konkurrierender Sofortkäufe; bestehende
+Browser-, Sprach- und Accessibilityprüfungen ebenfalls bestanden. `f6668be` ist
+gepusht; dessen zusätzlicher Browserlauf `41662757710` scheiterte am Testselektor
+`[name=description]` (Textarea und SEO-Metatag). Auf `textarea` eingegrenzt;
+neuer Browsernachweis noch ausstehend. Keine Anwendungsfehler dadurch behauptet.
+
 Commit `7d5b25ad380d987231bcafe6b43d718d0e6c714c` auf Entwicklungsbranch gepusht,
 Remote-SHA bestätigt. CI `41662133685` läuft; Windows-Prüfung bereits erfolgreich,
 Linux/MySQL noch aktiv. Zusätzlich echte Browserfälle für die neue Oberfläche

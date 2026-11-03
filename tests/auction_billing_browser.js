@@ -16,7 +16,7 @@ function fixture(operation,fields={}){return JSON.parse(execFileSync('docker',['
   await page.goto(origin+'/auth/login.php');await page.locator('[name=login]').fill(data.username);await page.locator('[name=password]').fill(data.password);
   await Promise.all([page.waitForURL('**/user/dashboard.php'),page.locator('main button[type=submit]').click()]);
   async function fill(){
-   await page.locator('[name=title]').fill('Synthetic browser folding table');await page.locator('[name=description]').fill('Synthetic ordinary folding table, used only in isolated browser regression tests.');
+   await page.locator('[name=title]').fill('Synthetic browser folding table');await page.locator('textarea[name=description]').fill('Synthetic ordinary folding table, used only in isolated browser regression tests.');
    await page.locator('[name=category_id]').selectOption(String(data.category));await page.locator('[name=price]').fill('10.00');await page.locator('[name=zip]').fill('10115');await page.locator('[name=city]').fill('Synthetic city');await page.locator('[name=accept_rules]').check();
   }
   async function save(button){await Promise.all([page.waitForURL('**/user/dashboard.php?saved=*'),button.click()]);return Number(new URL(page.url()).searchParams.get('saved'));}
