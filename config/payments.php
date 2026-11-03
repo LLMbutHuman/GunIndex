@@ -215,6 +215,7 @@ function payments_begin(PDO $pdo, int $invoiceId, int $userId, string $provider)
     // response or later transaction failure must retry the SAME provider request.
     $pdo->beginTransaction();
     try {
+        maintenance_assert_market_available($pdo);
         $invoice = payments_invoice($pdo, $invoiceId, $userId, true); payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
         if(function_exists('finance_assert_payable'))finance_assert_payable($pdo,$invoice,$config['mode']);
         $query = $pdo->prepare('SELECT * FROM market_payment_attempts WHERE invoice_id=? ORDER BY id DESC LIMIT 1 FOR UPDATE'); $query->execute([$invoiceId]); $attempt = $query->fetch();
@@ -229,6 +230,7 @@ function payments_begin(PDO $pdo, int $invoiceId, int $userId, string $provider)
     $attemptId = (int)$attempt['id'];
     $pdo->beginTransaction();
     try {
+        maintenance_assert_market_available($pdo);
         $invoice = payments_invoice($pdo, $invoiceId, $userId, true); payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
         $query = $pdo->prepare('SELECT * FROM market_payment_attempts WHERE id=? AND invoice_id=? FOR UPDATE'); $query->execute([$attemptId, $invoiceId]); $attempt = $query->fetch();
         if (!$attempt || !in_array($attempt['status'], ['created', 'pending'], true)) throw new PaymentConflict('Dieser Zahlungsversuch ist nicht mehr offen.');

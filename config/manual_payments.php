@@ -22,6 +22,7 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
  $tax=fees_tax_split($quote['gross_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),true);
  $pdo->beginTransaction();
  try{
+  maintenance_assert_market_available($pdo);
   $q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new PaymentConflict('Konto nicht verfügbar.');
   $q=$pdo->prepare('SELECT invoice_id FROM market_manual_orders WHERE request_key=? AND user_id=?');$q->execute([$requestKey,$userId]);$previous=$q->fetchColumn();if($previous){$pdo->commit();return(int)$previous;}
   $contractDocuments=consent_check($pdo,'checkout',$consent,i18n_locale());
@@ -71,6 +72,7 @@ function manual_bump(PDO $pdo,int $userId,int $listingId,bool $immediateStart=fa
  if(!$immediateStart)throw new PaymentConflict('Bitte den sofortigen Beginn dieses einzelnen Bumps ausdrücklich verlangen.');
  $pdo->beginTransaction();
  try{
+  maintenance_assert_market_available($pdo);
   $listing=market_lock_listing($pdo,$listingId);
   if((int)$listing['seller_id']!==$userId||$listing['status']!=='active'||!catalog_category_allowed($pdo,(int)$listing['category_id'])||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict('Dieses Angebot kann nicht hervorgehoben werden.');
   $q=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');$q->execute([$userId]);if((int)$q->fetchColumn()!==1)throw new PaymentConflict('Konto nicht aktiv.');

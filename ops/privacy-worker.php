@@ -5,6 +5,7 @@ require_once __DIR__.'/../config/bootstrap.php';
 require_once __DIR__.'/../config/governance.php';
 require_once __DIR__.'/../config/privacy.php';
 try{
+ maintenance_worker_gate();
  $arguments=array_slice($argv,1);
  if(($arguments[0]??'')==='--seed-legal'){
   $actor=filter_var($arguments[1]??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);

@@ -1,5 +1,22 @@
 # Implementierungsfortschritt
 
+## Wartungssperre und Auktionsfristen: nächste lokale Etappe, 2026-11-03
+
+HTTP-Gate jetzt mit Frontcontroller verbunden; Migration 013 und persistente
+Wartungsfenster ergänzt. Öffentliche Requests und fünf Scheduler-Batches halten
+eine separate DB-Lesesperre, damit Aktivierung auf laufende Arbeit wartet.
+Marktmutationen/neue Zahlungen zusätzlich innerhalb der Transaktion gesperrt.
+Noch nicht abgelaufene aktive/pausierte Auktionen erhalten nach Wartung genau
+einmal ihre Ausfallzeit zurück; abgeschlossene oder vorher fällige Auktionen nicht.
+MFA-Administration und geprüfte bestehende Zahlungsereignisse bleiben zugänglich.
+[MAINTENANCE.md](MAINTENANCE.md) beschreibt Grenzen, insbesondere keinen
+vollständigen Backup-Schreibstopp und noch offenen Ausgleich von Werbezeiten.
+
+Zwölf reine Wartungs-Testgruppen und Syntaxprüfung bestanden. Neue acht DB-/Worker-
+gruppen und 14 HTTP-/RBAC-Gruppen vorbereitet und sequenziell im Runner registriert;
+deren tatsächlicher Linux-Lauf steht noch aus. Agentenlimit unverändert, Integration
+durch Root fortgesetzt. Wartungsfunktion bisher nicht produktiv aktiviert.
+
 ## Auktionsgebühren: Integration zur Linux-Prüfung, 2026-11-03
 
 Update: CI `41662133685` für `7d5b25a` vollständig erfolgreich: 16 Gebühren-Unit-

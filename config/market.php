@@ -167,7 +167,7 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
     $data = market_validate($pdo, $input);
     $prepared = [];
     try {
-        $pdo->beginTransaction();
+        $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
         market_assert_users_active($pdo,[$sellerId]);
         if (!geo_country_locked_enabled($pdo,$data['country_code'])) throw new MarketAccessException('Dieser Ländermarkt ist derzeit nicht verfügbar.');
         if (!market_category_locked_allowed($pdo,(int)$data['category_id'])) throw new MarketAccessException('Diese Kategorie ist nicht mehr verfügbar.');
@@ -318,7 +318,7 @@ function market_bid(PDO $pdo, int $listingId, int $userId, int $maximum): array
         throw new InvalidArgumentException('Das Gebot liegt außerhalb des erlaubten Bereichs.');
     }
     try {
-        $pdo->beginTransaction();
+        $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
         $listing=market_lock_listing($pdo,$listingId);
         market_assert_auction($pdo,$listing);
         market_assert_users_active($pdo,[$userId,(int)$listing['seller_id']]);
@@ -363,7 +363,7 @@ function market_bid(PDO $pdo, int $listingId, int $userId, int $maximum): array
 function market_buy_now(PDO $pdo, int $listingId, int $userId): array
 {
     try {
-        $pdo->beginTransaction();
+        $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
         $listing=market_lock_listing($pdo,$listingId);
         market_assert_auction($pdo,$listing);
         market_assert_users_active($pdo,[$userId,(int)$listing['seller_id']]);
@@ -390,7 +390,7 @@ function market_transition(PDO $pdo, int $listingId, int $userId, string $action
 {
     if (!in_array($action,['pause','publish','archive','sold'],true)) throw new InvalidArgumentException('Ungültige Angebotsaktion.');
     try {
-        $pdo->beginTransaction();
+        $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
         $listing=market_lock_listing($pdo,$listingId);
         market_assert_users_active($pdo,[$userId]);
         if ((int)$listing['seller_id']!==$userId) throw new MarketAccessException('Nur eigene Angebote können geändert werden.');
@@ -427,7 +427,7 @@ function market_close_due(PDO $pdo, int $limit = 100): int
     $closed=0;
     foreach ($ids as $id) {
         try {
-            $pdo->beginTransaction();
+            $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
             $listing=market_lock_listing($pdo,(int)$id);
             if ($listing['status']!=='active' || $listing['type']!=='auction' || !market_expired($listing)) {
                 $pdo->commit();
@@ -454,11 +454,14 @@ function market_close_due(PDO $pdo, int $limit = 100): int
             }
             $pdo->commit();
             $closed++;
+        } catch (MaintenancePaused $error) {
+            if($pdo->inTransaction())$pdo->rollBack();
+            return $closed;
         } catch (MarketConflictException $error) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             // Quarantine inconsistent rows. Preserve every bid; never invent a winner.
-            $pdo->beginTransaction();
             try {
+                $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
                 $listing=market_lock_listing($pdo,(int)$id);
                 if ($listing['status']==='active' && market_expired($listing)) {
                     $q=$pdo->prepare("UPDATE market_listings SET status='review',updated_at=UTC_TIMESTAMP() WHERE id=?");
@@ -467,6 +470,9 @@ function market_close_due(PDO $pdo, int $limit = 100): int
                     $q->execute([$id,'close-review-'.$id]);
                 }
                 $pdo->commit();
+            } catch (MaintenancePaused $quarantineError) {
+                if($pdo->inTransaction())$pdo->rollBack();
+                return $closed;
             } catch (Throwable $quarantineError) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
                 throw $quarantineError;

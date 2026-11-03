@@ -3,6 +3,7 @@ declare(strict_types=1);
 if (PHP_SAPI!=='cli') { http_response_code(404); exit(1); }
 try {
     require_once __DIR__.'/../config/bootstrap.php';
+    maintenance_worker_gate();
     $args=array_slice($argv,1);
     if (($args[0] ?? '')==='--once') array_shift($args);
     if (count($args)>1 || (isset($args[0]) && (!ctype_digit($args[0]) || (int)$args[0]<1 || (int)$args[0]>1000))) throw new InvalidArgumentException('Batch size must be 1–1000.');

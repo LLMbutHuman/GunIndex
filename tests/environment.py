@@ -91,6 +91,8 @@ def test():
    docker('exec',APP,'php','tests/'+suite,*arguments)
   for suite in ('auction_billing_test.php','auction_billing_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
+  for suite in ('maintenance_test.php','maintenance_auction_test.php','maintenance_integration_test.php'):
+   docker('exec',APP,'php','tests/'+suite)
   for suite in ('legacy_import_test.py','chat_migration_test.py','production_manifest_test.py','backup_test.py'):
    subprocess.run([sys.executable,str(ROOT/'tests'/suite)],cwd=ROOT,env=ENV,check=True)
  finally:docker('start',WORKER,capture=True)

@@ -1,5 +1,21 @@
 # Tatsächlicher Testnachweis
 
+## Bestätigter Gebührenlauf und nächste Wartungsprüfung, 2026-11-03
+
+CI [41662133685](https://github.com/LLMbutHuman/GunIndex/actions/runs/41662133685)
+für `7d5b25a` vollständig erfolgreich: 16 Gebühren-Unit- und 24 Gebühren-DB-/HTTP-
+Gruppen, einschließlich echter konkurrierender Sofortkäufe. Bestehende Regression,
+Composer-Audit, Browser, Internationalisierung und Accessibility ebenfalls bestanden.
+Der zusätzliche mobile Gebühren-Browsertest in `f6668be` scheiterte anschließend
+an einem mehrdeutigen Testselektor; `9303510` korrigiert diesen. CI `41663795718`
+noch aktiv, deshalb für diesen zusätzlichen Ablauf noch keine Erfolgsaussage.
+
+Wartung: zwölf reine Testgruppen und PHP-Syntax lokal bestanden. Acht neue DB-/Worker-
+gruppen sowie 14 HTTP-/RBAC-Gruppen wurden integriert. Datenbank-Barriere,
+Fristverlängerung, tatsächliche Worker-Zurückstellung und HTTP-Zugriffe müssen
+erst im folgenden Linux-Lauf bestätigt werden. Alte Ausstehend-Vermerke darunter
+beschreiben vorherige Zwischenstände.
+
 ## Auktionsgebühren, 2026-11-03: lokal bestanden, Linux-Ausführung ausstehend
 
 `auction_billing_test.php`: 16 Testgruppen, einschließlich 25 unabhängiger

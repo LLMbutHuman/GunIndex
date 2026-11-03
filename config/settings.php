@@ -11,7 +11,7 @@ function site_setting_definitions(): array
         'accent' => ['type' => 'color', 'default' => '#35e6bd', 'label' => 'Akzentfarbe'],
         'secondary' => ['type' => 'color', 'default' => '#ffb86c', 'label' => 'Zweite Akzentfarbe'],
         'animation_mode' => ['type' => 'animation', 'default' => 'full', 'label' => 'Bewegung und Animationen'],
-        'maintenance_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'Wartungshinweis anzeigen'],
+        'maintenance_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'Wartungsmodus aktivieren'],
         'seo_indexing_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'Öffentliche Suchmaschinenindexierung freigeben'],
         'registration_enabled' => ['type' => 'boolean', 'default' => '1', 'label' => 'Neue Registrierungen erlauben'],
         'contact_email' => ['type' => 'email', 'default' => '', 'label' => 'Öffentliche Kontakt-E-Mail'],
@@ -143,14 +143,17 @@ function site_settings_save(PDO $pdo, int $actorId, array $submitted, string $ex
     if ((int)$lock->fetchColumn() !== 1) throw new RuntimeException('Die Einstellungen werden gerade bearbeitet. Bitte erneut versuchen.');
     try {
         $pdo->beginTransaction();
+        // Acquire the global write barrier before any actor/settings row locks.
+        if(function_exists('maintenance_state'))maintenance_state($pdo,true);
         settings_assert_admin($pdo, $actorId);
         $previous = site_settings($pdo, true);
         if (!hash_equals(site_settings_revision($previous), $expectedRevision)) throw new DomainException('Die Einstellungen wurden zwischenzeitlich geändert. Deine Eingaben bleiben erhalten; lade den aktuellen Stand vor erneutem Speichern neu.');
+        if(function_exists('maintenance_transition'))maintenance_transition($pdo,$actorId,$previous['maintenance_enabled'],$validated['maintenance_enabled']);
         $changed = [];
         $statement = $pdo->prepare('INSERT INTO system_settings(setting_key, setting_value, updated_at) VALUES (?, ?, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_at=UTC_TIMESTAMP()');
         foreach ($validated as $key => $value) {
             if ($previous[$key] !== $value) {
-                $statement->execute([$key, $value]);
+                if($key!=='maintenance_enabled'||!function_exists('maintenance_transition'))$statement->execute([$key, $value]);
                 $changed[] = $key;
             }
         }

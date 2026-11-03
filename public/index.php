@@ -8,4 +8,7 @@ $allowed=array_merge($allowed,['admin/setup.php','user/listing-image.php','user/
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 if(isset($static[$path])&&is_file($root.$path)){header('Content-Type: '.$static[$path]);header('X-Content-Type-Options: nosniff');if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')readfile($root.$path);exit;}
-if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route)){http_response_code(404);header('X-Robots-Tag: noindex');exit('Nicht gefunden.');}require $root.'/'.$route;
+if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route)){http_response_code(404);header('X-Robots-Tag: noindex');exit('Nicht gefunden.');}
+require_once $root.'/config/bootstrap.php';
+maintenance_enforce_http($pdo,$route);
+require $root.'/'.$route;

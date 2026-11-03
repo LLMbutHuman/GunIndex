@@ -226,6 +226,7 @@ function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $imm
     if (!$invoiceId) throw new DomainException('Buchung nicht gefunden.');
     $pdo->beginTransaction();
     try {
+        maintenance_assert_market_available($pdo);
         market_assert_users_active($pdo,[$userId]);
         $paidQuery=$pdo->prepare('SELECT status FROM market_invoices WHERE id=? FOR SHARE');$paidQuery->execute([$invoiceId]);$paidStatus=$paidQuery->fetchColumn();
         $booking = business_locked_booking($pdo,(int)$invoiceId);
@@ -310,7 +311,7 @@ function business_bulk_transition(PDO $pdo,int $userId,array $ids,string $action
 {
     if(!in_array($action,['pause','archive'],true)||$ids===[]||count($ids)>100)throw new InvalidArgumentException('Bitte höchstens 100 eigene Inserate und eine zulässige Aktion auswählen.');
     $clean=[];foreach($ids as $id){if(!is_scalar($id)||!ctype_digit((string)$id)||(int)$id<1)throw new InvalidArgumentException('Ungültige Inseratsauswahl.');$clean[]=(int)$id;}$clean=array_values(array_unique($clean));sort($clean,SORT_NUMERIC);
-    $pdo->beginTransaction();try{market_assert_users_active($pdo,[$userId]);foreach($clean as $id){$listing=market_lock_listing($pdo,$id);if((int)$listing['seller_id']!==$userId||!in_array($listing['status'],['draft','active','paused'],true)||market_has_bids($pdo,$id)||($listing['type']==='auction'&&$listing['status']==='active'&&market_expired($listing))||($action==='pause'&&$listing['status']!=='active'))throw new DomainException('Mindestens ein Angebot ist fremd, bereits gebunden oder nicht im passenden Zustand. Es wurde nichts geändert.');}
+    $pdo->beginTransaction();try{maintenance_assert_market_available($pdo);market_assert_users_active($pdo,[$userId]);foreach($clean as $id){$listing=market_lock_listing($pdo,$id);if((int)$listing['seller_id']!==$userId||!in_array($listing['status'],['draft','active','paused'],true)||market_has_bids($pdo,$id)||($listing['type']==='auction'&&$listing['status']==='active'&&market_expired($listing))||($action==='pause'&&$listing['status']!=='active'))throw new DomainException('Mindestens ein Angebot ist fremd, bereits gebunden oder nicht im passenden Zustand. Es wurde nichts geändert.');}
         $q=$pdo->prepare('UPDATE market_listings SET status=?,updated_at=UTC_TIMESTAMP() WHERE id=?');foreach($clean as $id)$q->execute([$action==='pause'?'paused':'archived',$id]);audit_log($pdo,$userId,'dealer.bulk_'.$action,null,['listing_ids'=>$clean]);$pdo->commit();return count($clean);
     }catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
 }
