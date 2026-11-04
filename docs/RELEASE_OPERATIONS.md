@@ -1,5 +1,16 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-04 – Gebühren und Wartung gesichert und geprüft
+
+Letzter geprüfter Code lokal und remote: `4add338349ba3865e51f4333f0ece515ccadbef8`,
+weiterhin ausschließlich `feature/general-marketplace-rebuild`.
+CI 41666927670 vollständig erfolgreich, ebenso direkte Vorgänger 2c070d6
+(CI 41665892946), de42a91 (CI 41664657641), 9303510 (CI 41663795718).
+Der Browser-Testselektorfehler in f6668be wurde korrigiert und erfolgreich nachgeprüft.
+Migrationen 012/013, Gebührenverträge/-forderungen, Wartungssperre samt Auktionsfristen,
+Betriebsdiagnose und achtsprachige Gebührenhinweise dokumentiert. Kein Produktivstart,
+keine realen Zahlungen, keine geänderten Geheimnisse. Private Auftragsdatei bleibt lokal.
+
 ## 2026-11-02 – Kontoetappen gesichert, Gesamtstatus erstellt
 
 `505ffa1`, `ad5ed5f` und `2042549d5cec2bc39f713ebc18a76f8ab30fc3af`

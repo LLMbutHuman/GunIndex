@@ -1,4 +1,4 @@
-# Technischer Abnahmestand – 2026-11-03
+# Technischer Abnahmestand – 2026-11-04
 
 Gesamtplattform **nicht fertig und nicht produktiv abgenommen**.
 Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
@@ -15,8 +15,14 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
   24 DB-/HTTP-Gruppen einschließlich paralleler Sofortkäufe. Zehn zusätzliche
   Gebühren-Browser-Journeys in `9303510`, CI 41663795718, einschließlich acht mobiler
   Sprachen bestanden. Freigaben standardmäßig aus.
-- **C:** Wartungszugriff, Worker-Barriere und Auktionsfrist-Pause implementiert in
-  `de42a91`; zwölf reine Tests lokal bestanden, DB-/HTTP-/Betriebsnachweis ausstehend.
+- **A:** Wartungszugriff, Worker-Barriere, Auktionsfrist-Pause und Healthdiagnose:
+  durch `4add338`, CI 41666927670 erneut bestätigt; zwölf reine, neun DB-/Worker-
+  und 14 HTTP-/RBAC-Gruppen bestanden. Gesamtanforderung 22 bleibt wegen der unten
+  genannten Betriebsfolgen teilweise offen. Gebührenhinweise ebenfalls bestätigt;
+  Gebührensuite inzwischen 16 reine und 26 DB-/HTTP-Gruppen.
+- **C:** Wiedereinstellung lokal begonnen: Backend, Schema und Sprachdateien;
+  noch keine Anbindung und kein erfolgreicher Integrationsnachweis. Neues Testgerüst
+  enthält bislang keine Fallgruppen. Kein fertiger Meilenstein.
 
 - **A:** Lokalisierte Konto-/Recovery-/Profil-/Benachrichtigungs-/Dashboard-
   und Footerabläufe in acht Sprachen; Empfängersprache in Mail-Links für frische
@@ -69,7 +75,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |
 | 20 | Händlerfunktionen | C | Mitarbeiterrollen, Abos, Warenwirtschaft und API |
 | 21 | Vollständiges SEO | C | Internationale URL-/hreflang-Strategie und vollständige Abnahme |
-| 22 | Wartungsmodus | C | Sperre/Fristfortsetzung implementiert, Integrationsnachweis ausstehend; Behandlung längerer Ausfälle und Werbezeiten offen |
+| 22 | Wartungsmodus | C | Sperre/Fristfortsetzung und Healthdiagnose integriert und geprüft; Behandlung längerer Ausfälle und Werbezeiten offen |
 | 23 | Automatische Rückerstattungen | C | Vollständiger Workflow, Statusabgleich und Providerabnahme |
 | 24 | Bitcoin | C | Node-Anbindung, Bestätigungen, Reorganisationen und Infrastruktur |
 | 25 | Banküberweisung | C | Kontenabgleich und verifizierte zuordenbare Eingänge |

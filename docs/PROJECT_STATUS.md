@@ -1,5 +1,164 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
+## Aktuelle Neubewertung: 4. November 2026
+
+**Kurzantwort: grob 40 % des vollständigen Masterumfangs fertig; etwa 60 % fehlen.
+Die vertretbare Unsicherheitsspanne beträgt 35–50 % fertig bzw. 50–65 % offen.**
+Dies ist eine grobe, nach technischer Komplexität gewichtete Planungsschätzung,
+keine gemessene Fertigstellungsquote, Testabdeckung oder Produktionsfreigabe.
+Die bereits nutzbare Marktplatzbasis ist weiter als der gesamte vereinbarte Umfang.
+
+**Restaufwand bis zum vollständigen technischen Release: realistisch ungefähr
+2.400–4.200 Entwicklungs-, Integrations- und Prüfstunden.** Das sind vergleichbare
+produktive Facharbeitsstunden, weder Codex-Laufzeit noch eine Kalenderprognose.
+Es gibt keine belastbare historische Zeiterfassung für eine engere Schätzung.
+Externe Prüfungsarbeit, Anbieterfreigaben und deren Wartezeiten kommen getrennt hinzu.
+
+Diese Neubewertung hat Vorrang vor dem ausdrücklich historischen Bericht weiter
+unten. Gebührenforderungen und Wartungssperre sind inzwischen integriert und
+geprüft; deren alte Offen-Vermerke gelten nicht mehr. Die großen fehlenden Systeme
+bleiben jedoch offen. Deshalb rechtfertigen die jüngsten Etappen keinen Sprung
+auf beispielsweise 80 oder 90 % Gesamtfertigstellung.
+
+### Erneut geprüfte Belege und Sicherungsstand
+
+- Repository/Branch stimmen: `LLMbutHuman/GunIndex`,
+  `feature/general-marketplace-rebuild`. Lokales HEAD, Tracking-Referenz und
+  unmittelbar abgefragtes `git ls-remote` stimmen auf
+  `4add338349ba3865e51f4333f0ece515ccadbef8` überein. Das ist der letzte Codecommit;
+  ein anschließender reiner Dokumentationscommit ändert diesen Codeprüfstand nicht.
+- [CI 41666927670](https://github.com/LLMbutHuman/GunIndex/actions/runs/41666927670)
+  erneut über Jobs und Linux-Log geprüft: Windows und Integration erfolgreich.
+  Gebühren: 16 reine und 26 DB-/HTTP-Gruppen. Wartung: zwölf reine, neun DB-/Worker-
+  und 14 HTTP-/RBAC-Gruppen. Bestehende Browser-, Sprach-, Accessibility- und
+  Dependency-Prüfungen erfolgreich. Kein Nachweis realer Providerzahlungen.
+- Codebefunde gezielt abgeglichen: `config/market.php`, `auction_billing.php`,
+  `maintenance.php`, `chat.php`, `payments.php`, `auth.php`, `fees.php`, `mail.php`,
+  `setup.php`, `seo.php`, Konto-/Adminseiten sowie Installer und Betriebsdokumente.
+  Keine neue vollständige Sicherheitsprüfung und keine unnötige Testwiederholung.
+- **Wiedereinstellung ist begonnen, nicht fertig:** `config/relisting.php`,
+  `sql/migrations/014_relisting.sql` und acht Sprachdateien liegen uncommittet vor.
+  Bootstrap-/Gebühren-/Marktplatz-Anbindung, Route/Oberfläche und Pure-Tests fehlen.
+  `tests/relisting_integration_test.php` enthält bislang ein Gerüst mit leerer
+  Testfallliste und einem Schutz gegen einen scheinbar erfolgreichen Null-Testlauf.
+  Kein Integrations-/Browsernachweis; nicht als fertige Funktion gezählt.
+- Alle offenen Dateien bleiben erhalten. Die private Auftragsdatei bleibt lokal.
+  Unfertige Relisting-Dateien sind noch **nicht auf GitHub gesichert** und werden
+  nicht als geprüfter Meilenstein committed. Keine gestagten Dateien bei Auditbeginn.
+
+### Aktualisierte Schätzbereiche
+
+W ist das unverändert offengelegte Komplexitätsgewicht des früheren Modells,
+keine gemessene Arbeitszeit. Nur Auktionen/Gebühren und Finanzen erhalten aufgrund
+der konkreten neuen Integration eine geänderte Bereichsschätzung. Wartung ist als
+erledigte Teilfunktion berücksichtigt, begründet aber allein keine höhere pauschale
+Produktionsreife. Die Teilbudgets enthalten Implementierung und Modulprüfung;
+die Testzeile betrifft zusätzliche systemweite Prüfung. Nicht doppelt addieren.
+
+| Bereich | Fertig, unsicher; W | Verbleibende Arbeit in Stunden, realistisch |
+| --- | --- | ---: |
+| Marktplatz und Inserate | 60–75 %; 10 | 180–280 |
+| Auktionen und Gebühren | 65–80 %; 8 | 80–150 |
+| PayPal und Zahlungsintegration | 45–60 %; 6 | 100–180 |
+| Rechnungen und Finanzen | 65–80 %; 6 | 50–100 |
+| Treuhand | 0–5 %; 10 | 260–440 |
+| Bitcoin und Banküberweisung | 0–5 %; 7 | 200–340 |
+| E2EE-Chat und verschlüsselte Anhänge | 0–5 %; 14 | 360–600 |
+| Benutzerkonten und Sicherheit | 60–75 %; 7 | 120–200 |
+| Händlerfunktionen | 35–50 %; 5 | 180–300 |
+| Vollständige acht Sprachen | 35–50 %; 5 | 160–280 |
+| Suche und internationale PLZ | 50–65 %; 4 | 100–180 |
+| SEO und Performance | 50–65 %; 3 | 60–120 |
+| Mail und Benachrichtigungen | 45–60 %; 4 | 90–160 |
+| Admin und Einrichtungsassistent | 40–55 %; 3 | 90–160 |
+| Automatische Installation | 40–55 %; 3 | 100–180 |
+| Tests und Sicherheitsprüfung | 45–60 %; 3 | 180–320 |
+| Vorbereitung der Veröffentlichung | 15–30 %; 2 | 80–140 |
+
+Gewichte zusammen 100; das Modell liefert grob 35–47 %, wegen Unsicherheit als
+35–50 % angegeben. Die Stundenbudgets summieren sich zu 2.390–4.130, gerundet
+2.400–4.200. Diese Rechnung macht Annahmen transparent; sie macht sie nicht zu
+gemessenen Fakten. Insbesondere E2EE, Treuhand und Providerabstimmung können
+erheblich mehr Nacharbeit benötigen. Kein Punkt des Masterauftrags entfällt.
+
+### Was konkret noch umzusetzen ist
+
+1. **P0/P1 – E2EE und Anhänge:** etablierter Client-Schlüssel-/Geräteworkflow,
+   Partnerprüfung, Mehrgeräte, Widerruf, Recovery, verschlüsselte Dateien und Quoten.
+   Der heutige Server entschlüsselt Nachrichten selbst (`config/chat.php`);
+   deshalb ist diese Kernanforderung weiterhin nicht erfüllt. Nachweis: echte
+   Mehrbenutzer-/Mehrgeräteabläufe, Negativtests und unabhängige Kryptografieprüfung.
+2. **P0/P1 – Vollständige Handelsabläufe:** Wiedereinstellen/Verlängern samt
+   Gratisanspruch fertig integrieren; Festpreiskauf, Verhandlung und zugehörige
+   Bewertungen implementieren; unbezahlte Teilkorrekturen und neue Rechtsbindungen
+   ergänzen. Nachweis: atomare Zustandswechsel, konkurrierende Anfragen, Wiederholung,
+   Abbruch und Browserabläufe. Bestehende Gebührenforderung nicht neu entwickeln.
+3. **P0/P1, externe Anbindung BLOCKIERT – Zahlungen und Treuhand:** automatische
+   PayPal-Erstattung/Abstimmung, tatsächlicher Bankabgleich, Bitcoin-Node einschließlich
+   Bestätigungen/Reorganisationen sowie vollständige Treuhand-Zustände, Versand,
+   Empfang, Streitfall, Fristen und Auszahlung. Vorhandene REST-Methode und
+   Treuhand-Gebührenvorschau ersetzen diese Workflows nicht. Nachweis: kontrollierte
+   Adapter-/Fehler-/Paralleltests, danach reale Sandbox und getrennte Live-Abnahme.
+4. **P1 – Produkt-/Suchfunktionen:** typisierte Kategorieattribute, Klassifizierung,
+   Autocomplete/Ranking/Filter, Autosave und vollständige Vorschau. Realdatenimport
+   der validierten deutschen PLZ-Datei, zusätzliche lizenzierte Länder und Updates.
+   Nachweis: kombinierte Eingabe-/Such-/Radiusfälle mit tatsächlich importierten Daten.
+5. **P1 – Konten/Händler:** Einzelgeräte und Sitzungswiderruf, Nutzer-2FA, Passkeys,
+   Profilbilder/Logos, Händler-Mitarbeiterrechte, Abonnements, Warenwirtschaft und API.
+   Nachweis: Rollen-/Mandantengrenzen, Recovery und vollständige Kundenabläufe.
+6. **P1 – Sprache/Mail/SEO:** übrige Konto-, Finanz-, Checkout-, Admin- und Fehlertexte
+   in acht Sprachen; acht ungeprüfte Rechtsfassungen zur Fachabnahme; SMTP-/DNS-
+   Assistent und fehlende Preis-/Vorablaufmeldungen; internationale URLs/hreflang.
+   Nachweis: mobile Erfolgs-/Fehlerabläufe je Sprache, Ereignismatrix, DNS-/Postfachprobe.
+7. **P0/P1 – Einrichtung/Betrieb:** vorhandene 18 Setup-Diagnosen zur geführten
+   Einrichtung vervollständigen; lokalen WSL-/Docker-Betrieb herstellen; Installation
+   auf frischem Ubuntu, Neustart/Update und Offsite-Restore prüfen; Wartungsfolgen
+   für bezahlte Werbezeiten/lange Ausfälle behandeln. Nachweis: reproduzierbare
+   Installations-/Wiederanlauf-/Restoreprotokolle ohne Verlust bestehender Schlüssel.
+8. **P0/P2 – Abschlussprüfung:** neue Systeme regressionsprüfen; unabhängige
+   Sicherheitsprüfung, realistische Last, manuelle Barrierefreiheit, Monitoring,
+   Betriebs- und Legal-Team-Übergabe. Performanceoptimierung nach Messbefund.
+
+### Aufwand, externe Voraussetzungen und Wiederaufnahme
+
+Kumulative Reststunden ab jetzt, Zeilen nicht addieren. Der vollständige Umfang
+bleibt verbindlich; keine reduzierte Basisversion wird als Ziel vorgeschlagen.
+
+| Vollständiges Ziel | Optimistisch | Realistisch | Pessimistisch |
+| --- | ---: | ---: | ---: |
+| Alle Anforderungen implementiert und isoliert getestet | 1.300–2.100 h | 2.000–3.400 h | 3.900–6.400 h |
+| Technischer Release einschließlich Integration, Betrieb und Dokumentation | 1.600–2.600 h | 2.400–4.200 h | 4.900–7.900 h |
+
+Die Szenarien bleiben grobe Planungsbudgets; keine garantierte Obergrenze. Für
+echten Produktivbetrieb kommen interne Aktivierungs-/Betriebsproben und externe
+Anbieter-, Rechts-, Steuer- und Sicherheitsabnahmen hinzu. Deren Kalenderdauer
+ist derzeit nicht verlässlich schätzbar. Etwa **22–34 weitere überprüfbare
+Entwicklungsetappen** sind plausibel; komplexe Module brauchen mehrere Etappen.
+Ein Fertigstellungsdatum lässt sich aus Commitzahl oder Codex-Nutzungslimits
+nicht seriös errechnen.
+
+Vom Betreiber fehlen insbesondere geeignete Provider-/Sandboxzugänge und später
+deren Freigaben, Bank-/Node-/Treuhandinfrastruktur, Server/DNS/Mail/Backupziele,
+Betreiber-/Steuer-/Rechtsangaben, externe Prüfungen und nötige lokale
+Betriebssystemaktionen. Geheimnisse ausschließlich privat konfigurieren.
+Fehlende Zugangsdaten sind **nicht** die einzige Ursache des Restaufwands:
+umfangreiche intern ausführbare Entwicklung fehlt tatsächlich noch.
+
+**Exakter nächster Arbeitspunkt:** vorhandenes Relisting-Backend/Schema prüfen,
+Bootstrap/I18N, Gebührenquote und Veröffentlichung mit konsistenter Sperrreihenfolge
+anbinden, Bestätigungsseite/Dashboard/Edit-Hinweis ergänzen; dann fehlende reine,
+DB-/HTTP-/Parallel- und mobile Browserfälle implementieren und sequenziell testen.
+Anspruch nur bei tatsächlichem Rabatt einer positiven Einstellgebühr verbrauchen.
+Erst nach erfolgreichem Nachweis diesen Code als Etappe committen und pushen.
+Die letzte grüne Gebühren-/Wartungsimplementierung bleibt erhalten.
+
+---
+
+## Historischer Bericht vom 2. November mit Fortschreibung vom 3. November
+
+Die folgenden Angaben dokumentieren den damaligen Stand. Für aktuelle Zahlen,
+erledigte Gebühren-/Wartungsarbeiten und die Wiederaufnahme gilt der Abschnitt oben.
+
 **Fortschreibung 3. November:** Dieser Bericht bleibt die datierte Gesamtbewertung
 vom 2. November; seine Prozent-/Aufwandsspannen wurden nicht neu geschätzt.
 Inzwischen sind Auktions-Gebührenverträge und automatische Forderungen geprüft

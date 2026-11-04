@@ -1,5 +1,19 @@
 # Tatsächlicher Testnachweis
 
+## Vollständig bestätigter Stand bei Wiederaufnahme, 2026-11-04
+
+Commit `4add338349ba3865e51f4333f0ece515ccadbef8`,
+[CI 41666927670](https://github.com/LLMbutHuman/GunIndex/actions/runs/41666927670):
+alle Jobs erfolgreich. Gebühren: 16 reine und 26 DB-/HTTP-Gruppen. Wartung: zwölf
+reine, neun DB-/Worker- und 14 HTTP-/RBAC-Gruppen. Zehn Gebühren-Browser-Journeys,
+acht mobile Sprachen, bestehende Browser-/Accessibilityregression und Composer-Audit
+bestanden. Deduplizierte Gebührenmails und Empfängerpräferenzen nachgewiesen; keine
+tatsächliche Providerzahlung oder bewiesene E-Mail-Postfachzustellung.
+
+CI 41665892946 für `2c070d6` ebenfalls vollständig erfolgreich. Frühere
+Ausstehend-Vermerke unten sind überholte Zwischenstände. Neue Wiedereinstellungs-
+arbeiten besitzen noch keinen Testnachweis.
+
 ## Achtsprachiger Gebühren-Browserlauf bestätigt
 
 CI [41663795718](https://github.com/LLMbutHuman/GunIndex/actions/runs/41663795718)

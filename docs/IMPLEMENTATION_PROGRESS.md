@@ -1,5 +1,48 @@
 # Implementierungsfortschritt
 
+## Restaufwand geprüft und Implementierung für Statusauskunft pausiert, 2026-11-04
+
+Auf aktuelle Nutzerfrage gezielter Code-/Git-/CI-Abgleich statt Neuimplementierung.
+Remote erneut direkt geprüft: letzter Codecommit `4add338349ba3865e51f4333f0ece515ccadbef8`;
+CI 41666927670 samt Joblog vollständig erfolgreich. Aktuelle gewichtete grobe
+Planung und offene Pakete: [PROJECT_STATUS.md](PROJECT_STATUS.md), Neubewertung
+vom 4. November. Kein abgeschlossener Gesamtumfang und keine Produktivfreigabe.
+
+Relisting-Zwischenstand bleibt lokal erhalten: Backend, Migration 014, acht
+Sprachdateien und Integrationstestgerüst uncommittet. Das Gerüst enthält noch
+keine Testfälle; reine Tests fehlen. Backend/SQL noch ohne Syntax-/Laufzeitnachweis,
+Sprachdateien zuvor syntaxgeprüft. Keine Bootstrap-, Markt-/Gebühren- oder
+Oberflächenanbindung; Browserdateien noch unverändert. Nicht in den Runner
+aufnehmen oder als erfolgreich ausgeben, bevor diese Lücken geschlossen sind.
+
+Nächster Schritt: bestehende Backendfunktionen prüfen, Kettensperre vor
+Inseratsperre integrieren, Rabatt vor Zustimmungsprüfung in Quote/Hash aufnehmen,
+Anspruch bei tatsächlich rabattierter Veröffentlichung atomar verbrauchen;
+Bestätigungsseite/Dashboard/Edit-Hinweis und fehlende Testgruppen ergänzen.
+Danach isolierte sequenzielle DB- und echte Browserprüfung, Fehlerbehebung,
+geprüfter Codecommit/Push. Nur Nachweisdokumente werden jetzt gesichert;
+die private Auftragsdatei und unfertigen Codeänderungen bleiben unverändert.
+
+## Wiederaufnahme und bestätigter Stand, 2026-11-04
+
+Lokal und auf dem Entwicklungsbranch `4add338349ba3865e51f4333f0ece515ccadbef8`;
+Arbeitsbaum vor Fortsetzung sauber bis auf die private, unversionierte Auftragsdatei.
+CI [41666927670](https://github.com/LLMbutHuman/GunIndex/actions/runs/41666927670)
+vollständig erfolgreich: 16 reine Gebühren- und 26 Gebühren-DB-/HTTP-Gruppen,
+zwölf reine Wartungs-, neun DB-/Worker- und 14 HTTP-/RBAC-Gruppen. Gebührenhinweise
+in acht Empfängersprachen, verschlüsselte Queue und Kanalpräferenzen bestanden.
+Zehn Gebühren-Browser-Journeys einschließlich acht mobiler Sprachen sowie gesamte
+bestehende Regression, Composer-Audit, Internationalisierung und Accessibility grün.
+Auch Wartungsdiagnose-Commit `2c070d6`, CI `41665892946`, vollständig erfolgreich.
+Die unten stehenden Ausstehend-Vermerke sind damit historische Zwischenstände.
+
+Nächste Implementierung begonnen: sichere Wiedereinstellung erfolglos beendeter
+Auktionen als neuer Entwurf mit eigener ID und unabhängigen Bilddateien. Einmaliger
+Gratisanspruch pro Ursprungskette, Verbrauch erst bei tatsächlicher Veröffentlichung;
+Erfolgsprovision bleibt bestehen. Ursprüngliche Gebote und Verträge bleiben erhalten.
+Backend, Übersetzungen und Integrationstests werden getrennt parallel bearbeitet.
+Diese neue Etappe ist noch nicht fertig oder getestet. Produktionsschalter bleiben aus.
+
 ## Gebührenhinweise und Abschlussprüfung, 2026-11-03
 
 CI `41664657641` für Wartungscommit `de42a91` vollständig erfolgreich, einschließlich
