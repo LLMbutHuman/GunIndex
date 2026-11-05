@@ -30,8 +30,9 @@ $q=$pdo->prepare('SELECT id,position FROM market_images WHERE listing_id=? ORDER
 $categories=catalog_categories($pdo,true);
 include __DIR__.'/../includes/header.php';
 ?>
-<main class="page"><div class="page-heading"><p class="eyebrow">Dein Angebot</p><h1>Details, die den Unterschied machen.</h1></div>
+<main class="page"><div class="page-heading"><h1><?=h(t('Inserat bearbeiten'))?></h1></div>
 <?php if ($error!==''): ?><div class="notice notice-error" role="alert"><?= h($error) ?></div><?php endif; ?>
+<?php if (isset($_GET['relisted']) && $listing['status']==='draft' && relisting_context($pdo,(int)$user['id'],$listingId)!==null): ?><p class="notice" role="status"><?=h(t('relisting.draft_created'))?></p><?php endif; ?>
 <?php include __DIR__.'/../includes/market-form.php'; ?>
 </main>
 <?php include __DIR__.'/../includes/footer.php'; ?>

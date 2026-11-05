@@ -1,5 +1,15 @@
 # Tatsächlicher Testnachweis
 
+## Wiedereinstellung: lokale Prüfung und neue CI-Fälle, 2026-11-05
+
+22 neue reine Relisting-Gruppen und PHP-Syntax bestanden; zusätzlich bestehende
+16 Gebühren-, 14 Zustimmungs- und sieben Geo-/Sprachgruppen erfolgreich.
+Node-Syntax der erweiterten Gebühren-Browsersuite bestanden. 14 neue DB-/HTTP-
+Gruppen einschließlich echter Prozesskonkurrenz und spätem Transaktionsrollback
+ergänzt; neun neue mobile Browserabläufe (acht Sprachen plus bezahlter Folgeversuch).
+Diese DB-/Browserfälle sind zu diesem Zwischenstand noch nicht ausgeführt.
+Sie benötigen den nächsten isolierten Linux-CI-Lauf. Keine Live-Zahlungen.
+
 ## Vollständig bestätigter Stand bei Wiederaufnahme, 2026-11-04
 
 Commit `4add338349ba3865e51f4333f0ece515ccadbef8`,

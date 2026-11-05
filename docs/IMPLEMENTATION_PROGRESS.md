@@ -1,5 +1,26 @@
 # Implementierungsfortschritt
 
+## Wiedereinstellung integriert, Prüfungen laufen, 2026-11-05
+
+Auf Nutzerauftrag tatsächliche Umsetzung fortgesetzt. Bestehendes Relisting-
+Backend und Migration 014 erhalten, geprüft und mit Bootstrap, Sprachkatalogen,
+Gebührenquote/Veröffentlichung, Dashboard, Bestätigungsseite und Editor verbunden.
+Neuer Durchlauf hat eigene ID/Bilder; einmaliger Rabatt wird bei Veröffentlichung
+atomar verbraucht, nicht beim Entwurf oder bei ohnehin kostenlosen Tarifen.
+Paralleles Nachlesen auf aktuelle DB-Sicht korrigiert; veröffentlichte Nachfolger
+behalten auch bei gebührenfreier Pause/Fortsetzung ihre ursprüngliche Endzeit.
+
+Lokal bestanden: PHP-Syntax sämtlicher neuer/geänderter PHP-Dateien, 22 neue
+Relisting-Regelgruppen, 16 bestehende Gebühren-, 14 Zustimmungs- und sieben
+Geo-/Sprachgruppen; Browserdatei Node-syntaxgeprüft. 14 DB-/HTTP-Gruppen einschließlich
+echter Prozesskonkurrenz, spätem Rollback und deterministischem altem RR-Snapshot
+ergänzt. Neun Browserabläufe für acht mobile Erst-Wiedereinstellungen und einen
+bezahlten Folgeversuch ergänzt; tatsächlicher Linux-/Browsernachweis noch ausstehend.
+Die DB-Suite läuft sequenziell im bestehenden isolierten Runner. Unabhängige
+Agentenarbeiten nach Nutzungslimit durch Root geprüft und integriert.
+Details und verbleibender Umfang: [RELISTING.md](RELISTING.md).
+Keine Live-Aktivierung, kein Eingriff in ursprüngliche Auktionen/Schlüssel/Volumes.
+
 ## Restaufwand geprüft und Implementierung für Statusauskunft pausiert, 2026-11-04
 
 Auf aktuelle Nutzerfrage gezielter Code-/Git-/CI-Abgleich statt Neuimplementierung.

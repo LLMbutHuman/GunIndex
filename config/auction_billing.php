@@ -14,8 +14,9 @@ function auction_billing_enabled(PDO $pdo): bool {
 function auction_billing_json(array $payload): string {
     return json_encode($payload,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 }
-function auction_billing_contract(PDO $pdo,int $listingId): ?array {
-    $q=$pdo->prepare('SELECT * FROM market_auction_fee_contracts WHERE listing_id=?');$q->execute([$listingId]);$row=$q->fetch();if(!$row)return null;
+function auction_billing_contract(PDO $pdo,int $listingId,bool $current=false): ?array {
+    if($current&&!$pdo->inTransaction())throw new LogicException('Current contract read requires a transaction.');
+    $q=$pdo->prepare('SELECT * FROM market_auction_fee_contracts WHERE listing_id=?'.($current?' FOR SHARE':''));$q->execute([$listingId]);$row=$q->fetch();if(!$row)return null;
     $json=crypto_decrypt('finance',$row['payload_ciphertext']);
     if(!hash_equals($row['payload_hash'],hash('sha256',$json)))throw new RuntimeException('Auction contract integrity failed.');
     $payload=json_decode($json,true,32,JSON_THROW_ON_ERROR);
@@ -61,7 +62,10 @@ function auction_billing_validate_quote(array $quote,array $input): void {
 /** Called inside market_save_listing after ownership/row locking, before mutation. */
 function auction_billing_prepare(PDO $pdo,int $seller,array $data,array $input,?array $existing): ?array {
     if(!$pdo->inTransaction())throw new LogicException('Auction billing requires publication transaction.');
-    $contract=$existing?auction_billing_contract($pdo,(int)$existing['id']):null;
+    // A concurrent publication may have committed after our initial lineage snapshot.
+    // Drafts have no contract yet: do not gap-lock all missing contract keys.
+    $currentContract=$existing&&$existing['type']==='auction'&&in_array($existing['status'],['active','paused'],true)&&(int)$existing['auction_fee_eligible']===1;
+    $contract=$existing?auction_billing_contract($pdo,(int)$existing['id'],$currentContract):null;
     if($contract!==null){
         if($data['type']!=='auction'||$data['status']!=='active')throw new MarketConflictException(t('auction_billing.locked'));
         if(market_expired($existing))throw new MarketConflictException(t('auction_billing.expired'));
@@ -70,7 +74,9 @@ function auction_billing_prepare(PDO $pdo,int $seller,array $data,array $input,?
     if($data['type']!=='auction'||$data['status']!=='active')return null;
     // Migration defaults and already public free auctions never acquire a retroactive tariff.
     if($existing&&((int)$existing['auction_fee_eligible']!==1||($existing['type']==='auction'&&in_array($existing['status'],['active','paused'],true))))return null;
-    $quote=auction_billing_quote($pdo,$seller,true);if($quote===null)return null;
+    $quote=auction_billing_quote($pdo,$seller,true);
+    if($existing)$quote=relisting_discount_quote($pdo,$seller,(int)$existing['id'],$quote,true);
+    if($quote===null)return null;
     auction_billing_validate_quote($quote,$input);return $quote+['existing'=>false];
 }
 function auction_billing_publish(PDO $pdo,int $listingId,int $seller,?array $quote): void {
@@ -175,7 +181,10 @@ function auction_billing_form(PDO $pdo,int $seller,?array $listing=null): bool {
         echo '<section class="panel"><h2>'.h(t('auction_billing.heading')).'</h2><p>'.h(t('auction_billing.preserved')).'</p><p>'.h($contract['terms']).'</p></section>';return false;
     }
     if($listing&&((int)$listing['auction_fee_eligible']!==1||($listing['type']==='auction'&&in_array($listing['status'],['active','paused'],true))))return false;
-    try{$quote=auction_billing_quote($pdo,$seller);}catch(InvalidArgumentException|DomainException|PaymentUnavailable $error){
+    try{
+        $quote=auction_billing_quote($pdo,$seller);
+        if($listing)$quote=relisting_discount_quote($pdo,$seller,(int)$listing['id'],$quote);
+    }catch(InvalidArgumentException|DomainException|PaymentUnavailable $error){
         echo '<p class="notice">'.h($error->getMessage()).' <a href="/user/billing-details.php">'.h(t('auction_billing.billing_required')).'</a></p>';return false;
     }
     if($quote===null)return false;

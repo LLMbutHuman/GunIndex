@@ -173,11 +173,15 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
         if (!market_category_locked_allowed($pdo,(int)$data['category_id'])) throw new MarketAccessException('Diese Kategorie ist nicht mehr verfügbar.');
         $existingImages = 0;
         $existing = null;
+        $relistingContext = null;
         if ($listingId !== null) {
+            // A lineage is locked before its listing, including ordinary draft saves.
+            $relistingContext=relisting_context($pdo,$sellerId,$listingId,true);
             $existing = market_lock_listing($pdo, $listingId);
             if ((int)$existing['seller_id'] !== $sellerId) {
                 throw new MarketAccessException('Nur eigene Angebote können bearbeitet werden.');
             }
+            relisting_assert_target($pdo,$sellerId,$listingId,$data);
             if (!in_array($existing['status'], ['draft','active','paused'], true) || market_has_bids($pdo, $listingId)
                 || ($existing['type']==='auction' && $existing['status']==='active' && market_expired($existing))) {
                 throw new MarketConflictException('Dieses Angebot kann nicht mehr bearbeitet werden.');
@@ -198,6 +202,7 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             $ends=$existing['ends_at'];
         }
         if(!empty($feeQuote['existing']))$ends=$existing['ends_at'];
+        if($relistingContext!==null&&$relistingContext['published_at']!==null)$ends=$existing['ends_at'];
         $point=geo_postcode($pdo,$data['country_code'],$data['zip']);
         $values=[$data['country_code'],$point['latitude']??null,$point['longitude']??null,$data['category_id'],$data['title'],$data['description'],$data['type'],$data['price_cents'],$data['buyout_cents'],$data['status'],$ends,$data['zip'],$data['city'],$data['pickup'],$data['shipping'],$data['condition_label']];
         if ($listingId === null) {
@@ -208,7 +213,10 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
             $q->execute(array_merge($values,[$listingId]));
         }
-        if($data['type']==='auction'&&$data['status']==='active')auction_billing_publish($pdo,$listingId,$sellerId,$feeQuote);
+        if($data['type']==='auction'&&$data['status']==='active'){
+            auction_billing_publish($pdo,$listingId,$sellerId,$feeQuote);
+            relisting_consume($pdo,$sellerId,$listingId,$feeQuote);
+        }
         foreach ($prepared as $index=>$image) {
             $q=$pdo->prepare('INSERT INTO market_images(listing_id,storage_key,position,width,height,created_at) VALUES (?,?,?,?,?,UTC_TIMESTAMP())');
             $q->execute([$listingId,$image['key'],$existingImages+$index,$image['width'],$image['height']]);
