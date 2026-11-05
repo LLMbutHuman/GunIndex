@@ -1,5 +1,16 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-05 – Wiedereinstellung geprüft und gesichert
+
+`7b423f88b592592139d37b6faa3c0c94e64ace6b` auf dem bestehenden Entwicklungsbranch;
+Remote-SHA verifiziert. CI 42055817743 einschließlich Windows, Linux/MySQL,
+Browser, acht Sprachen, Accessibility und Dependency-Audit vollständig erfolgreich.
+Neue Migration 014, 22 reine, 14 DB-/HTTP-Gruppen und neun zusätzliche Browserabläufe
+bestanden. Kein Reset, keine produktiven Daten-/Volumeänderungen und keine echte
+Zahlung. Ursprüngliche Auktionen/Bilder/Verträge bleiben erhalten. Private
+Auftragsdatei weiter unversioniert. Nachfolgender reiner Nachweiscommit ändert
+keinen Anwendungscode und benötigt keine erneute vollständige Regression.
+
 ## 2026-11-04 – Gebühren und Wartung gesichert und geprüft
 
 Letzter geprüfter Code lokal und remote: `4add338349ba3865e51f4333f0ece515ccadbef8`,

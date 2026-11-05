@@ -18,8 +18,16 @@ MySQL/InnoDB, UTF8MB4, UTC-Zeitwerte, Fremdschlüssel und eindeutige Referenzen 
 | `008_finance.sql` | Rechnungsanschriften, Ländersteuerregeln, unveränderliche Snapshots/Belege, Sequenzen, Erstattungen und Finanzereignisse |
 | `009_chat_privacy.sql` | Nachrichten-Verschlüsselungsversion, Blockierungen und Gesprächsindex |
 | `010_legacy_import.sql` | Eindeutige Zuordnung kontrolliert übernommener Altkonten |
+| `011_contract_receipts.sql` | Unveränderliche Dokumentbindung bei Registrierung und Leistungsbestellung |
+| `012_auction_billing.sql` | Gebührenverträge, Zustimmungen und eindeutige Einstell-/Erfolgsforderungen |
+| `013_maintenance.sql` | Persistente Wartungsfenster und Auktionsfrist-Snapshots |
+| `014_relisting.sql` | Ursprungsketten, eindeutige Nachfolger und einmaliger Einstellgebührenrabatt |
 
-Die Migrationen 003–010 wurden auf der isolierten synthetischen Entwicklungsdatenbank angewendet. Bereits ausgeführte Dateien sind unveränderlich; spätere Änderungen benötigen eine neue Migration. Das ist kein Nachweis einer ausgeführten Produktivmigration.
+Migrationen bis 014 wurden auf der isolierten synthetischen Entwicklungsdatenbank
+geprüft; CI 42055817743 bestätigt auch die neue Wiedereinstellungs-Etappe.
+Den aktuellen Laufnachweis dokumentiert `IMPLEMENTATION_PROGRESS.md`. Bereits ausgeführte Dateien
+sind unveränderlich; spätere Änderungen benötigen eine neue Migration.
+Das ist kein Nachweis einer ausgeführten Produktivmigration.
 
 ```sh
 php ops/migrate.php --backup-confirmed
@@ -42,7 +50,11 @@ Kernangebote, Bilder, Gebote, Merklisten, Nachrichten, Bewertungen und Zahlungen
 - Dokumentenzugänge auf berechtigte Prüfer, Fall und kurze Gültigkeit; Rechtszustimmungen auf konkrete Version und Hash.
 - PLZ-Punkte auf Land und normalisierte PLZ; Entfernungsabfragen verwenden nur aktivierte Quellen mit dokumentierter Rechteprüfung.
 
-Die automatische Auktionsgebührenforderung ist noch nicht vollständig integriert. Vorhandene Gebots-, Gebühren- und Finanztabellen allein erzeugen keine vollständige Auktionsabrechnung.
+Automatische Auktionsgebührenforderungen sind mit Veröffentlichung und Abschluss
+integriert. Vertrag, Zustimmung und Forderung gehören jeweils zur selben Transaktion.
+Wartungsfenster sichern die einmalige Fristfortsetzung. Wiedereinstellungs-Ketten
+begrenzen den Gratisanspruch; sie schreiben keine ursprünglichen Gebote um.
+Weitere Zahlungs-/Korrekturarten und reale Providerabnahmen bleiben offen.
 
 ## Bestehende Daten und Datenschutz
 

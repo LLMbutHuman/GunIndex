@@ -7,7 +7,9 @@ Bestehende Auktionen werden nicht rückwirkend berechnet. Neue Auktionen, die
 bei ausgeschalteter Abrechnung veröffentlicht werden, bleiben für diesen
 Durchlauf gebührenfrei. Ein neuer Entwurf kann beim ersten Veröffentlichen
 einen Gebührenvertrag erhalten. Wiedereinstellung muss einen neuen Durchlauf
-mit neuer Inserats-ID erzeugen; der Gratis-Wiedereinstellungsanspruch ist offen.
+mit neuer Inserats-ID erzeugen. Der integrierte neue Ablauf samt einmaligem Rabatt
+ist in [RELISTING.md](RELISTING.md) beschrieben; der aktuelle Prüfnachweis steht im
+Fortschrittsprotokoll.
 
 `auction_fees_enabled` und `auction_fees_approved` sind standardmäßig aus.
 Zusätzlich erforderlich: freigegebene manuelle geschäftliche PayPal-Zahlung,
@@ -68,8 +70,9 @@ Teil-/Vollerstattungen mit neuen Korrekturbelegen. Diese Bedienung versendet kei
 
 Die vorhandene automatische PayPal-API nimmt diese manuellen Gebührenaufträge
 absichtlich nicht an. Automatische Gebühreneinziehung, automatische
-Providererstattung, Teilkorrektur einer unbezahlten Forderung sowie ein neuer
-Wiedereinstellungsworkflow sind weitere Anforderungen. Keine Kundengeldverwahrung
+Providererstattung, Teilkorrektur einer unbezahlten Forderung und Verlängerungen
+sind weitere Anforderungen. Wiedereinstellung erfolgloser Auktionen ist als
+eigener Durchlauf integriert. Keine Kundengeldverwahrung
 und kein Einzug des Warenkaufpreises. Finanz-/Bestandsseiten sind noch nicht
 durchgängig übersetzt; das neue Gebührenmodul umfasst alle acht Sprachen.
 

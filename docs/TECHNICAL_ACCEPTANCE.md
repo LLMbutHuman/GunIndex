@@ -1,4 +1,4 @@
-# Technischer Abnahmestand – 2026-11-04
+# Technischer Abnahmestand – 2026-11-05
 
 Gesamtplattform **nicht fertig und nicht produktiv abgenommen**.
 Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
@@ -20,9 +20,11 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
   und 14 HTTP-/RBAC-Gruppen bestanden. Gesamtanforderung 22 bleibt wegen der unten
   genannten Betriebsfolgen teilweise offen. Gebührenhinweise ebenfalls bestätigt;
   Gebührensuite inzwischen 16 reine und 26 DB-/HTTP-Gruppen.
-- **C:** Wiedereinstellung lokal begonnen: Backend, Schema und Sprachdateien;
-  noch keine Anbindung und kein erfolgreicher Integrationsnachweis. Neues Testgerüst
-  enthält bislang keine Fallgruppen. Kein fertiger Meilenstein.
+- **A:** Wiedereinstellung eigener erfolgloser Auktionen: neue ID und Bilddateien,
+  einmaliger transaktionaler Einstellgebührenrabatt, unveränderte Erfolgsprovision,
+  Dashboard-/Bestätigungs-/Editorablauf. `7b423f8`, CI 42055817743 vollständig grün:
+  22 reine und 14 DB-/HTTP-Gruppen sowie neun zusätzliche Browserabläufe inklusive
+  acht mobiler Sprachen. Masterpunkt 11 umfasst weitere noch offene Fälle.
 
 - **A:** Lokalisierte Konto-/Recovery-/Profil-/Benachrichtigungs-/Dashboard-
   und Footerabläufe in acht Sprachen; Empfängersprache in Mail-Links für frische
@@ -56,7 +58,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | --- | --- | --- | --- |
 | 1 | Auktions-Einstellgebühr | A | Neuer bestätigter Durchlauf atomar berechnet; Aktivierungsfreigaben und tatsächliche Zahlungen extern |
 | 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
-| 3 | Gebühren, Korrekturen, Rechnungen | C | Voller unbezahlter Erlass und verifizierte Erstattungen geprüft; unbezahlte Teilkorrektur, Wiedereinstellung und Bestandsbehandlung offen |
+| 3 | Gebühren, Korrekturen, Rechnungen | C | Voller unbezahlter Erlass, verifizierte Erstattungen und Gebührenbindung bei erfolgloser Wiederholung geprüft; unbezahlte Teilkorrektur, weitere Durchlaufarten und Bestandsbehandlung offen |
 | 4 | Rechtsdokumentbindung | C | Bestehende Registrierungs-/Leistungsabläufe geprüft; neue Transaktionsarten und Pflichtzustimmung für Bestandskonten offen |
 | 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
 | 6 | Kategorieattribute | C | Typisierte Verwaltung und Validierung |
@@ -64,7 +66,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 8 | Autocomplete/Relevanz/Filter | C | Erweiterung und kombinierte End-to-End-Prüfung |
 | 9 | Entwurfs-Autosave/Vorschau | C | Automatische Speicherung und vollständige Vorschau |
 | 10 | Bildreihenfolge | A | Implementiert und geprüft |
-| 11 | Wiedereinstellen/Verlängern | C | Vollständiger Ablauf einschließlich einmaligem Gratisanspruch |
+| 11 | Wiedereinstellen/Verlängern | C | Erfolglose Auktion samt einmaligem Gratisanspruch vollständig integriert und getestet; weitere Inseratarten und explizite Verlängerungen offen |
 | 12 | Verhandlungsmodus | C | Eigenständige Verhandlung und Angebotszustände |
 | 13 | Festpreis-Transaktion | C | Vollständiger Käufer-/Verkäuferablauf |
 | 14 | Transaktionsbewertungen | C | Vorhandene Auktionsgrundlage auf weitere Transaktionen erweitern |

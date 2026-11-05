@@ -26,7 +26,18 @@ Aktive Geschäftsdaten liegen in eigenen `market_*`-Tabellen; lokale Postleitzah
 
 Gebote, Zahlungsprüfungen, Bumps und begrenzte Werbeinventare verwenden Transaktionen und Zeilensperren. Private Proxy-Maxima werden nicht öffentlich angezeigt. Eindeutige Referenzen verhindern doppelte lokale Buchungen, Hinweise und Suchtreffer. Finanzdokumente bewahren bei aktivierter Finanzfunktion den verschlüsselten Betreiber-/Kunden-/Steuersnapshot; Änderungen erfolgen durch zugeordnete Korrekturbelege.
 
-Die Gebührenberechnung ist zentral vorhanden. Die automatische Erzeugung von Einstell- und Abschlussforderungen aus der Auktionslogik ist noch nicht vollständig angebunden. Eine vorhandene Gebührenformel ist deshalb kein Nachweis eines vollständigen Auktionsabrechnungsprozesses.
+Einstell- und Erfolgsforderungen sind atomar an bestätigte Veröffentlichung und
+Zuschlag/Sofortkauf angebunden. Der verschlüsselte Gebührenvertrag bewahrt den
+akzeptierten Tarif und die Rechtsfassungen; Ereignisschlüssel verhindern doppelte
+Forderungen. Tatsächliche Zahlungseingänge werden getrennt geprüft. Vollständige
+automatische Providererstattung und weitere Korrekturarten bleiben offen.
+Siehe [Auktionsgebühren](AUCTION_BILLING.md).
+
+Wiedereinstellung erfolgloser Auktionen erzeugt eine neue ID mit unabhängigen
+Bilddateien. Ketten- und Inseratsperren, eindeutige Nachfolger und ein bei rabattierter
+Veröffentlichung verbrauchter Gratisanspruch schützen Wiederholungen. Migration 014
+und `config/relisting.php` ergänzen die bestehenden Abläufe; Nachweise und Grenzen
+stehen in [RELISTING.md](RELISTING.md) und im Fortschrittsprotokoll.
 
 ## Hintergrundverarbeitung
 

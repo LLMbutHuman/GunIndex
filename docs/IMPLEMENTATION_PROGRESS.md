@@ -1,5 +1,38 @@
 # Implementierungsfortschritt
 
+## Wiedereinstellung vollständig geprüft und gesichert, 2026-11-05
+
+Codecommit `7b423f88b592592139d37b6faa3c0c94e64ace6b` auf
+`feature/general-marketplace-rebuild` gepusht, Remote-SHA bestätigt.
+[CI 42055817743](https://github.com/LLMbutHuman/GunIndex/actions/runs/42055817743)
+vollständig erfolgreich, Windows- und Linuxjob samt Joblog geprüft.
+Migration 014 angewendet; 22 Relisting-Regelgruppen und 14 DB-/HTTP-Gruppen
+bestanden, einschließlich unabhängiger Bilder, fremder Zugriffe, CSRF,
+Wartung, später Rollbacks, zweier echter paralleler Prozesse und altem
+Repeatable-Read-Snapshot vor konkurrierender Veröffentlichung.
+
+Neun zusätzliche echte Browserabläufe erfolgreich: acht mobile Sprachansichten
+vom Dashboard über Bestätigung/Entwurf/Bildkopien bis zur kostenlosen
+Veröffentlichung und Bearbeitung; weiterer kostenpflichtiger Nachfolger derselben
+Kette genau einmal berechnet. Gebühren-Browsersuite nun 19 Abläufe insgesamt;
+keine JavaScriptfehler oder externen Requests. Bestehende Gebühren-/Wartungs-,
+Finanz-, Konto-, Betriebs-, Browser-, Sprach- und Accessibilityregression sowie
+Composer-Audit ebenfalls erfolgreich. Keine tatsächliche Zahlung oder Livefreigabe.
+
+Der Arbeitsbaum enthält nach Sicherung der Nachweisdokumente nur die absichtlich
+private, unversionierte Auftragsdatei. Alle bisherigen Relisting-Zwischenstände
+sind jetzt im geprüften Codecommit enthalten; keine ungesicherten Agentenfragmente.
+Details: [RELISTING.md](RELISTING.md). Masterpunkt 11 bleibt insgesamt offen für
+weitere Inseratarten und explizite Verlängerungen; der einmalige Gratisablauf
+erfolgloser Auktionen ist abgeschlossen. Keine pauschale neue Prozentrechnung.
+
+**Nächster konkreter Arbeitspunkt:** Wiedereinstellen/Verlängern für die übrigen
+zulässigen Inseratzustände definieren und mit neuer Durchlauf-ID, bestehendem
+Rechte-/Gebührenmodell sowie Frist-/Nebenläufigkeitstests ergänzen. Erfolgreiche,
+verkaufte und konfliktbehaftete Auktionen nicht als erfolglose Gratisquellen
+umdeuten. Danach Entwurfs-Autosave und vollständige Vorschau (Masterpunkt 9).
+Die gerade bestandene Regression ohne neue Änderung nicht unnötig wiederholen.
+
 ## Wiedereinstellung integriert, Prüfungen laufen, 2026-11-05
 
 Auf Nutzerauftrag tatsächliche Umsetzung fortgesetzt. Bestehendes Relisting-

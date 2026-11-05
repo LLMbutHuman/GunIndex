@@ -1,5 +1,23 @@
 # Tatsächlicher Testnachweis
 
+## Wiedereinstellung: vollständiger Linux-/Browsernachweis, 2026-11-05
+
+`7b423f88b592592139d37b6faa3c0c94e64ace6b`,
+[CI 42055817743](https://github.com/LLMbutHuman/GunIndex/actions/runs/42055817743):
+Windows und Linux vollständig erfolgreich. Job 127343789657 bestätigt Migration
+014, 22 reine Relisting-Gruppen und 14 DB-/HTTP-Gruppen. Insbesondere tatsächliche
+konkurrierende Entwurfsanlage/Veröffentlichung, alter RR-Snapshot, später
+Transaktionsrollback samt Bilddateien, Gebühren-off/Nulltarif und Wartung bestanden.
+
+Die Gebühren-Browsersuite bestätigt jetzt 19 Abläufe: bisherige zehn plus acht
+mobile Erst-Wiedereinstellungen in allen vorgesehenen Sprachen und eine zweite,
+kostenpflichtige Wiederholung derselben Kette. Dashboard-Einstieg, ausdrückliche
+Bestätigung, eigene Bilddateien, Originalerhalt, Quote, Zustimmung, Nullforderung,
+einmaliger Anspruch und unveränderte Gebühr bei Bearbeitung geprüft. Keine
+JavaScriptfehler oder externen Requests. Gesamte bestehende Regression,
+Dependency-Audit, Internationalisierung und Accessibility ebenfalls grün.
+Die folgenden Ausstehend-Vermerke sind historische Zwischenstände.
+
 ## Wiedereinstellung: lokale Prüfung und neue CI-Fälle, 2026-11-05
 
 22 neue reine Relisting-Gruppen und PHP-Syntax bestanden; zusätzlich bestehende

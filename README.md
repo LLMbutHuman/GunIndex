@@ -14,7 +14,7 @@ Vorhanden sind:
 - Berechtigungsbasierte Administration, Meldungen und Beschwerden, eigener Datenexport, kontrollierte Deaktivierung/Anonymisierung sowie technisch vorbereitete, standardmäßig deaktivierte Identitätsprüfung.
 - Zwanzig versionierbare deutsche Rechtsentwürfe, lokale Hintergrundqueues, Betriebsüberwachung und ein Ubuntu-22.04-Installer mit verschlüsselten Sicherungs-/Restorewerkzeugen.
 
-Die Plattform ist **noch nicht produktionsfreigegeben**. Zahlungs-, Werbe-, Finanz-, Identitäts- und Rechtstextveröffentlichung benötigen die jeweiligen expliziten Konfigurationen und tatsächlichen fachlichen Freigaben. Bitcoin, Banküberweisung und Treuhand bleiben deaktiviert. Die automatische Verknüpfung von Auktionsabschluss und Gebührenforderung ist noch offen. Automatisierte PayPal-API-Abläufe wurden mit lokalen Testantworten geprüft; ein echter Provider-Sandbox-/Live-Nachweis steht aus.
+Die Plattform ist **noch nicht produktionsfreigegeben**. Zahlungs-, Werbe-, Finanz-, Identitäts- und Rechtstextveröffentlichung benötigen die jeweiligen expliziten Konfigurationen und tatsächlichen fachlichen Freigaben. Bitcoin, Banküberweisung und Treuhand bleiben deaktiviert. Auktions-Einstell- und Erfolgsforderungen sind integriert und isoliert geprüft; automatische Providererstattungen und weitere Korrekturen bleiben offen. Automatisierte PayPal-API-Abläufe wurden mit lokalen Testantworten geprüft; ein echter Provider-Sandbox-/Live-Nachweis steht aus.
 
 Entwicklung mit ausschließlich synthetischen Daten:
 

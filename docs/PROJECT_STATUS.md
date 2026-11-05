@@ -1,5 +1,15 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
+**Fortschreibung 5. November:** Wiedereinstellung erfolgloser Auktionen einschließlich
+einmaligem Einstellgebührenrabatt ist jetzt integriert, getestet und gesichert:
+`7b423f8`, [CI 42055817743](https://github.com/LLMbutHuman/GunIndex/actions/runs/42055817743)
+vollständig erfolgreich. 22 reine, 14 DB-/HTTP-Gruppen und neun zusätzliche
+Browserabläufe bestanden, einschließlich acht mobiler Sprachen. Die nachfolgend
+beschriebenen ungesicherten Relisting-Fragmente sind damit abgeschlossen und
+gesichert. Weitere Inseratarten/Verlängerungen sowie die übrigen großen Pakete
+bleiben offen. Prozent-/Stundenschätzungen vom 4. November wurden nicht neu
+berechnet. Verbindlicher Wiederaufnahmepunkt: `IMPLEMENTATION_PROGRESS.md`.
+
 ## Aktuelle Neubewertung: 4. November 2026
 
 **Kurzantwort: grob 40 % des vollständigen Masterumfangs fertig; etwa 60 % fehlen.
