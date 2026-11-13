@@ -143,6 +143,48 @@ function privacy_review_deletion(PDO $pdo,int $actor,int $requestId,string $deci
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
 
+/** Export only authenticated message parties' opaque E2EE packets, never recovery backups. */
+function privacy_message_export(PDO $pdo, int $userId, array $row): array
+{
+    if (!in_array($userId,[(int)$row['sender_id'],(int)$row['receiver_id']],true)) throw new MarketAccessException('Private message unavailable.');
+    $version = (int)($row['cipher_version'] ?? 0);
+    $row['cipher_version'] = $version;
+    if ($version === 0 || $version === 1) {
+        $row['message_text'] = function_exists('chat_message_plain') ? chat_message_plain($row['message_text'],$version) : ($version === 0 ? $row['message_text'] : crypto_decrypt('chat',$row['message_text']));
+        $row['encryption'] = 'legacy_server_readable';
+        return $row;
+    }
+    if ($version !== 2 || $row['message_text'] !== '') throw new RuntimeException('Invalid encrypted message state.');
+    $q = $pdo->prepare('SELECT device_id,client_id,sender_version,receiver_version,ciphertext FROM market_e2ee_messages WHERE message_id=? AND sender_id=? AND receiver_id=?');
+    $q->execute([$row['id'],$row['sender_id'],$row['receiver_id']]); $packet = $q->fetch();
+    if (!$packet) throw new RuntimeException('Encrypted message packet unavailable.');
+    $packet['sender_version'] = (int)$packet['sender_version'];
+    $packet['receiver_version'] = (int)$packet['receiver_version'];
+    $packet['sender_manifest'] = e2ee_historical_manifest($pdo,(int)$row['sender_id'],$packet['sender_version']);
+    $packet['receiver_manifest'] = e2ee_historical_manifest($pdo,(int)$row['receiver_id'],$packet['receiver_version']);
+    $q = $pdo->prepare('SELECT * FROM market_e2ee_attachments WHERE message_id=? ORDER BY id'); $q->execute([$row['id']]);
+    $packet['attachments'] = [];
+    foreach ($q->fetchAll() as $attachment) {
+        if ((int)$attachment['owner_id'] !== (int)$row['sender_id'] || (int)$attachment['peer_id'] !== (int)$row['receiver_id'] || (int)$attachment['listing_id'] !== (int)$row['listing_id'] || $attachment['device_id'] !== $packet['device_id'] || $attachment['client_id'] !== $packet['client_id']) throw new RuntimeException('Invalid encrypted attachment state.');
+        $packet['attachments'][] = privacy_encrypted_attachment_export($attachment);
+    }
+    $row['message_text'] = null;
+    $row['encryption'] = 'end_to_end_encrypted';
+    $row['e2ee'] = $packet;
+    return $row;
+}
+
+/** The stream helper verifies opaque bytes against their stored digest before export. */
+function privacy_encrypted_attachment_export(array $attachment): array
+{
+    $stream = e2ee_attachment_stream($attachment);
+    try {
+        $bytes = stream_get_contents($stream);
+        if ($bytes === false || strlen($bytes) !== (int)$attachment['cipher_bytes']) throw new RuntimeException('Encrypted attachment export failed.');
+        return e2ee_attachment_summary($attachment) + ['ciphertext'=>base64_encode($bytes)];
+    } finally { fclose($stream); }
+}
+
 /** Build the entire owner-only JSON before sending headers, using a 0600 temporary stream. */
 function privacy_export(PDO $pdo,int $userId,string $password)
 {
@@ -155,7 +197,9 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'listings'=>['market_listings','seller_id=?',[$userId],['id','title','description','type','price_cents','current_bid_cents','status','zip','city','country_code','created_at','ends_at']],
             'bids'=>['market_bids','user_id=?',[$userId],['id','listing_id','amount_cents','event_type','created_at']],
             'private_maximum_bids'=>['market_proxy_bids','user_id=?',[$userId],['id','listing_id','max_cents','created_at','updated_at']],
-            'messages'=>['market_messages','(sender_id=? OR receiver_id=?)',[$userId,$userId],['id','listing_id','sender_id','receiver_id','message_text','is_read','created_at']],
+            'messages'=>['market_messages','(sender_id=? OR receiver_id=?)',[$userId,$userId],['id','listing_id','sender_id','receiver_id','message_text','cipher_version','encryption','e2ee','is_read','created_at']],
+            'e2ee_account'=>['market_e2ee_accounts','user_id=?',[$userId],['user_id','identity_key','current_version','current_hash','created_at','updated_at'],'user_id'],
+            'e2ee_manifests'=>['market_e2ee_manifests','user_id=?',[$userId],['user_id','version','manifest','signature','manifest_hash','created_at'],'version'],
             'ratings'=>['market_ratings','(sender_id=? OR receiver_id=?)',[$userId,$userId],['id','listing_id','sender_id','receiver_id','stars','comment','status','created_at']],
             'invoices'=>['market_invoices','user_id=?',[$userId],['id','invoice_number','service_code','fee_version','gross_cents','currency','status','created_at']],
             'legal_acceptances'=>['market_legal_acceptances','user_id=?',[$userId],['id','document_id','content_hash','acceptance_type','created_at']],
@@ -186,11 +230,17 @@ function privacy_export(PDO $pdo,int $userId,string $password)
         ];
         foreach($sources as $name=>$source){
             [$table,$where,$values,$allowed]=$source;$cursor=$source[4]??'id';
-
+            // Recovery backups are not part of this export and must not be loaded in a 250-row batch.
+            $selected=$name==='e2ee_manifests'?implode(',',$allowed):'*';
+            $batchSize=$name==='e2ee_manifests'?25:250;
             $write(','.json_encode($name,JSON_THROW_ON_ERROR).':[');$first=true;$last=0;
-            do{$q=$pdo->prepare('SELECT * FROM '.$table.' WHERE '.$cursor.'>? AND '.$where.' ORDER BY '.$cursor.' LIMIT 250');$q->execute(array_merge([$last],$values));$rows=$q->fetchAll();foreach($rows as $row){$last=(int)$row[$cursor];if($name==='cases'&&(int)$row['reporter_id']===$userId&&!empty($row['evidence_cipher']))$row['submitted_evidence']=crypto_decrypt('report',$row['evidence_cipher']);if(in_array($name,['invoice_snapshots','invoice_documents'],true)){$plain=crypto_decrypt('finance',$row['payload_ciphertext']);$hash=$name==='invoice_snapshots'?$row['payload_hash']:$row['content_hash'];if(!hash_equals($hash,hash('sha256',$plain)))throw new RuntimeException('Der gespeicherte Rechnungsnachweis konnte nicht verifiziert werden.');$row['payload']=json_decode($plain,true,64,JSON_THROW_ON_ERROR);}if($name==='messages'){$cipherVersion=(int)($row['cipher_version']??0);$row['message_text']=function_exists('chat_message_plain')?chat_message_plain($row['message_text'],$cipherVersion):($cipherVersion===0?$row['message_text']:crypto_decrypt('chat',$row['message_text']));}$row=array_intersect_key($row,array_flip($allowed));$write(($first?'':',').json_encode($row,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));$first=false;}}while(count($rows)===250);
+            do{$q=$pdo->prepare('SELECT '.$selected.' FROM '.$table.' WHERE '.$cursor.'>? AND '.$where.' ORDER BY '.$cursor.' LIMIT '.$batchSize);$q->execute(array_merge([$last],$values));$rows=$q->fetchAll();foreach($rows as $row){$last=(int)$row[$cursor];if($name==='cases'&&(int)$row['reporter_id']===$userId&&!empty($row['evidence_cipher']))$row['submitted_evidence']=crypto_decrypt('report',$row['evidence_cipher']);if(in_array($name,['invoice_snapshots','invoice_documents'],true)){$plain=crypto_decrypt('finance',$row['payload_ciphertext']);$hash=$name==='invoice_snapshots'?$row['payload_hash']:$row['content_hash'];if(!hash_equals($hash,hash('sha256',$plain)))throw new RuntimeException('Der gespeicherte Rechnungsnachweis konnte nicht verifiziert werden.');$row['payload']=json_decode($plain,true,64,JSON_THROW_ON_ERROR);}if($name==='messages')$row=privacy_message_export($pdo,$userId,$row);$row=array_intersect_key($row,array_flip($allowed));$write(($first?'':',').json_encode($row,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));$first=false;}}while(count($rows)===$batchSize);
             $write(']');
         }
+        $write(',"e2ee_unbound_attachments":[');
+        $q=$pdo->prepare('SELECT * FROM market_e2ee_attachments WHERE owner_id=? AND message_id IS NULL ORDER BY id');$q->execute([$userId]);$unbound=$q->fetchAll();$first=true;
+        foreach($unbound as $attachment){$export=privacy_encrypted_attachment_export($attachment)+['listing_id'=>(int)$attachment['listing_id'],'peer_id'=>(int)$attachment['peer_id'],'device_id'=>$attachment['device_id'],'client_id'=>$attachment['client_id'],'created_at'=>$attachment['created_at']];$write(($first?'':',').json_encode($export,JSON_THROW_ON_ERROR));$first=false;}
+        $write(']');
         $write(',"verification_documents":[');$q=$pdo->prepare('SELECT d.id,d.storage_key,r.id AS request_id FROM market_verification_documents d JOIN market_verification_requests r ON r.id=d.request_id WHERE r.user_id=? AND d.deleted_at IS NULL AND r.expires_at>UTC_TIMESTAMP() ORDER BY d.id');$q->execute([$userId]);$first=true;
         while($doc=$q->fetch()){$path=verification_document_path($doc['storage_key']);if(!is_file($path)||is_link($path)||filesize($path)>12*1024*1024)throw new RuntimeException('Ein eigenes Dokument konnte nicht in den Export aufgenommen werden.');$plain=crypto_decrypt('identity',file_get_contents($path));$write(($first?'':',').json_encode(['id'=>(int)$doc['id'],'request_id'=>(int)$doc['request_id'],'mime'=>'image/webp','base64'=>base64_encode($plain)],JSON_THROW_ON_ERROR));$first=false;}
         $write(']}');rewind($stream);audit_log($pdo,$userId,'privacy.exported',$userId,[]);return$stream;

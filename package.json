@@ -1,0 +1,8 @@
+{
+  "name": "gunindex-browser-crypto",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned local cryptography dependency for GunIndex E2EE",
+  "dependencies": { "openpgp": "6.3.2" },
+  "scripts": { "vendor:e2ee": "node ops/vendor-e2ee.mjs", "test:e2ee": "node tests/e2ee_crypto_test.mjs" }
+}

@@ -1,5 +1,49 @@
 # Implementierungsfortschritt
 
+## E2EE-Chat integriert, Systemabnahme läuft, 2026-11-13
+
+Aktueller Nutzerauftrag priorisiert ausdrücklich den Chat vor weiteren
+Marktplatzmodulen. Letzter vorheriger gesicherter Stand: `f8b1a6c`.
+Die privaten Auftragsdateien bleiben unversioniert.
+
+Neu: lokale OpenPGP.js-6.3.2-Bibliothek mit gesperrter npm-Abhängigkeit,
+Lizenz und überprüften SHA256-Dateien; unabhängige Geräteschlüssel,
+Ed25519-signierte Geräteverzeichnisse, expliziter Fingerabdruckvergleich,
+passwortverschlüsselter lokaler Tresor und getrennte Wiederherstellungscodes.
+Geräteaufnahme und Widerruf rotieren Wiederherstellungsempfänger und Code.
+Verschlüsselte Nachrichten und Dateien werden ausschließlich auf Endgeräten
+entschlüsselt. Migration 015 bewahrt den alten Verlauf; nach E2EE-Einrichtung
+ist der alte Versandweg dauerhaft gesperrt, auch bei später deaktiviertem Gate.
+Private Downloads, Quoten, atomare Dateibindung, idempotenter Versand,
+Wiederholung nach Verbindungsabbruch, Datenexport und Oberflächen sind verbunden.
+
+Tatsächlich lokal bestanden: 12 echte Kryptografie-Prüfgruppen mit portablem
+Node 22.23.4, inklusive Mehrgerätebetrieb, Wiederherstellung, direktem
+Entschlüsselungsfehlschlag widerrufener Schlüssel für zukünftige Nachrichten
+und Dateien, Manipulations-/Kontextabwehr und 3-MiB-Grenzfall. PHP-Syntax der
+neuen/geänderten PHP-Dateien und JavaScript-Syntax geprüft; Vendorbytes gegen
+die gesperrte Paketinstallation verglichen. DB-/HTTP-/Browsertests werden in
+der isolierten Linux-CI ausgeführt; ihr Erfolg ist hier noch nicht behauptet.
+
+**Wiederaufnahme:** E2EE-Browser- und Datenbanktests abschließen, Linux-CI
+ausführen, Fehler beheben und Commit/Run-Nachweise hier ergänzen. Anschließend
+die Abnahmeliste in `E2EE_PROTOCOL.md` aktualisieren. Noch keine produktive
+Aktivierung: `E2EE_ENABLED` bleibt standardmäßig 0. Unabhängige Protokoll- und
+Anwendungssicherheitsprüfung, Zielserver-/Backupabnahme sowie Browsermatrix
+bleiben gesonderte Nachweise. Keine Forward-Secrecy-/Key-Transparency-Garantie.
+Keine Zahlungseinstellungen oder historischen privaten Dateien geändert.
+
+Am 13. November zusätzlich geprüft: npm-Audit ohne gemeldete Schwachstellen,
+acht Sprachdateien mit identischen 59 Schlüsseln, PHP-Syntax erfolgreich.
+Zweiter Code-Review fand und korrigierte eine verlorene Widerrufsauswahl,
+Sperrverzögerung während Netzwerkaufrufen, nicht monotone Trust-Pin-Speicherung
+zwischen Tabs und fehlende Behandlung des Browser-Zurück-Caches. Sperren bricht
+laufende Requests ab; Pin-Merge erfolgt atomar in IndexedDB. Gezielte Browserfälle
+für verlorene Versandantwort und Sperren bei hängender Verbindung ergänzen die
+Systemabnahme. Die automatische Ausführungsprüfung scheiterte am 12. November
+am Nutzungslimit; am 13. November war sie wieder verfügbar. Kein Umgehen der
+Freigabe und kein Erfolg für den damals nicht ausgeführten Lauf behauptet.
+
 ## Wiedereinstellung vollständig geprüft und gesichert, 2026-11-05
 
 Codecommit `7b423f88b592592139d37b6faa3c0c94e64ace6b` auf

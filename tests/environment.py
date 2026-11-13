@@ -60,9 +60,9 @@ def up():
    old=docker('inspect','--format','{{.Image}}',container,capture=True).stdout.strip()
    new=docker('image','inspect','--format','{{.Id}}',IMAGE,capture=True).stdout.strip()
    version=docker('inspect','--format','{{index .Config.Labels \"gunindex.runtime\"}}',container,capture=True).stdout.strip()
-   if old!=new or version!=b'phase2':docker('stop',container,capture=True);docker('rm',container,capture=True)
+   if old!=new or version!=b'phase3':docker('stop',container,capture=True);docker('rm',container,capture=True)
   if not exists(container):
-   args=['run','-d','--name',container,'--label','gunindex.runtime=phase2','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem']
+   args=['run','-d','--name',container,'--label','gunindex.runtime=phase3','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
    for name in ('PAYPAL_CLIENT_ID','PAYPAL_CLIENT_SECRET','PAYPAL_MERCHANT_ID','PAYPAL_WEBHOOK_ID','PAYPAL_MODE','PAYPAL_ACCOUNT_TYPE','PAYPAL_BUSINESS_SCOPE','PAYPAL_ENABLED','PLATFORM_BILLING_APPROVED','PAYPAL_LIVE_APPROVED','APP_URL'):
     if name in os.environ:args+=['-e',name]
    if worker:
@@ -95,6 +95,7 @@ def test():
    docker('exec',APP,'php','tests/'+suite)
   for suite in ('maintenance_test.php','maintenance_auction_test.php','maintenance_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
+  docker('exec',APP,'php','tests/e2ee_integration_test.php')
   for suite in ('legacy_import_test.py','chat_migration_test.py','production_manifest_test.py','backup_test.py'):
    subprocess.run([sys.executable,str(ROOT/'tests'/suite)],cwd=ROOT,env=ENV,check=True)
  finally:docker('start',WORKER,capture=True)

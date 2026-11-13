@@ -1,0 +1,2 @@
+# Preserve the exact audited dependency bytes and their SHA256 provenance.
+assets/vendor/openpgp/* -text

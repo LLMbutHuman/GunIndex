@@ -1,5 +1,20 @@
 # Tatsächlicher Testnachweis
 
+## E2EE: lokale Prüfungen, Linux-Abnahme noch offen, 2026-11-13
+
+- `node tests/e2ee_crypto_test.mjs`: 12/12 Gruppen mit echtem OpenPGP.js 6.3.2,
+  Node 22.23.4. Unter anderem Mehrgeräte, Recoveryrotation, Manipulation,
+  Dateigrenzen und direktes Entschlüsselungsversagen widerrufener Schlüssel.
+- `node ops/vendor-e2ee.mjs --check`: exakte Paket-/Lizenzbytes bestätigt.
+- `npm audit --omit=dev --ignore-scripts`: keine gemeldeten Schwachstellen.
+- Geänderte/neue PHP-Dateien samt acht Chat-Sprachdateien syntaxgeprüft;
+  alle acht Kataloge enthalten dieselben 59 Schlüssel. JavaScript-Syntax geprüft.
+
+E2EE-DB-/HTTP-/Konkurrenzsuite und echter Chromium-Mehrgeräteablauf sind im
+sequenziellen Linux-CI-Runner verdrahtet. **Noch kein erfolgreicher Systemlauf
+nachgewiesen.** Vorherige grüne CI-Läufe decken diesen neuen Code nicht ab.
+Unabhängige Sicherheitsprüfung und produktive Betriebsabnahme bleiben separat.
+
 ## Wiedereinstellung: vollständiger Linux-/Browsernachweis, 2026-11-05
 
 `7b423f88b592592139d37b6faa3c0c94e64ace6b`,

@@ -24,6 +24,7 @@ function chat_send(PDO $pdo,int $user,int $listing,int $peer,string $text):int {
  $pdo->beginTransaction();try{
   $q=$pdo->prepare('SELECT id FROM market_listings WHERE id=? FOR UPDATE');$q->execute([$listing]);if(!$q->fetchColumn())throw new MarketNotFoundException('Angebot nicht gefunden.');
   $ids=[$user,$peer];sort($ids,SORT_NUMERIC);$q=$pdo->prepare('SELECT id,is_active FROM users WHERE id IN (?,?) ORDER BY id FOR UPDATE');$q->execute($ids);$people=$q->fetchAll();if(count($people)!==2||array_filter($people,static fn($p)=>(int)$p['is_active']!==1))throw new MarketAccessException('Dieses Konto nimmt keine Nachrichten an.');
+  if(!e2ee_legacy_allowed($pdo,$user,$peer))throw new MarketAccessException(t('e2ee.legacy_blocked'));
   $ctx=chat_context($pdo,$user,$listing,$peer);if(!$ctx['can_send'])throw new MarketAccessException('Diese Unterhaltung nimmt aktuell keine neuen Nachrichten an.');
   if(!market_category_locked_allowed($pdo,(int)$ctx['item']['category_id'])||!geo_country_locked_enabled($pdo,$ctx['item']['country_code']))throw new MarketAccessException('Dieses Angebot ist aktuell gesperrt.');
   $q=$pdo->prepare('SELECT COUNT(*) FROM market_messages WHERE sender_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 MINUTE');$q->execute([$user]);if((int)$q->fetchColumn()>=20)throw new OverflowException('Bitte warte kurz vor der nächsten Nachricht.');
@@ -46,5 +47,5 @@ function chat_history(PDO $pdo,array $context,int $before=0,int $after=0,int $li
  $limit=max(1,min(50,$limit));$sql='SELECT id,sender_id,receiver_id,message_text,cipher_version,is_read,created_at FROM market_messages WHERE '.$context['where'];$args=$context['pair'];
  if($before>0){$sql.=' AND id<?';$args[]=$before;}if($after>0){$sql.=' AND id>?';$args[]=$after;}
  $sql.=' ORDER BY id '.($after>0?'ASC':'DESC').' LIMIT '.$limit;$q=$pdo->prepare($sql);$q->execute($args);$rows=$q->fetchAll();if($after===0)$rows=array_reverse($rows);
- foreach($rows as &$row){$row['message_text']=chat_message_plain($row['message_text'],(int)$row['cipher_version']);unset($row['cipher_version']);}unset($row);return$rows;
+ foreach($rows as &$row){$row['message_text']=(int)$row['cipher_version']===2?t('e2ee.placeholder'):chat_message_plain($row['message_text'],(int)$row['cipher_version']);unset($row['cipher_version']);}unset($row);return$rows;
 }

@@ -25,6 +25,12 @@ jobs:
         run: python3 tests/runtime_platform_test.py
       - name: Read-only postcode validator regressions
         run: node tests/postcodes_validation_test.mjs
+      - name: Locked client cryptography and genuine multi-device tests
+        run: |
+          npm ci --ignore-scripts --no-fund
+          npm audit --omit=dev
+          node ops/vendor-e2ee.mjs --check
+          node tests/e2ee_crypto_test.mjs
       - name: Isolated PHP and MySQL checks
         run: python3 tests/environment.py test
       - name: Audit locked PHP dependencies
@@ -37,6 +43,7 @@ jobs:
         run: |
           node tests/browser_smoke.js
           node tests/auction_billing_browser.js
+          node tests/e2ee_browser.js
           node tests/international_smoke.js
           node tests/accessibility_smoke.js
       - name: Stop test services and retain their data
