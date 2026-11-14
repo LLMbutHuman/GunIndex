@@ -1,5 +1,46 @@
 # Implementierungsfortschritt
 
+## E2EE-Kern vollständig im isolierten System geprüft, 2026-11-14
+
+Codecommit `7ba5dfd79315da10f5d6f3282a9a4e7c246b5656`,
+[CI 43648359381](https://github.com/LLMbutHuman/GunIndex/actions/runs/43648359381),
+Windowsjob 132611100512 und Linuxjob 132611100770 erfolgreich; Joblog geprüft.
+Remote-SHA beim Push bestätigt. Die mobile Umbruchkorrektur behebt den vorherigen
+Browserabbruch. Private Auftragsdatei weiterhin unversioniert und unangetastet.
+
+**Tatsächlich bestanden:** zwölf echte OpenPGP-Kryptografiegruppen; 15
+E2EE-HTTP-/DB-/Konkurrenzgruppen; 19 Chromium-Browserfälle. Browsernachweise:
+explizit gesicherter Recoverycode und Fingerabdruckvergleich, zwei Benutzer,
+mehrere unabhängige Geräte, historische Wiederherstellung, neue Recoverycodes,
+Gerätewiderruf und Ausschluss von zukünftigen Nachrichten/Dateien; bytegenauer
+verschlüsselter Download; verlorene Versandantwort mit Reload und identischer
+Wiederholung ohne doppelte Nachricht; Sperren bei hängendem HTTP ohne spätere
+Klartextanzeige; kein Rücksetzen neuer Trust-Pins durch alten Tab; fremde Zugriffe
+gesperrt; kein Legacy-Downgrade; acht mobile Sprachen. Kein Testklartext oder
+privates Schlüsselmaterial in HTTP, IndexedDB, Serverzeilen oder Dateiblobs
+gefunden. Keine JavaScriptfehler oder externen Browserrequests.
+
+Auch bestehende Markt-/Finanz-/Auktions-/Relisting-/Konten-/Wartungs- und
+Betriebsregressionen sowie internationale Oberflächen und öffentliche automatische
+Accessibilityprüfungen grün. npm- und Composer-Audit ohne gemeldete Advisories.
+Keine echten Zahlungen, keine Produktivdaten und keine Aktivierung von E2EE im
+Produktionsprofil. Das ist ein technischer Nachweis für die benannten Abläufe,
+keine unabhängige Kryptografie-, Screenreader- oder Produktionsabnahme.
+
+**Verbleibender Chatumfang:** Austausch einer kompromittierten Kontoautorität
+ist noch nicht implementiert; Gerätewiderruf rotiert nicht diesen Autoritätsschlüssel.
+Separate unabhängige Sicherheitsprüfung, Firefox-/Safari-/reale Mobilbrowsermatrix
+und tatsächlicher Zielserver-Restore bleiben offen. E2EE_ENABLED bleibt 0 im
+Produktionsbeispiel. Grenzen und A/B/C-Liste in `E2EE_PROTOCOL.md`.
+
+**Exakter Wiederaufnahmepunkt:** geprüften Chat-Kern erhalten; als nächste
+Chat-Erweiterung einen expliziten, erneut authentifizierten Identitätswechsel
+für kompromittierte Autorität mit verpflichtender neuer Teilnehmerverifikation,
+erhaltener historischer Prüfbarkeit und eigenen Angriffstests ausarbeiten und
+implementieren. Keine stille Root-Ersetzung oder automatische Pinfreigabe.
+Danach weitere Browser und Zielbetrieb abnehmen. Den eben grünen Gesamtlauf
+ohne neue Änderung oder konkreten Anlass nicht erneut ausführen.
+
 ## E2EE-Serverabnahme bestanden, Browserkorrektur, 2026-11-14
 
 `c9cde62b32699ee1e1407dcda07b12e21130b2e5` ist auf dem Entwicklungsbranch

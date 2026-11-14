@@ -1,5 +1,19 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
+**Fortschreibung 14. November – Chat:** Echte clientseitige OpenPGP-Verschlüsselung,
+getrennte Geräteschlüssel, Fingerabdruckprüfung, Mehrgerätebetrieb, Widerruf,
+Gerätewiederherstellung und verschlüsselte Dateianhänge sind inzwischen implementiert.
+`7ba5dfd`, [CI 43648359381](https://github.com/LLMbutHuman/GunIndex/actions/runs/43648359381):
+zwölf Kryptografiegruppen, 15 neue Server-/DB-/HTTP-Gruppen und 19 echte
+Chromium-Browserfälle einschließlich acht mobiler Sprachen bestanden; gesamte
+bestehende Regression ebenfalls grün. Die älteren Aussagen „keine E2EE
+implementiert“ und die damalige Chat-Schätzung beschreiben den historischen Stand.
+Keine neue Gesamtprozent- oder Reststundenschätzung ohne erneuten Gesamtvergleich.
+Für den Chat bleiben außerdem unabhängige Sicherheitsprüfung, Browsermatrix und
+Betriebsabnahme offen. Ein Austausch einer vollständig kompromittierten
+Kontoautorität ist noch nicht implementiert; rotierende Geräte-/Recoverycodes
+sind davon zu unterscheiden. E2EE bleibt für Produktion standardmäßig deaktiviert.
+
 **Fortschreibung 5. November:** Wiedereinstellung erfolgloser Auktionen einschließlich
 einmaligem Einstellgebührenrabatt ist jetzt integriert, getestet und gesichert:
 `7b423f8`, [CI 42055817743](https://github.com/LLMbutHuman/GunIndex/actions/runs/42055817743)

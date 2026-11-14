@@ -1,4 +1,4 @@
-# Technischer Abnahmestand – 2026-11-05
+# Technischer Abnahmestand – 2026-11-14
 
 Gesamtplattform **nicht fertig und nicht produktiv abgenommen**.
 Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
@@ -8,6 +8,14 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
 **C:** Gesamtanforderung offen, teilweise implementiert oder nicht vollständig geprüft.
 
 ## Belegte Teilfunktionen
+
+- **A:** E2EE-Kern mit OpenPGP.js 6.3.2, Geräteschlüsseln, Fingerabdruckprüfung,
+  Mehrgeräten, Geräte-Recovery/Widerruf, verschlüsselten Dateien, Quoten und Export
+  in `7ba5dfd`, CI 43648359381: zwölf echte Kryptografiegruppen, 15 Servergruppen
+  und 19 Chromium-Browserfälle einschließlich acht mobiler Sprachen bestanden.
+  **B:** unabhängige Sicherheits- und Zielserverabnahme sowie weitere Browser.
+  **C:** Austausch kompromittierter Kontoautorität noch nicht implementiert.
+  Kein Forward-Secrecy-Versprechen; Produktionsgate standardmäßig aus.
 
 - **A:** Auktions-Gebührenverträge, Einstell-/Erfolgsforderungen, Zuschlagsbindung,
   Wiederholungsschutz, manuelle Zahlungsprüfung, vollständiger Erlass unbezahlter
@@ -83,11 +91,12 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 25 | Banküberweisung | C | Kontenabgleich und verifizierte zuordenbare Eingänge |
 | 26 | Treuhand | C | Vollständiger gesperrter Workflow und geeignete Providerinfrastruktur |
 
-Zusätzlich offen: echte E2EE einschließlich Geräteschlüsseln und verschlüsselten
-Anhängen; SMTP-/DNS-Assistent; geführter Ubuntu-Installer; vollständiger Admin-
+Zusätzlich offen: vollständige E2EE-Abnahme und kompromittierte Kontoautorität;
+SMTP-/DNS-Assistent; geführter Ubuntu-Installer; vollständiger Admin-
 Einrichtungsablauf; internationale Datenimporte; vollständige Installations-/
-Restore-/Betriebsabnahme und Legal-Team-Übergabe. Bestehende serverseitige
-Chatverschlüsselung ist **keine E2EE**. Neue Sprachmodule sind nicht mit einer
+Restore-/Betriebsabnahme und Legal-Team-Übergabe. Alte serverseitige
+Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md
+getrennt beschrieben. Neue Sprachmodule sind nicht mit einer
 vollständigen Übersetzung sämtlicher Seiten gleichzusetzen.
 
 Fachliche Rechts-/Steuer-/Länderprüfung, Providerzulassung, echte DNS-/Posteingangs-

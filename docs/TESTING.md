@@ -1,5 +1,26 @@
 # Tatsächlicher Testnachweis
 
+## E2EE: kompletter isolierter Lauf erfolgreich, 2026-11-14
+
+`7ba5dfd79315da10f5d6f3282a9a4e7c246b5656`,
+[CI 43648359381](https://github.com/LLMbutHuman/GunIndex/actions/runs/43648359381):
+Windows und Linux erfolgreich, Linuxjob 132611100770 samt Log geprüft.
+Zwölf reale Kryptografiegruppen, 15 neue Server-/DB-/HTTP-Gruppen und 19 echte
+Chromium-Browserfälle bestanden. Das schließt Mehrgeräte, historische Recovery,
+Code-/Geräterotation, Widerruf, Dateien mit bytegenauem Download, Quoten,
+Integrität, Autorisierung, Export, parallelen CAS, acht mobile Sprachen,
+unterbrochenen Versand samt genau einmaligem Retry, Lock bei hängendem Request
+und zurückgewiesenen Cross-tab-Rollback ein. Der Ciphertext-/Klartext-Canarytest
+für HTTP, lokalen Browserstore und Serverdateien/-zeilen ist ebenfalls grün.
+Keine JavaScriptfehler und keine externen Browserrequests.
+
+Bestehende vollständige Regression einschließlich internationaler Oberflächen,
+öffentlicher automatisierter WCAG-Prüfungen und Abhängigkeitsaudits ebenfalls
+erfolgreich. Keine Aussage über manuelle Chat-Screenreader-Abnahme, Firefox/Safari,
+reale Mobilgeräte, unabhängigen Krypto-Review oder produktiven Zielserver-Restore.
+Der vorherige Lauf 43436883236 hatte erfolgreiche Serverprüfungen, aber einen
+Browserabbruch; er wird dadurch nicht rückwirkend als vollständig grün bezeichnet.
+
 ## E2EE: lokale Prüfungen, Linux-Abnahme noch offen, 2026-11-13
 
 - `node tests/e2ee_crypto_test.mjs`: 12/12 Gruppen mit echtem OpenPGP.js 6.3.2,

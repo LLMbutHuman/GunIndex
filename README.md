@@ -8,7 +8,7 @@ Vorhanden sind:
 - Hierarchische Kategorien, Inserate mit aufbereiteten Bildern, Suche, Merklisten, Bewertungen und Proxyauktionen mit unabhängigem Abschlussworker.
 - Kostenlose Gesuche, lokales Matching, gespeicherte Suchen, Suchalarme und In-App-/optionale E-Mail-Hinweise.
 - Elf Ländermärkte, internationale Suche, lokale PLZ-/Radiusfilter und acht Sprachen für wesentliche Oberflächen. Teile der Administration, Geschäfts- und Rechtstexte verwenden weiterhin Deutsch.
-- Inseratsbezogener Chat mit Teilnehmerprüfung, Blockieren, Melden und serverseitiger AEAD-Verschlüsselung gespeicherter neuer Nachrichten. Das ist keine Ende-zu-Ende-Verschlüsselung.
+- Inseratsbezogener Chat mit Teilnehmerprüfung, Blockieren und Melden. Neuer, standardmäßig deaktivierter E2EE-Modus mit OpenPGP-Geräteschlüsseln, Fingerabdruckvergleich, Wiederherstellung und verschlüsselten Anhängen; [Architektur und Abnahmegrenzen](docs/E2EE_PROTOCOL.md). Der erhaltene alte Verlauf mit serverseitiger AEAD-Verschlüsselung ist keine E2EE.
 - Händlerprofile, eigene Kennzahlen, CSV-/Massenverwaltung, begrenzte Premiumplätze und landesspezifische Bannerkampagnen.
 - Manuelle PayPal-Zahlungsaufträge mit festem Betrag/Verwendungszweck, tatsächlicher Personalprüfung, Bumps und versionierten Buchungsbedingungen. Nach gesonderter Finanzfreigabe entstehen unveränderliche Rechnungsbelege/PDFs und dokumentierte Korrekturen.
 - Berechtigungsbasierte Administration, Meldungen und Beschwerden, eigener Datenexport, kontrollierte Deaktivierung/Anonymisierung sowie technisch vorbereitete, standardmäßig deaktivierte Identitätsprüfung.

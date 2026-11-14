@@ -93,10 +93,24 @@ Der neue Verlauf ist freiwillig, sitzungsgebunden und abschaltbar; Vergleich
 maximal vier Angebote. Logische Fristen und physisches Session-Aufräumen sind
 in [PERSONAL_LISTS.md](PERSONAL_LISTS.md) getrennt beschrieben.
 
-Chatinhalte werden serverseitig AEAD-verschlüsselt. **Keine E2EE vorhanden.**
+Der alte Chatverlauf bleibt serverseitig lesbar (Klartext/AEAD, Version 0/1).
+Der neue E2EE-Modus (Version 2) verschlüsselt Nachrichten und Dateien bereits
+auf Endgeräten. Geräte- und Wiederherstellungsschlüssel liegen nicht im Klartext
+auf dem Server. Standardmäßig deaktiviert; technische Nachweise und Grenzen:
+[E2EE_PROTOCOL.md](E2EE_PROTOCOL.md). Keine rückwirkende E2EE des Altverlaufs.
+Metadaten wie Teilnehmer, Inserat, Zeitpunkt, Gerätestand und Dateigröße bleiben
+sichtbar. Moderation und Virenprüfung können verschlüsselte Inhalte nicht
+serverseitig lesen. Der Datenschutzexport enthält für E2EE verschlüsselte Pakete
+und öffentliche Prüfmanifeste; keine privaten Recoverygeheimnisse. Aufbewahrung,
+Löschverfahren, Missbrauchsmeldungen, Support bei Schlüsselverlust und Nutzertexte
+benötigen fachliche Prüfung. Ohne Geräte oder aktuellen Recoverycode ist keine
+Betreiberentschlüsselung möglich. Ein kompromittierter Autoritätsschlüssel kann
+derzeit nicht innerhalb desselben Kontos ersetzt werden.
 Identitätsprüfung hat eigene deaktivierte Freigaben und Aufbewahrungseinstellungen.
 E-Mail-Bestätigung beweist weder Identität noch Erwerbsberechtigung. Empfänger-
-zustellung, externe Mail-/DNS-Infrastruktur und E2EE-Anhänge sind nicht abgenommen.
+zustellung und externe Mail-/DNS-Infrastruktur sind nicht abgenommen. E2EE-Anhänge
+besitzen einen erfolgreichen isolierten technischen Nachweis (CI 43648359381),
+aber noch keine unabhängige Sicherheits- oder Produktivabnahme.
 
 Zu prüfen: Zwecke, Rechtsgrundlagen, erforderliche Informationen, Dienstleister,
 Ländertransfers, Rollen/Zugriffe, Aufbewahrung, Löschung und Auskunftsverfahren.

@@ -1,5 +1,22 @@
 # Release- und Betriebsprotokoll
 
+## 2026-11-14 – E2EE-Kern geprüft und gesichert
+
+`c9cde62` implementiert den standardmäßig deaktivierten E2EE-Modus;
+`7ba5dfd79315da10f5d6f3282a9a4e7c246b5656` korrigiert mobilen Umbruch und ergänzt
+den Mehr-Tab-Angriffstest. Beide auf `feature/general-marketplace-rebuild`
+gepusht, Remote-SHA bestätigt. [CI 43648359381](https://github.com/LLMbutHuman/GunIndex/actions/runs/43648359381)
+vollständig grün: zwölf Kryptografiegruppen, 15 neue Servergruppen, 19 echte
+Chromium-Fälle sowie die bestehende vollständige Regression. Vorheriger Lauf
+43436883236 hatte einen Browserfehler und bleibt als solcher dokumentiert.
+
+Migration 015 ist additiv, alte Chatdaten bleiben erhalten. Privater Dateipfad
+liegt im bestehenden Backupvolume. Kein Produktivstart, keine Livezahlungen,
+kein Reset/Force-Push; private Auftragsdatei ausgeschlossen. E2EE-Produktivgate
+weiterhin aus. Grenzen und nächste Schritte in E2EE_PROTOCOL.md und
+IMPLEMENTATION_PROGRESS.md; insbesondere keine automatische Ersetzung einer
+kompromittierten Kontoautorität.
+
 ## 2026-11-05 – Wiedereinstellung geprüft und gesichert
 
 `7b423f88b592592139d37b6faa3c0c94e64ace6b` auf dem bestehenden Entwicklungsbranch;

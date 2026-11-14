@@ -1,6 +1,7 @@
-# E2EE implementation contract (development, 2026-11-12)
+# E2EE implementation contract (development, 2026-11-14)
 
-Status: implementation in progress; not a production or independent security approval.
+Status: normal device/recovery/message/file workflows implemented and tested in
+isolated Chromium/PHP/MySQL; not a production or independent security approval.
 OpenPGP.js 6.3.2 / RFC9580 protects signed message and attachment packets. Separate
 Ed25519 signatures authenticate account device manifests. This application trust
 protocol needs independent review. No forward secrecy or post-compromise security
@@ -165,3 +166,20 @@ capabilities fail closed. E2EE_ENABLED defaults to 0. Independent security revie
 Firefox/Safari and supported mobile-browser validation, and an actual target-server
 restore remain separate acceptance items. Until their completion this development
 implementation must not be described as independently audited or production-ready.
+
+## Acceptance at 2026-11-14
+
+Code `7ba5dfd79315da10f5d6f3282a9a4e7c246b5656`,
+[CI 43648359381](https://github.com/LLMbutHuman/GunIndex/actions/runs/43648359381),
+Linux job 132611100770: complete pass, including existing regression suite.
+
+| Class | Scope | Evidence or remaining work |
+| --- | --- | --- |
+| A | Signed encryption, independent devices, verification, recovery, revocation, encrypted files | 12 genuine crypto groups, 15 HTTP/DB groups, 19 Chromium UI checks; eight mobile locales |
+| A | Interrupted delivery, locked plaintext lifecycle, cross-tab trust state | Real lost-response retry without duplicate row; manual lock aborts stalled HTTP; old tab cannot lower a newer persisted pin |
+| A | Server/file confidentiality and permissions | Canary checks for plaintext/private material; private downloads, quotas, CAS, access failures, export and legacy preservation |
+| B | Production assurance | Independent crypto/application review, additional supported browsers and actual target-server backup/restore |
+| C | Compromised account authority replacement | Not implemented. Recovery-code rotation does not revoke already extracted authority material. Requires an explicit authenticated identity reset, peer re-verification and preserved historical verification |
+
+The earlier failed browser run 43436883236 identified mobile overflow from a long
+participant name; this was corrected and the entire subsequent run passed.

@@ -7,7 +7,7 @@ Technisch erweiterter Entwicklungsstand, **keine Produktionsfreigabe**. Vorhande
 
 ## Technisch vorhanden, fachlich und betrieblich abzunehmen
 
-Kontoverifikation/Reset, lokale Benachrichtigungen, Gesuche/Matching/Suchalarme, Länder-/Radiusfilter, Händler-/CSV-Verwaltung, begrenzte Platzierungen/Banner, Rechnungsbelege/PDFs, dokumentierte Korrekturen, Personalrollen, Meldungen/Beschwerden, Datenschutzabläufe und versionierte Rechtsentwürfe sind implementiert. Identitätsprüfung, Zahlungen, Werbung, Finanzdokumente und Rechtsveröffentlichung haben standardmäßig geschlossene Freigaben. Chat speichert neue Texte serverseitig AEAD-verschlüsselt und bietet keine E2EE.
+Kontoverifikation/Reset, lokale Benachrichtigungen, Gesuche/Matching/Suchalarme, Länder-/Radiusfilter, Händler-/CSV-Verwaltung, begrenzte Platzierungen/Banner, Rechnungsbelege/PDFs, dokumentierte Korrekturen, Personalrollen, Meldungen/Beschwerden, Datenschutzabläufe und versionierte Rechtsentwürfe sind implementiert. Identitätsprüfung, Zahlungen, Werbung, Finanzdokumente und Rechtsveröffentlichung haben standardmäßig geschlossene Freigaben. Der neue E2EE-Chat besitzt einen eigenen, standardmäßig geschlossenen Schalter; alter Chatverlauf bleibt serverlesbar. Abnahmegrenzen: [E2EE_PROTOCOL.md](E2EE_PROTOCOL.md).
 
 Die folgenden Punkte sind vor einem jeweiligen Produktivbetrieb tatsächlich nachzuweisen:
 
@@ -15,10 +15,11 @@ Die folgenden Punkte sind vor einem jeweiligen Produktivbetrieb tatsächlich nac
 
 - [ ] Historische Geheimnisse rotiert; Datenherkunft, Retention, Zugriff und alte Git-History bewertet.
 - [ ] Verschlüsseltes Backup von Datenbank und privaten Dateien vorhanden; Schlüssel getrennt gesichert und Wiederherstellung überprüft.
-- [ ] Basisschema ausschließlich für leere Datenbank verwendet; unveränderte Migrationen bis 013 kontrolliert angewendet.
+- [ ] Basisschema ausschließlich für leere Datenbank verwendet; unveränderte Migrationen bis 015 kontrolliert angewendet.
 - [ ] Tatsächliches Altkontenschema per Dry-run und Staging geprüft; Kollisionen/ID-Zuordnung und Passwortresetprozess abgenommen.
 - [ ] Historische Angebote, Gebote, Nachrichten, Dokumente und Finanzen getrennt zugeordnet; keine ungeprüfte Übernahme.
 - [ ] Vorhandene allgemeine Klartextchats nach geprüftem Backup kontrolliert verschlüsselt; Schlüsselrotation/Recovery geprobt.
+- [ ] E2EE separat abgenommen: unterstützte Browser, echte Gerätewiederherstellung, unabhängiger Kryptografie-/Anwendungsreview, private Anhänge im Zielserver-Restore und Umgang mit kompromittierter Kontoautorität geklärt. Erst anschließend bewusst E2EE_ENABLED freigeben.
 
 ## Betreiber, Länder und Recht
 
