@@ -1,5 +1,25 @@
 # Implementierungsfortschritt
 
+## E2EE-Serverabnahme bestanden, Browserkorrektur, 2026-11-14
+
+`c9cde62b32699ee1e1407dcda07b12e21130b2e5` ist auf dem Entwicklungsbranch
+gesichert; Remote-SHA beim Push geprüft. [CI 43436883236](https://github.com/LLMbutHuman/GunIndex/actions/runs/43436883236)
+hat Windows, Kryptografie, Migration 015, sämtliche PHP-/MySQL-Prüfungen und
+Abhängigkeitsaudits bestanden. Die 15 neuen E2EE-Servergruppen sind tatsächlich
+grün, einschließlich Export ohne Recoverygeheimnisse, Quoten, Lesestatus,
+Uploadisolation und parallelem Manifest-CAS. Bestehende allgemeine und
+Gebühren-/Relisting-Browserabläufe ebenfalls erfolgreich.
+
+**Nicht vollständig grün:** E2EE-Browserlauf bei `create_buyer_identity` durch
+Assertion abgebrochen, ohne JavaScriptfehler oder externe Requests. Der lange
+synthetische Teilnehmername besitzt in der Gesprächszeile keinen Umbruch;
+CSS korrigiert. Diagnostik gibt nun ausschließlich feste Prüfnamen und sichere
+Stackpositionen aus. Zusätzlich realer Mehr-Tab-Test gegen Rücksetzen eines
+neueren Gerätestands ergänzt. Folge-CI erforderlich; keine vorzeitige
+Chat-Fertigmeldung. Spätere Sprach-/Accessibilityschritte wurden im fehlgeschlagenen
+Lauf nicht erreicht. Nächster Schritt: Folgecommit prüfen/pushen, Browserfehler
+beheben bis der gesamte Lauf besteht; anschließend Nachweise aktualisieren.
+
 ## E2EE-Chat integriert, Systemabnahme läuft, 2026-11-13
 
 Aktueller Nutzerauftrag priorisiert ausdrücklich den Chat vor weiteren

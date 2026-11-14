@@ -20,7 +20,7 @@ const checks = [], pageErrors = [], external = [], wire = [], pendingResponses =
 const expectedAborts = new WeakSet();
 let phase = 'setup';
 
-function invariant(condition, message) { assert.ok(condition, message); }
+function invariant(condition, message) { if(!condition){const error=new Error('Browser invariant failed');error.name='AssertionError';error.safeCheck=message;throw error;} }
 function fixture(operation, fields = {}) {
   const output = execFileSync('docker', ['--host=unix:///var/run/docker.sock', 'exec', '-i', 'gunindex-rebuild-app', 'php', 'tests/e2ee_browser_fixture.php'], {
     input: JSON.stringify({ operation, ...fields }), stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 5 * 1024 * 1024,
@@ -241,6 +241,80 @@ async function lockDuringHeldRefresh(page) {
   } finally { release(); await page.unroute('**/user/e2ee-api.php?*', handler); }
   await unlock(page); await visibleMessage(page, firstMessage);
 }
+async function peerPin(page, userId, peerId) {
+  return page.evaluate(({ userId, peerId }) => new Promise((resolve, reject) => {
+    const request = indexedDB.open('gunindex-e2ee-v1');
+    request.onerror = () => reject(Error('Unable to read public trust pin'));
+    request.onsuccess = () => {
+      const db = request.result, read = db.transaction('items').objectStore('items').get(userId + ':pins');
+      read.onerror = () => { db.close(); reject(Error('Unable to read public trust pin')); };
+      read.onsuccess = () => { db.close(); resolve(read.result?.[peerId] || null); };
+    };
+  }), { userId, peerId });
+}
+async function holdStaleSellerTab(sellerContext, path, sellerId, buyerId) {
+  const page = await sellerContext.newPage(); page.setDefaultTimeout(30000); page.setDefaultNavigationTimeout(30000);
+  page.on('pageerror', error => pageErrors.push(error.name));
+  let release, reached, heldRequest, replayed = false, handlerFailure = null, disposed = false;
+  const paused = new Promise(resolve => { release = resolve; });
+  const intercepted = new Promise(resolve => { reached = resolve; });
+  let handler;
+  async function dispose() {
+    if (disposed) return; disposed = true; release();
+    if (handler) await page.unroute('**/user/e2ee-api.php?*', handler);
+    await page.close();
+  }
+  try {
+    const response = await page.goto(origin + path); assert.equal(response.status(), 200);
+    await enabled(page, '#e2ee-passphrase'); await unlock(page);
+    const before = await peerPin(page, sellerId, buyerId);
+    invariant(before?.version === 2, 'Stale tab must begin with the actually trusted version two');
+    const query = new URLSearchParams({ action: 'context', listing_id: new URL(origin + path).searchParams.get('listing_id'), peer_id: buyerId });
+    const snapshotResponse = await sellerContext.request.get(origin + '/user/e2ee-api.php?' + query);
+    assert.equal(snapshotResponse.status(), 200);
+    const snapshot = await snapshotResponse.body(); wire.push(snapshot);
+    const context = JSON.parse(snapshot.toString('utf8'));
+    invariant(JSON.parse(context.peer.manifest).version === 2 && context.peer.hash === before.hash, 'Capture the real signed version-two peer context');
+    handler = async route => {
+      const request = route.request(), action = new URL(request.url()).searchParams.get('action');
+      if (request.method() !== 'GET') return route.fallback();
+      try {
+        if (action === 'account' && !heldRequest) {
+          heldRequest = request;
+          const response = await route.fetch(); assert.equal(response.status(), 200); wire.push(await response.body());
+          reached(); await paused;
+          await route.fulfill({ response });
+        } else if (action === 'context' && heldRequest) {
+          replayed = true;
+          await route.fulfill({ status: 200, contentType: 'application/json; charset=utf-8', headers: { 'Cache-Control': 'no-store' }, body: snapshot });
+        } else await route.fallback();
+      } catch (error) { handlerFailure = error; reached(); await route.abort('failed').catch(() => {}); }
+    };
+    await enabled(page, '#e2ee-load'); await page.route('**/user/e2ee-api.php?*', handler);
+    await page.locator('#e2ee-load').evaluate(node => node.click());
+    let timer;
+    try { await Promise.race([intercepted, new Promise((_, reject) => { timer = setTimeout(() => reject(Error('Expected stale-tab refresh')), 15000); })]); }
+    finally { clearTimeout(timer); }
+    if (handlerFailure) throw handlerFailure;
+    invariant(await page.locator('#e2ee-load').isDisabled(), 'Old tab must remain inside its earlier refresh');
+    return {
+      dispose,
+      finish: async (mainSeller, expectedHash) => {
+        try {
+          await action(mainSeller, 'load', 'ready');
+          const newest = await peerPin(mainSeller, sellerId, buyerId);
+          invariant(newest?.version === 3 && newest.hash === expectedHash, 'Main tab must persist the actual signed version-three pin');
+          release(); await status(page, 'error_trust');
+          if (handlerFailure) throw handlerFailure;
+          invariant(replayed, 'The old signed context must reach the stale tab');
+          const retained = await peerPin(page, sellerId, buyerId);
+          invariant(retained?.version === 3 && retained.hash === newest.hash && retained.identity_key === newest.identity_key, 'A stale tab rolled back the shared trust pin');
+          checks.push('cross_tab_stale_context_rejected_without_rolling_back_newer_device_pin');
+        } finally { await dispose(); }
+      },
+    };
+  } catch (error) { await dispose(); throw error; }
+}
 async function receiveFile(page, messageText) {
   const article = await visibleMessage(page, messageText);
   const button = article.locator('button').filter({ hasText: filename });
@@ -264,7 +338,7 @@ async function storageIsPrivate(page) {
 
 (async () => {
   invariant(process.platform !== 'win32', 'Run browser/database tests in the isolated Linux environment');
-  let data, browser;
+  let data, browser, staleSeller;
   try {
     data = fixture('setup'); browser = await playwright.chromium.launch(launchOptions());
     const sellerContext = await context(browser), buyerContext = await context(browser);
@@ -311,6 +385,9 @@ async function storageIsPrivate(page) {
     await action(second, 'load', 'ready'); await visibleMessage(second, sharedMessage);
     checks.push('new_device_recovers_history_and_two_active_devices_receive');
 
+    phase = 'hold_old_seller_tab_before_revocation';
+    staleSeller = await holdStaleSellerTab(sellerContext, chat(data.users.buyer.id), data.users.seller.id, data.users.buyer.id);
+
     phase = 'revoke_old_device_and_rotate_recovery';
     if (!await second.locator('#e2ee-recovery').evaluate(node => node.open)) await second.locator('#e2ee-recovery summary').click();
     await second.locator('#e2ee-device-name').fill('Synthetic replacement phone'); await second.locator('#e2ee-passphrase').fill(password);
@@ -319,9 +396,11 @@ async function storageIsPrivate(page) {
     invariant(replacement.fingerprint === buyerIdentity.fingerprint && replacement.code !== secondIdentity.code, 'Revocation rotates recovery code');
     await unlock(second); await visibleMessage(second, firstMessage); await visibleMessage(second, sharedMessage);
     const own = await secondContext.request.get(origin + '/user/e2ee-api.php?action=account'); assert.equal(own.status(), 200);
-    const manifest = JSON.parse((await own.json()).account.manifest);
+    const ownBundle = (await own.json()).account, manifest = JSON.parse(ownBundle.manifest);
     assert.equal(manifest.version, 3); assert.equal(manifest.devices.filter(device => !device.revoked).length, 1);
     invariant(manifest.devices.find(device => device.id === initialDevice)?.revoked, 'Old device must be revoked');
+    phase = 'cross_tab_monotonic_pin_after_revocation';
+    await staleSeller.finish(seller, ownBundle.hash); staleSeller = null;
     phase = 'future_messages_exclude_revoked_device';
     await send(seller, futureMessage, true); await action(second, 'load', 'ready'); await receiveFile(second, futureMessage);
     await buyer.reload(); await enabled(buyer, '#e2ee-passphrase'); await unlock(buyer, 'error_device');
@@ -382,13 +461,14 @@ async function storageIsPrivate(page) {
     checks.push('no_private_plaintext_in_http_browser_storage_server_rows_or_attachment_files');
     return { result: 'PASS', checks, js_errors: 0, external_requests: 0, scope: 'Synthetic Chromium UI with real browser OpenPGP; no production or independent cryptographic approval' };
   } finally {
-    try { if (browser) await browser.close(); }
+    try { if (staleSeller) await staleSeller.dispose(); if (browser) await browser.close(); }
     finally { if (data) fixture('restore', { fixture: data.fixture }); }
   }
 })().then(result => console.log(JSON.stringify(result))).catch(error => {
   // Never print Playwright locator diagnostics, assertion values, DOM, keys,
   // recovery codes, plaintext canaries or request bodies on failure.
-  console.error(JSON.stringify({ result: 'FAIL', phase, completed_checks: checks, error: error.name || 'Error', js_errors: pageErrors.length, external_requests: external.length }));
-  const frame = String(error.stack).split('\n').find(line => /^\s+at /.test(line) && /e2ee_browser\.js:\d+:\d+\)?$/.test(line));
+  const check=typeof error.safeCheck==='string'&&/^[A-Za-z0-9 _-]{1,160}$/.test(error.safeCheck)?error.safeCheck:undefined;
+  console.error(JSON.stringify({ result: 'FAIL', phase, completed_checks: checks, error: error.name || 'Error', check, js_errors: pageErrors.length, external_requests: external.length }));
+  const frame = String(error.stack).split('\n').find(line => /^\s+at /.test(line) && !/at invariant /.test(line) && /e2ee_browser\.js:\d+:\d+\)?$/.test(line));
   if (frame) console.error(frame); process.exitCode = 1;
 });
