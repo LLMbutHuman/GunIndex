@@ -40,8 +40,11 @@ function lci_trade(PDO $pdo,int $listing,int $seller,int $buyer,string $status):
     return (int)$pdo->lastInsertId();
 }
 function lci_money(PDO $pdo,int $seller): array {
-    $out=[];foreach (['market_invoices'=>'user_id','market_manual_orders'=>'user_id','market_auction_fee_contracts'=>'seller_id','market_auction_fee_charges'=>'seller_id'] as $table=>$column)
-        $out[$table]=(int)lci_scalar($pdo,'SELECT COUNT(*) FROM '.$table.' WHERE '.$column.'=?',[$seller]);return $out;
+    $out=[];
+    foreach (['market_invoices'=>'user_id','market_manual_orders'=>'user_id','market_auction_fee_contracts'=>'seller_id'] as $table=>$column)
+        $out[$table]=(int)lci_scalar($pdo,'SELECT COUNT(*) FROM '.$table.' WHERE '.$column.'=?',[$seller]);
+    $out['market_auction_fee_charges']=(int)lci_scalar($pdo,'SELECT COUNT(*) FROM market_auction_fee_charges c JOIN market_auction_fee_contracts ac ON ac.listing_id=c.listing_id WHERE ac.seller_id=?',[$seller]);
+    return $out;
 }
 function lci_image(PDO $pdo,int $listing): string {
     $key=bin2hex(random_bytes(24));$image=imagecreatetruecolor(8,6);imagefill($image,0,0,imagecolorallocate($image,80,120,160));
@@ -113,7 +116,8 @@ try{
                 lci_check($child>$parent&&relisting_create_draft($pdo,$seller['id'],$parent)===$child,'Copy retry did not reuse one new ID.');
                 foreach(['seller_id','category_id','type','title','description','price_cents','shipping_cents','pickup','shipping','country_code','zip','city','condition_label'] as $field)
                     lci_check($before[$field]===$copy[$field],'Copy lost '.$field);
-                lci_check($copy['status']==='draft'&&$copy['ends_at']===null&&$copy['highest_bidder_id']===null&&$copy['current_bid_cents']===null&&(int)$copy['auction_fee_eligible']===1,'Copy inherited transaction state or bypasses fees if converted to an auction.');
+                lci_check($copy['status']==='draft'&&$copy['ends_at']===null&&$copy['highest_bidder_id']===null&&$copy['current_bid_cents']===null
+                    &&(int)$copy['auction_fee_eligible']===1&&(int)$copy['trade_checkout_enabled']===0,'Copy inherited transaction state or bypasses fees if converted to an auction.');
                 lci_check(relisting_context($pdo,$seller['id'],$child)===null,'General copy acquired auction entitlement.');
                 foreach(['market_bids','market_proxy_bids','market_ratings','market_trades'] as $table)lci_check((int)lci_scalar($pdo,'SELECT COUNT(*) FROM '.$table.' WHERE listing_id=?',[$child])===0,'Copy inherited historical rows.');
                 lci_check(lci_row($pdo,'SELECT * FROM market_listings WHERE id=?',[$parent])===$before&&lci_money($pdo,$seller['id'])===$money,'Copy mutated original/finances.');

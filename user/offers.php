@@ -37,7 +37,9 @@ foreach($context['offers'] as $offer){
     if($parentInput!==''&&(int)$offer['id']===(int)$parentInput&&!empty($offer['actionable'])&&(int)$offer['proposer_id']!==$actor)$parent=$offer;
 }
 if($parentInput!==''&&!$parent){http_response_code(409);$error=t('trade.changed');}
-$canCreate=$listing['status']==='active'&&($parent!==null||((int)$listing['seller_id']!==$actor&&!$hasOpen&&$parentInput===''));
+$canCreate=(int)$listing['trade_checkout_enabled']===1&&$listing['status']==='active'
+    &&($listing['ends_at']===null||strtotime($listing['ends_at'].' UTC')>time())
+    &&($parent!==null||((int)$listing['seller_id']!==$actor&&!$hasOpen&&$parentInput===''));
 $requestKey=isset($_POST['request_key'])&&is_string($_POST['request_key'])&&preg_match('/\A[a-f0-9]{32}\z/',$_POST['request_key'])?$_POST['request_key']:bin2hex(random_bytes(16));
 $amount=$method==='POST'&&isset($_POST['amount'])&&is_string($_POST['amount'])?substr($_POST['amount'],0,30):($parent!==null?number_format((int)$parent['price_cents']/100,2,'.',''):'');
 $delivery=$method==='POST'&&isset($_POST['delivery'])&&is_string($_POST['delivery'])?$_POST['delivery']:($parent['delivery']??(!empty($listing['pickup'])?'pickup':'shipping'));

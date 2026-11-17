@@ -61,7 +61,7 @@ try {
             $category = (int)$pdo->lastInsertId();
             foreach (['fixed','negotiated','cancel','dispute'] as $role) {
                 $type = $role === 'negotiated' ? 'negotiated' : 'fixed';
-                $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,shipping_cents,status,zip,city,country_code,pickup,shipping,ends_at) VALUES (?,?,?,'Ordinary synthetic folding desk for isolated trade browser tests.',?,4500,300,'active','10115','Synthetic town','DE',1,1,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 7 DAY))")
+                $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,shipping_cents,status,zip,city,country_code,pickup,shipping,ends_at,trade_checkout_enabled) VALUES (?,?,?,'Ordinary synthetic folding desk for isolated trade browser tests.',?,4500,300,'active','10115','Synthetic town','DE',1,1,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 7 DAY),1)")
                     ->execute([$users['seller']['id'],$category,'Synthetic trade desk '.$role,$type]);
                 $listings[$role] = (int)$pdo->lastInsertId();
             }

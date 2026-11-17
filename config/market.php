@@ -160,8 +160,11 @@ function market_validate(PDO $pdo, array $input): array
     if(!in_array($listingDuration,['7','14','30','60','90'],true))throw new InvalidArgumentException(t('trade.invalid'));
     $shipping=market_input($input,'shipping','0')==='1';
     $shippingCents=$shipping?money_parse(market_input($input,'shipping_price','0')):0;
+    $pickup=market_input($input,'pickup','0')==='1';
+    $tradeEnabled=$type!=='auction'&&market_input($input,'trade_checkout_enabled','0')==='1';
+    if($tradeEnabled&&!$pickup&&!$shipping)throw new InvalidArgumentException(t('trade.invalid'));
     return ['title'=>$title,'description'=>$description,'category_id'=>(int)$category,'type'=>$type,'status'=>$status,
-        'shipping_cents'=>$shippingCents,'listing_duration_days'=>(int)$listingDuration,
+        'shipping_cents'=>$shippingCents,'listing_duration_days'=>(int)$listingDuration,'trade_checkout_enabled'=>(int)$tradeEnabled,
         'price_cents'=>$price,'buyout_cents'=>$buyout,'duration_days'=>(int)$durationText,
         'country_code'=>$country,'zip'=>$zip,'city'=>$city,'pickup'=>market_input($input,'pickup','0')==='1'?1:0,
         'shipping'=>market_input($input,'shipping','0')==='1'?1:0,'condition_label'=>$condition];
@@ -215,17 +218,17 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
         if(!empty($feeQuote['existing']))$ends=$existing['ends_at'];
         if($relistingContext!==null&&$relistingContext['published_at']!==null)$ends=$existing['ends_at'];
         $point=geo_postcode($pdo,$data['country_code'],$data['zip']);
-        $values=[$data['country_code'],$point['latitude']??null,$point['longitude']??null,$data['category_id'],$data['title'],$data['description'],$data['type'],$data['price_cents'],$data['buyout_cents'],$data['status'],$ends,$data['zip'],$data['city'],$data['pickup'],$data['shipping'],$data['condition_label'],$data['shipping_cents']];
+        $values=[$data['country_code'],$point['latitude']??null,$point['longitude']??null,$data['category_id'],$data['title'],$data['description'],$data['type'],$data['price_cents'],$data['buyout_cents'],$data['status'],$ends,$data['zip'],$data['city'],$data['pickup'],$data['shipping'],$data['condition_label'],$data['shipping_cents'],$data['trade_checkout_enabled']];
         if ($listingId === null) {
-            $q=$pdo->prepare('INSERT INTO market_listings(seller_id,country_code,latitude,longitude,category_id,title,description,type,price_cents,buyout_cents,status,ends_at,zip,city,pickup,shipping,condition_label,shipping_cents,created_at,updated_at,auction_fee_eligible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1)');
+            $q=$pdo->prepare('INSERT INTO market_listings(seller_id,country_code,latitude,longitude,category_id,title,description,type,price_cents,buyout_cents,status,ends_at,zip,city,pickup,shipping,condition_label,shipping_cents,trade_checkout_enabled,created_at,updated_at,auction_fee_eligible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1)');
             $q->execute(array_merge([$sellerId],$values));
             $listingId=(int)$pdo->lastInsertId();
         } else {
-            $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,shipping_cents=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
+            $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,shipping_cents=?,trade_checkout_enabled=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
             $q->execute(array_merge($values,[$listingId]));
             if($existing['type']==='negotiated'){
                 $current=market_lock_listing($pdo,$listingId);
-                if($current['status']!=='active'||trade_listing_hash($existing)!==trade_listing_hash($current)){
+                if(!$data['trade_checkout_enabled']||$current['status']!=='active'||trade_listing_hash($existing)!==trade_listing_hash($current)){
                     $pdo->prepare("UPDATE market_trade_offers SET status='expired' WHERE listing_id=? AND status='open'")->execute([$listingId]);
                 }
             }

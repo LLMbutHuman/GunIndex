@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'Der er nyt om dit køb eller salg. Åbn handlen for at se detaljerne.',
     'trade.admin' => 'Tvister om handler',
     'trade.admin_help' => 'Angiv en begrundelse for at registrere aftalens status. Afgørelsen udløser ingen betaling eller tilbagebetaling.',
+    'trade.seller_opt_in' => 'Tillad bindende køb eller pristilbud for denne annonce. De angivne leveringsvilkår og fragtpriser gælder.',
 ];

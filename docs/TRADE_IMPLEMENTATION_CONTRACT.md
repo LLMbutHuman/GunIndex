@@ -4,6 +4,9 @@ Einzelartikel, EUR/Cent. Neue Inseratsart `negotiated` neben `fixed`/`auction`.
 Keine Zahlung durch diese Funktion, keine Treuhand, keine automatischen Erstattungen.
 Externe Abwicklung wird nur als Erklärung einer Partei protokolliert. Bestehende
 Auktionsgebühren/Finanzbelege bleiben getrennt. Vorhandene Daten bleiben erhalten.
+Verbindliche Kauf- und Preisangebote setzen die ausdrückliche Verkäuferfreigabe
+pro Inserat voraus (`trade_checkout_enabled`, Migration 018). Bestehende
+Inserate und neue Wiedereinstellungsentwürfe beginnen im Kontaktverkauf.
 
 ## Dienstschnittstellen (config/trade.php)
 

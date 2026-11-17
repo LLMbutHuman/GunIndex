@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'Votre achat ou vente a été mis à jour. Ouvrez la transaction pour en savoir plus.',
     'trade.admin' => 'Litiges commerciaux',
     'trade.admin_help' => 'Une décision enregistre uniquement le statut du contrat. Elle ne déclenche aucun paiement ni remboursement. Un motif est obligatoire.',
+    'trade.seller_opt_in' => 'Autoriser les achats ou offres fermes pour cette annonce. Les modalités de remise et les frais de livraison indiqués s’appliquent.',
 ];

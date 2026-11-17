@@ -12,6 +12,9 @@ an abgeschlossene Vorgänge und deren Parteien gebunden. Die bestehenden
 Auktionsgebühren und der einmalige Rabatt je Auktionskette gelten weiterhin.
 
 Neue befristete Festpreis- und Verhandlungsinserate laufen standardmäßig 30 Tage.
+Migration 018 hält den bisherigen Kontaktverkauf für Bestandsinserate verfügbar.
+Verbindlicher Checkout und bindende Angebote erfordern die ausdrückliche
+Freigabe des Verkäufers mit den für das Inserat geltenden Übergabe- und Versanddaten.
 Die einmalige kostenlose Verlängerung setzt ein aktives, befristetes Inserat
 ohne Gebote oder Kauf voraus. Geschlossene allgemeine Inserate lassen sich als
 separate Entwürfe kopieren. Für verkaufte Ware sind verfügbarer Bestand und
@@ -28,10 +31,15 @@ ist auf dem Entwicklungsbranch verifiziert. [CI 44172593727](https://github.com/
 hat die Windows-Prüfung und Migrationen 016/017 bestanden. Der Linux-Lauf
 stoppte vor den neuen Handelstests bei der Sprachparität. Die fehlenden
 dänischen und italienischen Texte sind ergänzt. Alle acht Handelsdateien
-besitzen lokal bestätigt dieselben 120 Schlüssel und Platzhalter. Die
-erneute MySQL-/HTTP- und Chromium-Prüfung steht bis zum nächsten CI-Ergebnis aus.
+besitzen lokal bestätigt dieselben Schlüssel und Platzhalter.
+[CI 44173303639](https://github.com/LLMbutHuman/GunIndex/actions/runs/44173303639)
+für `3b06931` hat die Sprachparität und alle 14 MySQL-Handelsgruppen bestanden,
+darunter zwei parallele Kaufanfragen und wiederholte Anfragen. Die Laufzeitsuite
+stoppte bei einer Testabfrage zur Gebührenkontrolle. Sie liest den Verkäufer
+jetzt aus dem zugehörigen Gebührenvertrag. Die abschließende Laufzeit- und
+Chromium-Abnahme sowie der Nachweis für Migration 018 stehen noch aus.
 
-Wiederaufnahmepunkt: CI für Migrationen 016/017, Handels- und Laufzeittests
+Wiederaufnahmepunkt: CI für Migrationen 016–018, Handels- und Laufzeittests
 nachverfolgen und etwaige Fehler auf dem Entwicklungsbranch beheben. Nach dem
 Handelspaket folgt die noch offene Kategorieklassifizierung mit Suchfiltern.
 

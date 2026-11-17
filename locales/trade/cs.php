@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'U vašeho nákupu nebo prodeje došlo ke změně. Podrobnosti najdete v transakci.',
     'trade.admin' => 'Obchodní spory',
     'trade.admin_help' => 'Rozhodnutí zaznamená pouze stav smlouvy. Nespouští platbu ani vrácení peněz. Je nutné uvést důvod.',
+    'trade.seller_opt_in' => 'Povolit závazný nákup nebo cenové nabídky u tohoto inzerátu. Platí uvedený způsob předání a náklady na dopravu.',
 ];

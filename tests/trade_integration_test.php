@@ -27,7 +27,7 @@ function tri_user(PDO $pdo, bool $admin=false): int {
     return (int)$pdo->lastInsertId();
 }
 function tri_listing(PDO $pdo, int $seller, int $category, string $type='fixed', ?string $ends=null): int {
-    $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,shipping_cents,status,zip,city,country_code,pickup,shipping,ends_at) VALUES (?,?,?,'Ordinary synthetic desk for isolated trade integration checks.',?,4500,300,'active','10115','Synthetic town','DE',1,1,?)")
+    $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,shipping_cents,status,zip,city,country_code,pickup,shipping,ends_at,trade_checkout_enabled) VALUES (?,?,?,'Ordinary synthetic desk for isolated trade integration checks.',?,4500,300,'active','10115','Synthetic town','DE',1,1,?,1)")
         ->execute([$seller,$category,'Synthetic trade desk '.bin2hex(random_bytes(8)),$type,$ends]);
     return (int)$pdo->lastInsertId();
 }
@@ -160,6 +160,13 @@ try {
             $expired=tri_listing($pdo,$seller,$category,'fixed','2000-01-01 00:00:00'); tri_reject(fn()=>trade_quote($pdo,$buyer,$expired,'pickup'));
             $input=tri_buy_input($pdo,$buyer,$listing,'pickup'); $pdo->prepare("UPDATE market_listings SET status='paused' WHERE id=?")->execute([$listing]);
             tri_reject(fn()=>trade_purchase($pdo,$buyer,$listing,$input));
+        },
+        'seller_opt_in_is_required_and_revocable_before_purchase'=>static function() use($pdo,$seller,$buyer,$category):void {
+            $listing=tri_listing($pdo,$seller,$category);$input=tri_buy_input($pdo,$buyer,$listing);
+            $pdo->prepare('UPDATE market_listings SET trade_checkout_enabled=0 WHERE id=?')->execute([$listing]);
+            tri_reject(fn()=>trade_quote($pdo,$buyer,$listing,'shipping'));
+            tri_reject(fn()=>trade_purchase($pdo,$buyer,$listing,$input));
+            tri_check((int)tri_scalar($pdo,'SELECT COUNT(*) FROM market_trades WHERE listing_id=?',[$listing])===0,'Legacy contact listing was purchased.');
         },
         'negotiation_counter_and_accept_preserve_exact_agreed_price'=>static function() use($pdo,$seller,$buyer,$outsider,$category):void {
             $listing=tri_listing($pdo,$seller,$category,'negotiated');

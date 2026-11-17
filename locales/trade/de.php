@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'Zu deinem Kauf oder Verkauf gibt es eine Änderung. Öffne den Vorgang für Einzelheiten.',
     'trade.admin' => 'Handelsstreitfälle',
     'trade.admin_help' => 'Eine Entscheidung dokumentiert nur den Vertragsstatus. Sie löst keine Zahlung oder Erstattung aus. Eine Begründung ist erforderlich.',
+    'trade.seller_opt_in' => 'Verbindlichen Kauf oder verbindliche Preisangebote für dieses Inserat erlauben. Versandkosten und Übergabe gelten wie angegeben.',
 ];

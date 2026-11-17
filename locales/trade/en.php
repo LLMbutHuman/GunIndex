@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'There is an update to your purchase or sale. Open the transaction for details.',
     'trade.admin' => 'Trade disputes',
     'trade.admin_help' => 'A decision records the agreement status only. It does not initiate a payment or refund. A reason is required.',
+    'trade.seller_opt_in' => 'Allow binding purchases or price offers for this listing. The stated delivery terms and shipping costs apply.',
 ];

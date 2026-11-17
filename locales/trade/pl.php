@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'Twój zakup lub sprzedaż uległy zmianie. Otwórz transakcję, aby sprawdzić szczegóły.',
     'trade.admin' => 'Spory dotyczące transakcji',
     'trade.admin_help' => 'Decyzja zapisuje wyłącznie status umowy. Nie uruchamia płatności ani zwrotu. Wymagane jest uzasadnienie.',
+    'trade.seller_opt_in' => 'Zezwól na wiążące zakupy lub oferty cenowe w tym ogłoszeniu. Obowiązują podane warunki odbioru i koszty wysyłki.',
 ];

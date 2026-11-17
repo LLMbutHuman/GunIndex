@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'Je aankoop of verkoop is gewijzigd. Open de transactie voor meer informatie.',
     'trade.admin' => 'Handelsgeschillen',
     'trade.admin_help' => 'Een beslissing legt alleen de contractstatus vast. Ze start geen betaling of terugbetaling. Een reden is verplicht.',
+    'trade.seller_opt_in' => 'Sta bindende aankopen of prijsbiedingen toe voor deze advertentie. De vermelde leveringswijze en verzendkosten gelden.',
 ];

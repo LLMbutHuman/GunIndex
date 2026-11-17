@@ -121,4 +121,5 @@ return [
     'trade.updated_body' => 'Ci sono novità sul tuo acquisto o sulla tua vendita. Apri la transazione per i dettagli.',
     'trade.admin' => 'Contestazioni sulle transazioni',
     'trade.admin_help' => 'La decisione registra lo stato dell’accordo. Le parti gestiscono separatamente pagamenti e rimborsi. Indica il motivo della decisione.',
+    'trade.seller_opt_in' => 'Consenti acquisti o offerte vincolanti per questo annuncio. Si applicano le modalità di consegna e le spese di spedizione indicate.',
 ];

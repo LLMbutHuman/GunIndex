@@ -61,7 +61,7 @@ function trade_listing(PDO $pdo,int $actor,int $id,bool $lock=false): array
     trade_integer($actor); trade_integer($id);
     if($lock) $listing=market_lock_listing($pdo,$id);
     else { $q=$pdo->prepare('SELECT * FROM market_listings WHERE id=?');$q->execute([$id]);$listing=$q->fetch(); }
-    if(!$listing||!in_array($listing['type'],['fixed','negotiated'],true)||$listing['status']!=='active'
+    if(!$listing||!in_array($listing['type'],['fixed','negotiated'],true)||$listing['status']!=='active'||(int)$listing['trade_checkout_enabled']!==1
         ||($listing['ends_at']!==null&&strtotime($listing['ends_at'].' UTC')<=time())) throw new DomainException(t('trade.unavailable'));
     market_assert_users_active($pdo,[$actor,(int)$listing['seller_id']]);
     if(!($lock?market_category_locked_allowed($pdo,(int)$listing['category_id']):catalog_category_allowed($pdo,(int)$listing['category_id']))
@@ -230,7 +230,7 @@ function trade_offer_context(PDO $pdo,int $actor,int $listing): array
         if($q->fetchColumn()===false)throw new DomainException(t('trade.unavailable'));
     }
     $q=$pdo->prepare('SELECT o.*,l.title FROM market_trade_offers o JOIN market_listings l ON l.id=o.listing_id WHERE o.listing_id=? AND (o.seller_id=? OR o.buyer_id=?) ORDER BY o.id DESC LIMIT 100');$q->execute([$listing,$actor,$actor]);
-    $offers=$q->fetchAll();foreach($offers as &$offer)$offer['actionable']=$row['status']==='active'&&($row['ends_at']===null||strtotime($row['ends_at'].' UTC')>time())&&$offer['status']==='open'&&strtotime($offer['expires_at'].' UTC')>time()&&hash_equals($offer['listing_hash'],trade_listing_hash($row));unset($offer);
+    $offers=$q->fetchAll();foreach($offers as &$offer)$offer['actionable']=(int)$row['trade_checkout_enabled']===1&&$row['status']==='active'&&($row['ends_at']===null||strtotime($row['ends_at'].' UTC')>time())&&$offer['status']==='open'&&strtotime($offer['expires_at'].' UTC')>time()&&hash_equals($offer['listing_hash'],trade_listing_hash($row));unset($offer);
     return ['listing'=>$row,'hash'=>trade_listing_hash($row),'locale'=>i18n_locale(),'documents'=>consent_documents($pdo,'checkout',i18n_locale()),'offers'=>$offers];
 }
 

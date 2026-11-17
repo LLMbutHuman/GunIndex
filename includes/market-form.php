@@ -38,6 +38,7 @@ $field=static function(string $key,string $fallback='') use ($values):string { $
 <?php endforeach; ?></div></fieldset>
 <?php endif; ?>
 <p class="notice"><?=h(t('auction_billing.goods_notice'))?> <?=h(t('auction_billing.fixed_notice'))?></p>
+<label class="check"><input type="checkbox" name="trade_checkout_enabled" value="1" <?=$field('trade_checkout_enabled')==='1'?'checked':''?>><?=h(t('trade.seller_opt_in'))?></label>
 <?php $auctionFeeOffered=auction_billing_form($pdo,(int)$user['id'],$listing??null); ?>
 <label class="check"><input type="checkbox" name="accept_rules" value="1" required <?= $field('accept_rules')==='1'?'checked':'' ?>><?=h(t('Ich bestätige die allgemeinen Produktregeln (Version general-1.0), die Richtigkeit der Angaben und meine Berechtigung zum Verkauf.'))?></label>
 <div class="button-row"><button class="button" type="submit" data-listing-save><?= isset($listingId)?t('Änderungen speichern'):t('Inserat speichern') ?></button><?php if($auctionFeeOffered):?><button class="button" type="submit" name="auction_fee_action" value="publish" data-auction-publish><?=h(t('auction_billing.publish'))?></button><?php endif;?><a class="button button-ghost" href="/user/dashboard.php"> <?=h(t('Zum Dashboard'))?> </a></div>
