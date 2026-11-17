@@ -223,6 +223,12 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
         } else {
             $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,shipping_cents=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
             $q->execute(array_merge($values,[$listingId]));
+            if($existing['type']==='negotiated'){
+                $current=market_lock_listing($pdo,$listingId);
+                if($current['status']!=='active'||trade_listing_hash($existing)!==trade_listing_hash($current)){
+                    $pdo->prepare("UPDATE market_trade_offers SET status='expired' WHERE listing_id=? AND status='open'")->execute([$listingId]);
+                }
+            }
         }
         if($data['type']==='auction'&&$data['status']==='active'){
             auction_billing_publish($pdo,$listingId,$sellerId,$feeQuote);
@@ -428,6 +434,7 @@ function market_transition(PDO $pdo, int $listingId, int $userId, string $action
         }
         $q=$pdo->prepare('UPDATE market_listings SET status=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
         $q->execute([$states[$action],$listingId]);
+        if($listing['type']==='negotiated'&&$action!=='publish')$pdo->prepare("UPDATE market_trade_offers SET status='expired' WHERE listing_id=? AND status='open'")->execute([$listingId]);
         if($action==='publish'&&function_exists('discovery_enqueue_listing'))discovery_enqueue_listing($pdo,$listingId);
         $pdo->commit();
     } catch (Throwable $error) {

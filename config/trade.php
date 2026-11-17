@@ -131,7 +131,8 @@ function trade_request_hash(string $operation,int $id,?int $related,array $input
     // Canonical request body: POST ordering cannot change retry identity.
     $canonical=static function(array $data) use (&$canonical):array {ksort($data);foreach($data as &$value)if(is_array($value))$value=$canonical($value);unset($value);return $data;};
     unset($input['csrf_token'],$input['csrf']);
-    return hash('sha256',trade_json([$operation,$id,$related,$canonical($input)]));
+    try {return hash('sha256',trade_json([$operation,$id,$related,$canonical($input)]));}
+    catch(JsonException){throw new InvalidArgumentException(t('trade.invalid'));}
 }
 
 function trade_purchase(PDO $pdo,int $actor,int $listing,array $input,?int $offerId=null): int
@@ -185,7 +186,8 @@ function trade_offer_create(PDO $pdo,int $actor,int $listing,array $input): int
             $buyer=(int)$previous['buyer_id'];
         } elseif($actor===(int)$row['seller_id'])throw new DomainException(t('trade.forbidden'));
         market_assert_users_active($pdo,[$buyer,(int)$row['seller_id']]);
-        $pdo->prepare("UPDATE market_trade_offers SET status='expired' WHERE listing_id=? AND status='open' AND expires_at<=UTC_TIMESTAMP()")->execute([$listing]);
+        $pdo->prepare("UPDATE market_trade_offers SET status='expired' WHERE listing_id=? AND status='open' AND (expires_at<=UTC_TIMESTAMP() OR listing_hash<>?)")
+            ->execute([$listing,trade_listing_hash($row)]);
         $q=$pdo->prepare("SELECT id FROM market_trade_offers WHERE listing_id=? AND buyer_id=? AND status='open' FOR UPDATE");$q->execute([$listing,$buyer]);
         foreach($q->fetchAll(PDO::FETCH_COLUMN) as $open)if((int)$open!==$parent)throw new DomainException(t('trade.duplicate'));
         $delivery=market_input($input,'delivery');$shipping=trade_delivery($row,$delivery);
@@ -214,6 +216,7 @@ function trade_offer_action(PDO $pdo,int $actor,int $offer,string $action): void
         if($row['status']!=='open')throw new DomainException(t('trade.changed'));
         $pdo->prepare('UPDATE market_trade_offers SET status=? WHERE id=?')->execute([$target,$offer]);
         audit_log($pdo,$actor,'trade.offer_'.$target,$offer,[]);
+        trade_notify($pdo,(int)$row['seller_id'],(int)$row['buyer_id'],$target.':'.$offer,'/user/offers.php?listing_id='.(int)$row['listing_id']);
     });
 }
 

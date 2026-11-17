@@ -128,6 +128,20 @@ try{
                 trt_check(trade_allowed_actions(trt_trade(['status'=>'completed']),$party)===['dispute'],'Completed trade permits fulfilment mutations.');
             }
         },
+        'each_trade_catalog_preserves_keys_and_interpolation'=>static function():void {
+            $base=require __DIR__.'/../locales/trade/en.php';
+            foreach(['de','en','fr','nl','pl','cs','da','it'] as $locale){
+                $catalog=require __DIR__.'/../locales/trade/'.$locale.'.php';
+                trt_check(count($catalog)===count($base),'Unexpected trade catalog size: '.$locale);
+                foreach($base as $key=>$text){
+                    $localized=$catalog[$key]??null;
+                    trt_check(is_string($localized)&&trim($localized)!==''&&preg_match('//u',$localized)===1,'Invalid localized entry: '.$locale.' '.$key);
+                    preg_match_all('/\{[a-z_]+\}/',$text,$expected);preg_match_all('/\{[a-z_]+\}/',$localized,$actual);
+                    sort($expected[0]);sort($actual[0]);
+                    trt_check($expected[0]===$actual[0],'Incorrect trade placeholders: '.$locale.' '.$key);
+                }
+            }
+        },
     ];
     foreach($tests as $name=>$run){$run();++$passed;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}
 }catch(Throwable $error){fwrite(STDERR,'FAIL '.$name.' ('.get_class($error).' at '.basename($error->getFile()).':'.$error->getLine().'): '.$error->getMessage().PHP_EOL);exit(1);}

@@ -196,6 +196,8 @@ try {
             $stale=trade_offer_create($pdo,$buyer,$listing,tri_offer_input($pdo,$buyer,$listing));
             $pdo->prepare("UPDATE market_listings SET description='Changed synthetic desk description.' WHERE id=?")->execute([$listing]);
             tri_reject(fn()=>trade_quote($pdo,$seller,$listing,'shipping',$stale));
+            $fresh=trade_offer_create($pdo,$buyer,$listing,tri_offer_input($pdo,$buyer,$listing));
+            tri_check($fresh!==$stale&&tri_scalar($pdo,'SELECT status FROM market_trade_offers WHERE id=?',[$stale])==='expired','Stale offer blocked a fresh offer or remained open.');
         },
         'dispatch_receipt_settlement_roles_version_and_event_idempotence'=>static function() use($pdo,$seller,$buyer,$outsider,$category):void {
             $listing=tri_listing($pdo,$seller,$category); $id=trade_purchase($pdo,$buyer,$listing,tri_buy_input($pdo,$buyer,$listing));
@@ -242,6 +244,24 @@ try {
             tri_reject(fn()=>tri_transition($pdo,$buyer,$id,'resolve_complete'));
             tri_reject(fn()=>tri_transition($pdo,$seller,$id,'resolve_cancel'));
             tri_reject(fn()=>trade_rate($pdo,$buyer,$id,5,'Disputed synthetic review.'));
+            $staff=tri_user($pdo,true);
+            tri_reject(fn()=>trade_details($pdo,trade_row($pdo,$id),$buyer+1000000));
+            $case=trade_details($pdo,trade_row($pdo,$id),$staff);
+            tri_check(in_array('resolve_cancel',trade_allowed_actions($case,$staff,true),true),'Independent reviewer cannot resolve the dispute.');
+            $resolution=['version'=>(string)$case['version'],'request_key'=>bin2hex(random_bytes(16)),
+                'confirm_action'=>'1','details'=>'Synthetic dispute decision only.'];
+            trade_transition($pdo,$staff,$id,'resolve_cancel',$resolution);
+            tri_check(trade_get($pdo,$buyer,$id)['status']==='cancelled','Staff dispute decision was not applied.');
+        },
+        'expiry_worker_closes_only_due_general_listings_and_offers'=>static function() use($pdo,$seller,$buyer,$category):void {
+            $listing=tri_listing($pdo,$seller,$category,'negotiated');
+            $offer=trade_offer_create($pdo,$buyer,$listing,tri_offer_input($pdo,$buyer,$listing));
+            $other=tri_listing($pdo,$seller,$category,'fixed',gmdate('Y-m-d H:i:s',time()+3600));
+            $pdo->prepare("UPDATE market_listings SET ends_at='2000-01-01 00:00:00' WHERE id=?")->execute([$listing]);
+            trade_close_due($pdo,100);
+            tri_check(tri_scalar($pdo,'SELECT status FROM market_listings WHERE id=?',[$listing])==='ended','Due listing did not end.');
+            tri_check(tri_scalar($pdo,'SELECT status FROM market_trade_offers WHERE id=?',[$offer])==='expired','Market deadline did not close the pending offer.');
+            tri_check(tri_scalar($pdo,'SELECT status FROM market_listings WHERE id=?',[$other])==='active','Future listing ended early.');
         },
         'current_legal_version_is_required_and_exact_consent_is_retained'=>static function() use($pdo,$seller,$buyer,$category):void {
             $admin=tri_user($pdo,true); $code='trade-contract-'.bin2hex(random_bytes(8));
@@ -251,9 +271,12 @@ try {
             tri_setting($pdo,'legal_publication_enabled','1'); tri_setting($pdo,'legal_checkout_documents',$code);
             try {
                 $listing=tri_listing($pdo,$seller,$category); $old=tri_buy_input($pdo,$buyer,$listing);
+                $negotiated=tri_listing($pdo,$seller,$category,'negotiated');
+                $offer=trade_offer_create($pdo,$buyer,$negotiated,tri_offer_input($pdo,$buyer,$negotiated));
                 $second=legal_create($pdo,$admin,$code,'2.0','de','Synthetic revised trade terms',$body.' Changed fixture.');
                 legal_approve($pdo,$admin,$second,'Synthetic fixture only; no legal approval',gmdate('Y-m-d'),array_fill(0,5,'1'));
                 tri_reject(fn()=>trade_purchase($pdo,$buyer,$listing,$old));
+                tri_reject(fn()=>trade_quote($pdo,$seller,$negotiated,'shipping',$offer));
                 $input=tri_buy_input($pdo,$buyer,$listing); $missing=$input; unset($missing['legal_confirm']);
                 tri_reject(fn()=>trade_purchase($pdo,$buyer,$listing,$missing));
                 $id=trade_purchase($pdo,$buyer,$listing,$input);

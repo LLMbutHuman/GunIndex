@@ -22,10 +22,14 @@ Die Handelsbestätigung dokumentiert Vereinbarung und Erfüllung zwischen den
 Parteien. Plattformzahlungen, Treuhand und Erstattungen bleiben gesonderte
 Arbeitspakete mit ihren bestehenden Freigabesperren.
 
-Lokal 13 Handelsprüfungen, elf Laufzeitprüfungen und 22 vorhandene
-Auktions-Wiedereinstellungsprüfungen bestanden. Der Entwicklungsbranch hat
-zusätzliche isolierte MySQL-/HTTP- und Chromium-Prüfungen im bestehenden CI-Lauf.
-Ihr Ergebnis ist erst nach Prüfung des Joblogs bestätigt.
+Lokal 14 Handelsprüfungen, elf Laufzeitprüfungen und 22 vorhandene
+Auktions-Wiedereinstellungsprüfungen bestanden. Der erste Push `446e462`
+ist auf dem Entwicklungsbranch verifiziert. [CI 44172593727](https://github.com/LLMbutHuman/GunIndex/actions/runs/44172593727)
+hat die Windows-Prüfung und Migrationen 016/017 bestanden. Der Linux-Lauf
+stoppte vor den neuen Handelstests bei der Sprachparität. Die fehlenden
+dänischen und italienischen Texte sind ergänzt. Alle acht Handelsdateien
+besitzen lokal bestätigt dieselben 120 Schlüssel und Platzhalter. Die
+erneute MySQL-/HTTP- und Chromium-Prüfung steht bis zum nächsten CI-Ergebnis aus.
 
 Wiederaufnahmepunkt: CI für Migrationen 016/017, Handels- und Laufzeittests
 nachverfolgen und etwaige Fehler auf dem Entwicklungsbranch beheben. Nach dem
