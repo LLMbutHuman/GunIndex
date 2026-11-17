@@ -74,10 +74,10 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 8 | Autocomplete/Relevanz/Filter | C | Erweiterung und kombinierte End-to-End-Prüfung |
 | 9 | Entwurfs-Autosave/Vorschau | C | Automatische Speicherung und vollständige Vorschau |
 | 10 | Bildreihenfolge | A | Implementiert und geprüft |
-| 11 | Wiedereinstellen/Verlängern | C | Erfolglose Auktion samt einmaligem Gratisanspruch vollständig integriert und getestet; weitere Inseratarten und explizite Verlängerungen offen |
-| 12 | Verhandlungsmodus | C | Eigenständige Verhandlung und Angebotszustände |
-| 13 | Festpreis-Transaktion | C | Vollständiger Käufer-/Verkäuferablauf |
-| 14 | Transaktionsbewertungen | C | Vorhandene Auktionsgrundlage auf weitere Transaktionen erweitern |
+| 11 | Wiedereinstellen/Verlängern | A | Auktions-Gratisanspruch, Kopie geschlossener Festpreis-/Verhandlungsinserate und begrenzte einmalige Laufzeitverlängerung in MySQL/HTTP geprüft |
+| 12 | Verhandlungsmodus | A | Private Angebote, Gegenangebote, Annahme, Ablehnung, Rückzug, Fristen und unveränderliche Konditionen in MySQL und Chromium geprüft |
+| 13 | Festpreis-Transaktion | B | Verkäuferfreigabe, konkurrierende Käufe, Centbeträge, Versand/Abholung, Abschluss, Storno und Streitfälle geprüft. Zahlungen und Treuhand separat in 23–26 |
+| 14 | Transaktionsbewertungen | A | Bewertungen nur durch echte Parteien nach Abschluss, einmal pro Partei. MySQL- und Browserprüfung grün |
 | 15 | Benachrichtigungen | C | Fehlende Preis-/Ablauf-/Vorablaufereignisse |
 | 16 | Geräte/Einzelsitzungen | C | Übersicht und Einzelwiderruf |
 | 17 | Benutzer-2FA/Passkeys | C | Optionale Benutzeranmeldung, Passkeys und Wiederherstellung |

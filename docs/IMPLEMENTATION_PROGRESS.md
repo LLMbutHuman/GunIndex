@@ -2,6 +2,15 @@
 
 ## Handelsabläufe und Inseratslaufzeit, 2026-11-17
 
+Codecommit `100fde78cc060558bd7b6defb0ab90ed92567ed4` auf dem Entwicklungsbranch,
+Remote-SHA bestätigt. [CI 44174212303](https://github.com/LLMbutHuman/GunIndex/actions/runs/44174212303)
+mit Windowsjob `134361091171` und Linuxjob `134361091744` vollständig grün.
+Im Joblog bestätigt: Migrationen 016–018; 14 Handelsprüfungen ohne DB und
+15 MySQL-Handelsgruppen; elf Laufzeitprüfungen ohne DB und zwölf MySQL-/HTTP-
+Laufzeitgruppen; zwölf Chromium-Handelsprüfungen einschließlich acht mobiler
+Sprachen und automatischer Barrierefreiheitsprüfung. Auch die vorhandenen
+Regressionen und Abhängigkeitsaudits sind grün.
+
 Festpreiskäufe und private Preisverhandlungen für allgemeine Einzelartikel
 verwenden verbindliche serverseitige Preis- und Lieferdaten in Cent. Die
 Migrationen 016 und 017 ergänzen Kaufverträge, Angebotsversionen,
@@ -25,23 +34,13 @@ Die Handelsbestätigung dokumentiert Vereinbarung und Erfüllung zwischen den
 Parteien. Plattformzahlungen, Treuhand und Erstattungen bleiben gesonderte
 Arbeitspakete mit ihren bestehenden Freigabesperren.
 
-Lokal 14 Handelsprüfungen, elf Laufzeitprüfungen und 22 vorhandene
-Auktions-Wiedereinstellungsprüfungen bestanden. Der erste Push `446e462`
-ist auf dem Entwicklungsbranch verifiziert. [CI 44172593727](https://github.com/LLMbutHuman/GunIndex/actions/runs/44172593727)
-hat die Windows-Prüfung und Migrationen 016/017 bestanden. Der Linux-Lauf
-stoppte vor den neuen Handelstests bei der Sprachparität. Die fehlenden
-dänischen und italienischen Texte sind ergänzt. Alle acht Handelsdateien
-besitzen lokal bestätigt dieselben Schlüssel und Platzhalter.
-[CI 44173303639](https://github.com/LLMbutHuman/GunIndex/actions/runs/44173303639)
-für `3b06931` hat die Sprachparität und alle 14 MySQL-Handelsgruppen bestanden,
-darunter zwei parallele Kaufanfragen und wiederholte Anfragen. Die Laufzeitsuite
-stoppte bei einer Testabfrage zur Gebührenkontrolle. Sie liest den Verkäufer
-jetzt aus dem zugehörigen Gebührenvertrag. Die abschließende Laufzeit- und
-Chromium-Abnahme sowie der Nachweis für Migration 018 stehen noch aus.
+Die Vorläufe 44172593727 und 44173303639 stoppten an fehlenden Sprachdateien
+bzw. einer fehlerhaften Testabfrage. Beide Punkte sind im geprüften Stand behoben.
 
-Wiederaufnahmepunkt: CI für Migrationen 016–018, Handels- und Laufzeittests
-nachverfolgen und etwaige Fehler auf dem Entwicklungsbranch beheben. Nach dem
-Handelspaket folgt die noch offene Kategorieklassifizierung mit Suchfiltern.
+Wiederaufnahmepunkt: typisierte Kategorieattribute mit `categories.manage`,
+additiver Migration und Validierung für Bestands- und Neuinserate implementieren.
+Formular, Produktdarstellung und kombinierte Suchfilter daran anschließen.
+Die grünen Handelsprüfungen erst beim nächsten Integrationspunkt erneut ausführen.
 
 ## E2EE-Kern vollständig im isolierten System geprüft, 2026-11-14
 
