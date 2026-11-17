@@ -9,6 +9,8 @@ try {
     if (count($args)>1 || (isset($args[0]) && (!ctype_digit($args[0]) || (int)$args[0]<1 || (int)$args[0]>1000))) throw new InvalidArgumentException('Batch size must be 1–1000.');
     $closed=market_close_due($pdo,isset($args[0])?(int)$args[0]:100);
     fwrite(STDOUT,'Closed general auctions: '.$closed.PHP_EOL);
+    $limit=isset($args[0])?(int)$args[0]:100;
+    fwrite(STDOUT,'Closed general listings: '.trade_close_due($pdo,$limit).'; expired offers: '.trade_expire($pdo,$limit).PHP_EOL);
     $conflicts=market_worker_conflicts();
     if ($conflicts) {
         fwrite(STDERR,'Auctions moved to manual review: '.count($conflicts).PHP_EOL);

@@ -15,7 +15,12 @@ function chat_context(PDO $pdo,int $user,int $listing,int $peer):array {
  $q=$pdo->prepare('SELECT 1 FROM market_messages WHERE '.$where.' LIMIT 1');$q->execute($pair);$exists=(bool)$q->fetchColumn();
  $public=($item['seller_active']==1)&&catalog_category_allowed($pdo,(int)$item['category_id'])&&geo_country_enabled($pdo,$item['country_code']);
  $winner=$item['type']==='auction'&&in_array($item['status'],['ended','sold'],true)&&(int)($item['highest_bidder_id']??0)>0&&in_array((int)$item['highest_bidder_id'],[$user,$peer],true);
- if(!$exists&&!($public&&($winner||($item['status']==='active'&&$user!==$seller))))throw new MarketAccessException('Für dieses Angebot kann keine neue Unterhaltung begonnen werden.');
+ $trade=false;
+ if(!$exists&&!$winner&&$item['status']==='sold'&&in_array($item['type'],['fixed','negotiated'],true)){
+  $q=$pdo->prepare("SELECT 1 FROM market_trades WHERE listing_id=? AND seller_id=? AND buyer_id=? AND status<>'cancelled'");
+  $q->execute([$listing,$seller,$user===$seller?$peer:$user]);$trade=(bool)$q->fetchColumn();
+ }
+ if(!$exists&&!($public&&($winner||$trade||($item['status']==='active'&&$user!==$seller))))throw new MarketAccessException('Für dieses Angebot kann keine neue Unterhaltung begonnen werden.');
  $blocked=chat_blocked($pdo,$user,$peer);$q=$pdo->prepare('SELECT 1 FROM market_user_blocks WHERE user_id=? AND blocked_id=?');$q->execute([$user,$peer]);
  return ['item'=>$item,'peer'=>$person,'pair'=>$pair,'where'=>$where,'existing'=>$exists,'blocked'=>$blocked,'own_block'=>(bool)$q->fetchColumn(),'can_send'=>$public&&in_array($item['status'],['active','ended','sold'],true)&&(bool)$person['is_active']&&!$blocked];
 }

@@ -51,7 +51,7 @@ if (!function_exists('ui_icon')) {
             <a class="listing-picture" href="<?= h($url) ?>" tabindex="-1" aria-hidden="true">
                 <img src="/marketplace/image.php?id=<?= (int)$item['id'] ?>&amp;position=0&amp;size=thumb" alt="" width="480" height="360" loading="lazy" decoding="async">
                 <span class="picture-grain"></span>
-                <span class="badge <?= $auction ? 'accent' : 'muted' ?>"><?= !empty($item['sponsored']) ? h(t('Gesponsert')) : h($auction ? t('Auktion') : t('Festpreis')) ?></span>
+                <span class="badge <?= $auction ? 'accent' : 'muted' ?>"><?= !empty($item['sponsored']) ? h(t('Gesponsert')) : h($auction ? t('Auktion') : t($item['type']==='negotiated'?'trade.negotiated':'Festpreis')) ?></span>
                 <span class="picture-arrow"><?= ui_icon('arrow') ?></span>
             </a>
             <div class="listing-copy">

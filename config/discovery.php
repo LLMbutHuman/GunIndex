@@ -43,7 +43,7 @@ function discovery_postcode_key(string $country,string $postal):string
 
 function discovery_listing_live(array $listing): bool
 {
-    return ($listing['status'] ?? '') === 'active' && (($listing['type'] ?? '') !== 'auction' || (is_string($listing['ends_at'] ?? null) && strtotime($listing['ends_at'].' UTC') > time()));
+    return ($listing['status'] ?? '') === 'active' && ((($listing['type'] ?? '') !== 'auction' && ($listing['ends_at']??null)===null) || (is_string($listing['ends_at'] ?? null) && strtotime($listing['ends_at'].' UTC') > time()));
 }
 
 function discovery_score(array $wanted, array $listing): array

@@ -12,9 +12,9 @@ if ($page === false) { abort_request(422, 'Bitte eine gültige Seite auswählen.
 $result = market_search($pdo, ['seller_id'=>(string)$id, 'scope'=>'international'], (int)$page);
 $items=$result['items'];$total=$result['total'];
 $dealer=site_setting($pdo,'dealer_profiles_enabled','1')==='1'?business_dealer_profile($pdo,(int)$id):null;
-$query = $pdo->prepare("SELECT COUNT(*) AS count,AVG(r.stars) AS average FROM market_ratings r JOIN market_listings l ON l.id=r.listing_id WHERE r.receiver_id=? AND r.status='active' AND l.status IN ('ended','sold')");
+$query = $pdo->prepare("SELECT COUNT(*) AS count,AVG(r.stars) AS average FROM market_ratings r JOIN market_listings l ON l.id=r.listing_id WHERE r.receiver_id=? AND r.status='active' AND l.status IN ('ended','sold') AND (r.trade_id IS NULL OR EXISTS(SELECT 1 FROM market_trades rt WHERE rt.id=r.trade_id AND rt.status='completed'))");
 $query->execute([$id]); $summary = $query->fetch();
-$query = $pdo->prepare("SELECT r.stars,r.comment,r.created_at,s.username FROM market_ratings r JOIN users s ON s.id=r.sender_id JOIN market_listings l ON l.id=r.listing_id WHERE r.receiver_id=? AND r.status='active' AND l.status IN ('ended','sold') ORDER BY r.id DESC LIMIT 20");
+$query = $pdo->prepare("SELECT r.stars,r.comment,r.created_at,s.username FROM market_ratings r JOIN users s ON s.id=r.sender_id JOIN market_listings l ON l.id=r.listing_id WHERE r.receiver_id=? AND r.status='active' AND l.status IN ('ended','sold') AND (r.trade_id IS NULL OR EXISTS(SELECT 1 FROM market_trades rt WHERE rt.id=r.trade_id AND rt.status='completed')) ORDER BY r.id DESC LIMIT 20");
 $query->execute([$id]); $ratings = $query->fetchAll();
 $pageTitle = (string)$seller['username']; require __DIR__ . '/../includes/header.php';
 ?>

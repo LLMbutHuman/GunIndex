@@ -31,7 +31,7 @@ function seo_listing_path(array $listing): ?string
 {
     $id = $listing['id'] ?? null;
     if ((!is_int($id) && !is_string($id)) || !preg_match('/\A[1-9][0-9]{0,18}\z/', (string)$id)
-        || !in_array($listing['type'] ?? null, ['fixed', 'auction'], true)) return null;
+        || !in_array($listing['type'] ?? null, ['fixed', 'auction', 'negotiated'], true)) return null;
     return '/marketplace/view-' . ($listing['type'] === 'auction' ? 'auction' : 'item') . '.php?id=' . $id;
 }
 
@@ -40,7 +40,7 @@ function seo_listing_current(array $listing, ?int $now = null): bool
 {
     if (seo_listing_path($listing) === null || ($listing['status'] ?? '') !== 'active'
         || !catalog_text_allowed(($listing['title'] ?? '') . ' ' . ($listing['description'] ?? ''))) return false;
-    if ($listing['type'] === 'auction') {
+    if ($listing['type'] === 'auction' || ($listing['ends_at']??null)!==null) {
         $end = $listing['ends_at'] ?? null;
         if (!is_string($end) || !preg_match('/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/', $end)) return false;
         $timestamp = strtotime($end . ' UTC');
@@ -113,8 +113,8 @@ function seo_sitemap_condition(PDO $pdo): array
 {
     $categories = market_category_ids($pdo);
     if (!$categories) return ['1=0', []];
-    $sql = "l.status='active' AND l.type IN ('fixed','auction') AND u.is_active=1 AND mc.is_active=1"
-        . " AND (l.type='fixed' OR (l.ends_at IS NOT NULL AND l.ends_at>UTC_TIMESTAMP()))"
+    $sql = "l.status='active' AND l.type IN ('fixed','auction','negotiated') AND u.is_active=1 AND mc.is_active=1"
+        . " AND ((l.type<>'auction' AND l.ends_at IS NULL) OR l.ends_at>UTC_TIMESTAMP())"
         . ' AND l.category_id IN (' . implode(',', array_fill(0, count($categories), '?')) . ')';
     return [$sql, $categories];
 }

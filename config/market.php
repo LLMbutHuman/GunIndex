@@ -38,7 +38,7 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     $scope=$filters['scope']??'country';
     if(!is_string($scope)||!in_array($scope,['country','international'],true))throw new InvalidArgumentException('Ungültiger Suchbereich.');
     if(!$categories||($scope==='country'&&!geo_country_enabled($pdo,$country)))return ['items'=>[],'total'=>0,'page'=>$page,'per_page'=>$perPage,'country_code'=>$country,'scope'=>$scope];
-    $where=["l.status='active'",'EXISTS(SELECT 1 FROM users seller WHERE seller.id=l.seller_id AND seller.is_active=1)',
+    $where=["l.status='active'","(l.ends_at IS NULL OR l.ends_at>UTC_TIMESTAMP())",'EXISTS(SELECT 1 FROM users seller WHERE seller.id=l.seller_id AND seller.is_active=1)',
         'EXISTS(SELECT 1 FROM market_countries mc WHERE mc.code=l.country_code AND mc.is_active=1)',
         'l.category_id IN ('.implode(',',array_fill(0,count($categories),'?')).')'];
     $parameters=$categories;
@@ -55,7 +55,7 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     $category=$filters['category_id']??'';
     if($category!==''&&$category!==null){if(!is_scalar($category)||!ctype_digit((string)$category))throw new InvalidArgumentException('Ungültige Kategorie.');$where[]='l.category_id=?';$parameters[]=(int)$category;}
     $type=$filters['type']??'';
-    if($type!==''&&$type!==null){if(!is_string($type)||!in_array($type,['fixed','auction'],true))throw new InvalidArgumentException('Ungültige Angebotsart.');$where[]='l.type=?';$parameters[]=$type;}
+    if($type!==''&&$type!==null){if(!is_string($type)||!in_array($type,['fixed','auction','negotiated'],true))throw new InvalidArgumentException('Ungültige Angebotsart.');$where[]='l.type=?';$parameters[]=$type;}
     foreach(['min_price'=>'>=','max_price'=>'<='] as $key=>$operator){
         $value=$filters[$key]??'';
         if($value!==''&&$value!==null){if(!is_string($value))throw new InvalidArgumentException('Ungültiger Preisfilter.');$where[]='COALESCE(l.current_bid_cents,l.price_cents) '.$operator.' ?';$parameters[]=money_parse($value);}
@@ -131,7 +131,7 @@ function market_validate(PDO $pdo, array $input): array
     if (!ctype_digit($category) || !catalog_category_allowed($pdo, (int)$category)) {
         throw new InvalidArgumentException('Bitte eine aktive allgemeine Kategorie auswählen.');
     }
-    if (!in_array($type, ['fixed','auction'], true) || !in_array($status, ['draft','active'], true)) {
+    if (!in_array($type, ['fixed','auction','negotiated'], true) || !in_array($status, ['draft','active'], true)) {
         throw new InvalidArgumentException('Ungültige Angebotsart oder Veröffentlichungsform.');
     }
     if (!geo_validate_postcode($country,$zip) || strlen($city) < 2 || strlen($city) > 100) {
@@ -156,7 +156,12 @@ function market_validate(PDO $pdo, array $input): array
     if (market_input($input, 'accept_rules') !== '1') {
         throw new InvalidArgumentException('Bitte die allgemeinen Produktregeln ausdrücklich bestätigen.');
     }
+    $listingDuration=market_input($input,'listing_duration_days','30');
+    if(!in_array($listingDuration,['7','14','30','60','90'],true))throw new InvalidArgumentException(t('trade.invalid'));
+    $shipping=market_input($input,'shipping','0')==='1';
+    $shippingCents=$shipping?money_parse(market_input($input,'shipping_price','0')):0;
     return ['title'=>$title,'description'=>$description,'category_id'=>(int)$category,'type'=>$type,'status'=>$status,
+        'shipping_cents'=>$shippingCents,'listing_duration_days'=>(int)$listingDuration,
         'price_cents'=>$price,'buyout_cents'=>$buyout,'duration_days'=>(int)$durationText,
         'country_code'=>$country,'zip'=>$zip,'city'=>$city,'pickup'=>market_input($input,'pickup','0')==='1'?1:0,
         'shipping'=>market_input($input,'shipping','0')==='1'?1:0,'condition_label'=>$condition];
@@ -182,6 +187,7 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
                 throw new MarketAccessException('Nur eigene Angebote können bearbeitet werden.');
             }
             relisting_assert_target($pdo,$sellerId,$listingId,$data);
+            if(!trade_listing_available($pdo,$listingId))throw new MarketConflictException(t('trade.unavailable'));
             if (!in_array($existing['status'], ['draft','active','paused'], true) || market_has_bids($pdo, $listingId)
                 || ($existing['type']==='auction' && $existing['status']==='active' && market_expired($existing))) {
                 throw new MarketConflictException('Dieses Angebot kann nicht mehr bearbeitet werden.');
@@ -198,19 +204,24 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
         $feeQuote=auction_billing_prepare($pdo,$sellerId,$data,$input,$existing);
         $prepared = market_prepare_images($files, $existingImages);
         $ends = $data['type'] === 'auction' && $data['status'] === 'active' ? gmdate('Y-m-d H:i:s', time()+$data['duration_days']*86400) : null;
+        if($data['type']!=='auction'){
+            $ends=$existing&&$existing['type']!=='auction'&&$existing['status']!=='draft'?$existing['ends_at']:
+                ($data['status']==='active'?gmdate('Y-m-d H:i:s',time()+$data['listing_duration_days']*86400):null);
+            if($existing&&$existing['type']!=='auction'&&$existing['status']!=='draft'&&$ends!==null&&strtotime($ends.' UTC')<=time())throw new MarketConflictException(t('trade.expired'));
+        }
         if ($existing && $existing['type']==='auction' && $data['type']==='auction' && $existing['status']==='active' && $data['status']==='active') {
             $ends=$existing['ends_at'];
         }
         if(!empty($feeQuote['existing']))$ends=$existing['ends_at'];
         if($relistingContext!==null&&$relistingContext['published_at']!==null)$ends=$existing['ends_at'];
         $point=geo_postcode($pdo,$data['country_code'],$data['zip']);
-        $values=[$data['country_code'],$point['latitude']??null,$point['longitude']??null,$data['category_id'],$data['title'],$data['description'],$data['type'],$data['price_cents'],$data['buyout_cents'],$data['status'],$ends,$data['zip'],$data['city'],$data['pickup'],$data['shipping'],$data['condition_label']];
+        $values=[$data['country_code'],$point['latitude']??null,$point['longitude']??null,$data['category_id'],$data['title'],$data['description'],$data['type'],$data['price_cents'],$data['buyout_cents'],$data['status'],$ends,$data['zip'],$data['city'],$data['pickup'],$data['shipping'],$data['condition_label'],$data['shipping_cents']];
         if ($listingId === null) {
-            $q=$pdo->prepare('INSERT INTO market_listings(seller_id,country_code,latitude,longitude,category_id,title,description,type,price_cents,buyout_cents,status,ends_at,zip,city,pickup,shipping,condition_label,created_at,updated_at,auction_fee_eligible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1)');
+            $q=$pdo->prepare('INSERT INTO market_listings(seller_id,country_code,latitude,longitude,category_id,title,description,type,price_cents,buyout_cents,status,ends_at,zip,city,pickup,shipping,condition_label,shipping_cents,created_at,updated_at,auction_fee_eligible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1)');
             $q->execute(array_merge([$sellerId],$values));
             $listingId=(int)$pdo->lastInsertId();
         } else {
-            $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
+            $q=$pdo->prepare('UPDATE market_listings SET country_code=?,latitude=?,longitude=?,category_id=?,title=?,description=?,type=?,price_cents=?,buyout_cents=?,status=?,ends_at=?,zip=?,city=?,pickup=?,shipping=?,condition_label=?,shipping_cents=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
             $q->execute(array_merge($values,[$listingId]));
         }
         if($data['type']==='auction'&&$data['status']==='active'){
@@ -402,12 +413,15 @@ function market_transition(PDO $pdo, int $listingId, int $userId, string $action
         $listing=market_lock_listing($pdo,$listingId);
         market_assert_users_active($pdo,[$userId]);
         if ((int)$listing['seller_id']!==$userId) throw new MarketAccessException('Nur eigene Angebote können geändert werden.');
+        if(!trade_listing_available($pdo,$listingId))throw new MarketConflictException(t('trade.unavailable'));
         if (market_has_bids($pdo,$listingId) || !in_array($listing['status'],['draft','active','paused'],true)) throw new MarketConflictException('Der aktuelle Angebotszustand erlaubt diese Änderung nicht.');
         if ($listing['type']==='auction' && $listing['status']==='active' && market_expired($listing)) throw new MarketConflictException('Abgelaufene Auktionen werden durch den Abschlussjob verarbeitet.');
         $states=['pause'=>'paused','publish'=>'active','archive'=>'archived','sold'=>'sold'];
-        if ($action==='sold' && $listing['type']!=='fixed') throw new MarketConflictException('Auktionen werden ausschließlich durch Gebote oder Sofortkauf abgeschlossen.');
+        if ($action==='sold' && !in_array($listing['type'],['fixed','negotiated'],true)) throw new MarketConflictException('Auktionen werden ausschließlich durch Gebote oder Sofortkauf abgeschlossen.');
         if ($action==='pause' && $listing['status']!=='active') throw new MarketConflictException('Nur veröffentlichte Angebote können pausiert werden.');
         if ($action==='publish') {
+            if($listing['ends_at']!==null&&strtotime($listing['ends_at'].' UTC')<=time())throw new MarketConflictException(t('trade.expired'));
+            if($listing['status']==='draft'&&$listing['type']!=='auction')$pdo->prepare('UPDATE market_listings SET ends_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 30 DAY) WHERE id=?')->execute([$listingId]);
             if(!geo_country_locked_enabled($pdo,$listing['country_code']))throw new MarketAccessException('Dieser Ländermarkt ist derzeit nicht verfügbar.');
             if (!market_category_locked_allowed($pdo,(int)$listing['category_id']) || !catalog_text_allowed($listing['title'].' '.$listing['description'])) throw new MarketAccessException('Dieses Angebot kann nicht veröffentlicht werden.');
             if ($listing['type']==='auction') throw new MarketConflictException('Eine Auktionslaufzeit bitte über die Bearbeitung festlegen.');

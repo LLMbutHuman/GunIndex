@@ -1,5 +1,36 @@
 # Implementierungsfortschritt
 
+## Handelsabläufe und Inseratslaufzeit, 2026-11-17
+
+Festpreiskäufe und private Preisverhandlungen für allgemeine Einzelartikel
+verwenden verbindliche serverseitige Preis- und Lieferdaten in Cent. Die
+Migrationen 016 und 017 ergänzen Kaufverträge, Angebotsversionen,
+Zustimmungsnachweise, Zustandsereignisse sowie Kopien und Verlängerungen.
+Käufer und Verkäufer sehen den Vorgang im Konto und können Übergabe, Empfang,
+externe Abwicklung, Stornierung und Streitfall dokumentieren. Bewertungen sind
+an abgeschlossene Vorgänge und deren Parteien gebunden. Die bestehenden
+Auktionsgebühren und der einmalige Rabatt je Auktionskette gelten weiterhin.
+
+Neue befristete Festpreis- und Verhandlungsinserate laufen standardmäßig 30 Tage.
+Die einmalige kostenlose Verlängerung setzt ein aktives, befristetes Inserat
+ohne Gebote oder Kauf voraus. Geschlossene allgemeine Inserate lassen sich als
+separate Entwürfe kopieren. Für verkaufte Ware sind verfügbarer Bestand und
+eine ausdrückliche Bestätigung erforderlich. Der Ablaufworker berücksichtigt
+auch allgemeine Inserate und offene Verhandlungen.
+
+Die Handelsbestätigung dokumentiert Vereinbarung und Erfüllung zwischen den
+Parteien. Plattformzahlungen, Treuhand und Erstattungen bleiben gesonderte
+Arbeitspakete mit ihren bestehenden Freigabesperren.
+
+Lokal 13 Handelsprüfungen, elf Laufzeitprüfungen und 22 vorhandene
+Auktions-Wiedereinstellungsprüfungen bestanden. Der Entwicklungsbranch hat
+zusätzliche isolierte MySQL-/HTTP- und Chromium-Prüfungen im bestehenden CI-Lauf.
+Ihr Ergebnis ist erst nach Prüfung des Joblogs bestätigt.
+
+Wiederaufnahmepunkt: CI für Migrationen 016/017, Handels- und Laufzeittests
+nachverfolgen und etwaige Fehler auf dem Entwicklungsbranch beheben. Nach dem
+Handelspaket folgt die noch offene Kategorieklassifizierung mit Suchfiltern.
+
 ## E2EE-Kern vollständig im isolierten System geprüft, 2026-11-14
 
 Codecommit `7ba5dfd79315da10f5d6f3282a9a4e7c246b5656`,

@@ -38,6 +38,73 @@ function relisting_source_eligible(array $source, array $events, bool $hasProxy,
         &&array_key_exists('amount_cents',$event)&&$event['amount_cents']===null;
 }
 
+/** Closed general-goods listings can be copied, never revived in place. */
+function relisting_general_eligible(array $source, array $events, bool $hasProxy, ?int $now=null): bool
+{
+    try { relisting_integer($source['id']??null); relisting_integer($source['seller_id']??null); } catch (DomainException) { return false; }
+    if (!in_array($source['type']??null,['fixed','negotiated'],true)
+        ||!in_array($source['status']??null,['archived','ended','sold'],true)||$hasProxy||$events!==[]
+        ||!array_key_exists('highest_bidder_id',$source)||$source['highest_bidder_id']!==null
+        ||!array_key_exists('current_bid_cents',$source)||$source['current_bid_cents']!==null) return false;
+    if ($source['status']==='ended') {
+        $end=relisting_timestamp($source['ends_at']??null);
+        if ($end===null||$end>($now??time())) return false;
+    }
+    return true;
+}
+
+/** Limited choices are deliberately independent of the auction's accepted fee tariff. */
+function relisting_extension_days(string $type): array
+{
+    return match($type) { 'auction'=>[1,3,7], 'fixed','negotiated'=>[7,14,30], default=>[] };
+}
+
+/** An existing future deadline is required; historical unlimited listings stay unlimited. */
+function relisting_extension_eligible(array $listing, bool $hasBidHistory, ?int $now=null): bool
+{
+    try { relisting_integer($listing['id']??null); relisting_integer($listing['seller_id']??null); } catch (DomainException) { return false; }
+    $end=relisting_timestamp($listing['ends_at']??null);
+    return ($listing['status']??null)==='active'&&relisting_extension_days((string)($listing['type']??''))!==[]
+        &&$end!==null&&$end>($now??time())&&!$hasBidHistory
+        &&array_key_exists('highest_bidder_id',$listing)&&$listing['highest_bidder_id']===null
+        &&array_key_exists('current_bid_cents',$listing)&&$listing['current_bid_cents']===null;
+}
+
+/** Bind confirmation to every visible/product state field, not just a second-granularity timestamp. */
+function relisting_extension_hash(array $listing): string
+{
+    $fields=['id','seller_id','category_id','title','description','type','status','price_cents','buyout_cents','shipping_cents',
+        'zip','city','country_code','latitude','longitude','pickup','shipping','condition_label','ends_at','updated_at',
+        'highest_bidder_id','current_bid_cents'];
+    $snapshot=[];
+    foreach ($fields as $field) {
+        if (!array_key_exists($field,$listing)||(!is_scalar($listing[$field])&&$listing[$field]!==null)) throw new DomainException(t('relisting.extension_conflict'));
+        $snapshot[$field]=$listing[$field]===null?null:(string)$listing[$field];
+    }
+    return hash('sha256',json_encode($snapshot,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+}
+
+/** UTC arithmetic from the current deadline; never shorten or reset to the request time. */
+function relisting_extension_deadline(array $listing, int $days, ?int $now=null): string
+{
+    if (!in_array($days,relisting_extension_days((string)($listing['type']??'')),true)
+        ||!relisting_extension_eligible($listing,false,$now)) throw new DomainException(t('relisting.extension_unavailable'));
+    $end=relisting_timestamp($listing['ends_at']);
+    $deadline=gmdate('Y-m-d H:i:s',$end+$days*86400);
+    if (relisting_timestamp($deadline)===null) throw new DomainException(t('relisting.extension_unavailable'));
+    return $deadline;
+}
+
+/** Caller holds the listing barrier, so bids/trades cannot appear after this check. */
+function relisting_has_bid_history(PDO $pdo, int $listingId, bool $lock=false): bool
+{
+    foreach (['market_proxy_bids','market_bids'] as $table) {
+        $q=$pdo->prepare('SELECT id FROM '.$table.' WHERE listing_id=? LIMIT 1'.($lock?' FOR SHARE':''));
+        $q->execute([$listingId]); if ($q->fetchColumn()!==false) return true;
+    }
+    return false;
+}
+
 /** Public GET eligibility helper; a locked call requires the lineage barrier first. */
 function relisting_source(PDO $pdo, int $seller, int $parentId, bool $lock=false): array
 {
@@ -49,7 +116,10 @@ function relisting_source(PDO $pdo, int $seller, int $parentId, bool $lock=false
     $q->execute([$parentId]); $hasProxy=$q->fetchColumn()!==false;
     $q=$pdo->prepare('SELECT event_type,idempotency_key,user_id,amount_cents FROM market_bids WHERE listing_id=? ORDER BY id LIMIT 2'.($lock?' FOR SHARE':''));
     $q->execute([$parentId]);
-    if (!relisting_source_eligible($source,$q->fetchAll(),$hasProxy)) throw new DomainException(t('relisting.unavailable'));
+    $events=$q->fetchAll();
+    if (in_array($source['type'],['fixed','negotiated'],true)) {
+        if (!relisting_general_eligible($source,$events,$hasProxy)||!trade_listing_available($pdo,$parentId)) throw new DomainException(t('relisting.general_unavailable'));
+    } elseif (!relisting_source_eligible($source,$events,$hasProxy)) throw new DomainException(t('relisting.unavailable'));
     return $source;
 }
 
@@ -188,10 +258,12 @@ function relisting_prepare_images(array $rows): array
 }
 
 /** Own transaction; only completed, unsold auction sources may create a new draft. */
-function relisting_create_draft(PDO $pdo, int $seller, int $parentId): int
+function relisting_create_draft(PDO $pdo, int $seller, int $parentId, bool $confirmInventory=false): int
 {
     if ($pdo->inTransaction()) throw new LogicException('Relisting draft creation owns its transaction.');
     if ($seller<1||$parentId<1) throw new DomainException(t('relisting.unavailable'));
+    $q=$pdo->prepare('SELECT type FROM market_listings WHERE id=? AND seller_id=?'); $q->execute([$parentId,$seller]);
+    if (in_array($q->fetchColumn(),['fixed','negotiated'],true)) return relisting_create_general_draft($pdo,$seller,$parentId,$confirmInventory);
     for ($attempt=0;$attempt<3;$attempt++) {
         $prepared=[]; $committing=false; $rolledBack=false;
         try {
@@ -243,6 +315,105 @@ function relisting_create_draft(PDO $pdo, int $seller, int $parentId): int
         }
     }
     throw new LogicException('Relisting retry exhausted.');
+}
+
+/** A separate lineage prevents a fixed-price copy from acquiring a free auction entitlement. */
+function relisting_create_general_draft(PDO $pdo, int $seller, int $parentId, bool $confirmInventory=false): int
+{
+    if ($pdo->inTransaction()) throw new LogicException('Relisting draft creation owns its transaction.');
+    if ($seller<1||$parentId<1) throw new DomainException(t('relisting.general_unavailable'));
+    for ($attempt=0;$attempt<3;$attempt++) {
+        $prepared=[]; $committing=false; $rolledBack=false;
+        try {
+            $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
+            $source=relisting_source($pdo,$seller,$parentId,true);
+            market_assert_users_active($pdo,[$seller]);
+            if (!in_array($source['type'],['fixed','negotiated'],true)) throw new DomainException(t('relisting.general_unavailable'));
+            if ($source['status']==='sold'&&!$confirmInventory) throw new DomainException(t('relisting.inventory_confirm'));
+            $q=$pdo->prepare('SELECT c.*,l.seller_id AS child_owner FROM market_listing_copies c JOIN market_listings l ON l.id=c.child_listing_id WHERE c.parent_listing_id=? FOR SHARE');
+            $q->execute([$parentId]); $link=$q->fetch();
+            if ($link) {
+                if ((int)$link['seller_id']!==$seller||(int)$link['child_owner']!==$seller||$link['source_type']!==$source['type']) throw new DomainException(t('relisting.extension_conflict'));
+                $committing=true; $pdo->commit(); return (int)$link['child_listing_id'];
+            }
+            if (!geo_country_locked_enabled($pdo,$source['country_code'])||!market_category_locked_allowed($pdo,(int)$source['category_id'])
+                ||!catalog_text_allowed($source['title'].' '.$source['description'])) throw new DomainException(t('relisting.general_unavailable'));
+            $q=$pdo->prepare('SELECT storage_key,position,width,height FROM market_images WHERE listing_id=? ORDER BY position FOR SHARE');
+            $q->execute([$parentId]); $prepared=relisting_prepare_images($q->fetchAll());
+            $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,buyout_cents,status,zip,city,country_code,latitude,longitude,pickup,shipping,shipping_cents,condition_label,auction_fee_eligible) VALUES (?,?,?,?,?,?,NULL,'draft',?,?,?,?,?,?,?,?,?,1)")
+                ->execute([$seller,$source['category_id'],$source['title'],$source['description'],$source['type'],$source['price_cents'],
+                    $source['zip'],$source['city'],$source['country_code'],$source['latitude'],$source['longitude'],$source['pickup'],$source['shipping'],$source['shipping_cents'],$source['condition_label']]);
+            $child=(int)$pdo->lastInsertId();
+            $pdo->prepare('INSERT INTO market_listing_copies(parent_listing_id,child_listing_id,seller_id,source_type,source_status,inventory_confirmed) VALUES (?,?,?,?,?,?)')
+                ->execute([$parentId,$child,$seller,$source['type'],$source['status'],(int)($source['status']==='sold'&&$confirmInventory)]);
+            foreach ($prepared as $position=>$image) {
+                $pdo->prepare('INSERT INTO market_images(listing_id,storage_key,position,width,height) VALUES (?,?,?,?,?)')->execute([$child,$image['key'],$position,$image['width'],$image['height']]);
+            }
+            audit_log($pdo,$seller,'listing.relist_draft_created',$child,['parent_listing_id'=>$parentId,'source_type'=>$source['type'],
+                'inventory_confirmed'=>$source['status']==='sold'&&$confirmInventory,'image_count'=>count($prepared)]);
+            $committing=true; $pdo->commit(); return $child;
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) { try { $pdo->rollBack(); $rolledBack=true; } catch (Throwable) {} }
+            if (!$committing||$rolledBack) market_remove_prepared_images($prepared);
+            $retry=$error instanceof PDOException&&($error->getCode()==='40001'||in_array((int)($error->errorInfo[1]??0),[1205,1213],true));
+            if (!$committing&&$retry&&!$pdo->inTransaction()&&$attempt<2) { usleep(random_int(5000,25000)); continue; }
+            throw $error;
+        }
+    }
+    throw new LogicException('General relisting retry exhausted.');
+}
+
+/** Read-only UI state. Mutations repeat every eligibility check under the listing lock. */
+function relisting_extension_context(PDO $pdo, int $seller, int $listingId): array
+{
+    if ($seller<1||$listingId<1) throw new DomainException(t('relisting.extension_unavailable'));
+    $q=$pdo->prepare('SELECT * FROM market_listings WHERE id=? AND seller_id=?'); $q->execute([$listingId,$seller]); $listing=$q->fetch();
+    if (!$listing) throw new DomainException(t('relisting.extension_unavailable'));
+    $q=$pdo->prepare('SELECT * FROM market_listing_extensions WHERE listing_id=? AND seller_id=?'); $q->execute([$listingId,$seller]); $event=$q->fetch();
+    if (!$event&&(!relisting_extension_eligible($listing,relisting_has_bid_history($pdo,$listingId))||!trade_listing_available($pdo,$listingId))) {
+        throw new DomainException(t('relisting.extension_unavailable'));
+    }
+    return ['listing'=>$listing,'hash'=>relisting_extension_hash($listing),'days'=>relisting_extension_days($listing['type']),'event'=>$event?:null];
+}
+
+/** Exactly one explicit extension, with compare-and-swap and replay of the same confirmation. */
+function relisting_extend(PDO $pdo, int $seller, int $listingId, int $days, string $snapshotHash): string
+{
+    if ($pdo->inTransaction()) throw new LogicException('Listing extension owns its transaction.');
+    if ($seller<1||$listingId<1||!preg_match('/\A[a-f0-9]{64}\z/',$snapshotHash)) throw new DomainException(t('relisting.extension_unavailable'));
+    $requestHash=hash('sha256',$snapshotHash.':'.$days);
+    for ($attempt=0;$attempt<3;$attempt++) {
+        $committing=false;
+        try {
+            $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
+            $q=$pdo->prepare('SELECT * FROM market_listings WHERE id=? AND seller_id=? FOR UPDATE'); $q->execute([$listingId,$seller]); $listing=$q->fetch();
+            if (!$listing) throw new DomainException(t('relisting.extension_unavailable'));
+            market_assert_users_active($pdo,[$seller]);
+            $q=$pdo->prepare('SELECT * FROM market_listing_extensions WHERE listing_id=? FOR SHARE'); $q->execute([$listingId]); $event=$q->fetch();
+            if ($event) {
+                if ((int)$event['seller_id']!==$seller||!hash_equals($event['request_hash'],$requestHash)) throw new DomainException(t('relisting.extension_used'));
+                $committing=true; $pdo->commit(); return $event['extended_ends_at'];
+            }
+            if (!hash_equals(relisting_extension_hash($listing),$snapshotHash)) throw new DomainException(t('relisting.extension_conflict'));
+            if (!relisting_extension_eligible($listing,relisting_has_bid_history($pdo,$listingId,true))||!trade_listing_available($pdo,$listingId)
+                ||!geo_country_locked_enabled($pdo,$listing['country_code'])||!market_category_locked_allowed($pdo,(int)$listing['category_id'])
+                ||!catalog_text_allowed($listing['title'].' '.$listing['description'])) throw new DomainException(t('relisting.extension_unavailable'));
+            $deadline=relisting_extension_deadline($listing,$days);
+            $q=$pdo->prepare("UPDATE market_listings SET ends_at=?,updated_at=UTC_TIMESTAMP() WHERE id=? AND seller_id=? AND status='active' AND ends_at=? AND ends_at>UTC_TIMESTAMP() AND highest_bidder_id IS NULL AND current_bid_cents IS NULL");
+            $q->execute([$deadline,$listingId,$seller,$listing['ends_at']]);
+            if ($q->rowCount()!==1) throw new DomainException(t('relisting.extension_conflict'));
+            $pdo->prepare('INSERT INTO market_listing_extensions(listing_id,seller_id,listing_type,original_ends_at,extended_ends_at,days,request_hash) VALUES (?,?,?,?,?,?,?)')
+                ->execute([$listingId,$seller,$listing['type'],$listing['ends_at'],$deadline,$days,$requestHash]);
+            audit_log($pdo,$seller,'listing.extended',$listingId,['original_ends_at'=>$listing['ends_at'],'extended_ends_at'=>$deadline,'days'=>$days,'fee_cents'=>0]);
+            $committing=true; $pdo->commit(); return $deadline;
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $retry=$error instanceof PDOException&&($error->getCode()==='40001'||in_array((int)($error->errorInfo[1]??0),[1205,1213],true));
+            if (!$committing&&$retry&&$attempt<2) { usleep(random_int(5000,25000)); continue; }
+            throw $error;
+        }
+    }
+    throw new LogicException('Listing extension retry exhausted.');
 }
 
 /** Quote helpers must not attach one seller's billing identity to another lineage. */

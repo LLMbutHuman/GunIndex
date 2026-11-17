@@ -12,6 +12,7 @@ if (!in_array($listing['status'],['draft','active','paused'],true) || market_has
 $decimal=static fn(int $amount):string=>intdiv($amount,100).'.'.str_pad((string)($amount%100),2,'0',STR_PAD_LEFT);
 $values=array_map(static fn($value):string=>(string)($value ?? ''),$listing);
 $values['price']=$decimal((int)$listing['price_cents']);
+$values['shipping_price']=$decimal((int)$listing['shipping_cents']);
 $values['buyout_price']=$listing['buyout_cents']===null?'':$decimal((int)$listing['buyout_cents']);
 $values['duration_days']='7'; $values['status']=$listing['status']==='draft'?'draft':'active';
 $pageTitle=t('Inserat bearbeiten'); $error='';
@@ -32,7 +33,7 @@ include __DIR__.'/../includes/header.php';
 ?>
 <main class="page"><div class="page-heading"><h1><?=h(t('Inserat bearbeiten'))?></h1></div>
 <?php if ($error!==''): ?><div class="notice notice-error" role="alert"><?= h($error) ?></div><?php endif; ?>
-<?php if (isset($_GET['relisted']) && $listing['status']==='draft' && relisting_context($pdo,(int)$user['id'],$listingId)!==null): ?><p class="notice" role="status"><?=h(t('relisting.draft_created'))?></p><?php endif; ?>
+<?php if (isset($_GET['relisted']) && $listing['status']==='draft'): ?><p class="notice" role="status"><?=h(t($listing['type']==='auction'?'relisting.draft_created':'relisting.general_draft_created'))?></p><?php endif; ?>
 <?php include __DIR__.'/../includes/market-form.php'; ?>
 </main>
 <?php include __DIR__.'/../includes/footer.php'; ?>
