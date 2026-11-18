@@ -79,7 +79,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 13 | Festpreis-Transaktion | B | Verkäuferfreigabe, konkurrierende Käufe, Centbeträge, Versand/Abholung, Abschluss, Storno und Streitfälle geprüft. Zahlungen und Treuhand separat in 23–26 |
 | 14 | Transaktionsbewertungen | A | Bewertungen nur durch echte Parteien nach Abschluss, einmal pro Partei. MySQL- und Browserprüfung grün |
 | 15 | Benachrichtigungen | A | Preis, Vorablauf und Ablauf in MySQL geprüft, getrenntes Opt-out im Browser und Warteschlangenstopp im Mail-Testtransport |
-| 16 | Geräte/Einzelsitzungen | C | Übersicht und Einzelwiderruf |
+| 16 | Geräte/Einzelsitzungen | A | Private Übersicht, Einzelwiderruf und Abmeldung mit Konto- und CSRF-Grenzen in MySQL/Chromium geprüft. Passwortwechselregression grün |
 | 17 | Benutzer-2FA/Passkeys | C | Optionale Benutzeranmeldung, Passkeys und Wiederherstellung |
 | 18 | Profilbilder/Händlerlogos | C | Sicherer Upload, Quoten und Integration |
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |

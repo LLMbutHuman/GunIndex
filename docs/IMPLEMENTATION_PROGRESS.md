@@ -2,6 +2,14 @@
 
 ## Private Inseratentwürfe und Vorschau
 
+Der gemeinsame Abschlusslauf
+[CI 44406392996](https://github.com/LLMbutHuman/GunIndex/actions/runs/44406392996)
+für `0c6c04f530a5e89d62b5bceba7b99a69c63393da` ist vollständig grün.
+Windowsjob `135162635719` und Linuxjob `135162636332` sind bestanden.
+Geprüft sind Migrationen 021–023, Entwürfe mit Bildübernahme, Preis- und
+Ablaufmeldungen, Einzelwiderruf und Passwortwechsel, neun neue Chromium-Fälle
+sowie die bestehenden E2EE-, Handels- und Betriebsregressionen.
+
 Migration 021 ergänzt getrennte private Arbeitsstände für neue und bestehende
 Inserate. Formulare speichern auch unvollständige Eingaben und aufbereitete
 Produktbilder automatisch. Ein Arbeitsstand pro Editor, maximal zwölf je Konto
@@ -56,8 +64,9 @@ für `906f284` bestand daraufhin Passwortwechsel, Sitzungs-MySQL-Tests und alle
 vier Sitzungsabläufe in Chromium. Der spätere E2EE-Netzwerktest konnte einen
 Antwortkörper beim Abschluss des Browserlaufs nicht mehr lesen. Der Test
 stoppt jetzt neue Anfragen und liest bereits erhaltene Antworten vor dem
-Schließen der Browserseiten. Der Abschlusslauf prüft die Regression erneut.
-Wiederaufnahmepunkt nach der Abnahme: optionale Benutzer-2FA und Passkeys.
+Schließen der Browserseiten. Der Abschlusslauf bestätigt den vollständigen
+E2EE-Netzwerknachweis mit allen 19 Browserfällen.
+Wiederaufnahmepunkt: optionale Benutzer-2FA und Passkeys.
 
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18
 
