@@ -69,9 +69,9 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 3 | Gebühren, Korrekturen, Rechnungen | C | Voller unbezahlter Erlass, verifizierte Erstattungen und Gebührenbindung bei erfolgloser Wiederholung geprüft; unbezahlte Teilkorrektur, weitere Durchlaufarten und Bestandsbehandlung offen |
 | 4 | Rechtsdokumentbindung | C | Bestehende Registrierungs-/Leistungsabläufe geprüft; neue Transaktionsarten und Pflichtzustimmung für Bestandskonten offen |
 | 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
-| 6 | Kategorieattribute | C | Typisierte Verwaltung und Validierung |
-| 7 | Produktklassifizierung | C | Durchgängige strukturierte Eingabe, Suche und Darstellung |
-| 8 | Autocomplete/Relevanz/Filter | C | Erweiterung und kombinierte End-to-End-Prüfung |
+| 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |
+| 7 | Produktklassifizierung | A | Validierte Werte in Inserat, Produktseite, Wiedereinstellung und Kaufnachweis. Bestehende Inserate beginnen ohne erfundene Werte |
+| 8 | Autocomplete/Relevanz/Filter | A | Öffentliche Titelvorschläge, Relevanzsortierung und kombinierte Merkmals-, Preis-, Länder- und Umkreissuche in MySQL und Chromium geprüft |
 | 9 | Entwurfs-Autosave/Vorschau | C | Automatische Speicherung und vollständige Vorschau |
 | 10 | Bildreihenfolge | A | Implementiert und geprüft |
 | 11 | Wiedereinstellen/Verlängern | A | Auktions-Gratisanspruch, Kopie geschlossener Festpreis-/Verhandlungsinserate und begrenzte einmalige Laufzeitverlängerung in MySQL/HTTP geprüft |

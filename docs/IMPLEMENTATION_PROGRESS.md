@@ -2,6 +2,13 @@
 
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18
 
+Code `26564a8fa6fc26d4c21e324dcd06e157603069cc` auf dem Entwicklungsbranch.
+[CI 44343065557](https://github.com/LLMbutHuman/GunIndex/actions/runs/44343065557)
+ist vollständig grün. Im Log bestätigt: Migrationen 019 und 020, PHP- und
+MySQL-Prüfungen, internationale Umkreissuche, vier Chromium-Fälle für Rechte,
+Kategorieumschaltung, Produktseite, Vorschläge, mobile Filter und das native
+Formular ohne JavaScript. Bestehende Regressionen und Abhängigkeitsaudits grün.
+
 Migration 019 ergänzt typisierte Attribute pro Kategorie und validierte
 Inseratwerte. Die Kategorieverwaltung erfordert `categories.manage` und MFA.
 Text, Dezimalzahl mit Einheit, Auswahl und Ja/Nein sind verfügbar. Pflichtfelder
@@ -19,12 +26,12 @@ Umkreis. Relevanz bevorzugt exakte Titel und Titeltreffer. Die Vorschläge
 verwenden einen Präfixindex (Migration 020) und berücksichtigen sichtbare
 Inserate, Konten, Kategorien und Länder. Eingaben erzeugen vorbereitete
 SQL-Parameter. Lokale PHP-, JavaScript- und Sprachprüfungen sind erfolgreich.
-Die MySQL-Prüfungen für `ded8174` in
-[CI 44341375406](https://github.com/LLMbutHuman/GunIndex/actions/runs/44341375406)
-sind grün. Der erste Chromium-Test traf beim Ausfüllen auch ein gleichnamiges
-Metadatenfeld. Der Selektor ist auf das Inseratformular beschränkt. Die Abnahme
-von Suche und korrigiertem Browserablauf erfolgt im nachfolgenden CI-Lauf.
-Wiederaufnahmepunkt nach der Abnahme: automatisches Speichern von Entwürfen
+Die Vorläufe 44341375406 und 44342407048 stoppten im Chromium-Test am
+mehrdeutigen Selektor für die Beschreibung. Der korrigierte Selektor wurde
+im grünen Abschlusslauf ausgeführt. Titelvorschläge sind auf acht öffentliche
+Präfixtreffer begrenzt. Die Relevanzsuche bevorzugt Titel ohne externe Dienste.
+
+Wiederaufnahmepunkt: automatisches Speichern von Entwürfen
 und vollständige private Veröffentlichungsvorschau.
 
 ## Handelsabläufe und Inseratslaufzeit, 2026-11-17
