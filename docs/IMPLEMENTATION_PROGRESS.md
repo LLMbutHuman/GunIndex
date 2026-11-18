@@ -19,7 +19,11 @@ Umkreis. Relevanz bevorzugt exakte Titel und Titeltreffer. Die Vorschläge
 verwenden einen Präfixindex (Migration 020) und berücksichtigen sichtbare
 Inserate, Konten, Kategorien und Länder. Eingaben erzeugen vorbereitete
 SQL-Parameter. Lokale PHP-, JavaScript- und Sprachprüfungen sind erfolgreich.
-Die neuen isolierten MySQL- und Chromium-Prüfungen laufen über GitHub-CI.
+Die MySQL-Prüfungen für `ded8174` in
+[CI 44341375406](https://github.com/LLMbutHuman/GunIndex/actions/runs/44341375406)
+sind grün. Der erste Chromium-Test traf beim Ausfüllen auch ein gleichnamiges
+Metadatenfeld. Der Selektor ist auf das Inseratformular beschränkt. Die Abnahme
+von Suche und korrigiertem Browserablauf erfolgt im nachfolgenden CI-Lauf.
 Wiederaufnahmepunkt nach der Abnahme: automatisches Speichern von Entwürfen
 und vollständige private Veröffentlichungsvorschau.
 

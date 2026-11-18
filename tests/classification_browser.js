@@ -38,7 +38,7 @@ const origin = 'http://127.0.0.1:8081';
     await page.locator(input('attributes',attributes.width)).waitFor();
     assert.equal(await page.locator(input('attributes',attributes.width)).inputValue(),'51,125');
     await page.locator('[name=title]').fill(title);
-    await page.locator('[name=description]').fill('An ordinary synthetic desk published through the full listing form.');
+    await page.locator('[data-listing-form] textarea[name=description]').fill('An ordinary synthetic desk published through the full listing form.');
     await page.locator('[name=price]').fill('23.50');
     await page.locator('[name=accept_rules]').check();
     await Promise.all([page.waitForURL('**/user/dashboard.php?saved=*'),page.locator('[data-listing-save]').click()]);
