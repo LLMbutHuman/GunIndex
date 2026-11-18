@@ -1,5 +1,25 @@
 # Implementierungsfortschritt
 
+## Kategorieattribute und Produktklassifizierung, 2026-11-18
+
+Migration 019 ergänzt typisierte Attribute pro Kategorie und validierte
+Inseratwerte. Die Kategorieverwaltung erfordert `categories.manage` und MFA.
+Text, Dezimalzahl mit Einheit, Auswahl und Ja/Nein sind verfügbar. Pflichtfelder
+gelten beim Veröffentlichen und erneuten Veröffentlichen. Bestehende Inserate
+bleiben sichtbar und erhalten keine automatisch erzeugten Produktangaben.
+Deaktivierte Merkmale behalten ihre Werte für eine spätere Reaktivierung.
+
+Artikelbearbeitung, öffentlicher Artikel, kombinierte Suchfilter, Wiedereinstellung
+und Checkout sind verbunden. Der Kauf speichert die tatsächlich angezeigten
+Merkmale mit dem unveränderlichen Vorgang. Die neue Bedienung ist in acht
+Sprachen verfügbar. Bezeichnungen und Optionen werden von der Verwaltung verfasst.
+
+Lokale PHP-, JavaScript- und Sprachprüfungen erfolgreich. Die neuen isolierten
+MySQL- und Chromium-Prüfungen laufen über die bestehende GitHub-CI.
+Wiederaufnahmepunkt nach erfolgreicher Abnahme: Autocomplete und Relevanzsuche
+an denselben öffentlichen Katalog anbinden und mit strukturierten, Landes- und
+Umkreisfiltern prüfen.
+
 ## Handelsabläufe und Inseratslaufzeit, 2026-11-17
 
 Codecommit `100fde78cc060558bd7b6defb0ab90ed92567ed4` auf dem Entwicklungsbranch,

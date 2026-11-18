@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
+require_once __DIR__.'/../includes/classification-fields.php';
 $filters=[];
 foreach(['q','category_id','type','min_price','max_price','sort','country_code','scope','zip','origin_country','radius_km'] as $key){
     if(isset($_GET[$key])&&!is_string($_GET[$key]))abort_request(400,t('Ungültiger Suchfilter.'));
@@ -14,6 +15,11 @@ if($filters['sort']==='')$filters['sort']='newest';
 $page=isset($_GET['page'])&&is_string($_GET['page'])?filter_var($_GET['page'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>10000]]):1;
 if(!$page)abort_request(400,t('Ungültige Ergebnisseite.'));
 $categories=catalog_categories($pdo);$countries=geo_active_countries($pdo);$error='';
+foreach(['attributes','attribute_min','attribute_max'] as $key){
+    if(isset($_GET[$key])&&!is_array($_GET[$key]))abort_request(400,t('classification.invalid'));
+    if(isset($_GET[$key]))$filters[$key]=$_GET[$key];
+}
+$attributeCategory=(int)$filters['category_id'];
 try{$results=market_search($pdo,$filters,(int)$page,24);}catch(InvalidArgumentException $e){http_response_code(422);$error=t($e->getMessage());$results=['items'=>[],'total'=>0];}
 $pageTitle=$filters['q']?t('Suche: {query}',['query'=>$filters['q']]):t('Entdecken');
 include __DIR__.'/../includes/header.php';
@@ -34,6 +40,9 @@ include __DIR__.'/../includes/header.php';
 <label class="field"><?=h(t('Suchradius'))?><select name="radius_km"><option value=""><?=h(t('Exakte PLZ'))?></option><?php foreach([5,10,25,50,100,250,500,1000,2000] as $radius):?><option value="<?=$radius?>" <?=$filters['radius_km']===(string)$radius?'selected':''?>><?=$radius?> km</option><?php endforeach;?></select></label>
 <label class="field"><?=h(t('Sortierung'))?><select name="sort"><?php foreach(['newest'=>'Neueste zuerst','price_asc'=>'Preis aufsteigend','price_desc'=>'Preis absteigend','ending'=>'Bald endende Auktionen','distance'=>'Nächste zuerst'] as $value=>$label):?><option value="<?=h($value)?>" <?=$filters['sort']===$value?'selected':''?>><?=h(t($label))?></option><?php endforeach;?></select></label>
 <button class="button" type="submit"><?=h(t('Anzeigen'))?> <?=ui_icon('arrow')?></button></div>
+<div data-classification-mode="search" data-classification-error="<?=h(t('classification.reload'))?>">
+<?php if(in_array($attributeCategory,array_column($categories,'id'),true))classification_fields(classification_definitions($pdo,$attributeCategory),$filters,true);?>
+</div>
 <p class="help"><?=h(t('Entfernungen sind ungefähre Luftlinien zwischen PLZ-Mittelpunkten, keine Straßenentfernungen.'))?></p>
 <p class="help"><?=h(t('Preise werden in EUR angezeigt. Es erfolgt keine automatische Währungsumrechnung.'))?></p>
 </form>

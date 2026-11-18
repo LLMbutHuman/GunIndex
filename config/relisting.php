@@ -299,6 +299,7 @@ function relisting_create_draft(PDO $pdo, int $seller, int $parentId, bool $conf
                 ->execute([$seller,$source['category_id'],$source['title'],$source['description'],$source['price_cents'],$source['buyout_cents'],
                     $source['zip'],$source['city'],$source['country_code'],$source['latitude'],$source['longitude'],$source['pickup'],$source['shipping'],$source['condition_label']]);
             $child=(int)$pdo->lastInsertId();
+            classification_copy($pdo,$parentId,$child);
             $pdo->prepare('INSERT INTO market_relistings(parent_listing_id,child_listing_id,root_listing_id,seller_id) VALUES (?,?,?,?)')->execute([$parentId,$child,$root,$seller]);
             foreach ($prepared as $position=>$image) {
                 $pdo->prepare('INSERT INTO market_images(listing_id,storage_key,position,width,height) VALUES (?,?,?,?,?)')->execute([$child,$image['key'],$position,$image['width'],$image['height']]);
@@ -344,6 +345,7 @@ function relisting_create_general_draft(PDO $pdo, int $seller, int $parentId, bo
                 ->execute([$seller,$source['category_id'],$source['title'],$source['description'],$source['type'],$source['price_cents'],
                     $source['zip'],$source['city'],$source['country_code'],$source['latitude'],$source['longitude'],$source['pickup'],$source['shipping'],$source['shipping_cents'],$source['condition_label']]);
             $child=(int)$pdo->lastInsertId();
+            classification_copy($pdo,$parentId,$child);
             $pdo->prepare('INSERT INTO market_listing_copies(parent_listing_id,child_listing_id,seller_id,source_type,source_status,inventory_confirmed) VALUES (?,?,?,?,?,?)')
                 ->execute([$parentId,$child,$seller,$source['type'],$source['status'],(int)($source['status']==='sold'&&$confirmInventory)]);
             foreach ($prepared as $position=>$image) {

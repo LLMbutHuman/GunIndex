@@ -1,6 +1,46 @@
 /* Local progressive enhancement. Every core workflow also uses native forms. */
 (() => {
   'use strict';
+  document.querySelectorAll('[data-classification-mode]').forEach(fields => {
+    const form = fields.closest('form');
+    const category = form?.elements.namedItem('category_id');
+    if (!(category instanceof HTMLSelectElement)) return;
+    let currentCategory = category.value;
+    let request;
+    const saved = new Map();
+    category.addEventListener('change', async () => {
+      request?.abort();
+      if (currentCategory) {
+        saved.set(currentCategory, [...fields.querySelectorAll('input,select')].map(input => [input.name, input.value]));
+      }
+      currentCategory = '';
+      fields.replaceChildren();
+      fields.removeAttribute('aria-busy');
+      const selected = category.value;
+      if (!selected) return;
+      const controller = new AbortController();
+      request = controller;
+      const query = new URLSearchParams({ category_id: selected, mode: fields.dataset.classificationMode });
+      fields.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch('/marketplace/category-fields.php?' + query, { signal: controller.signal });
+        if (!response.ok) throw new Error('Attribute fields unavailable');
+        const markup = await response.text();
+        if (controller.signal.aborted) return;
+        // Same-origin fragment with all administrator-authored values escaped by PHP.
+        fields.innerHTML = markup;
+        currentCategory = selected;
+        for (const [name, value] of saved.get(selected) ?? []) {
+          const input = form.elements.namedItem(name);
+          if (input) input.value = value;
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) fields.textContent = fields.dataset.classificationError;
+      } finally {
+        if (controller === request) fields.removeAttribute('aria-busy');
+      }
+    });
+  });
   document.querySelectorAll('[data-listing-form]').forEach(form => {
     const paid = form.querySelector('[data-auction-publish]');
     if (!paid) return;

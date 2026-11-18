@@ -45,6 +45,7 @@ $pageTitle=t('trade.checkout');include __DIR__.'/../includes/header.php';
 <h2><?=h($listing['title'])?></h2>
 <p><a href="/marketplace/view-item.php?id=<?=$listingId?>"><?=h(t('trade.view_listing'))?></a></p>
 <details><summary><?=h(t('trade.description'))?></summary><div class="trade-text"><?=h($listing['description'])?></div></details>
+<?php require_once __DIR__.'/../includes/classification-fields.php'; classification_summary($quote['attributes']); ?>
 <?php if($offerId===null&& !empty($listing['pickup'])&& !empty($listing['shipping'])):?>
 <form method="get" action="/user/checkout.php"><input type="hidden" name="listing_id" value="<?=$listingId?>">
 <label><?=h(t('trade.delivery'))?><select name="delivery"><option value="pickup" <?=$quote['delivery']==='pickup'?'selected':''?>><?=h(t('trade.delivery.pickup'))?></option><option value="shipping" <?=$quote['delivery']==='shipping'?'selected':''?>><?=h(t('trade.delivery.shipping'))?></option></select></label>

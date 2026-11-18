@@ -44,7 +44,7 @@ include __DIR__ . '/../includes/header.php';
             </form>
         </section>
         <section class="panel"><h2>Kategoriebaum <span class="muted">· <?= count($categories) ?></span></h2><div class="table-wrap"><table class="data-table"><thead><tr><th>Kategorie</th><th>Kennung</th><th>Status</th><th>Aktion</th></tr></thead><tbody>
-            <?php foreach ($categories as $category): ?><tr><td><?= h(str_repeat('— ', min(20, (int)$category['depth'])) . $category['name']) ?></td><td><?= h($category['slug']) ?></td><td><span class="status"><?= $category['available'] ? 'Verfügbar' : ($category['is_active'] ? 'Durch Vorfahr gesperrt' : 'Deaktiviert') ?></span></td><td><a href="/admin/categories.php?edit=<?= (int)$category['id'] ?>">Bearbeiten ↗</a></td></tr><?php endforeach; ?>
+            <?php foreach ($categories as $category): ?><tr><td><?= h(str_repeat('— ', min(20, (int)$category['depth'])) . $category['name']) ?></td><td><?= h($category['slug']) ?></td><td><span class="status"><?= $category['available'] ? 'Verfügbar' : ($category['is_active'] ? 'Durch Vorfahr gesperrt' : 'Deaktiviert') ?></span></td><td><a href="/admin/categories.php?edit=<?= (int)$category['id'] ?>">Bearbeiten ↗</a> · <a href="/admin/category-attributes.php?category_id=<?=(int)$category['id']?>"><?=h(t('classification.admin'))?></a></td></tr><?php endforeach; ?>
             <?php if ($categories === []): ?><tr><td colspan="4">Noch keine Kategorien. Lege die erste Hauptkategorie an.</td></tr><?php endif; ?>
         </tbody></table></div></section>
         <p class="muted">Eine Kategorie erteilt keine rechtliche Produktfreigabe. Regulierte Waren bleiben vom allgemeinen Handel ausgeschlossen. Historische Angebote werden nicht automatisch übernommen.</p>

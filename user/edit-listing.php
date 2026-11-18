@@ -13,13 +13,14 @@ $decimal=static fn(int $amount):string=>intdiv($amount,100).'.'.str_pad((string)
 $values=array_map(static fn($value):string=>(string)($value ?? ''),$listing);
 $values['price']=$decimal((int)$listing['price_cents']);
 $values['shipping_price']=$decimal((int)$listing['shipping_cents']);
+$values['attributes']=array_column(classification_entries($pdo,$listingId),'value','id');
 $values['buyout_price']=$listing['buyout_cents']===null?'':$decimal((int)$listing['buyout_cents']);
 $values['duration_days']='7'; $values['status']=$listing['status']==='draft'?'draft':'active';
 $pageTitle=t('Inserat bearbeiten'); $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     require_csrf(); $values=$_POST;
     $values['pickup']=$_POST['pickup'] ?? '0'; $values['shipping']=$_POST['shipping'] ?? '0';
-    try {
+    if (($_POST['load_attributes']??null)!=='1') try {
         market_save_listing($pdo,(int)$user['id'],$_POST,$_FILES['images'] ?? [],$listingId);
         redirect('/user/dashboard.php?saved='.$listingId);
     } catch (InvalidArgumentException|DomainException|PaymentUnavailable|MarketAccessException|MarketConflictException $exception) {

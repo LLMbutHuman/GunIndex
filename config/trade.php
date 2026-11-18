@@ -23,6 +23,7 @@ function trade_listing_hash(array $listing): string
     $fields=['id','seller_id','category_id','title','description','type','price_cents','shipping_cents','pickup','shipping',
         'country_code','zip','city','condition_label','ends_at'];
     $data=[]; foreach($fields as $key) $data[$key]=isset($listing[$key])?(string)$listing[$key]:null;
+    if(isset($listing['attribute_digest']))$data['attribute_digest']=$listing['attribute_digest'];
     return hash('sha256',trade_json($data));
 }
 
@@ -96,10 +97,17 @@ function trade_quote_for(PDO $pdo,int $actor,array $listing,string $delivery,?in
         $proposed=consent_documents($pdo,'checkout',$offer['consent_locale'],$lock);
         if(!hash_equals($offer['consent_hash'],trade_consent_hash($proposed)))throw new DomainException(t('trade.changed'));
     }
-    $hash=hash('sha256',trade_json([trade_listing_hash($listing),$actor,$delivery,$price,$shipping,$offerId,
-        $offer['proposer_id']??null,$offer['expires_at']??null,$locale,array_column($documents,'content_hash','id')]));
+    $attributes=classification_entries($pdo,(int)$listing['id']);
+    if($offer!==null){
+        $proposedSnapshot=json_decode(crypto_decrypt('trade_snapshot',$offer['snapshot_cipher']),true,32,JSON_THROW_ON_ERROR);
+        if(($proposedSnapshot['attributes']??[])!==$attributes)throw new DomainException(t('trade.changed'));
+    }
+    $terms=[trade_listing_hash($listing),$actor,$delivery,$price,$shipping,$offerId,
+        $offer['proposer_id']??null,$offer['expires_at']??null,$locale,array_column($documents,'content_hash','id')];
+    if($attributes)$terms[]=$attributes;
+    $hash=hash('sha256',trade_json($terms));
     return ['listing'=>$listing,'hash'=>$hash,'documents'=>$documents,'locale'=>$locale,'delivery'=>$delivery,
-        'price_cents'=>$price,'shipping_cents'=>$shipping,'total_cents'=>$price+$shipping,'offer'=>$offer];
+        'price_cents'=>$price,'shipping_cents'=>$shipping,'total_cents'=>$price+$shipping,'offer'=>$offer,'attributes'=>$attributes];
 }
 
 function trade_quote(PDO $pdo,int $actor,int $listing,string $delivery,?int $offerId=null): array
@@ -153,6 +161,7 @@ function trade_purchase(PDO $pdo,int $actor,int $listing,array $input,?int $offe
         $q=$pdo->prepare('SELECT id FROM market_trades WHERE listing_id=? FOR UPDATE');$q->execute([$listing]);
         if($q->fetchColumn()!==false)throw new DomainException(t('trade.unavailable'));
         $snapshot=trade_snapshot($row,$buyer,$quote['delivery'],$quote['price_cents'],$quote['shipping_cents']);
+        $snapshot['attributes']=$quote['attributes'];
         $q=$pdo->prepare('INSERT INTO market_trades(reference,listing_id,seller_id,buyer_id,offer_id,delivery,price_cents,shipping_cents,total_cents,snapshot_cipher,request_actor,request_key,request_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $q->execute(['GT-'.strtoupper(bin2hex(random_bytes(10))),$listing,$row['seller_id'],$buyer,$offerId,$quote['delivery'],$quote['price_cents'],$quote['shipping_cents'],$quote['total_cents'],crypto_encrypt('trade_snapshot',trade_json($snapshot)),$actor,$key,$hash]);
         $id=(int)$pdo->lastInsertId();trade_receipts($pdo,$actor,$id,null,$quote['documents']);
@@ -195,6 +204,7 @@ function trade_offer_create(PDO $pdo,int $actor,int $listing,array $input): int
         $locale=i18n_locale();$documents=consent_check($pdo,'checkout',$input,$locale);
         if($parent!==null)$pdo->prepare("UPDATE market_trade_offers SET status='countered' WHERE id=?")->execute([$parent]);
         $snapshot=trade_snapshot($row,$buyer,$delivery,$amount,$shipping);
+        $snapshot['attributes']=classification_entries($pdo,$listing);
         $q=$pdo->prepare('INSERT INTO market_trade_offers(listing_id,seller_id,buyer_id,proposer_id,parent_id,delivery,price_cents,shipping_cents,total_cents,listing_hash,snapshot_cipher,request_key,request_hash,expires_at,consent_locale,consent_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $q->execute([$listing,$row['seller_id'],$buyer,$actor,$parent,$delivery,$amount,$shipping,$amount+$shipping,trade_listing_hash($row),crypto_encrypt('trade_snapshot',trade_json($snapshot)),$key,$hash,gmdate('Y-m-d H:i:s',time()+$hours*3600),$locale,trade_consent_hash($documents)]);
         $id=(int)$pdo->lastInsertId();trade_receipts($pdo,$actor,null,$id,$documents);

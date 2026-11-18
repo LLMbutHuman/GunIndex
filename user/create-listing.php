@@ -8,7 +8,7 @@ $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     require_csrf(); $values=$_POST;
     $values['pickup']=$_POST['pickup'] ?? '0'; $values['shipping']=$_POST['shipping'] ?? '0';
-    try {
+    if (($_POST['load_attributes']??null)!=='1') try {
         $id=market_save_listing($pdo,(int)$user['id'],$_POST,$_FILES['images'] ?? []);
         redirect('/user/dashboard.php?saved='.$id);
     } catch (InvalidArgumentException|DomainException|PaymentUnavailable|MarketAccessException|MarketConflictException $exception) {

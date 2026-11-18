@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/classification-fields.php';
 $field=static function(string $key,string $fallback='') use ($values):string { $value=$values[$key] ?? $fallback; return is_string($value)?$value:$fallback; };
+$attributeCategory=(int)$field('category_id');
+$attributeValues=['attributes'=>is_array($values['attributes']??null)?$values['attributes']:[]];
 ?>
 <form method="post" enctype="multipart/form-data" class="panel listing-form" data-listing-form>
 <?= csrf_field() ?>
@@ -22,6 +25,10 @@ $field=static function(string $key,string $fallback='') use ($values):string { $
 <label class="field span-2"> <?=h(t('Produktbilder'))?> <input name="images[]" type="file" accept="image/jpeg,image/png,image/webp" multiple><small><?=h(t('Bis zu fünf Bilder insgesamt, je maximal 5 MiB und 20 Megapixel. JPEG, PNG und WebP werden sicher neu codiert. Keine Ausweise oder anderen Identitätsdokumente hochladen. Bereits gespeicherte Bilder bleiben erhalten.'))?></small></label>
 <label class="field"> <?=h(t('Veröffentlichung'))?> <select name="status"><option value="active" <?= $field('status','active')==='active'?'selected':'' ?>> <?=h(t('Veröffentlichen'))?> </option><option value="draft" <?= $field('status')==='draft'?'selected':'' ?>> <?=h(t('Als Entwurf speichern'))?> </option></select></label>
 </div>
+<div data-classification-mode="listing" data-classification-error="<?=h(t('classification.reload'))?>">
+<?php if(in_array($attributeCategory,array_column($categories,'id'),true))classification_fields(classification_definitions($pdo,$attributeCategory),$attributeValues,false);?>
+</div>
+<button class="button secondary" type="submit" name="load_attributes" value="1" formnovalidate><?=h(t('classification.load'))?></button>
 <?php if (($existingImageCount ?? 0)>0): ?><p class="muted"><?= (int)$existingImageCount ?><?=h(t('Produktbild(er) bereits gespeichert.'))?></p><?php endif; ?>
 <?php if (!empty($existingImageRows)): ?>
 <fieldset class="panel"><legend><?=h(t('image_order.title'))?></legend>

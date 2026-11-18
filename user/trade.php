@@ -42,6 +42,7 @@ $pageTitle=t('trade.transaction',['reference'=>$trade['reference']]);include __D
 <p><a href="/user/chat.php?listing_id=<?=(int)$trade['listing_id']?>&amp;user_id=<?=$peer?>"><?=h(t('Nachrichten'))?></a></p><?php endif;?>
 <p class="trade-meta"><?=h(t('trade.snapshot_notice'))?></p>
 <details><summary><?=h(t('trade.description'))?></summary><div class="trade-text"><?=h($snapshot['description'])?></div></details>
+<?php require_once __DIR__.'/../includes/classification-fields.php'; classification_summary($snapshot['attributes']??[]); ?>
 <dl class="trade-terms"><dt><?=h(t('trade.price'))?></dt><dd><?=h(money_eur((int)$trade['price_cents']))?></dd><dt><?=h(t('trade.delivery'))?></dt><dd><?=h(t('trade.delivery.'.$trade['delivery']))?></dd><dt><?=h(t('trade.shipping_cost'))?></dt><dd><?=h(money_eur((int)$trade['shipping_cents']))?></dd><dt class="trade-total"><?=h(t('trade.total'))?></dt><dd class="trade-total"><?=h(money_eur((int)$trade['total_cents']))?></dd></dl>
 <p class="trade-note"><?=h(t('trade.payment_notice'))?></p>
 <dl class="trade-terms"><dt><?=h(t('trade.buyer_confirmation'))?></dt><dd><?=h(t(!empty($trade['buyer_confirmed'])?'trade.confirmed':'trade.pending'))?></dd><dt><?=h(t('trade.seller_confirmation'))?></dt><dd><?=h(t(!empty($trade['seller_confirmed'])?'trade.confirmed':'trade.pending'))?></dd></dl>
