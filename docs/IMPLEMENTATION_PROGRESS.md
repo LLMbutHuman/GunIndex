@@ -51,7 +51,12 @@ Lokale Syntax-, Sitzungs-, Sprach- und Authentifizierungsprüfungen sind grün.
 für `be03fd2` hat Migration 023 angewendet. Die HTTP-Regression beim
 Passwortwechsel fand einen alten Aufruf zum Anlegen der Folgesitzung.
 Profiländerungen mit Sitzungswechsel verwenden jetzt ebenfalls das Register.
-Die MySQL- und Chromium-Abnahme erfolgt im Folgelauf.
+[CI 44404747860](https://github.com/LLMbutHuman/GunIndex/actions/runs/44404747860)
+für `906f284` bestand daraufhin Passwortwechsel, Sitzungs-MySQL-Tests und alle
+vier Sitzungsabläufe in Chromium. Der spätere E2EE-Netzwerktest konnte einen
+Antwortkörper beim Abschluss des Browserlaufs nicht mehr lesen. Der Test
+stoppt jetzt neue Anfragen und liest bereits erhaltene Antworten vor dem
+Schließen der Browserseiten. Der Abschlusslauf prüft die Regression erneut.
 Wiederaufnahmepunkt nach der Abnahme: optionale Benutzer-2FA und Passkeys.
 
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18

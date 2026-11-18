@@ -18,6 +18,8 @@ const fileBytes = Buffer.from('Encrypted file canary ' + token + '\nUnicode: \u0
 const probes = new Set([password, firstMessage, sharedMessage, futureMessage, lockedDraft, filename, fileBytes.toString('utf8')]);
 const checks = [], pageErrors = [], external = [], wire = [], pendingResponses = [];
 const expectedAborts = new WeakSet();
+const activeApiRequests = new Set();
+let freezeApiRequests = false;
 let phase = 'setup';
 
 function invariant(condition, message) { if(!condition){const error=new Error('Browser invariant failed');error.name='AssertionError';error.safeCheck=message;throw error;} }
@@ -28,6 +30,7 @@ function fixture(operation, fields = {}) {
   return JSON.parse(output.toString('utf8'));
 }
 function isLocal(url) { return url.startsWith(origin + '/'); }
+function isE2eeApi(url) { return url.startsWith(origin + '/user/e2ee-api.php'); }
 function privateFree(buffer) {
   for (const probe of probes) {
     const encodings = [probe, encodeURIComponent(probe), Buffer.from(probe).toString('base64'), Buffer.from(probe).toString('base64url'), JSON.stringify(probe).slice(1, -1)];
@@ -81,16 +84,27 @@ async function login(context, user, path) {
 }
 async function context(browser) {
   const result = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', acceptDownloads: true });
-  await result.route('**/*', route => isLocal(route.request().url()) ? route.continue() : route.abort());
+  await result.route('**/*', route => {
+    const request=route.request();
+    if (freezeApiRequests&&isE2eeApi(request.url())) {
+      expectedAborts.add(request);
+      return route.abort();
+    }
+    return isLocal(request.url()) ? route.continue() : route.abort();
+  });
   result.on('request', request => {
     if (!isLocal(request.url())) external.push(new URL(request.url()).protocol);
     wire.push(Buffer.from(request.url()));
     const body = request.postDataBuffer(); if (body) wire.push(body);
+    if (!freezeApiRequests&&isE2eeApi(request.url())) activeApiRequests.add(request);
   });
+  result.on('requestfinished',request=>activeApiRequests.delete(request));
+  result.on('requestfailed',request=>activeApiRequests.delete(request));
   result.on('response', response => {
-    if (response.url().startsWith(origin + '/user/e2ee-api.php')) {
+    if (isE2eeApi(response.url())) {
+      const responsePhase=phase;
       const read = response.body().then(body => wire.push(body)).catch(() => {
-        if (!expectedAborts.has(response.request())) throw Error('Unable to inspect E2EE response');
+        if (!expectedAborts.has(response.request())) invariant(false,'Unreadable E2EE response in '+responsePhase);
       });
       // Keep rejection handled until the final explicit assertion.
       read.catch(() => {}); pendingResponses.push(read);
@@ -453,10 +467,14 @@ async function storageIsPrivate(page) {
       }
     }
     for (const page of [seller, buyer, second]) await storageIsPrivate(page);
-    // Close contexts before checking pending response reads, so periodic polling
-    // cannot add an unchecked response after the final network audit.
+    // Stop new API traffic and drain existing responses before closing pages.
+    freezeApiRequests=true;
+    const drainDeadline=Date.now()+10000;
+    while (activeApiRequests.size>0&&Date.now()<drainDeadline) await new Promise(resolve=>setTimeout(resolve,25));
+    invariant(activeApiRequests.size===0,'E2EE network audit did not drain');
+    await Promise.all(pendingResponses);
     for (const page of [seller, buyer, second, stranger]) await page.close();
-    await Promise.all(pendingResponses); for (const bytes of wire) privateFree(bytes);
+    for (const bytes of wire) privateFree(bytes);
     assert.equal(pageErrors.length, 0); assert.equal(external.length, 0);
     checks.push('no_private_plaintext_in_http_browser_storage_server_rows_or_attachment_files');
     return { result: 'PASS', checks, js_errors: 0, external_requests: 0, scope: 'Synthetic Chromium UI with real browser OpenPGP; no production or independent cryptographic approval' };
