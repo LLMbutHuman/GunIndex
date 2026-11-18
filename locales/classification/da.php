@@ -29,4 +29,6 @@ return [
     'classification.kind.boolean' => 'Ja/Nej',
     'classification.yes' => 'Ja',
     'classification.no' => 'Nej',
+    'classification.relevance' => 'Bedste resultater',
+    'classification.search_invalid' => 'Forkort søgeteksten, og brug højst tolv søgeord.',
 ];

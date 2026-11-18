@@ -49,6 +49,8 @@ const origin = 'http://127.0.0.1:8081';
 
     await page.goto(origin+'/marketplace/search.php');
     await page.locator('main [name=category_id]').selectOption(String(categories.main));
+    await page.locator('main [name=q]').fill('Synthetic classification desk');
+    await page.locator('datalist option[value="'+title+'"]').waitFor({state:'attached'});
     await page.locator('main [name=q]').fill(tag);
     await page.locator(input('attribute_min',attributes.width)).fill('51.125');
     await page.locator(input('attribute_max',attributes.width)).fill('52');
@@ -57,7 +59,7 @@ const origin = 'http://127.0.0.1:8081';
     assert.equal(await page.locator('main .listing-card').filter({hasText:title}).count(),1);
     assert.equal(await page.locator(input('attribute_min',attributes.width)).inputValue(),'51.125');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true);
-    assertions.push('combined_filters_and_mobile_layout');
+    assertions.push('autocomplete_combined_filters_and_mobile_layout');
 
     const basic = await browser.newContext({javaScriptEnabled:false});
     const noJs = await login(basic);

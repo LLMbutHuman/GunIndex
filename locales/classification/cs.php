@@ -29,4 +29,6 @@ return [
     'classification.kind.boolean' => 'Ano/Ne',
     'classification.yes' => 'Ano',
     'classification.no' => 'Ne',
+    'classification.relevance' => 'Nejlepší shody',
+    'classification.search_invalid' => 'Zkraťte hledaný text a použijte nejvýše dvanáct slov.',
 ];

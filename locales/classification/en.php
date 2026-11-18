@@ -29,4 +29,6 @@ return [
     'classification.kind.boolean' => 'Yes/No',
     'classification.yes' => 'Yes',
     'classification.no' => 'No',
+    'classification.relevance' => 'Best matches',
+    'classification.search_invalid' => 'Shorten your search and use no more than twelve search terms.',
 ];

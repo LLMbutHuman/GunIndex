@@ -28,7 +28,6 @@ $attributeValues=['attributes'=>is_array($values['attributes']??null)?$values['a
 <div data-classification-mode="listing" data-classification-error="<?=h(t('classification.reload'))?>">
 <?php if(in_array($attributeCategory,array_column($categories,'id'),true))classification_fields(classification_definitions($pdo,$attributeCategory),$attributeValues,false);?>
 </div>
-<button class="button secondary" type="submit" name="load_attributes" value="1" formnovalidate><?=h(t('classification.load'))?></button>
 <?php if (($existingImageCount ?? 0)>0): ?><p class="muted"><?= (int)$existingImageCount ?><?=h(t('Produktbild(er) bereits gespeichert.'))?></p><?php endif; ?>
 <?php if (!empty($existingImageRows)): ?>
 <fieldset class="panel"><legend><?=h(t('image_order.title'))?></legend>
@@ -48,5 +47,5 @@ $attributeValues=['attributes'=>is_array($values['attributes']??null)?$values['a
 <label class="check"><input type="checkbox" name="trade_checkout_enabled" value="1" <?=$field('trade_checkout_enabled')==='1'?'checked':''?>><?=h(t('trade.seller_opt_in'))?></label>
 <?php $auctionFeeOffered=auction_billing_form($pdo,(int)$user['id'],$listing??null); ?>
 <label class="check"><input type="checkbox" name="accept_rules" value="1" required <?= $field('accept_rules')==='1'?'checked':'' ?>><?=h(t('Ich bestätige die allgemeinen Produktregeln (Version general-1.0), die Richtigkeit der Angaben und meine Berechtigung zum Verkauf.'))?></label>
-<div class="button-row"><button class="button" type="submit" data-listing-save><?= isset($listingId)?t('Änderungen speichern'):t('Inserat speichern') ?></button><?php if($auctionFeeOffered):?><button class="button" type="submit" name="auction_fee_action" value="publish" data-auction-publish><?=h(t('auction_billing.publish'))?></button><?php endif;?><a class="button button-ghost" href="/user/dashboard.php"> <?=h(t('Zum Dashboard'))?> </a></div>
+<div class="button-row"><button class="button" type="submit" data-listing-save><?= isset($listingId)?t('Änderungen speichern'):t('Inserat speichern') ?></button><?php if($auctionFeeOffered):?><button class="button" type="submit" name="auction_fee_action" value="publish" data-auction-publish><?=h(t('auction_billing.publish'))?></button><?php endif;?><button class="button secondary" type="submit" name="load_attributes" value="1" formnovalidate><?=h(t('classification.load'))?></button><a class="button button-ghost" href="/user/dashboard.php"> <?=h(t('Zum Dashboard'))?> </a></div>
 </form>

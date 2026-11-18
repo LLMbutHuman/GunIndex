@@ -43,6 +43,7 @@ if ($mode === '') {
     require_once __DIR__.'/../config/i18n.php';
     require_once __DIR__.'/../config/catalog.php';
     require_once __DIR__.'/../config/classification.php';
+    require_once __DIR__.'/../config/market_search_text.php';
     c_check(classification_number('-1,065')==='-1.065'&&classification_number('-0,0')==='0.000'&&classification_number('999999999.999')==='999999999.999','Decimal normalization lost precision.');
     foreach (['1e3','1.1234','1000000000','01','+1',1,[],null] as $bad) c_reject(fn()=>classification_number($bad));
     $definition=classification_definition(['code'=>'finish','label'=>'Finish','kind'=>'choice','choices'=>"Oak\r\nMaple"]);
@@ -56,6 +57,11 @@ if ($mode === '') {
     c_check(count($sql)===4&&$params===[2,'0',3,'Maple',1,'7.200',1,'9.000'],'Combined filters changed prepared values.');
     c_reject(fn()=>classification_search($defs,['attribute_min'=>[2=>'0']]));
     c_reject(fn()=>classification_search($defs,['attributes'=>[3=>['Maple']]]));
+    [$terms,$bindings,$score,$rankBindings]=market_text_search('Oak 20%_!');
+    c_check(count($terms)===2&&$bindings===['%Oak%','%Oak%','%20!%!_!!%','%20!%!_!!%']&&count($rankBindings)===6,
+        'Text search did not bind terms and escape literal wildcard characters.');
+    c_reject(fn()=>market_text_search("invalid\0word"));
+    c_reject(fn()=>market_text_search(implode(' ',range(1,13))));
     echo "Classification pure checks passed.\n";
     exit;
 }
@@ -87,6 +93,16 @@ $legacy=market_save_listing($pdo,$seller,array_replace($listing,['category_id'=>
 $filters=['category_id'=>(string)$category,'scope'=>'country','country_code'=>'DE','q'=>$tag,'min_price'=>'23',
     'attributes'=>[$finish=>'Oak',$folds=>'0'],'attribute_min'=>[$width=>'51.125'],'attribute_max'=>[$width=>'52']];
 c_check(array_column(market_search($pdo,$filters)['items'],'id')===[$published],'Combined attribute, price, text and market filters broke.');
+$prefix='Indexed test '.$tag;
+$exact=market_save_listing($pdo,$seller,array_replace($listing,['title'=>$prefix])+$priceAttributes);
+$body=market_save_listing($pdo,$seller,array_replace($listing,['title'=>'Independent table '.$tag,'description'=>'This synthetic item mentions: '.$prefix.'.'])+$priceAttributes);
+$archived=market_save_listing($pdo,$seller,array_replace($listing,['title'=>$prefix.' hidden'])+$priceAttributes);
+market_transition($pdo,$archived,$seller,'archive');
+$ranked=market_search($pdo,array_replace($filters,['q'=>$prefix,'sort'=>'relevance']));
+c_check(array_column($ranked['items'],'id')===[$exact,$body],'Exact title does not outrank a description match.');
+c_check(market_suggestions($pdo,$prefix,['country_code'=>'DE','category_id'=>(string)$category])===[$prefix],'Prefix suggestions included a nonpublic or nonmatching title.');
+c_check(market_suggestions($pdo,$prefix,['country_code'=>'DE','category_id'=>(string)$other])===[],'Suggestions leaked from another category.');
+c_check(market_suggestions($pdo,$prefix.'%',['country_code'=>'DE'])===[],'Unescaped prefix wildcard suggested a title.');
 $filters['attribute_min'][$width]='51.126';
 c_check(market_search($pdo,$filters)['total']===0,'Numeric range rounded unexpectedly.');
 c_reject(fn()=>market_search($pdo,array_replace($filters,['category_id'=>(string)$other])));

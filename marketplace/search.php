@@ -7,11 +7,11 @@ foreach(['q','category_id','type','min_price','max_price','sort','country_code',
     if(isset($_GET[$key])&&!is_string($_GET[$key]))abort_request(400,t('Ungültiger Suchfilter.'));
     $filters[$key]=isset($_GET[$key])?trim($_GET[$key]):'';
 }
-$filters['q']=substr($filters['q'],0,150);
+$filters['q']=mb_strcut($filters['q'],0,200,'UTF-8');
 if($filters['country_code']==='')$filters['country_code']=geo_country();
 if($filters['scope']==='')$filters['scope']='country';
 if($filters['origin_country']==='')$filters['origin_country']=$filters['country_code'];
-if($filters['sort']==='')$filters['sort']='newest';
+if($filters['sort']==='')$filters['sort']='relevance';
 $page=isset($_GET['page'])&&is_string($_GET['page'])?filter_var($_GET['page'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>10000]]):1;
 if(!$page)abort_request(400,t('Ungültige Ergebnisseite.'));
 $categories=catalog_categories($pdo);$countries=geo_active_countries($pdo);$error='';
@@ -27,7 +27,7 @@ include __DIR__.'/../includes/header.php';
 <main class="page-width section search-page">
 <div class="page-heading reveal"><p class="eyebrow"><?=h(t('Deine nächste Geschichte'))?></p><h1><?= $filters['q']?h(t('Suche: {query}',['query'=>$filters['q']])):h(t('Entdeckungen mit Charakter.'))?></h1><p><?=h(t('Ein guter Fund ist manchmal nur einen Filter entfernt.'))?></p></div>
 <form action="/marketplace/search.php" method="get" class="search-toolbar panel">
-<div class="search-input"><label class="sr-only" for="query"><?=h(t('Suchbegriff'))?></label><?=ui_icon('search')?><input id="query" name="q" type="search" value="<?=h($filters['q'])?>" maxlength="150" placeholder="<?=h(t('Was möchtest du entdecken?'))?>"></div>
+<div class="search-input"><label class="sr-only" for="query"><?=h(t('Suchbegriff'))?></label><?=ui_icon('search')?><input id="query" name="q" type="search" value="<?=h($filters['q'])?>" maxlength="150" placeholder="<?=h(t('Was möchtest du entdecken?'))?>" data-market-suggest autocomplete="off"></div>
 <div class="search-filter-grid">
 <label class="field"><?=h(t('Ländermarkt'))?><select name="country_code"><?php foreach($countries as $code=>$name):?><option value="<?=h($code)?>" <?=$filters['country_code']===$code?'selected':''?>><?=h($name.' ('.$code.')')?></option><?php endforeach;?></select></label>
 <label class="field"><?=h(t('Suchbereich'))?><select name="scope"><option value="country" <?=$filters['scope']==='country'?'selected':''?>><?=h(t('Nur ausgewähltes Land'))?></option><option value="international" <?=$filters['scope']==='international'?'selected':''?>><?=h(t('International'))?></option></select></label>
@@ -38,7 +38,7 @@ include __DIR__.'/../includes/header.php';
 <label class="field"><?=h(t('Bezugsland'))?><select name="origin_country"><?php foreach($countries as $code=>$name):?><option value="<?=h($code)?>" <?=$filters['origin_country']===$code?'selected':''?>><?=h($name.' ('.$code.')')?></option><?php endforeach;?></select></label>
 <label class="field"><?=h(t('Postleitzahl'))?><input name="zip" value="<?=h($filters['zip'])?>" autocomplete="postal-code" maxlength="16"></label>
 <label class="field"><?=h(t('Suchradius'))?><select name="radius_km"><option value=""><?=h(t('Exakte PLZ'))?></option><?php foreach([5,10,25,50,100,250,500,1000,2000] as $radius):?><option value="<?=$radius?>" <?=$filters['radius_km']===(string)$radius?'selected':''?>><?=$radius?> km</option><?php endforeach;?></select></label>
-<label class="field"><?=h(t('Sortierung'))?><select name="sort"><?php foreach(['newest'=>'Neueste zuerst','price_asc'=>'Preis aufsteigend','price_desc'=>'Preis absteigend','ending'=>'Bald endende Auktionen','distance'=>'Nächste zuerst'] as $value=>$label):?><option value="<?=h($value)?>" <?=$filters['sort']===$value?'selected':''?>><?=h(t($label))?></option><?php endforeach;?></select></label>
+<label class="field"><?=h(t('Sortierung'))?><select name="sort"><?php foreach(['relevance'=>'classification.relevance','newest'=>'Neueste zuerst','price_asc'=>'Preis aufsteigend','price_desc'=>'Preis absteigend','ending'=>'Bald endende Auktionen','distance'=>'Nächste zuerst'] as $value=>$label):?><option value="<?=h($value)?>" <?=$filters['sort']===$value?'selected':''?>><?=h(t($label))?></option><?php endforeach;?></select></label>
 <button class="button" type="submit"><?=h(t('Anzeigen'))?> <?=ui_icon('arrow')?></button></div>
 <div data-classification-mode="search" data-classification-error="<?=h(t('classification.reload'))?>">
 <?php if(in_array($attributeCategory,array_column($categories,'id'),true))classification_fields(classification_definitions($pdo,$attributeCategory),$filters,true);?>

@@ -29,4 +29,6 @@ return [
     'classification.kind.boolean' => 'Oui/Non',
     'classification.yes' => 'Oui',
     'classification.no' => 'Non',
+    'classification.relevance' => 'Meilleurs résultats',
+    'classification.search_invalid' => 'Raccourcissez la recherche et utilisez au maximum douze mots.',
 ];

@@ -38,9 +38,7 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     $scope=$filters['scope']??'country';
     if(!is_string($scope)||!in_array($scope,['country','international'],true))throw new InvalidArgumentException('Ungültiger Suchbereich.');
     if(!$categories||($scope==='country'&&!geo_country_enabled($pdo,$country)))return ['items'=>[],'total'=>0,'page'=>$page,'per_page'=>$perPage,'country_code'=>$country,'scope'=>$scope];
-    $where=["l.status='active'","(l.ends_at IS NULL OR l.ends_at>UTC_TIMESTAMP())",'EXISTS(SELECT 1 FROM users seller WHERE seller.id=l.seller_id AND seller.is_active=1)',
-        'EXISTS(SELECT 1 FROM market_countries mc WHERE mc.code=l.country_code AND mc.is_active=1)',
-        'l.category_id IN ('.implode(',',array_fill(0,count($categories),'?')).')'];
+    $where=market_public_where($categories);
     $parameters=$categories;
     if($scope==='country'){$where[]='l.country_code=?';$parameters[]=$country;}
     foreach(['listing_id','seller_id'] as $key){
@@ -51,7 +49,9 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     }
     $query=$filters['q']??'';
     if(!is_string($query)||strlen($query)>200)throw new InvalidArgumentException('Die Suchanfrage ist zu lang.');
-    if(trim($query)!==''){$where[]="(l.title LIKE ? ESCAPE '!' OR l.description LIKE ? ESCAPE '!')";$term='%'.str_replace(['!','%','_'],['!!','!%','!_'],trim($query)).'%';$parameters[]=$term;$parameters[]=$term;}
+    [$textWhere,$textParameters,$ranking,$rankingParameters]=market_text_search($query);
+    array_push($where,...$textWhere);
+    array_push($parameters,...$textParameters);
     $category=$filters['category_id']??'';
     if($category!==''&&$category!==null){if(!is_scalar($category)||!ctype_digit((string)$category))throw new InvalidArgumentException('Ungültige Kategorie.');$where[]='l.category_id=?';$parameters[]=(int)$category;}
     $type=$filters['type']??'';
@@ -96,12 +96,15 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
         array_push($parameters,...$attributeParameters);
     }
     $sort=$filters['sort']??'newest';
-    $orders=['newest'=>'COALESCE(l.bumped_at,l.created_at) DESC,l.id DESC','price_asc'=>'COALESCE(l.current_bid_cents,l.price_cents),l.id DESC','price_desc'=>'COALESCE(l.current_bid_cents,l.price_cents) DESC,l.id DESC','ending'=>'l.ends_at IS NULL,l.ends_at,l.id','distance'=>'distance_km IS NULL,distance_km,l.id DESC'];
+    $newest='COALESCE(l.bumped_at,l.created_at) DESC,l.id DESC';
+    $orders=['newest'=>$newest,'relevance'=>($rankingParameters?'search_rank DESC,':'').$newest,'price_asc'=>'COALESCE(l.current_bid_cents,l.price_cents),l.id DESC','price_desc'=>'COALESCE(l.current_bid_cents,l.price_cents) DESC,l.id DESC','ending'=>'l.ends_at IS NULL,l.ends_at,l.id','distance'=>'distance_km IS NULL,distance_km,l.id DESC'];
     if(!is_string($sort)||!isset($orders[$sort]))throw new InvalidArgumentException('Ungültige Sortierung.');
     if($sort==='distance'&&$origin===null)throw new InvalidArgumentException('Für die Entfernungssortierung ist eine Postleitzahl mit freigegebenen Koordinaten erforderlich.');
     $condition=implode(' AND ',$where);
     $count=$pdo->prepare('SELECT COUNT(*) FROM market_listings l'.$geoJoin.' WHERE '.$condition);$count->execute($parameters);$total=(int)$count->fetchColumn();
-    $sql='SELECT l.*,u.username AS seller_username,u.username AS seller_name,c.name AS category_name,(SELECT COUNT(*) FROM market_images i WHERE i.listing_id=l.id) AS image_count,'.$distanceSelect.' AS distance_km FROM market_listings l JOIN users u ON u.id=l.seller_id JOIN market_categories c ON c.id=l.category_id'.$geoJoin.' WHERE '.$condition.' ORDER BY '.$orders[$sort].' LIMIT '.$perPage.' OFFSET '.(($page-1)*$perPage);
+    $rankSelect=$sort==='relevance'&&$rankingParameters?',('.$ranking.') AS search_rank':'';
+    if($rankSelect!=='')array_push($selectParameters,...$rankingParameters);
+    $sql='SELECT l.*,u.username AS seller_username,u.username AS seller_name,c.name AS category_name,(SELECT COUNT(*) FROM market_images i WHERE i.listing_id=l.id) AS image_count,'.$distanceSelect.' AS distance_km'.$rankSelect.' FROM market_listings l JOIN users u ON u.id=l.seller_id JOIN market_categories c ON c.id=l.category_id'.$geoJoin.' WHERE '.$condition.' ORDER BY '.$orders[$sort].' LIMIT '.$perPage.' OFFSET '.(($page-1)*$perPage);
     $q=$pdo->prepare($sql);$q->execute(array_merge($selectParameters,$parameters));$items=$q->fetchAll();
     if($postal!=='')foreach($items as &$item){$item['origin_zip']=geo_postcode_key($originCountry,$postal);$item['origin_country']=$originCountry;}unset($item);
     return ['items'=>$items,'total'=>$total,'page'=>$page,'per_page'=>$perPage,'origin'=>$origin,'country_code'=>$country,'scope'=>$scope];

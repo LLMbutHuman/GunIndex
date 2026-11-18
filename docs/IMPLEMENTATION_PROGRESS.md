@@ -14,11 +14,14 @@ und Checkout sind verbunden. Der Kauf speichert die tatsächlich angezeigten
 Merkmale mit dem unveränderlichen Vorgang. Die neue Bedienung ist in acht
 Sprachen verfügbar. Bezeichnungen und Optionen werden von der Verwaltung verfasst.
 
-Lokale PHP-, JavaScript- und Sprachprüfungen erfolgreich. Die neuen isolierten
-MySQL- und Chromium-Prüfungen laufen über die bestehende GitHub-CI.
-Wiederaufnahmepunkt nach erfolgreicher Abnahme: Autocomplete und Relevanzsuche
-an denselben öffentlichen Katalog anbinden und mit strukturierten, Landes- und
-Umkreisfiltern prüfen.
+Die Suche kombiniert strukturierte Felder mit Preis, Wortsuche, Land und
+Umkreis. Relevanz bevorzugt exakte Titel und Titeltreffer. Die Vorschläge
+verwenden einen Präfixindex (Migration 020) und berücksichtigen sichtbare
+Inserate, Konten, Kategorien und Länder. Eingaben erzeugen vorbereitete
+SQL-Parameter. Lokale PHP-, JavaScript- und Sprachprüfungen sind erfolgreich.
+Die neuen isolierten MySQL- und Chromium-Prüfungen laufen über GitHub-CI.
+Wiederaufnahmepunkt nach der Abnahme: automatisches Speichern von Entwürfen
+und vollständige private Veröffentlichungsvorschau.
 
 ## Handelsabläufe und Inseratslaufzeit, 2026-11-17
 

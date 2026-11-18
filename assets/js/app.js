@@ -1,6 +1,42 @@
 /* Local progressive enhancement. Every core workflow also uses native forms. */
 (() => {
   'use strict';
+  document.querySelectorAll('[data-market-suggest]').forEach((input, index) => {
+    const form = input.form;
+    const list = document.createElement('datalist');
+    list.id = 'market-suggestions-' + index;
+    input.setAttribute('list', list.id);
+    input.after(list);
+    let pending;
+    let timer;
+    function refresh() {
+      clearTimeout(timer);
+      pending?.abort();
+      list.replaceChildren();
+      const query = input.value.trim();
+      if (query.length < 2 || query.length > 80) return;
+      const params = new URLSearchParams({ q: query });
+      for (const key of ['country_code','scope','category_id','type']) {
+        const value = form?.elements.namedItem(key)?.value;
+        if (value) params.set(key,value);
+      }
+      const controller = new AbortController();
+      pending = controller;
+      timer = setTimeout(async () => {
+        try {
+          const response = await fetch('/marketplace/suggest.php?' + params, { signal: controller.signal });
+          if (!response.ok) return;
+          const results = await response.json();
+          if (!Array.isArray(results) || controller.signal.aborted) return;
+          for (const title of results.slice(0,8)) {
+            if (typeof title === 'string') list.append(new Option(title,title));
+          }
+        } catch { /* Search remains available when suggestions are unavailable. */ }
+      }, 250);
+    }
+    input.addEventListener('input',refresh);
+    form?.addEventListener('change',event => { if (event.target!==input) refresh(); });
+  });
   document.querySelectorAll('[data-classification-mode]').forEach(fields => {
     const form = fields.closest('form');
     const category = form?.elements.namedItem('category_id');
