@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->commit();
         $wasMfa = ($_SESSION['admin_mfa_user_id'] ?? null) === (int)$user['id'];
         $query = $pdo->prepare('SELECT * FROM users WHERE id=?'); $query->execute([$user['id']]); $user = $query->fetch();
-        if ($sensitive) { auth_issue_session($user, $wasMfa); }
+        if ($sensitive) { auth_issue_session($pdo,$user,$wasMfa); }
         $_SESSION['locale']=(string)$user['preferred_locale'];
         $values = array_intersect_key($user, $values);
         $success = t($action === 'revoke' ? 'account.sessions_revoked' : 'account.profile_saved');

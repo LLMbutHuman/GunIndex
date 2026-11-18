@@ -34,8 +34,8 @@ Preise und kurze Fristverschiebungen erzeugen keine neuen Folgenachrichten.
 Ein Opt-out vor dem Mailversand stoppt auch bereits eingereihte Inseratmeldungen.
 Lokale Syntax- und Sprachprüfungen grün. In
 [CI 44402842458](https://github.com/LLMbutHuman/GunIndex/actions/runs/44402842458)
-für `4440985` sind die isolierten MySQL-Prüfungen mit Mail-Testtransport grün.
-Die Browserprüfung der Einstellungen folgt im selben Lauf.
+für `4440985` sind Migration 022, MySQL-Prüfungen mit Mail-Testtransport,
+Opt-out im Browser und bestehende Regressionen grün.
 
 ## Geräte und einzelne Sitzungen
 
@@ -47,7 +47,11 @@ betroffenen Sitzung. Bestehender TOTP-, Passwort- und Kontowiderruf bleibt
 wirksam. Rohdaten zum Gerät, IP-Adressen und PHP-Sitzungskennungen werden im
 Register nicht gespeichert. Der Datenschutzexport enthält nur Sitzungsmetadaten.
 Lokale Syntax-, Sitzungs-, Sprach- und Authentifizierungsprüfungen sind grün.
-MySQL- und Chromium-Prüfungen laufen in der isolierten GitHub-CI.
+[CI 44404157331](https://github.com/LLMbutHuman/GunIndex/actions/runs/44404157331)
+für `be03fd2` hat Migration 023 angewendet. Die HTTP-Regression beim
+Passwortwechsel fand einen alten Aufruf zum Anlegen der Folgesitzung.
+Profiländerungen mit Sitzungswechsel verwenden jetzt ebenfalls das Register.
+Die MySQL- und Chromium-Abnahme erfolgt im Folgelauf.
 Wiederaufnahmepunkt nach der Abnahme: optionale Benutzer-2FA und Passkeys.
 
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18

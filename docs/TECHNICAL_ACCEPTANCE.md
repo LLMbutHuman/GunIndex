@@ -72,13 +72,13 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |
 | 7 | Produktklassifizierung | A | Validierte Werte in Inserat, Produktseite, Wiedereinstellung und Kaufnachweis. Bestehende Inserate beginnen ohne erfundene Werte |
 | 8 | Autocomplete/Relevanz/Filter | A | Öffentliche Titelvorschläge, Relevanzsortierung und kombinierte Merkmals-, Preis-, Länder- und Umkreissuche in MySQL und Chromium geprüft |
-| 9 | Entwurfs-Autosave/Vorschau | C | Automatische Speicherung und vollständige Vorschau |
+| 9 | Entwurfs-Autosave/Vorschau | A | Privater Zwischenstand, Bildübernahme, Versionsprüfung, Formular ohne JavaScript sowie Veröffentlichungs- und Zugriffstests grün |
 | 10 | Bildreihenfolge | A | Implementiert und geprüft |
 | 11 | Wiedereinstellen/Verlängern | A | Auktions-Gratisanspruch, Kopie geschlossener Festpreis-/Verhandlungsinserate und begrenzte einmalige Laufzeitverlängerung in MySQL/HTTP geprüft |
 | 12 | Verhandlungsmodus | A | Private Angebote, Gegenangebote, Annahme, Ablehnung, Rückzug, Fristen und unveränderliche Konditionen in MySQL und Chromium geprüft |
 | 13 | Festpreis-Transaktion | B | Verkäuferfreigabe, konkurrierende Käufe, Centbeträge, Versand/Abholung, Abschluss, Storno und Streitfälle geprüft. Zahlungen und Treuhand separat in 23–26 |
 | 14 | Transaktionsbewertungen | A | Bewertungen nur durch echte Parteien nach Abschluss, einmal pro Partei. MySQL- und Browserprüfung grün |
-| 15 | Benachrichtigungen | C | Fehlende Preis-/Ablauf-/Vorablaufereignisse |
+| 15 | Benachrichtigungen | A | Preis, Vorablauf und Ablauf in MySQL geprüft, getrenntes Opt-out im Browser und Warteschlangenstopp im Mail-Testtransport |
 | 16 | Geräte/Einzelsitzungen | C | Übersicht und Einzelwiderruf |
 | 17 | Benutzer-2FA/Passkeys | C | Optionale Benutzeranmeldung, Passkeys und Wiederherstellung |
 | 18 | Profilbilder/Händlerlogos | C | Sicherer Upload, Quoten und Integration |
