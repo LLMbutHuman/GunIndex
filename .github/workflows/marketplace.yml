@@ -46,6 +46,7 @@ jobs:
           node tests/trade_browser.js
           node tests/classification_browser.js
           node tests/listing_draft_browser.js
+          node tests/auth_session_browser.js
           node tests/e2ee_browser.js
           node tests/international_smoke.js
           node tests/accessibility_smoke.js

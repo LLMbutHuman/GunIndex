@@ -18,8 +18,9 @@ gecached. Die neue Bedienung ist in acht Sprachen verfügbar.
 
 Lokale Syntax-, Sprach- und Dienstprüfungen sind erledigt. In
 [CI 44401294604](https://github.com/LLMbutHuman/GunIndex/actions/runs/44401294604)
-für `f7c693c` sind Windows und die isolierte PHP-/MySQL-Prüfung grün. Die
-Browserabnahme folgt im selben Lauf. Beim geprüften Anonymisieren werden die
+für `f7c693c` bestanden Windows, Migration 021, PHP/MySQL und vier
+Chromium-Fälle einschließlich Bildübernahme, fremdem Zugriff und der nativen
+Vorschau ohne JavaScript. Beim geprüften Anonymisieren werden die
 privaten Zwischenstände samt Bildern entfernt. Der Eigentümerexport enthält
 Zwischenstände und aufbereitete Bilder.
 
@@ -31,8 +32,23 @@ Gemerkte Inserate, Empfängersprache und Kanalpräferenzen werden berücksichtig
 Die Verarbeitung läuft in begrenzten Batches mit Wiederaufnahmepunkt. Überholte
 Preise und kurze Fristverschiebungen erzeugen keine neuen Folgenachrichten.
 Ein Opt-out vor dem Mailversand stoppt auch bereits eingereihte Inseratmeldungen.
-Lokale Syntax- und Sprachprüfungen grün. Datenbankabnahme einschließlich
-Testtransport für die E-Mail-Prüfung läuft in der isolierten CI.
+Lokale Syntax- und Sprachprüfungen grün. In
+[CI 44402842458](https://github.com/LLMbutHuman/GunIndex/actions/runs/44402842458)
+für `4440985` sind die isolierten MySQL-Prüfungen mit Mail-Testtransport grün.
+Die Browserprüfung der Einstellungen folgt im selben Lauf.
+
+## Geräte und einzelne Sitzungen
+
+Migration 023 registriert authentifizierte Sitzungen. Bereits angemeldete
+Nutzer werden innerhalb ihrer bisherigen Zeitgrenzen erfasst. Eine private
+Übersicht zeigt die aktuelle Sitzung, grobe Browser- und Plattformangaben und
+Zeitpunkte. Der Widerruf gilt beim nächsten authentifizierten Zugriff der
+betroffenen Sitzung. Bestehender TOTP-, Passwort- und Kontowiderruf bleibt
+wirksam. Rohdaten zum Gerät, IP-Adressen und PHP-Sitzungskennungen werden im
+Register nicht gespeichert. Der Datenschutzexport enthält nur Sitzungsmetadaten.
+Lokale Syntax-, Sitzungs-, Sprach- und Authentifizierungsprüfungen sind grün.
+MySQL- und Chromium-Prüfungen laufen in der isolierten GitHub-CI.
+Wiederaufnahmepunkt nach der Abnahme: optionale Benutzer-2FA und Passkeys.
 
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18
 

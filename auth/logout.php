@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { require_csrf(); auth_clear_session(); redirect('/marketplace/index.php'); }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { require_csrf(); auth_logout($pdo); redirect('/marketplace/index.php'); }
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') { abort_request(405, 'Diese Methode wird nicht unterstützt.'); }
 $pageTitle = 'Abmelden'; require __DIR__ . '/../includes/header.php';
 ?>

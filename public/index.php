@@ -9,6 +9,7 @@ $allowed=array_merge($allowed,['user/secure-chat.php','user/e2ee-api.php']);
 $allowed=array_merge($allowed,['user/checkout.php','user/offers.php','user/trade.php','user/trades.php','user/extend-listing.php','admin/trades.php']);
 $allowed=array_merge($allowed,['marketplace/category-fields.php','marketplace/suggest.php','admin/category-attributes.php']);
 $allowed=array_merge($allowed,['user/listing-draft.php','user/listing-draft-image.php']);
+$allowed[]='user/sessions.php';
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 $static+=['/assets/css/e2ee.css'=>'text/css; charset=utf-8','/assets/js/e2ee-ui.mjs'=>'application/javascript; charset=utf-8','/assets/js/e2ee-crypto.mjs'=>'application/javascript; charset=utf-8','/assets/vendor/openpgp/openpgp.min.mjs'=>'application/javascript; charset=utf-8'];

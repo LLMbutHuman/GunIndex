@@ -137,6 +137,7 @@ function privacy_review_deletion(PDO $pdo,int $actor,int $requestId,string $deci
             $suffix=bin2hex(random_bytes(8));$pdo->prepare("UPDATE users SET username=?,email=?,full_name='',zip='',city='',password_hash=?,mfa_secret=NULL,is_active=0,is_verified=0,auth_version=auth_version+1 WHERE id=?")->execute(['deleted_'.$row['user_id'].'_'.$suffix,'deleted_'.$suffix.'@example.invalid',password_hash(bin2hex(random_bytes(32)),PASSWORD_DEFAULT),$row['user_id']]);
             $pdo->prepare('DELETE FROM market_role_grants WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare('DELETE FROM market_listing_drafts WHERE seller_id=?')->execute([$row['user_id']]);
+            $pdo->prepare('DELETE FROM market_auth_sessions WHERE user_id=?')->execute([$row['user_id']]);
             foreach(['market_discovery_matches','market_discovery_digests','market_wanted','market_saved_searches','market_watchlist','market_notifications','market_notification_preferences','market_mail_queue','market_auth_tokens','market_billing_profiles','market_dealer_profiles'] as $table)$pdo->prepare('DELETE FROM '.$table.' WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare("UPDATE market_campaigns SET status='disabled' WHERE user_id=?")->execute([$row['user_id']]);
         }
@@ -211,6 +212,7 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'contract_receipts'=>['market_contract_receipts','user_id=?',[$userId],['id','scope','context_key','invoice_id','document_id','content_hash','created_at']],
         ];
         $sources += [
+            'sign_in_sessions'=>['market_auth_sessions','user_id=?',[$userId],['id','browser','platform','started_at','last_seen_at','expires_at','revoked_at']],
             'blocked_users'=>['market_user_blocks','user_id=?',[$userId],['blocked_id','created_at'],'blocked_id'],
             'watchlist'=>['market_watchlist','user_id=?',[$userId],['listing_id','created_at'],'listing_id'],
             'wanted'=>['market_wanted','user_id=?',[$userId],['id','category_id','title','description','keywords','manufacturer','model','min_cents','max_cents','condition_label','country_code','scope','zip','radius_km','notify_mode','status','created_at','updated_at']],

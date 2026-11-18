@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['pending_admin_started'] = time();
                 redirect('/auth/mfa.php');
             }
-        } else { auth_issue_session($user); redirect('/user/dashboard.php'); }
+        } else { auth_issue_session($pdo,$user); redirect('/user/dashboard.php'); }
     } catch (InvalidArgumentException $exception) { $error = $exception->getMessage(); http_response_code(422); }
 }
 $pageTitle = t('Anmelden'); require __DIR__ . '/../includes/header.php';

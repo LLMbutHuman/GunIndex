@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/auth_sessions.php';
 require_once __DIR__.'/i18n.php';
 
 function auth_input(array $source, string $key, bool $trim = true): string
@@ -75,11 +76,19 @@ function current_user(PDO $pdo): ?array
     $statement = $pdo->prepare('SELECT * FROM users WHERE id = ?'); $statement->execute([$id]); $user = $statement->fetch();
     $now = time();
     if (!$user || (int)$user['is_active'] !== 1 || (int)$user['auth_version'] !== ($_SESSION['auth_version'] ?? null)
-        || $now - (int)($_SESSION['auth_started_at'] ?? 0) > 43200
-        || $now - (int)($_SESSION['auth_last_seen'] ?? 0) > 1800) {
+        || $now - (int)($_SESSION['auth_started_at'] ?? 0) >= AUTH_SESSION_LIFETIME
+        || $now - (int)($_SESSION['auth_last_seen'] ?? 0) > AUTH_SESSION_IDLE) {
+        auth_logout($pdo); return null;
+    }
+    if (!array_key_exists('auth_session_key',$_SESSION)) {
+        // Register already authenticated pre-upgrade sessions without extending their lifetime.
+        $_SESSION['auth_session_key']=auth_session_create($pdo,$user,(int)$_SESSION['auth_started_at']);
+    }
+    $sessionHash=auth_session_key($_SESSION['auth_session_key']);
+    if ($sessionHash===null||!auth_session_active($pdo,$id,(int)$user['auth_version'],$sessionHash)) {
         auth_clear_session(); return null;
     }
-    $_SESSION['auth_last_seen'] = $now;
+    $_SESSION['auth_last_seen']=$now;
     return $user;
 }
 
@@ -103,12 +112,16 @@ function require_admin(PDO $pdo): array
     return $user;
 }
 
-function auth_issue_session(array $user, bool $mfa = false): void
+function auth_issue_session(PDO $pdo,array $user,bool $mfa=false): void
 {
+    $now=time();
+    $token=auth_session_create($pdo,$user,$now);
+    if ($token===null) throw new InvalidArgumentException(t('account.login_error'));
     auth_clear_session();
     $_SESSION['user_id'] = (int)$user['id']; $_SESSION['username'] = (string)$user['username'];
     $_SESSION['auth_version'] = (int)$user['auth_version'];
-    $_SESSION['auth_started_at'] = $_SESSION['auth_last_seen'] = time();
+    $_SESSION['auth_started_at'] = $_SESSION['auth_last_seen'] = $now;
+    $_SESSION['auth_session_key']=$token;
     if ($mfa) { $_SESSION['admin_mfa_user_id'] = (int)$user['id']; }
     $_SESSION['locale'] ??= (string)($user['preferred_locale'] ?? 'de');
     $_SESSION['market_country'] ??= (string)($user['country_code'] ?? 'DE');
@@ -213,6 +226,6 @@ function auth_verify_pending_mfa(PDO $pdo, string $code): ?array
             $user['mfa_last_counter'] === null ? -1 : (int)$user['mfa_last_counter']);
         if ($counter === null) { $pdo->rollBack(); return null; }
         $pdo->prepare('UPDATE users SET mfa_last_counter = ?,mfa_secret=? WHERE id = ?')->execute([$counter,auth_secret_encrypt($secret),$id]);
-        $pdo->commit(); auth_issue_session($user, true); return $user;
+        $pdo->commit(); auth_issue_session($pdo,$user,true); return $user;
     } catch (Throwable $error) { if ($pdo->inTransaction()) { $pdo->rollBack(); } throw $error; }
 }

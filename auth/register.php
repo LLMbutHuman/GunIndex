@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $created=$query->fetch();
         consent_record($pdo,(int)$created['id'],'registration',null,$contractDocuments);
         account_token_request($pdo,$created['email'],'verify');
-        $pdo->commit();auth_issue_session($created);$_SESSION['locale']=$created['preferred_locale'];redirect('/user/dashboard.php');
+        $pdo->commit();auth_issue_session($pdo,$created);$_SESSION['locale']=$created['preferred_locale'];redirect('/user/dashboard.php');
     } catch (InvalidArgumentException|DomainException $exception) { if ($pdo->inTransaction()) $pdo->rollBack(); $error = $exception->getMessage(); http_response_code(422); }
     catch (PDOException $exception) {
         if ($pdo->inTransaction()) $pdo->rollBack();

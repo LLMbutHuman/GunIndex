@@ -20,5 +20,6 @@ try{
   fwrite(STDOUT,'Legal drafts added: '.$added.". No publication or professional approval was performed.\n");
  }elseif($arguments===[]||$arguments===['--once']){
   fwrite(STDOUT,'Expired verification requests purged: '.privacy_purge_expired($pdo,100)."\n");
+  fwrite(STDOUT,'Old sign-in records purged: '.auth_session_purge($pdo)."\n");
  }else throw new InvalidArgumentException('Unknown argument.');
 }catch(Throwable $error){fwrite(STDERR,"Privacy worker did not complete. Inspect restricted application logs; no document content was logged.\n");exit(1);}

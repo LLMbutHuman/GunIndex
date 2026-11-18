@@ -12,7 +12,7 @@ if (($_SERVER['REQUEST_METHOD']??'')==='POST') {
         $password=post_string('password',1024);$confirmation=post_string('password_confirm',1024);
         if (!hash_equals($password,$confirmation)) throw new InvalidArgumentException(t('account.password_mismatch'));
         if (!account_token_consume($pdo,$token,'reset',$password)) { http_response_code(422);$error=t('account.token_invalid'); }
-        else {auth_clear_session();$success=true;}
+        else {auth_logout($pdo);$success=true;}
     } catch (InvalidArgumentException $exception) {http_response_code(422);$error=$exception->getMessage();}
     catch (Throwable) {http_response_code(503);$error=t('account.change_unavailable');}
 }
