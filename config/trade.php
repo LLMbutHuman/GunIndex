@@ -381,6 +381,7 @@ function trade_close_due(PDO $pdo,int $limit=100): int
         if(!in_array($row['type'],['fixed','negotiated'],true)||$row['status']!=='active'||$row['ends_at']===null||strtotime($row['ends_at'].' UTC')>time())return 0;
         if(!trade_listing_available($pdo,(int)$id))return 0;
         $pdo->prepare("UPDATE market_listings SET status='ended',updated_at=UTC_TIMESTAMP() WHERE id=?")->execute([$id]);
+        listing_alert_deadline($pdo,$row,'ended');
         $pdo->prepare("UPDATE market_trade_offers SET status='expired' WHERE listing_id=? AND status='open'")->execute([$id]);
         return 1;
     });return $count;

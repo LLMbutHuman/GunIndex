@@ -16,9 +16,23 @@ greifen die Pflichtfelder, ausdrückliche Zustimmungen und Auktionsgebühren.
 Private Vorschauen und Bilder erfordern das Eigentümerkonto und werden nicht
 gecached. Die neue Bedienung ist in acht Sprachen verfügbar.
 
-Lokale Syntax-, Sprach- und Dienstprüfungen sind erledigt. MySQL- und Chromium-
-Prüfungen laufen über die isolierte GitHub-CI. Nach deren Abnahme folgt das
-Benachrichtigungspaket für Preisänderung und Ablauf.
+Lokale Syntax-, Sprach- und Dienstprüfungen sind erledigt. In
+[CI 44401294604](https://github.com/LLMbutHuman/GunIndex/actions/runs/44401294604)
+für `f7c693c` sind Windows und die isolierte PHP-/MySQL-Prüfung grün. Die
+Browserabnahme folgt im selben Lauf. Beim geprüften Anonymisieren werden die
+privaten Zwischenstände samt Bildern entfernt. Der Eigentümerexport enthält
+Zwischenstände und aufbereitete Bilder.
+
+## Preis- und Ablaufbenachrichtigungen
+
+Migration 022 ergänzt eine transaktionale Warteschlange für Preisänderungen,
+einen Hinweis innerhalb der letzten 24 Stunden und Meldungen beim Ablauf.
+Gemerkte Inserate, Empfängersprache und Kanalpräferenzen werden berücksichtigt.
+Die Verarbeitung läuft in begrenzten Batches mit Wiederaufnahmepunkt. Überholte
+Preise und kurze Fristverschiebungen erzeugen keine neuen Folgenachrichten.
+Ein Opt-out vor dem Mailversand stoppt auch bereits eingereihte Inseratmeldungen.
+Lokale Syntax- und Sprachprüfungen grün. Datenbankabnahme einschließlich
+Testtransport für die E-Mail-Prüfung läuft in der isolierten CI.
 
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18
 

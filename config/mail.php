@@ -37,11 +37,11 @@ function mail_enqueue(PDO $pdo, ?int $userId, string $to, string $subject, strin
     $query->execute([$userId, $dedupe, $payload]);
 }
 
-function notification_preferences(PDO $pdo, int $userId): array
+function notification_preferences(PDO $pdo, int $userId, bool $lock=false): array
 {
-    $query = $pdo->prepare('SELECT inapp_enabled,mail_enabled FROM market_notification_preferences WHERE user_id=?');
+    $query = $pdo->prepare('SELECT inapp_enabled,mail_enabled,listing_alerts_enabled FROM market_notification_preferences WHERE user_id=?'.($lock?' FOR SHARE':''));
     $query->execute([$userId]);
-    return $query->fetch() ?: ['inapp_enabled'=>1,'mail_enabled'=>0];
+    return $query->fetch() ?: ['inapp_enabled'=>1,'mail_enabled'=>0,'listing_alerts_enabled'=>1];
 }
 
 function notify_user(PDO $pdo, int $userId, string $key, string $title, string $body, ?string $url = null, bool $mail = false): void
@@ -164,6 +164,10 @@ function mail_worker_once(PDO $pdo, int $limit = 25): array
             if ($item['user_id'] !== null) {
                 $query=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');$query->execute([$item['user_id']]);
                 $active=(int)$query->fetchColumn()===1;
+                if ($active&&preg_match('/\Anotification:[1-9][0-9]*:listing-alert:[1-9][0-9]*\z/',$item['dedupe_key'])) {
+                    $preferences=notification_preferences($pdo,(int)$item['user_id'],true);
+                    $active=(int)$preferences['mail_enabled']===1&&(int)$preferences['listing_alerts_enabled']===1;
+                }
             }
             $query=$pdo->prepare('SELECT status,processing_token FROM market_mail_queue WHERE id=? FOR UPDATE');$query->execute([$item['id']]);$current=$query->fetch();
             if (!$current || $current['status']!=='processing' || !hash_equals((string)$current['processing_token'],$lease)) {$pdo->commit();++$counts['deferred'];continue;}

@@ -276,6 +276,7 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             audit_log($pdo,$sellerId,'listing.rules_accepted',$listingId,['version'=>'general-1.0','status'=>$data['status']]);
         }
         if($data['status']==='active'&&function_exists('discovery_enqueue_listing'))discovery_enqueue_listing($pdo,$listingId);
+        if($existing)listing_alert_price($pdo,$existing,$data);
         if($managedDraft)listing_draft_finish($pdo,$sellerId,$editor,$draftBase);
         $committing=true;
         $pdo->commit();
@@ -513,6 +514,7 @@ function market_close_due(PDO $pdo, int $limit = 100): int
             $winner=$leaders ? (int)$leaders[0]['user_id'] : null;
             $q=$pdo->prepare("UPDATE market_listings SET status='ended',highest_bidder_id=?,current_bid_cents=?,updated_at=UTC_TIMESTAMP() WHERE id=?");
             $q->execute([$winner,$price,$id]);
+            listing_alert_deadline($pdo,$listing,'ended');
             $q=$pdo->prepare('INSERT INTO market_bids(listing_id,user_id,amount_cents,event_type,idempotency_key,created_at) VALUES (?,?,?,?,?,UTC_TIMESTAMP(6))');
             $q->execute([$id,$winner,$price,$winner===null?'close_no_bid':'close','close-'.$id]);
             if($winner!==null)auction_billing_charge($pdo,(int)$id,'success',$price);

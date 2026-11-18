@@ -61,6 +61,10 @@ draft_reject(fn()=>listing_draft_save($pdo,$seller,0,$empty+['title'=>'Captured 
 $stored=listing_draft_workspace($pdo,$seller,0);
 draft_check($stored['payload']['title']==='T'&&!isset($stored['payload']['accept_rules']),'Stale write changed the draft or stored consent.');
 draft_check(listing_draft_workspace($pdo,$other,0)===null,'Another owner can read this workspace.');
+$export=privacy_export($pdo,$seller,$users['seller']['password']);
+$ownerData=json_decode(stream_get_contents($export),true,64,JSON_THROW_ON_ERROR);fclose($export);
+draft_check(($ownerData['listing_drafts'][0]['payload']['title']??null)==='T'&&!isset($ownerData['listing_drafts'][0]['revision']),
+    'Owner export missed the draft or included its private revision.');
 $q=$pdo->prepare('SELECT COUNT(*) FROM market_listings WHERE seller_id=?');$q->execute([$seller]);
 draft_check((int)$q->fetchColumn()===0,'Draft autosave created a market listing.');
 $values=['title'=>'Draft test desk '.$tag,'description'=>'Synthetic desk from a private workspace, no real inventory.',

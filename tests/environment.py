@@ -99,6 +99,7 @@ def test():
   docker('exec',APP,'php','tests/classification_test.php','--database')
   docker('exec',APP,'php','tests/listing_draft_test.php')
   docker('exec',APP,'php','tests/listing_draft_test.php','--database')
+  docker('exec',APP,'php','tests/listing_alert_test.php')
   for suite in ('maintenance_test.php','maintenance_auction_test.php','maintenance_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
   docker('exec',APP,'php','tests/e2ee_integration_test.php')

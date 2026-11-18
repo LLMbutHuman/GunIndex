@@ -84,6 +84,14 @@ function runPhp(...args) {
     await native.goto(origin+'/user/create-listing.php');
     assert.equal(await native.locator('[data-listing-form] [name=title]').inputValue(),'');
     checks.push('native_preview_and_confirmed_discard_without_javascript');
+    await seller.goto(origin+'/user/notification-settings.php');
+    const alerts=seller.locator('input[type=checkbox][name=listing_alerts_enabled]');
+    assert.equal(await alerts.isChecked(),true);
+    await alerts.uncheck();
+    await Promise.all([seller.waitForNavigation(),seller.locator('main button[type=submit]').click()]);
+    assert.equal(await alerts.isChecked(),false);
+    assert.equal(await seller.locator('main input[type=checkbox][name=inapp_enabled]').isChecked(),true);
+    checks.push('listing_alert_opt_out_preserves_other_notifications');
     console.log(JSON.stringify({status:'PASS',suite:'listing_draft_browser',checks}));
   } finally { await browser.close(); }
 })().catch(error => { console.error(error.message); process.exitCode=1; });

@@ -136,6 +136,7 @@ function privacy_review_deletion(PDO $pdo,int $actor,int $requestId,string $deci
             $q=$pdo->prepare("SELECT COUNT(*) FROM market_listings WHERE seller_id=? AND status IN ('active','review') AND type='auction'");$q->execute([$row['user_id']]);if((int)$q->fetchColumn()>0)throw new DomainException('Offene oder zu prüfende Auktionen müssen zuerst fachlich bearbeitet werden.');
             $suffix=bin2hex(random_bytes(8));$pdo->prepare("UPDATE users SET username=?,email=?,full_name='',zip='',city='',password_hash=?,mfa_secret=NULL,is_active=0,is_verified=0,auth_version=auth_version+1 WHERE id=?")->execute(['deleted_'.$row['user_id'].'_'.$suffix,'deleted_'.$suffix.'@example.invalid',password_hash(bin2hex(random_bytes(32)),PASSWORD_DEFAULT),$row['user_id']]);
             $pdo->prepare('DELETE FROM market_role_grants WHERE user_id=?')->execute([$row['user_id']]);
+            $pdo->prepare('DELETE FROM market_listing_drafts WHERE seller_id=?')->execute([$row['user_id']]);
             foreach(['market_discovery_matches','market_discovery_digests','market_wanted','market_saved_searches','market_watchlist','market_notifications','market_notification_preferences','market_mail_queue','market_auth_tokens','market_billing_profiles','market_dealer_profiles'] as $table)$pdo->prepare('DELETE FROM '.$table.' WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare("UPDATE market_campaigns SET status='disabled' WHERE user_id=?")->execute([$row['user_id']]);
         }
@@ -216,7 +217,7 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'saved_searches'=>['market_saved_searches','user_id=?',[$userId],['id','name','criteria_json','notify_mode','status','created_at','updated_at']],
             'discovery_matches'=>['market_discovery_matches','user_id=?',[$userId],['id','query_kind','query_id','listing_id','score','reasons_json','notification_state','matched_at']],
             'notifications'=>['market_notifications','user_id=?',[$userId],['id','title','body','target_url','is_visible','read_at','created_at']],
-            'notification_preferences'=>['market_notification_preferences','user_id=?',[$userId],['inapp_enabled','mail_enabled','updated_at'],'user_id'],
+            'notification_preferences'=>['market_notification_preferences','user_id=?',[$userId],['inapp_enabled','mail_enabled','listing_alerts_enabled','updated_at'],'user_id'],
             'dealer_profile'=>['market_dealer_profiles','user_id=?',[$userId],['company_name','address_text','country_code','contact_email','website','legal_notice','status','moderation_reason','created_at','updated_at'],'user_id'],
             'campaigns'=>['market_campaigns','user_id=?',[$userId],['id','country_code','category_id','title','target_url','status','moderation_reason','created_at','updated_at']],
             'premium_bookings'=>['market_premium_bookings','user_id=?',[$userId],['id','invoice_id','listing_id','campaign_id','country_code','scope','category_id','status','reserved_until','starts_at','ends_at','immediate_start_at','created_at']],
@@ -244,6 +245,13 @@ function privacy_export(PDO $pdo,int $userId,string $password)
         $write(',"e2ee_unbound_attachments":[');
         $q=$pdo->prepare('SELECT * FROM market_e2ee_attachments WHERE owner_id=? AND message_id IS NULL ORDER BY id');$q->execute([$userId]);$unbound=$q->fetchAll();$first=true;
         foreach($unbound as $attachment){$export=privacy_encrypted_attachment_export($attachment)+['listing_id'=>(int)$attachment['listing_id'],'peer_id'=>(int)$attachment['peer_id'],'device_id'=>$attachment['device_id'],'client_id'=>$attachment['client_id'],'created_at'=>$attachment['created_at']];$write(($first?'':',').json_encode($export,JSON_THROW_ON_ERROR));$first=false;}
+        $write(']');
+        $write(',"listing_drafts":[');
+        $q=$pdo->prepare('SELECT editor_id,payload,updated_at FROM market_listing_drafts WHERE seller_id=? AND payload IS NOT NULL ORDER BY editor_id');$q->execute([$userId]);$first=true;
+        while($draft=$q->fetch()){$draft['payload']=json_decode($draft['payload'],true,16,JSON_THROW_ON_ERROR);$write(($first?'':',').json_encode($draft,JSON_THROW_ON_ERROR));$first=false;}
+        $write('],"listing_draft_images":[');
+        $q=$pdo->prepare('SELECT editor_id,position,width,height,large_webp FROM market_listing_draft_images WHERE seller_id=? ORDER BY editor_id,position');$q->execute([$userId]);$first=true;
+        while($image=$q->fetch()){$image['mime']='image/webp';$image['base64']=base64_encode($image['large_webp']);unset($image['large_webp']);$write(($first?'':',').json_encode($image,JSON_THROW_ON_ERROR));$first=false;}
         $write(']');
         $write(',"verification_documents":[');$q=$pdo->prepare('SELECT d.id,d.storage_key,r.id AS request_id FROM market_verification_documents d JOIN market_verification_requests r ON r.id=d.request_id WHERE r.user_id=? AND d.deleted_at IS NULL AND r.expires_at>UTC_TIMESTAMP() ORDER BY d.id');$q->execute([$userId]);$first=true;
         while($doc=$q->fetch()){$path=verification_document_path($doc['storage_key']);if(!is_file($path)||is_link($path)||filesize($path)>12*1024*1024)throw new RuntimeException('Ein eigenes Dokument konnte nicht in den Export aufgenommen werden.');$plain=crypto_decrypt('identity',file_get_contents($path));$write(($first?'':',').json_encode(['id'=>(int)$doc['id'],'request_id'=>(int)$doc['request_id'],'mime'=>'image/webp','base64'=>base64_encode($plain)],JSON_THROW_ON_ERROR));$first=false;}
