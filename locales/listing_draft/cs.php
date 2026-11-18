@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Zkontrolujte pole konceptu.',
+    'draft.unavailable' => 'Tento koncept není dostupný.',
+    'draft.conflict' => 'Koncept nebo inzerát se změnil. Otevřete a zkontrolujte uložený koncept.',
+    'draft.limit' => 'Byl dosažen limit soukromých konceptů nebo obrázků.',
+    'draft.saving' => 'Ukládání konceptu…',
+    'draft.saved' => 'Soukromý koncept uložen.',
+    'draft.failed' => 'Koncept se nepodařilo uložit. Zkontrolujte připojení nebo použijte náhled.',
+    'draft.help' => 'Změny se během psaní ukládají soukromě.',
+    'draft.open' => 'Otevřít uložený koncept',
+    'draft.preview' => 'Soukromý náhled',
+    'draft.clear_images' => 'Odebrat nové obrázky konceptu',
+    'draft.private' => 'Tento náhled vidíte pouze vy. Nic se zde nezveřejňuje.',
+    'draft.back' => 'Zpět k úpravám',
+    'draft.empty' => 'Dosud nebyl uložen žádný koncept.',
+    'draft.untitled' => 'Inzerát bez názvu',
+    'draft.duration' => 'Doba po zveřejnění',
+    'draft.unlimited' => 'Bez data ukončení',
+    'draft.checkout_enabled' => 'Pro tento inzerát je zvolen závazný nákup.',
+    'draft.confirm_discard' => 'Chci zahodit tento soukromý koncept a nově nahrané obrázky.',
+    'draft.discard' => 'Zahodit koncept',
+    'draft.workspaces' => 'Soukromé koncepty',
+];

@@ -4,6 +4,8 @@ require_once __DIR__.'/../config/bootstrap.php';
 $user=require_login($pdo);
 $pageTitle=t('Inserat erstellen');
 $values=['country_code'=>(string)($user['country_code']??geo_country()),'zip'=>(string)($user['zip'] ?? ''),'city'=>(string)($user['city'] ?? ''),'status'=>'active'];
+$draftContext=listing_draft_context($pdo,(int)$user['id'],0,null,[]);
+if($_SERVER['REQUEST_METHOD']==='GET'&&is_array($draftContext['payload'])) $values=array_replace($values,$draftContext['payload']);
 $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     require_csrf(); $values=$_POST;

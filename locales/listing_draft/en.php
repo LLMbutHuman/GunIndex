@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Check the draft fields.',
+    'draft.unavailable' => 'This draft is unavailable.',
+    'draft.conflict' => 'The draft or listing has changed. Open the current saved draft to review it.',
+    'draft.limit' => 'You have reached the limit for private drafts or images.',
+    'draft.saving' => 'Saving draft…',
+    'draft.saved' => 'Private draft saved.',
+    'draft.failed' => 'Could not save the draft. Check your connection or use the preview.',
+    'draft.help' => 'Changes are saved privately as you type.',
+    'draft.open' => 'Open saved draft',
+    'draft.preview' => 'Private preview',
+    'draft.clear_images' => 'Remove new draft images',
+    'draft.private' => 'Only you can see this preview. Nothing is published here.',
+    'draft.back' => 'Back to editing',
+    'draft.empty' => 'There is no saved draft yet.',
+    'draft.untitled' => 'Untitled listing',
+    'draft.duration' => 'Duration after publication',
+    'draft.unlimited' => 'No expiration date',
+    'draft.checkout_enabled' => 'Binding checkout is selected for this listing.',
+    'draft.confirm_discard' => 'I want to discard this private draft and its newly uploaded images.',
+    'draft.discard' => 'Discard draft',
+    'draft.workspaces' => 'Private drafts',
+];

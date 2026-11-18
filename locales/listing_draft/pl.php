@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Sprawdź pola szkicu.',
+    'draft.unavailable' => 'Ten szkic jest niedostępny.',
+    'draft.conflict' => 'Szkic lub ogłoszenie zmieniło się. Otwórz aktualny szkic, aby go sprawdzić.',
+    'draft.limit' => 'Osiągnięto limit prywatnych szkiców lub zdjęć.',
+    'draft.saving' => 'Zapisywanie szkicu…',
+    'draft.saved' => 'Prywatny szkic zapisany.',
+    'draft.failed' => 'Nie udało się zapisać szkicu. Sprawdź połączenie lub użyj podglądu.',
+    'draft.help' => 'Zmiany są zapisywane prywatnie podczas pisania.',
+    'draft.open' => 'Otwórz zapisany szkic',
+    'draft.preview' => 'Prywatny podgląd',
+    'draft.clear_images' => 'Usuń nowe zdjęcia szkicu',
+    'draft.private' => 'Tylko Ty widzisz ten podgląd. Nic nie jest tu publikowane.',
+    'draft.back' => 'Wróć do edycji',
+    'draft.empty' => 'Nie zapisano jeszcze szkicu.',
+    'draft.untitled' => 'Ogłoszenie bez tytułu',
+    'draft.duration' => 'Czas trwania po publikacji',
+    'draft.unlimited' => 'Bez daty wygaśnięcia',
+    'draft.checkout_enabled' => 'Dla tego ogłoszenia wybrano wiążące zakupy.',
+    'draft.confirm_discard' => 'Chcę odrzucić ten prywatny szkic i nowo dodane zdjęcia.',
+    'draft.discard' => 'Odrzuć szkic',
+    'draft.workspaces' => 'Prywatne szkice',
+];

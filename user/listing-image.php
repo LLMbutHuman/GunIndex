@@ -8,7 +8,7 @@ if (!is_string($id)||!ctype_digit($id)||!is_string($position)||!preg_match('/\A[
 $query=$pdo->prepare('SELECT i.storage_key FROM market_images i JOIN market_listings l ON l.id=i.listing_id WHERE l.id=? AND l.seller_id=? AND i.position=?');
 $query->execute([(int)$id,(int)$user['id'],(int)$position]);$key=$query->fetchColumn();
 if (!is_string($key)||!preg_match('/\A[a-f0-9]{48}\z/',$key)) abort_request(404,'Not found.');
-$directory=market_image_directory();$path=$directory.'/'.$key.'-thumb.webp';
+$directory=market_image_directory();$path=$directory.'/'.$key.(($_GET['size']??null)==='large'?'.webp':'-thumb.webp');
 if (is_link($path)||!is_file($path)||realpath(dirname($path))!==$directory) abort_request(404,'Not found.');
 header('Content-Type: image/webp');header('Content-Length: '.filesize($path));
 header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');

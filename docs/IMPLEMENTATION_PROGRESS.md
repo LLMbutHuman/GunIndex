@@ -1,5 +1,25 @@
 # Implementierungsfortschritt
 
+## Private Inseratentwürfe und Vorschau
+
+Migration 021 ergänzt getrennte private Arbeitsstände für neue und bestehende
+Inserate. Formulare speichern auch unvollständige Eingaben und aufbereitete
+Produktbilder automatisch. Ein Arbeitsstand pro Editor, maximal zwölf je Konto
+und 24 MiB für Zwischenbilder begrenzen den Speicherbedarf. Die Versionsprüfung
+erkennt konkurrierende Tabs sowie Änderungen am gespeicherten Ausgangsinserat.
+Zwischenstände sind im Konto wieder aufrufbar und einzeln verwerfbar.
+
+Die private Vorschau zeigt Bilder, Beschreibung, Merkmale, Preis, Lieferart und
+Laufzeit. Ein manuelles Vorschauformular funktioniert ohne JavaScript. Die
+Veröffentlichung übernimmt die Bilder im bestehenden Inseratvorgang. Erst hier
+greifen die Pflichtfelder, ausdrückliche Zustimmungen und Auktionsgebühren.
+Private Vorschauen und Bilder erfordern das Eigentümerkonto und werden nicht
+gecached. Die neue Bedienung ist in acht Sprachen verfügbar.
+
+Lokale Syntax-, Sprach- und Dienstprüfungen sind erledigt. MySQL- und Chromium-
+Prüfungen laufen über die isolierte GitHub-CI. Nach deren Abnahme folgt das
+Benachrichtigungspaket für Preisänderung und Ablauf.
+
 ## Kategorieattribute und Produktklassifizierung, 2026-11-18
 
 Code `26564a8fa6fc26d4c21e324dcd06e157603069cc` auf dem Entwicklungsbranch.

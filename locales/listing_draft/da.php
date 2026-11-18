@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Kontrollér felterne i kladden.',
+    'draft.unavailable' => 'Kladden er ikke tilgængelig.',
+    'draft.conflict' => 'Kladden eller annoncen er ændret. Åbn den gemte kladde for at se den.',
+    'draft.limit' => 'Grænsen for private kladder eller billeder er nået.',
+    'draft.saving' => 'Gemmer kladde…',
+    'draft.saved' => 'Privat kladde gemt.',
+    'draft.failed' => 'Kladden kunne ikke gemmes. Kontrollér forbindelsen, eller brug forhåndsvisningen.',
+    'draft.help' => 'Ændringer gemmes privat, mens du skriver.',
+    'draft.open' => 'Åbn gemt kladde',
+    'draft.preview' => 'Privat forhåndsvisning',
+    'draft.clear_images' => 'Fjern nye kladdebilleder',
+    'draft.private' => 'Kun du kan se forhåndsvisningen. Der udgives intet her.',
+    'draft.back' => 'Tilbage til redigering',
+    'draft.empty' => 'Der er endnu ingen gemt kladde.',
+    'draft.untitled' => 'Annonce uden titel',
+    'draft.duration' => 'Varighed efter udgivelse',
+    'draft.unlimited' => 'Ingen udløbsdato',
+    'draft.checkout_enabled' => 'Bindende køb er valgt for denne annonce.',
+    'draft.confirm_discard' => 'Jeg vil kassere denne private kladde og de nyligt uploadede billeder.',
+    'draft.discard' => 'Kassér kladde',
+    'draft.workspaces' => 'Private kladder',
+];

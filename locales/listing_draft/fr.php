@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Vérifiez les champs du brouillon.',
+    'draft.unavailable' => 'Ce brouillon est indisponible.',
+    'draft.conflict' => 'Le brouillon ou l’annonce a changé. Ouvrez le brouillon enregistré pour le vérifier.',
+    'draft.limit' => 'La limite de brouillons privés ou d’images est atteinte.',
+    'draft.saving' => 'Enregistrement du brouillon…',
+    'draft.saved' => 'Brouillon privé enregistré.',
+    'draft.failed' => 'Impossible d’enregistrer le brouillon. Vérifiez votre connexion ou utilisez l’aperçu.',
+    'draft.help' => 'Vos modifications sont enregistrées en privé pendant la saisie.',
+    'draft.open' => 'Ouvrir le brouillon enregistré',
+    'draft.preview' => 'Aperçu privé',
+    'draft.clear_images' => 'Supprimer les nouvelles images du brouillon',
+    'draft.private' => 'Vous seul pouvez voir cet aperçu. Rien n’est publié ici.',
+    'draft.back' => 'Revenir à la modification',
+    'draft.empty' => 'Aucun brouillon n’a encore été enregistré.',
+    'draft.untitled' => 'Annonce sans titre',
+    'draft.duration' => 'Durée après publication',
+    'draft.unlimited' => 'Sans date d’expiration',
+    'draft.checkout_enabled' => 'La commande ferme est activée pour cette annonce.',
+    'draft.confirm_discard' => 'Je souhaite supprimer ce brouillon privé et ses images nouvellement importées.',
+    'draft.discard' => 'Supprimer le brouillon',
+    'draft.workspaces' => 'Brouillons privés',
+];

@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Controleer de velden van het concept.',
+    'draft.unavailable' => 'Dit concept is niet beschikbaar.',
+    'draft.conflict' => 'Het concept of de advertentie is gewijzigd. Open het opgeslagen concept om het te controleren.',
+    'draft.limit' => 'De limiet voor privéconcepten of afbeeldingen is bereikt.',
+    'draft.saving' => 'Concept opslaan…',
+    'draft.saved' => 'Privéconcept opgeslagen.',
+    'draft.failed' => 'Opslaan mislukt. Controleer je verbinding of gebruik het voorbeeld.',
+    'draft.help' => 'Wijzigingen worden tijdens het typen privé opgeslagen.',
+    'draft.open' => 'Opgeslagen concept openen',
+    'draft.preview' => 'Privévoorbeeld',
+    'draft.clear_images' => 'Nieuwe conceptafbeeldingen verwijderen',
+    'draft.private' => 'Alleen jij ziet dit voorbeeld. Hier wordt niets gepubliceerd.',
+    'draft.back' => 'Terug naar bewerken',
+    'draft.empty' => 'Er is nog geen concept opgeslagen.',
+    'draft.untitled' => 'Advertentie zonder titel',
+    'draft.duration' => 'Looptijd na publicatie',
+    'draft.unlimited' => 'Geen vervaldatum',
+    'draft.checkout_enabled' => 'Bindend afrekenen is gekozen voor deze advertentie.',
+    'draft.confirm_discard' => 'Ik wil dit privéconcept en de nieuw geüploade afbeeldingen verwijderen.',
+    'draft.discard' => 'Concept verwijderen',
+    'draft.workspaces' => 'Privéconcepten',
+];

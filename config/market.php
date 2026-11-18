@@ -183,9 +183,14 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
 {
     $data = market_validate($pdo, $input);
     $prepared = [];
+    $managedDraft=array_key_exists('draft_revision',$input);
+    $editor=$listingId??0;
+    $draftBase='';
+    $committing=false;
     try {
         $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
-        market_assert_users_active($pdo,[$sellerId]);
+        if($managedDraft)listing_draft_lock_owner($pdo,$sellerId);
+        else market_assert_users_active($pdo,[$sellerId]);
         if (!geo_country_locked_enabled($pdo,$data['country_code'])) throw new MarketAccessException('Dieser Ländermarkt ist derzeit nicht verfügbar.');
         if (!market_category_locked_allowed($pdo,(int)$data['category_id'])) throw new MarketAccessException('Diese Kategorie ist nicht mehr verfügbar.');
         $existingImages = 0;
@@ -207,16 +212,26 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             $q=$pdo->prepare('SELECT COUNT(*) FROM market_images WHERE listing_id=?');
             $q->execute([$listingId]);
             $existingImages=(int)$q->fetchColumn();
+            if($managedDraft){
+                $draftBase=listing_draft_base($existing,listing_draft_images($pdo,$editor,true));
+                listing_draft_guard(listing_draft_workspace($pdo,$sellerId,$editor,true),$draftBase,$input);
+            }
             if (array_key_exists('image_positions',$input)) {
                 if (!is_array($input['image_positions'])) throw new InvalidArgumentException(t('image_order.invalid'));
                 image_order_apply($pdo,$listingId,$input['image_positions'],$input['image_revision']??null);
                 if (function_exists('audit_log')) audit_log($pdo,$sellerId,'listing.images_order_saved',$listingId,['positions'=>$input['image_positions']]);
             }
         }
+        if($managedDraft&&$editor===0){
+            $draftBase=listing_draft_base(null,[]);
+            listing_draft_guard(listing_draft_workspace($pdo,$sellerId,0,true),$draftBase,$input);
+        }
         $definitions=classification_definitions($pdo,$data['category_id'],true,true);
         $attributeValues=classification_values($definitions,$input['attributes']??[],$data['status']==='active');
         $feeQuote=auction_billing_prepare($pdo,$sellerId,$data,$input,$existing);
-        $prepared = market_prepare_images($files, $existingImages);
+        if($managedDraft)$prepared=listing_draft_materialize($pdo,$sellerId,$editor);
+        if($existingImages+count($prepared)>5)throw new MarketConflictException(t('draft.conflict'));
+        $prepared=array_merge($prepared,market_prepare_images($files,$existingImages+count($prepared)));
         $ends = $data['type'] === 'auction' && $data['status'] === 'active' ? gmdate('Y-m-d H:i:s', time()+$data['duration_days']*86400) : null;
         if($data['type']!=='auction'){
             $ends=$existing&&$existing['type']!=='auction'&&$existing['status']!=='draft'?$existing['ends_at']:
@@ -261,13 +276,17 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             audit_log($pdo,$sellerId,'listing.rules_accepted',$listingId,['version'=>'general-1.0','status'=>$data['status']]);
         }
         if($data['status']==='active'&&function_exists('discovery_enqueue_listing'))discovery_enqueue_listing($pdo,$listingId);
+        if($managedDraft)listing_draft_finish($pdo,$sellerId,$editor,$draftBase);
+        $committing=true;
         $pdo->commit();
         return $listingId;
     } catch (Throwable $error) {
+        $rolledBack=false;
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
+            $rolledBack=true;
         }
-        market_remove_prepared_images($prepared);
+        if(!$committing||$rolledBack)market_remove_prepared_images($prepared);
         throw $error;
     }
 }

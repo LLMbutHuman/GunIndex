@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Controlla i campi della bozza.',
+    'draft.unavailable' => 'Questa bozza non è disponibile.',
+    'draft.conflict' => 'La bozza o l’annuncio è cambiato. Apri la bozza salvata per controllarla.',
+    'draft.limit' => 'È stato raggiunto il limite di bozze private o immagini.',
+    'draft.saving' => 'Salvataggio della bozza…',
+    'draft.saved' => 'Bozza privata salvata.',
+    'draft.failed' => 'Impossibile salvare la bozza. Controlla la connessione o usa l’anteprima.',
+    'draft.help' => 'Le modifiche vengono salvate in privato mentre scrivi.',
+    'draft.open' => 'Apri la bozza salvata',
+    'draft.preview' => 'Anteprima privata',
+    'draft.clear_images' => 'Rimuovi le nuove immagini della bozza',
+    'draft.private' => 'Solo tu puoi vedere questa anteprima. Qui non viene pubblicato nulla.',
+    'draft.back' => 'Torna alla modifica',
+    'draft.empty' => 'Non è ancora stata salvata una bozza.',
+    'draft.untitled' => 'Annuncio senza titolo',
+    'draft.duration' => 'Durata dopo la pubblicazione',
+    'draft.unlimited' => 'Nessuna data di scadenza',
+    'draft.checkout_enabled' => 'Per questo annuncio è stato scelto l’acquisto vincolante.',
+    'draft.confirm_discard' => 'Voglio eliminare questa bozza privata e le immagini appena caricate.',
+    'draft.discard' => 'Elimina bozza',
+    'draft.workspaces' => 'Bozze private',
+];

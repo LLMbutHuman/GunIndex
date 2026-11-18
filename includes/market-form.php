@@ -5,8 +5,15 @@ $field=static function(string $key,string $fallback='') use ($values):string { $
 $attributeCategory=(int)$field('category_id');
 $attributeValues=['attributes'=>is_array($values['attributes']??null)?$values['attributes']:[]];
 ?>
-<form method="post" enctype="multipart/form-data" class="panel listing-form" data-listing-form>
+<script src="/assets/js/listing-draft.js" defer></script>
+<form method="post" enctype="multipart/form-data" class="panel listing-form" data-listing-form <?=$draftContext['stale']?'':'data-draft-autosave'?>>
 <?= csrf_field() ?>
+<input type="hidden" name="editor" value="<?=$draftContext['editor']?>">
+<input type="hidden" name="draft_revision" value="<?=h($field('draft_revision',$draftContext['revision']))?>">
+<input type="hidden" name="draft_base" value="<?=h($field('draft_base',$draftContext['base']))?>">
+<p role="status" data-draft-status data-saving="<?=h(t('draft.saving'))?>" data-saved="<?=h(t('draft.saved'))?>" data-failed="<?=h(t('draft.failed'))?>">
+<?=h(t($draftContext['stale']?'draft.conflict':($draftContext['payload']===null?'draft.help':'draft.saved')))?></p>
+<p><a href="/user/listing-draft.php?editor=<?=$draftContext['editor']?>"><?=h(t('draft.open'))?></a></p>
 <div class="form-grid"><label class="field"><?=h(t('Land'))?><select name="country_code"><?php foreach(geo_active_countries($pdo) as $code=>$label):?><option value="<?=h($code)?>" <?=$field('country_code',geo_country())===$code?'selected':''?>><?=h($label.' ('.$code.')')?></option><?php endforeach;?></select></label>
 <label class="field span-2"> <?=h(t('Titel'))?> <input name="title" maxlength="150" minlength="5" required value="<?= h($field('title')) ?>" placeholder="Zum Beispiel: Leichter Campingrucksack, 35 Liter"></label>
 <label class="field"> <?=h(t('Kategorie'))?> <select name="category_id" required><option value=""><?=h(t('Kategorie auswählen'))?></option><?php foreach ($categories as $category): ?><option value="<?= (int)$category['id'] ?>" <?= $field('category_id')===(string)$category['id']?'selected':'' ?>><?= h(str_repeat('— ',min(10,(int)($category['depth'] ?? 0))).i18n_category($pdo,$category)) ?></option><?php endforeach; ?></select></label>
@@ -39,13 +46,18 @@ $attributeValues=['attributes'=>is_array($values['attributes']??null)?$values['a
 <?=h(t('image_order.position',['number'=>(int)$imageRow['position']+1]))?>
 <select name="image_positions[<?=(int)$imageRow['id']?>]">
 <?php for($imagePosition=1;$imagePosition<=count($existingImageRows);$imagePosition++): ?>
-<option value="<?=$imagePosition?>" <?=$imagePosition===(int)$imageRow['position']+1?'selected':''?>><?=$imagePosition?></option>
+<option value="<?=$imagePosition?>" <?=(string)$imagePosition===($values['image_positions'][$imageRow['id']]??(string)((int)$imageRow['position']+1))?'selected':''?>><?=$imagePosition?></option>
 <?php endfor; ?></select></label>
 <?php endforeach; ?></div></fieldset>
 <?php endif; ?>
+<div class="button-row" data-draft-images data-image-alt="<?=h(t('Produktbilder'))?>">
+<?php for($position=0;$position<$draftContext['images'];$position++):?>
+<img src="/user/listing-draft-image.php?editor=<?=$draftContext['editor']?>&amp;position=<?=$position?>&amp;revision=<?=h($draftContext['revision'])?>&amp;size=thumb" width="96" height="72" alt="<?=h(t('image_order.image',['number'=>$position+1]))?>">
+<?php endfor;?>
+</div>
 <p class="notice"><?=h(t('auction_billing.goods_notice'))?> <?=h(t('auction_billing.fixed_notice'))?></p>
 <label class="check"><input type="checkbox" name="trade_checkout_enabled" value="1" <?=$field('trade_checkout_enabled')==='1'?'checked':''?>><?=h(t('trade.seller_opt_in'))?></label>
 <?php $auctionFeeOffered=auction_billing_form($pdo,(int)$user['id'],$listing??null); ?>
 <label class="check"><input type="checkbox" name="accept_rules" value="1" required <?= $field('accept_rules')==='1'?'checked':'' ?>><?=h(t('Ich bestätige die allgemeinen Produktregeln (Version general-1.0), die Richtigkeit der Angaben und meine Berechtigung zum Verkauf.'))?></label>
-<div class="button-row"><button class="button" type="submit" data-listing-save><?= isset($listingId)?t('Änderungen speichern'):t('Inserat speichern') ?></button><?php if($auctionFeeOffered):?><button class="button" type="submit" name="auction_fee_action" value="publish" data-auction-publish><?=h(t('auction_billing.publish'))?></button><?php endif;?><button class="button secondary" type="submit" name="load_attributes" value="1" formnovalidate><?=h(t('classification.load'))?></button><a class="button button-ghost" href="/user/dashboard.php"> <?=h(t('Zum Dashboard'))?> </a></div>
+<div class="button-row"><button class="button" type="submit" data-listing-save><?= isset($listingId)?t('Änderungen speichern'):t('Inserat speichern') ?></button><?php if($auctionFeeOffered):?><button class="button" type="submit" name="auction_fee_action" value="publish" data-auction-publish><?=h(t('auction_billing.publish'))?></button><?php endif;?><button class="button secondary" type="submit" name="load_attributes" value="1" formnovalidate><?=h(t('classification.load'))?></button><button class="button secondary" type="submit" formaction="/user/listing-draft.php" formnovalidate><?=h(t('draft.preview'))?></button><button <?=$draftContext['images']?'':'hidden'?> class="button secondary" type="submit" name="clear_draft_images" value="1" formaction="/user/listing-draft.php" formnovalidate><?=h(t('draft.clear_images'))?></button><a class="button button-ghost" href="/user/dashboard.php"> <?=h(t('Zum Dashboard'))?> </a></div>
 </form>

@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'draft.invalid' => 'Prüfe die Eingaben im Entwurf.',
+    'draft.unavailable' => 'Der Entwurf ist nicht verfügbar.',
+    'draft.conflict' => 'Der Entwurf oder das Inserat wurde inzwischen geändert. Öffne den aktuellen Zwischenstand zur Prüfung.',
+    'draft.limit' => 'Das Limit für private Entwürfe oder Bilder ist erreicht.',
+    'draft.saving' => 'Zwischenstand wird gespeichert …',
+    'draft.saved' => 'Privater Zwischenstand gespeichert.',
+    'draft.failed' => 'Zwischenstand konnte nicht gespeichert werden. Prüfe die Verbindung oder nutze die Vorschau.',
+    'draft.help' => 'Änderungen werden beim Schreiben als privater Zwischenstand gespeichert.',
+    'draft.open' => 'Gespeicherten Zwischenstand öffnen',
+    'draft.preview' => 'Private Vorschau',
+    'draft.clear_images' => 'Neue Entwurfbilder entfernen',
+    'draft.private' => 'Diese Vorschau ist nur für dich sichtbar. Hier wird nichts veröffentlicht.',
+    'draft.back' => 'Zurück zur Bearbeitung',
+    'draft.empty' => 'Es gibt noch keinen gespeicherten Zwischenstand.',
+    'draft.untitled' => 'Inserat ohne Titel',
+    'draft.duration' => 'Laufzeit nach Veröffentlichung',
+    'draft.unlimited' => 'Ohne Ablaufdatum',
+    'draft.checkout_enabled' => 'Für dieses Inserat ist verbindlicher Checkout gewählt.',
+    'draft.confirm_discard' => 'Ich möchte diesen privaten Zwischenstand und seine neu hochgeladenen Bilder verwerfen.',
+    'draft.discard' => 'Zwischenstand verwerfen',
+    'draft.workspaces' => 'Private Zwischenstände',
+];

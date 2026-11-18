@@ -9,13 +9,11 @@ $q=$pdo->prepare('SELECT * FROM market_listings WHERE id=? AND seller_id=?'); $q
 $listing=$q->fetch();
 if (!$listing) abort_request(404,'Angebot nicht gefunden.');
 if (!in_array($listing['status'],['draft','active','paused'],true) || market_has_bids($pdo,$listingId) || ($listing['type']==='auction' && $listing['status']==='active' && market_expired($listing))) abort_request(409,'Dieses Angebot kann nicht mehr bearbeitet werden.');
-$decimal=static fn(int $amount):string=>intdiv($amount,100).'.'.str_pad((string)($amount%100),2,'0',STR_PAD_LEFT);
-$values=array_map(static fn($value):string=>(string)($value ?? ''),$listing);
-$values['price']=$decimal((int)$listing['price_cents']);
-$values['shipping_price']=$decimal((int)$listing['shipping_cents']);
-$values['attributes']=array_column(classification_entries($pdo,$listingId),'value','id');
-$values['buyout_price']=$listing['buyout_cents']===null?'':$decimal((int)$listing['buyout_cents']);
-$values['duration_days']='7'; $values['status']=$listing['status']==='draft'?'draft':'active';
+$values=listing_draft_form_values($pdo,$listing);
+$existingImageRows=listing_draft_images($pdo,$listingId);
+$existingImageCount=count($existingImageRows);
+$draftContext=listing_draft_context($pdo,(int)$user['id'],$listingId,$listing,$existingImageRows);
+if($_SERVER['REQUEST_METHOD']==='GET'&&!$draftContext['stale']&&is_array($draftContext['payload'])) $values=array_replace($values,$draftContext['payload']);
 $pageTitle=t('Inserat bearbeiten'); $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     require_csrf(); $values=$_POST;
@@ -27,8 +25,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         http_response_code(422); $error=$exception->getMessage();
     }
 }
-$q=$pdo->prepare('SELECT COUNT(*) FROM market_images WHERE listing_id=?'); $q->execute([$listingId]); $existingImageCount=(int)$q->fetchColumn();
-$q=$pdo->prepare('SELECT id,position FROM market_images WHERE listing_id=? ORDER BY position'); $q->execute([$listingId]); $existingImageRows=$q->fetchAll();
 $categories=catalog_categories($pdo,true);
 include __DIR__.'/../includes/header.php';
 ?>
