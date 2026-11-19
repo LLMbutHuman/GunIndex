@@ -237,6 +237,50 @@ try {
         } finally { if ($pdo->inTransaction()) $pdo->rollBack(); }
     });
 
+    setup_integration_test('escrow_offer_from_chat_and_private_finance_route', static function () use ($pdo, $browser, $ordinary): void {
+        setup_integration_check(escrow_simulation_enabled($pdo));
+        $buyer = setup_integration_user($pdo);
+        $pdo->prepare('INSERT INTO market_categories(name,slug) VALUES (?,?)')
+            ->execute(['Synthetic HTTP escrow items','test-escrow-http-'.bin2hex(random_bytes(8))]);
+        $category = (int)$pdo->lastInsertId();
+        $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,shipping_cents,status,zip,city,country_code,pickup,shipping,trade_checkout_enabled) VALUES (?,?,?,'Synthetic HTTP escrow workflow','fixed',2500,300,'active','10115','Teststadt','DE',0,1,1)")
+            ->execute([$ordinary['id'],$category,'Synthetic HTTP escrow item '.bin2hex(random_bytes(8))]);
+        $listing = (int)$pdo->lastInsertId();
+        chat_send($pdo, $buyer['id'], $listing, $ordinary['id'], 'Synthetic HTTP test message.');
+        $seller = setup_integration_browser();
+        $buyerBrowser = setup_integration_browser();
+        try {
+            setup_integration_login($seller, $ordinary);
+            setup_integration_login($buyerBrowser, $buyer);
+            $sellerPair = '?listing_id='.$listing.'&user_id='.$buyer['id'];
+            $buyerPair = '?listing_id='.$listing.'&user_id='.$ordinary['id'];
+            $chat = setup_integration_request($seller, '/user/chat.php'.$sellerPair);
+            setup_integration_check($chat['status'] === 200 && str_contains($chat['body'], 'data-escrow-chat-offer'));
+            $secure = setup_integration_request($seller, '/user/secure-chat.php'.$sellerPair);
+            setup_integration_check($secure['status'] === 200 && str_contains($secure['body'], 'data-escrow-chat-offer'));
+            $submit = ['action'=>'create','amount'=>'25.80','confirm'=>'1','request_key'=>bin2hex(random_bytes(16))];
+            setup_integration_check(setup_integration_request($seller, '/user/escrow.php'.$sellerPair, $submit)['status'] === 403);
+            $submit['csrf_token'] = setup_integration_csrf($chat['body']);
+            $created = setup_integration_request($seller, '/user/escrow.php'.$sellerPair, $submit);
+            setup_integration_check($created['status'] === 303 && preg_match('/[&?]case_id=([1-9][0-9]*)\z/', $created['headers']['location'] ?? '', $match) === 1);
+            $case = (int)$match[1];
+            $buyerRoute = '/user/escrow.php'.$buyerPair.'&case_id='.$case;
+            $review = setup_integration_request($buyerBrowser, $buyerRoute);
+            setup_integration_check($review['status'] === 200 && str_contains($review['body'], 'data-escrow-status="offered"'));
+            $accept = ['action'=>'accept','case_id'=>(string)$case,'version'=>'1','request_key'=>bin2hex(random_bytes(16)),
+                'confirm'=>'1','csrf_token'=>setup_integration_csrf($review['body'])];
+            setup_integration_check(setup_integration_request($buyerBrowser, $buyerRoute, $accept)['status'] === 303);
+            $queue = '/admin/escrow.php?case_id='.$case;
+            setup_integration_check(setup_integration_request($buyerBrowser, $queue)['status'] === 403);
+            $financePage = setup_integration_request($browser, $queue);
+            setup_integration_check($financePage['status'] === 200 && str_contains($financePage['body'], 'awaiting_funding')
+                && str_contains($financePage['headers']['cache-control'] ?? '', 'no-store'));
+        } finally {
+            curl_close($seller);
+            curl_close($buyerBrowser);
+        }
+    });
+
     setup_integration_test('revoked_administrator_session_loses_setup_access', static function () use ($pdo, $browser, $admin): void {
         $pdo->prepare('UPDATE users SET auth_version=auth_version+1 WHERE id=?')->execute([$admin['id']]);
         $result = setup_integration_request($browser, '/admin/setup.php');

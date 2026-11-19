@@ -19,6 +19,7 @@ $messages=chat_history($pdo,$context,(int)$before);$latest=$messages?(int)end($m
 include __DIR__.'/../includes/header.php';?>
 <main class="container"><div class="page-heading"><p class="eyebrow">Privater Kontakt</p><h1><?=h($context['peer']['username'])?></h1><p><?=h($context['item']['title'])?></p><a href="/user/messages.php">Alle Nachrichten</a></div>
 <?php if($error):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?>
+<?php include __DIR__.'/../includes/escrow-chat.php'; ?>
 <?php if(e2ee_enabled()||!$legacyAllowed):?><section class="panel"><a class="button" href="/user/secure-chat.php?listing_id=<?=(int)$id?>&amp;user_id=<?=(int)$peer?>"><?=h(t('e2ee.title'))?></a><p><?=h(t($legacyAllowed?'e2ee.intro':'e2ee.legacy_blocked'))?></p></section><?php endif;?>
 <section class="panel" aria-label="Nachrichtenverlauf"><div data-chat-messages data-chat-endpoint="<?=h('/user/chat-updates.php?listing_id='.(int)$id.'&user_id='.(int)$peer)?>" data-chat-last="<?=$latest?>" data-chat-self="<?=$uid?>" aria-live="polite">
 <?php if(!$messages):?><p>Noch keine Nachrichten.</p><?php endif;?><?php foreach($messages as $m):?><article class="panel" data-chat-message="<?=(int)$m['id']?>"><strong><?=(int)$m['sender_id']===$uid?'Du':h($context['peer']['username'])?></strong><p style="white-space:pre-wrap;overflow-wrap:anywhere"><?=h($m['message_text'])?></p><small><?=h($m['created_at'])?> UTC</small><br><a href="/marketplace/report.php?type=message&amp;id=<?=(int)$m['id']?>">Nachricht melden</a></article><?php endforeach;?></div>

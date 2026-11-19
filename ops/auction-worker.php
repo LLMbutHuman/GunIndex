@@ -11,6 +11,7 @@ try {
     fwrite(STDOUT,'Closed general auctions: '.$closed.PHP_EOL);
     $limit=isset($args[0])?(int)$args[0]:100;
     fwrite(STDOUT,'Closed general listings: '.trade_close_due($pdo,$limit).'; expired offers: '.trade_expire($pdo,$limit).PHP_EOL);
+    if (escrow_simulation_enabled($pdo)) fwrite(STDOUT,'Expired simulated escrow cases: '.escrow_expire($pdo,$limit).PHP_EOL);
     fwrite(STDOUT,'Deadline warnings queued: '.listing_alert_due($pdo,$limit).'; notice batches: '.listing_alert_deliver($pdo).PHP_EOL);
     $conflicts=market_worker_conflicts();
     if ($conflicts) {

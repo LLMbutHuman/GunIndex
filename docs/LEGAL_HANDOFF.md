@@ -98,11 +98,12 @@ Regtest bleibt eine isolierte Simulation. Vor aktiviertem Mainnet-Betrieb sind
 Node, Wallet, Kursverfahren und Umgang mit Reorganisationen und Erstattungen
 fachlich und technisch abzunehmen. Details: [BITCOIN.md](BITCOIN.md).
 
-Treuhand ist noch kein implementierter verwahrender Zahlungsdienst. Es gibt
-eine Gebührenvorschau, aber keinen vollständig freigegebenen Verwahrungs-/
-Auszahlungsworkflow. Auch Bitcoin und Banküberweisung sind nicht aktiviert.
-Ein persönliches PayPal-Konto wird nicht als Treuhandinfrastruktur behandelt.
-Details: [PAYMENTS.md](PAYMENTS.md) und technische Restliste.
+Die Treuhand-Simulation umfasst Preisangebot, Gegenangebot, Eingangsereignis,
+Versand, Empfang, Streitfall, Freigabe, Erstattung und Rückbuchung im isolierten
+Testsystem. Für Kundengelder fehlen Anbieteranbindung, Rechtsbedingungen und
+Betriebsabnahme. Ein persönliches PayPal-Konto erfüllt die technische
+Anbietervoraussetzung für Verwahrung und Weiterleitung nicht.
+[Treuhandablauf](ESCROW.md), [Zahlungen](PAYMENTS.md)
 
 ## Datenschutz, Identitätsprüfung und Kommunikation
 

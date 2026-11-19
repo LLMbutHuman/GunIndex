@@ -18,6 +18,7 @@ include __DIR__.'/../includes/header.php';
 <main class="container e2ee" id="secure-chat" data-user="<?=$uid?>" data-listing="<?=$listing?>" data-peer="<?=$peer?>" data-csrf="<?=h(csrf_token())?>" data-labels="<?=h(json_encode($labels,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE))?>">
 <h1><?=h(t('e2ee.title'))?></h1><p><?=h(t('e2ee.intro'))?></p>
 <?php if($context): ?><p><?=h($context['peer']['username'])?> · <?=h($context['item']['title'])?></p><p><a href="/user/chat.php?listing_id=<?=$listing?>&amp;user_id=<?=$peer?>"><?=h(t('e2ee.legacy'))?></a></p><?php endif; ?>
+<?php include __DIR__.'/../includes/escrow-chat.php'; ?>
 <?php if(!$enabled): ?><p class="notice" role="status"><?=h(t('e2ee.disabled'))?></p>
 <?php else: ?>
 <noscript><p class="notice"><?=h(t('e2ee.unsupported'))?></p></noscript>

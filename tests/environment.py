@@ -34,7 +34,7 @@ def up():
  # Only synthetic runtime configuration is updated; existing secrets are preserved.
  names={line.split('=',1)[0] for line in appfile.read_text().splitlines() if '=' in line}
  with appfile.open('a') as handle:
-  for name,value in {'APP_URL':'http://127.0.0.1:8081','MAIL_TRANSPORT':'test'}.items():
+  for name,value in {'APP_URL':'http://127.0.0.1:8081','MAIL_TRANSPORT':'test','ESCROW_SIMULATION':'1'}.items():
    if name not in names:handle.write(name+'='+value+'\n')
  if exists(WORKER):docker('stop',WORKER,capture=True)
  docker('build','--secret','id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt','-q','-t',IMAGE,'-f',str(ROOT/'ops/Dockerfile'),str(ROOT))
@@ -60,9 +60,9 @@ def up():
    old=docker('inspect','--format','{{.Image}}',container,capture=True).stdout.strip()
    new=docker('image','inspect','--format','{{.Id}}',IMAGE,capture=True).stdout.strip()
    version=docker('inspect','--format','{{index .Config.Labels \"gunindex.runtime\"}}',container,capture=True).stdout.strip()
-   if old!=new or version!=b'phase3':docker('stop',container,capture=True);docker('rm',container,capture=True)
+   if old!=new or version!=b'phase4':docker('stop',container,capture=True);docker('rm',container,capture=True)
   if not exists(container):
-   args=['run','-d','--name',container,'--label','gunindex.runtime=phase3','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
+   args=['run','-d','--name',container,'--label','gunindex.runtime=phase4','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
    for name in ('PAYPAL_CLIENT_ID','PAYPAL_CLIENT_SECRET','PAYPAL_MERCHANT_ID','PAYPAL_WEBHOOK_ID','PAYPAL_MODE','PAYPAL_ACCOUNT_TYPE','PAYPAL_BUSINESS_SCOPE','PAYPAL_ENABLED','PLATFORM_BILLING_APPROVED','PAYPAL_LIVE_APPROVED','APP_URL'):
     if name in os.environ:args+=['-e',name]
    if worker:
@@ -93,6 +93,8 @@ def test():
    docker('exec',APP,'php','tests/'+suite)
   docker('exec',APP,'php','tests/mail_smtp_test.php','--wire')
   for suite in ('mail_dns_test.php','mail_setup_integration_test.php'):
+   docker('exec',APP,'php','tests/'+suite)
+  for suite in ('escrow_workflow_test.php','escrow_integration_test.php','escrow_parallel_test.php'):
    docker('exec',APP,'php','tests/'+suite)
   for suite in ('relisting_test.php','relisting_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)

@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Treuhandablauf im Testsystem, 2026-11-19
+
+Migration 032 verbindet Chatangebote, veränderliche Gegenangebote und feste
+Zahlungsreferenzen mit einem isolierten Treuhandverlauf. Die Parteien pflegen
+getrennte verschlüsselte Testkontakte. Annahme, Versand, Empfang, Streitfälle,
+Freigabe, Storno, Erstattung, Rückbuchung und Fristen sind rollen- und
+versionsgebunden. Der Anbieterablauf verwendet ausschließlich den internen
+Simulator im isolierten Entwicklungsschema. [Treuhandablauf](ESCROW.md)
+
+Lokale Zustands- und Syntaxprüfungen sind bestanden. Die MySQL-, HTTP-,
+Parallel- und Browserprüfungen werden im isolierten Testlauf überprüft.
+Ein zugelassener Provider und die Treuhandbedingungen fehlen für Live-Betrieb.
+
 ## Mail-Einrichtung und SMTP-Relay, 2026-11-19
 
 Migration 031 speichert eine verschlüsselte Konfiguration für lokalen Versand
@@ -9,8 +22,14 @@ SPF, DKIM und DMARC werden am DNS geprüft. Ein Testauftrag geht an die
 Adresse des angemeldeten Administratorkontos, gebunden an die Konfiguration.
 Die Transportannahme und die tatsächliche Empfängerzustellung sind getrennt.
 
-Lokale SMTP- und DNS-Tests verwenden ausschließlich synthetische Werte.
-MySQL-/HTTP-Test und vollständige Regression laufen in CI. Für die
+Lokale PHP-Syntax, Sprachparität, Setup- und DNS-Prüfungen sowie sechs
+SMTP-Logik- und vier echte SMTP-TLS-Tests bestanden.
+[CI 44581824454](https://github.com/LLMbutHuman/GunIndex/actions/runs/44581824454)
+für `cd0f2b0` ist vollständig grün. Windowsjob `135764197510` und Linuxjob
+`135764196816` bestanden. MySQL bestätigte Migration 031, Rollenprüfung,
+Verschlüsselung, Revisionsschutz und Warteschlangenbindung. Die HTTP-Tests
+prüften MFA, CSRF, Speicherung und Versand an das eigene Konto. STARTTLS,
+SMTPS, Fehlerfälle, Composer-Audit und Browserregression bestanden. Für die
 Produktivprüfung werden Betreiber-Domain, Mailanbieter und DNS benötigt.
 [Mail-Einrichtung](MAIL_SETUP.md)
 

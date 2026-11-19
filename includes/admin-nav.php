@@ -12,6 +12,7 @@ $adminLinks=[
  '/admin/listings.php'=>['Inserate & Auktionen','content.moderate'],'/admin/ratings.php'=>['Bewertungen','content.moderate'],'/admin/moderation.php'=>['Meldungen & Beschwerden','reports.read'],
  '/admin/campaigns.php'=>['Händler & Werbung','campaigns.manage'],'/admin/payments.php'=>['Zahlungseingänge','finance.manage'],'/admin/finance.php'=>['Rechnungen & Erstattungen','finance.manage'],
  '/admin/privacy.php'=>['Datenschutzanfragen','privacy.review'],'/admin/verifications.php'=>['Identitätsprüfung','identity.review'],'/admin/legal.php'=>['Rechtstexte','legal.manage'],'/admin/logs.php'=>['Änderungsprotokoll','site.manage']];
+if (escrow_simulation_enabled($pdo)) $adminLinks['/admin/escrow.php'] = ['escrow.admin_title','finance.manage'];
 $adminPath=parse_url($_SERVER['REQUEST_URI']??'',PHP_URL_PATH);$ordinal=0;
 ?>
 <aside class="admin-nav panel" aria-label="Administration"><p class="eyebrow">Control room</p><nav aria-label="Verwaltungsbereiche">

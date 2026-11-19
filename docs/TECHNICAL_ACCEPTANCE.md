@@ -95,8 +95,13 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 25 | Banküberweisung | B | Eindeutige Referenzen, camt.053.001.08-Import, Abgleich mit separater Eingangsprüfung und einmaliger Buchung getestet. Originalexport des Betreiberkontos und Produktivfreigabe offen. [CI 44577373006](https://github.com/LLMbutHuman/GunIndex/actions/runs/44577373006) |
 | 26 | Treuhand | C | Vollständiger gesperrter Workflow und geeignete Providerinfrastruktur |
 
+Der Mail-Assistent mit verschlüsselter Relay-Konfiguration, acht Sprachfassungen,
+DNS-Prüfung und simulierten Testaufträgen ist in MySQL und HTTP bestätigt. Ein
+lokaler SMTP-Server prüfte STARTTLS, SMTPS und TLS-Fehler. Externe Zustellung
+steht aus. [CI 44581824454](https://github.com/LLMbutHuman/GunIndex/actions/runs/44581824454)
+
 Zusätzlich offen: vollständige E2EE-Abnahme und kompromittierte Kontoautorität;
-SMTP-/DNS-Assistent; geführter Ubuntu-Installer; vollständiger Admin-
+geführter Ubuntu-Installer; vollständiger Admin-
 Einrichtungsablauf; internationale Datenimporte; vollständige Installations-/
 Restore-/Betriebsabnahme und Legal-Team-Übergabe. Alte serverseitige
 Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md

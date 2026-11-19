@@ -53,6 +53,7 @@ function trade_transaction(PDO $pdo,callable $work): mixed
 
 function trade_listing_available(PDO $pdo,int $id): bool
 {
+    if (escrow_listing_reserved($pdo,$id)) return false;
     $q=$pdo->prepare("SELECT id FROM market_trades WHERE listing_id=? AND status<>'cancelled' LIMIT 1".($pdo->inTransaction()?' FOR SHARE':''));
     $q->execute([$id]); return $q->fetchColumn()===false;
 }
@@ -152,6 +153,7 @@ function trade_purchase(PDO $pdo,int $actor,int $listing,array $input,?int $offe
         $q=$pdo->prepare('SELECT id,request_hash FROM market_trades WHERE request_actor=? AND request_key=? FOR UPDATE');$q->execute([$actor,$key]);$old=$q->fetch();
         if($old){if(!hash_equals($old['request_hash'],$hash))throw new DomainException(t('trade.duplicate'));return (int)$old['id'];}
         $row=trade_listing($pdo,$actor,$listing,true);
+        if (escrow_listing_reserved($pdo,$listing)) throw new DomainException(t('trade.unavailable'));
         $quote=trade_quote_for($pdo,$actor,$row,market_input($input,'delivery'),$offerId,true);
         if(!hash_equals($quote['hash'],trade_hex($input['quote_hash']??null,64)))throw new DomainException(t('trade.changed'));
         consent_validate_submission($quote['documents'],$input,$quote['locale']);
