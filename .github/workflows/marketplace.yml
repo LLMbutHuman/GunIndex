@@ -36,6 +36,7 @@ jobs:
       - name: Audit locked PHP dependencies
         run: docker --host=unix:///var/run/docker.sock exec -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/app gunindex-rebuild-app composer audit --locked --no-dev --no-interaction
       - name: Install locked browser test dependencies
+        timeout-minutes: 10
         run: |
           npm ci --ignore-scripts --prefix tests/browser-tools
           tests/browser-tools/node_modules/.bin/playwright install --with-deps chromium

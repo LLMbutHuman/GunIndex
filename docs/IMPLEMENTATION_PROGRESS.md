@@ -14,7 +14,14 @@ bindet die geprüfte Logorevision. Entfernen blendet das Bild sofort aus. Der
 Kontoexport enthält die eigene Bilddatei, bei Anonymisierung wird sie entfernt.
 
 PHP- und JavaScript-Syntax, Sprachschlüssel und lokale Bildreihenfolge-Tests
-sind geprüft. Der vollständige MySQL- und Chromium-Nachweis folgt in CI.
+sind geprüft. Der erste Browserlauf auf `74577eb` scheiterte beim Uploadformular,
+weil die beiden Routen im öffentlichen Dispatcher fehlten. `c8d7d02` ergänzt
+sie sowie den HTTP-Test für den geschützten Einstieg. Windows und der isolierte
+MySQL-Teil einschließlich Migration 026 und Löschung bei Anonymisierung sind
+im [CI-Lauf 44512195727](https://github.com/LLMbutHuman/GunIndex/actions/runs/44512195727)
+bestanden. Die Browserabnahme wartete länger als zehn Minuten beim Einrichten
+von Chromium. Der erneute Lauf begrenzt diesen Schritt auf zehn Minuten und
+führt dieselben Prüfungen aus.
 
 ## Optionale Benutzer-MFA und Passkeys, 2026-11-19
 
@@ -32,9 +39,14 @@ führt bei aktivem TOTP ebenfalls zur zweiten Prüfung. In Produktion müssen
 Browseradresse und HTTPS-`APP_URL` übereinstimmen. Der isolierte Browser-Test
 verwendet `http://localhost:8081` und einen virtuellen Authenticator.
 
-Lokale PHP- und JavaScript-Syntax, Grenzfalltests und Sprachschlüssel sind
-geprüft. MySQL- und Chromium-Abnahme folgt in CI. Nach erfolgreicher Abnahme
-folgen Profilbilder und Händlerlogos mit sicheren Uploads.
+Für `9b4bea4` war [CI 44510526788](https://github.com/LLMbutHuman/GunIndex/actions/runs/44510526788)
+vollständig grün. Windowsjob `135513280952` und Linuxjob `135513281279`
+bestanden. MySQL prüfte Migrationen 024–025, TOTP-Aktivierung, einmalige
+Recovery-Codes, Rotation, Versionsschutz und Entfernen. Chromium prüfte
+Origin-Sperre, echte Registrierung und Anmeldung mit virtuellem Authenticator,
+TOTP nach Passkey-Anmeldung, Recovery-Replay und Passkey-Widerruf. Der
+Composer-Audit meldete keine bekannten Sicherheitshinweise. Die Prüfung mit
+physischer Hardware und den Browsern am Zielsystem steht zur Betriebsabnahme aus.
 
 ## Private Inseratentwürfe und Vorschau
 
