@@ -245,7 +245,7 @@ class MarketplaceHTTP(unittest.TestCase):
                 self.assertEqual(404, Browser().request(path)[0])
 
     def test_anonymous_private_routes_redirect_and_member_is_not_admin(self):
-        for path in ('/user/profile.php', '/user/dashboard.php', '/user/create-listing.php', '/user/payments.php', '/admin/settings.php'):
+        for path in ('/user/profile.php', '/user/profile-image.php', '/user/dashboard.php', '/user/create-listing.php', '/user/payments.php', '/admin/settings.php'):
             self.assertEqual(303, Browser().request(path)[0])
         member = self.user()
         for path in ('/admin/index.php', '/admin/settings.php', '/admin/categories.php'):

@@ -92,7 +92,7 @@ async function login(page, user, admin = false) {
     await admin.goto(adminReview);
     const review = admin.locator(`form:has(input[name=target_id][value="${owner.id}"])`);
     const previous = await review.locator('[name=revision]').inputValue();
-    const preview = await review.locator('..').locator('img').getAttribute('src');
+    const preview = await review.locator('xpath=..').locator('img').getAttribute('src');
     assert.equal((await admin.request.get(origin + preview)).headers()['content-type'],'image/webp');
     assert.equal((await editor.request.get(origin + preview)).status(),403);
 
