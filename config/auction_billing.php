@@ -30,7 +30,7 @@ function auction_billing_quote(PDO $pdo,int $sellerId,bool $lock=false): ?array 
     // Hold all settings stable while the caller commits publication and contract.
     if($lock)$pdo->query('SELECT setting_key FROM system_settings ORDER BY setting_key FOR SHARE')->fetchAll();
     site_settings($pdo,true);
-    if(site_setting($pdo,'auction_fees_approved','0')!=='1'||!finance_enabled($pdo)||manual_payment_reason($pdo)!==null)
+    if(site_setting($pdo,'auction_fees_approved','0')!=='1'||!finance_enabled($pdo)||direct_payment_reason($pdo)!==null)
         throw new PaymentUnavailable(t('auction_billing.unavailable'));
     $q=$pdo->prepare('SELECT * FROM market_billing_profiles WHERE user_id=?'.($lock?' FOR SHARE':''));$q->execute([$sellerId]);$buyer=$q->fetch();
     if(!$buyer)throw new PaymentUnavailable(t('auction_billing.billing_required'));
@@ -47,7 +47,7 @@ function auction_billing_quote(PDO $pdo,int $sellerId,bool $lock=false): ?array 
     fees_tax_split($tariff['listing_cents'],(int)$rule['basis_points'],true);
     $payload=['version'=>'auction-billing-1','fee_version'=>'ab1-'.substr(hash('sha256',auction_billing_json($tariff)),0,20),
         'tariff'=>$tariff,'buyer'=>$buyer,'operator'=>$operator,'tax_bps'=>(int)$rule['basis_points'],'tax_explanation'=>$rule['explanation'],
-        'recipient'=>site_setting($pdo,'manual_paypal_recipient'),'currency'=>'EUR','locale'=>i18n_locale(),
+        'recipient'=>manual_payment_reason($pdo)===null?site_setting($pdo,'manual_paypal_recipient'):'','currency'=>'EUR','locale'=>i18n_locale(),
         'labels'=>['listing'=>t('auction_billing.listing_label'),'success'=>t('auction_billing.success_label')],
         'terms'=>t('auction_billing.tariff',['listing'=>money_eur($tariff['listing_cents'])]).' '.t('auction_billing.accept'),
         'documents'=>array_map(static fn(array $d):array=>['id'=>(int)$d['id'],'hash'=>$d['content_hash'],'language'=>$d['language']],$documents)];

@@ -8,17 +8,22 @@ function manual_payment_reason(PDO $pdo):?string {
  $bps=(int)site_setting($pdo,'manual_tax_bps','0');if($bps<0||$bps>10000)return 'Die Steuerkonfiguration ist ungültig.';
  return null;
 }
-function manual_terms(int $quantity):string {
- return 'Bump-Guthaben: '.$quantity.' Aktivierung(en). Ein Bump pro Inserat alle 72 Stunden; verändert nur die Sortieraktualität. Keine Reichweiten- oder Verkaufsgarantie. Zahlung wird vom Betreiber anhand des tatsächlichen PayPal-Eingangs geprüft. Guthaben entsteht erst nach Prüfung und wird vom Nutzer gesondert aktiviert. Gesetzliche Verbraucherrechte bleiben bestehen. Kein vorzeitiger Leistungsbeginn wird mit der Bestellung erklärt. Version manual-bump-1.0.';
+function direct_payment_reason(PDO $pdo):?string {
+ $paypal=manual_payment_reason($pdo);
+ return $paypal!==null&&bank_gate($pdo)!==null?$paypal:null;
+}
+function manual_terms(int $quantity,bool $bank=false):string {
+ $channel=$bank?'Zahlung wird vom Betreiber anhand des tatsächlichen Eingangs bei der Bank oder bei PayPal geprüft.':'Zahlung wird vom Betreiber anhand des tatsächlichen PayPal-Eingangs geprüft.';
+ return 'Bump-Guthaben: '.$quantity.' Aktivierung(en). Ein Bump pro Inserat alle 72 Stunden; verändert nur die Sortieraktualität. Keine Reichweiten- oder Verkaufsgarantie. '.$channel.' Guthaben entsteht erst nach Prüfung und wird vom Nutzer gesondert aktiviert. Gesetzliche Verbraucherrechte bleiben bestehen. Kein vorzeitiger Leistungsbeginn wird mit der Bestellung erklärt. Version manual-bump-'.($bank?'1.1.':'1.0.');
 }
 function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string $requestKey,?int $campaignId=null,array $consent=[]):int {
- if(manual_payment_reason($pdo)!==null)throw new PaymentUnavailable(manual_payment_reason($pdo));
+ if(($reason=direct_payment_reason($pdo))!==null)throw new PaymentUnavailable($reason);
  if(!in_array($service,['bump_single','bump_pack','category_top','home_top','banner_monthly'],true)||!preg_match('/\A[a-f0-9]{64}\z/',$requestKey))throw new InvalidArgumentException('Ungültige Bestellung.');
  $listing=market_find($pdo,$listingId,false);if(!$listing||(int)$listing['seller_id']!==$userId||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict('Nur eigene aktive Angebote können beworben werden.');
  $promotion=in_array($service,['category_top','home_top','banner_monthly'],true);
  if($promotion&&(!function_exists('business_reserve_order')||($businessReason=business_reason($pdo))!==null))throw new PaymentUnavailable($businessReason??'Die Platzierungsverwaltung ist noch nicht verfügbar.');
  $quote=fees_quote($service,null,$pdo);if($quote['gross_cents']<1)throw new PaymentConflict('Für kostenlose Guthaben ist dieser Zahlungsweg nicht vorgesehen.');
- $quantity=$service==='bump_pack'?3:1;$terms=$promotion?business_terms($pdo,$service,$listing):manual_terms($quantity);
+ $quantity=$service==='bump_pack'?3:1;$terms=$promotion?business_terms($pdo,$service,$listing):manual_terms($quantity,bank_gate($pdo)===null);
  $tax=fees_tax_split($quote['gross_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),true);
  $pdo->beginTransaction();
  try{
@@ -30,7 +35,7 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
   $reference='GI-'.strtoupper(bin2hex(random_bytes(10)));
   $q=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,?,?,?,'issued')");$q->execute([$userId,$reference,$service,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
   $q=$pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,request_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
-  $q->execute([$id,$userId,$listingId,$reference,site_setting($pdo,'manual_paypal_recipient'),$quantity,$tax['net_cents'],$tax['tax_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),hash('sha256',$terms),$terms,$requestKey]);
+  $q->execute([$id,$userId,$listingId,$reference,manual_payment_reason($pdo)===null?site_setting($pdo,'manual_paypal_recipient'):'',$quantity,$tax['net_cents'],$tax['tax_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),hash('sha256',$terms),$terms,$requestKey]);
   if($promotion)business_reserve_order($pdo,$id,$userId,$listing,$service,$campaignId);
   if(function_exists('finance_prepare_order'))finance_prepare_order($pdo,$id,$userId);
   consent_record($pdo,$userId,'checkout',$id,$contractDocuments);
@@ -45,6 +50,7 @@ function manual_claim(PDO $pdo,int $userId,int $invoiceId): void {
   $q->execute([$invoiceId,$userId]);$order=$q->fetch();
   if(!$order||!in_array($order['status'],['issued','pending','manual_rejected'],true))
    throw new PaymentConflict(t('auction_correction.claim_unavailable'));
+  if(bank_order($pdo,$invoiceId))throw new PaymentConflict(t('bank.conflict'));
   if(auction_billing_service($order['service_code'])){
    $charge=auction_fee_lock_charge($pdo,$invoiceId);
    if(!$charge||$charge['waived_at']!==null||auction_fee_replacement($pdo,$invoiceId,true))
@@ -67,6 +73,7 @@ function manual_review(PDO $pdo,int $actorId,int $invoiceId,string $transaction,
  try{
   if(function_exists('governance_assert_actor'))governance_assert_actor($pdo,$actorId,'finance.manage');else settings_assert_admin($pdo,$actorId);
   $q=$pdo->prepare('SELECT i.*,o.reference,o.quantity,o.recipient FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Zahlungsauftrag nicht gefunden.');
+  if(bank_order($pdo,$invoiceId))throw new PaymentConflict(t('bank.conflict'));
   if($invoice['status']==='paid'){
    $q=$pdo->prepare("SELECT capture_id FROM market_payment_attempts WHERE invoice_id=? AND provider='paypal_manual' AND status='manual_verified'");$q->execute([$invoiceId]);
    if($decision==='approve'&&$transaction===$q->fetchColumn()){$pdo->commit();return;}
@@ -80,16 +87,22 @@ function manual_review(PDO $pdo,int $actorId,int $invoiceId,string $transaction,
    $q=$pdo->prepare("INSERT INTO market_payment_attempts(invoice_id,provider,status,capture_id,idempotency_key,mode) VALUES (?,'paypal_manual','manual_verified',?,?,'live')");$q->execute([$invoiceId,$transaction,bin2hex(random_bytes(16))]);$attempt=(int)$pdo->lastInsertId();
    $pdo->prepare("INSERT INTO market_payment_events(attempt_id,provider_event_id,kind,payload_hash) VALUES (?,?,'manual_verified',?)")->execute([$attempt,'manual:'.$transaction,hash('sha256',$reference.':'.$received.':'.$invoice['recipient'])]);
    $pdo->prepare("UPDATE market_invoices SET status='paid' WHERE id=?")->execute([$invoiceId]);
-   if(in_array($invoice['service_code'],['bump_single','bump_pack'],true))$pdo->prepare('INSERT INTO market_bump_credits(invoice_id,user_id,quantity,remaining) VALUES (?,?,?,?)')->execute([$invoiceId,$invoice['user_id'],$invoice['quantity'],$invoice['quantity']]);
-   elseif(!$auctionFee){
-    if(!function_exists('business_fulfill_manual'))throw new PaymentConflict('Die gebuchte Leistung ist nicht zur Freigabe verfügbar.');
-    business_fulfill_manual($pdo,$invoiceId);
-   }
+   manual_fulfill($pdo,$invoice);
    if(function_exists('finance_issue_invoice'))finance_issue_invoice($pdo,$invoiceId,$actorId);
   }else{$pdo->prepare("UPDATE market_invoices SET status='manual_rejected' WHERE id=?")->execute([$invoiceId]);}
   if($decision==='approve'&&function_exists('notify_user'))notify_user($pdo,(int)$invoice['user_id'],'payment:'.$invoiceId,i18n_user_text($pdo,(int)$invoice['user_id'],'notification.payment_confirmed.title'),i18n_user_text($pdo,(int)$invoice['user_id'],'notification.payment_confirmed.body',['reference'=>$invoice['invoice_number']]),'/user/billing.php?order='.$invoiceId,true);
   audit_log($pdo,$actorId,'payment.manual_'.$decision,$invoiceId,['reason'=>$reason,'provider'=>'paypal_manual','verified_manually'=>true]);$pdo->commit();
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();if($e instanceof PDOException&&$e->getCode()==='23000')throw new PaymentConflict('Die Transaktionskennung wurde bereits zugeordnet.');throw$e;}
+}
+/** The payment and fulfilment use the same invoice transaction. */
+function manual_fulfill(PDO $pdo,array $invoice): void {
+ if(auction_billing_service($invoice['service_code']))return;
+ if(in_array($invoice['service_code'],['bump_single','bump_pack'],true)){
+  $pdo->prepare('INSERT INTO market_bump_credits(invoice_id,user_id,quantity,remaining) VALUES (?,?,?,?)')->execute([$invoice['id'],$invoice['user_id'],$invoice['quantity'],$invoice['quantity']]);
+  return;
+ }
+ if(!function_exists('business_fulfill_manual'))throw new PaymentConflict('Die gebuchte Leistung ist nicht zur Freigabe verfügbar.');
+ business_fulfill_manual($pdo,(int)$invoice['id']);
 }
 function manual_bump(PDO $pdo,int $userId,int $listingId,bool $immediateStart=false):void {
  if(!$immediateStart)throw new PaymentConflict('Bitte den sofortigen Beginn dieses einzelnen Bumps ausdrücklich verlangen.');

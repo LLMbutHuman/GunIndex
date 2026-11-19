@@ -86,12 +86,55 @@ function fin_auto_headers():array{return ['paypal-auth-algo'=>'SHA256withRSA','p
 function fin_status(PDO $pdo,int $invoice):string{$q=$pdo->prepare('SELECT status FROM market_invoices WHERE id=?');$q->execute([$invoice]);return(string)$q->fetchColumn();}
 function fin_document_id(PDO $pdo,int $invoice):int{$q=$pdo->prepare('SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?');$q->execute([$invoice]);return(int)$q->fetchColumn();}
 function fin_browser():CurlHandle{$c=curl_init();curl_setopt_array($c,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_COOKIEFILE=>'',CURLOPT_PROXY=>'',CURLOPT_TIMEOUT=>15,CURLOPT_CONNECTTIMEOUT=>3]);return$c;}
-function fin_request(CurlHandle $c,string $path,?array $fields=null):array{
- curl_setopt($c,CURLOPT_URL,'http://127.0.0.1:8081'.$path);if($fields===null)curl_setopt($c,CURLOPT_HTTPGET,true);else{curl_setopt($c,CURLOPT_POST,true);curl_setopt($c,CURLOPT_POSTFIELDS,http_build_query($fields));}
+function fin_request(CurlHandle $c,string $path,?array $fields=null,int $port=8081,bool $multipart=false):array{
+ curl_setopt($c,CURLOPT_URL,'http://127.0.0.1:'.$port.$path);if($fields===null)curl_setopt($c,CURLOPT_HTTPGET,true);else{curl_setopt($c,CURLOPT_POST,true);curl_setopt($c,CURLOPT_POSTFIELDS,$multipart?$fields:http_build_query($fields));}
  $body=curl_exec($c);fin_assert(is_string($body));return[(int)curl_getinfo($c,CURLINFO_RESPONSE_CODE),$body,(string)curl_getinfo($c,CURLINFO_CONTENT_TYPE)];
 }
 function fin_csrf(string $body):string{fin_assert((bool)preg_match('/name="csrf_token"\s+value="([a-f0-9]{64})"/',$body,$m));return$m[1];}
-function fin_login(CurlHandle $browser,array $user):void{[$code,$body]=fin_request($browser,'/auth/login.php');fin_assert($code===200);[$code]=fin_request($browser,'/auth/login.php',['csrf_token'=>fin_csrf($body),'login'=>$user['email'],'password'=>$user['password']]);fin_assert($code===303);}
+function fin_login(CurlHandle $browser,array $user,int $port=8081):void{[$code,$body]=fin_request($browser,'/auth/login.php',null,$port);fin_assert($code===200);[$code]=fin_request($browser,'/auth/login.php',['csrf_token'=>fin_csrf($body),'login'=>$user['email'],'password'=>$user['password']],$port);fin_assert($code===303);}
+
+function fin_bank_mode(callable $run,array $overrides=[]):void{
+ $config=array_replace(['BANK_TRANSFER_ENABLED'=>'1','BANK_TRANSFER_APPROVED'=>'1','BANK_TRANSFER_BENEFICIARY'=>'Synthetic test recipient','BANK_TRANSFER_IBAN'=>'DE89370400440532013000'],$overrides);
+ $saved=[];foreach($config as $key=>$value){$saved[$key]=getenv($key);putenv($key.'='.$value);}
+ try{$run();}finally{foreach($saved as $key=>$value)putenv($value===false?$key:$key.'='.$value);}
+}
+function fin_bank_entry(string $source,string $reference,int $amount,bool $reversal=false):string{
+ $direction=$reversal?'DBIT':'CRDT';
+ return '<Ntry><Amt Ccy="EUR">'.payments_decimal($amount).'</Amt><CdtDbtInd>'.$direction.'</CdtDbtInd>'
+  .($reversal?'<RvslInd>true</RvslInd>':'')
+  .'<Sts><Cd>BOOK</Cd></Sts><BookgDt><Dt>'.gmdate('Y-m-d').'</Dt></BookgDt><AcctSvcrRef>'.h($source).'</AcctSvcrRef>'
+  .'<BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>RCDT</Cd><SubFmlyCd>ESCT</SubFmlyCd></Fmly></Domn></BkTxCd>'
+  .'<NtryDtls><TxDtls><RmtInf><Ustrd>'.h($reference).'</Ustrd></RmtInf></TxDtls></NtryDtls></Ntry>';
+}
+function fin_bank_xml(string $entries,string $iban='DE89370400440532013000',string $tag='TEST'):string{
+ return '<Document xmlns="'.BANK_STATEMENT_NAMESPACE.'"><BkToCstmrStmt><GrpHdr><MsgId>'.$tag.'</MsgId><CreDtTm>'.gmdate('c').'</CreDtTm>'
+  .'</GrpHdr><Stmt><Id>'.$tag.'</Id><Acct><Id><IBAN>'.$iban.'</IBAN></Id><Ccy>EUR</Ccy></Acct>'.$entries.'</Stmt></BkToCstmrStmt></Document>';
+}
+function fin_bank_entry_id(PDO $pdo,string $source,string $direction='credit'):int{
+ $q=$pdo->prepare('SELECT id FROM market_bank_entries WHERE source_reference=? AND direction=?');
+ $q->execute([$source,$direction]);return(int)$q->fetchColumn();
+}
+function fin_bank_http_server(callable $run):void{
+ $listener=stream_socket_server('tcp://127.0.0.1:0');
+ fin_assert(is_resource($listener));
+ $address=stream_socket_get_name($listener,false);
+ fclose($listener);
+ $port=(int)substr(strrchr($address,':'),1);
+ $process=proc_open([PHP_BINARY,'-d','upload_max_filesize=5M','-d','post_max_size=8M','-S',$address,'-t','public','public/index.php'],
+  [0=>['pipe','r'],1=>['file','/dev/null','a'],2=>['file','/dev/null','a']],$pipes,dirname(__DIR__));
+ fin_assert(is_resource($process));
+ fclose($pipes[0]);
+ try{
+  $connected=false;
+  for($attempt=0;$attempt<50;$attempt++){
+   $probe=@stream_socket_client('tcp://'.$address,$error,$message,0.1);
+   if(is_resource($probe)){fclose($probe);$connected=true;break;}
+   usleep(100000);
+  }
+  fin_assert($connected);
+  $run($port);
+ }finally{proc_terminate($process);proc_close($process);}
+}
 
 if(($argv[1]??'')==='--automatic-race'){
  try{
@@ -308,6 +351,102 @@ try{
     [$code]=fin_request($browser,$path,$fields+['csrf_token'=>fin_csrf($body)]);fin_assert($code===422);
     $q=$pdo->prepare('SELECT COUNT(*) FROM market_paypal_refund_jobs WHERE request_id=?');$q->execute([$request]);fin_assert((int)$q->fetchColumn()===0);
    }finally{curl_close($browser);}
+  },
+  'bank_statement_reconciliation_is_exact_idempotent_and_keeps_payment_channels_exclusive'=>static function()use($pdo,$admin,$category):void{
+   fin_bank_mode(static function()use($pdo,$admin,$category):void{
+    $seller=fin_user($pdo);$other=fin_user($pdo);
+    fin_setting($pdo,'manual_paypal_enabled','0');
+    try{$id=fin_order($pdo,$seller,$category);}finally{fin_setting($pdo,'manual_paypal_enabled','1');}
+    fin_reject(fn()=>bank_start($pdo,$id,$other['id']),PaymentConflict::class);
+    bank_start($pdo,$id,$seller['id']);
+    $order=bank_order($pdo,$id);
+    bank_start($pdo,$id,$seller['id']);
+    fin_assert($order===bank_order($pdo,$id)&&fin_status($pdo,$id)==='pending');
+    fin_reject(fn()=>manual_claim($pdo,$seller['id'],$id),PaymentConflict::class);
+    fin_reject(fn()=>fin_pay($pdo,$admin['id'],$id),PaymentConflict::class);
+    $source='SYNTHETIC-BANK-'.bin2hex(random_bytes(8));
+    $entry=fin_bank_entry($source,$order['reference'],199);
+    $xml=fin_bank_xml($entry);
+    fin_reject(fn()=>bank_import($pdo,$other['id'],$xml),DomainException::class);
+    fin_reject(fn()=>bank_import($pdo,$admin['id'],fin_bank_xml($entry,'GB29NWBK60161331926819')),PaymentConflict::class);
+    fin_assert(bank_import($pdo,$admin['id'],$xml)===['imported'=>1,'duplicates'=>0,'skipped'=>0]);
+    fin_assert(bank_import($pdo,$admin['id'],$xml)===['imported'=>0,'duplicates'=>1,'skipped'=>0]);
+    fin_assert(bank_import($pdo,$admin['id'],fin_bank_xml($entry,tag:'EXPORTED-AGAIN'))===['imported'=>0,'duplicates'=>1,'skipped'=>0]);
+    fin_reject(fn()=>bank_import($pdo,$admin['id'],fin_bank_xml(fin_bank_entry($source,$order['reference'],198),tag:'ALTERED')),PaymentConflict::class);
+    fin_assert(fin_status($pdo,$id)==='pending'&&fin_document_id($pdo,$id)===0);
+    $entryId=fin_bank_entry_id($pdo,$source);
+    fin_reject(fn()=>bank_approve($pdo,$other['id'],$entryId),DomainException::class);
+    fin_assert(bank_approve($pdo,$admin['id'],$entryId)===$id&&bank_approve($pdo,$admin['id'],$entryId)===$id);
+    $q=$pdo->prepare("SELECT COUNT(*) FROM market_finance_events WHERE invoice_id=? AND kind='cash_in' AND amount_cents=199");
+    $q->execute([$id]);fin_assert((int)$q->fetchColumn()===1);
+    $q=$pdo->prepare('SELECT remaining FROM market_bump_credits WHERE invoice_id=?');
+    $q->execute([$id]);fin_assert((int)$q->fetchColumn()===1);
+    fin_assert(fin_status($pdo,$id)==='paid'&&str_starts_with(finance_pdf(finance_document($pdo,fin_document_id($pdo,$id),$seller['id'])),'%PDF'));
+    $request=finance_request_refund($pdo,$seller['id'],$id,30,'Synthetic bank refund requested.');
+    fin_reject(fn()=>finance_record_refund($pdo,$admin['id'],$id,30,'PAYPALREFUND123456','Synthetic incompatible provider refund.',$request),PaymentConflict::class);
+    $bankRefund=finance_record_refund($pdo,$admin['id'],$id,30,'Bank debit reference '.$source,'Synthetic completed bank return.',$request,'bank');
+    fin_assert(finance_record_refund($pdo,$admin['id'],$id,30,'Bank debit reference '.$source,'Synthetic completed bank return.',$request,'bank')===$bankRefund);
+    fin_assert(fin_status($pdo,$id)==='partially_refunded'&&finance_refunded_cents($pdo,$id)===30);
+   });
+  },
+  'bank_reversals_wrong_amounts_and_cancelled_orders_cannot_pay'=>static function()use($pdo,$admin,$category):void{
+   fin_bank_mode(static function()use($pdo,$admin,$category):void{
+    $seller=fin_user($pdo);$id=fin_order($pdo,$seller,$category);bank_start($pdo,$id,$seller['id']);
+    $reference=bank_order($pdo,$id)['reference'];
+    $short='SYNTHETIC-SHORT-'.bin2hex(random_bytes(8));$correct='SYNTHETIC-FULL-'.bin2hex(random_bytes(8));
+    $unknown='SYNTHETIC-UNKNOWN-'.bin2hex(random_bytes(8));
+    bank_import($pdo,$admin['id'],fin_bank_xml(fin_bank_entry($short,$reference,198).fin_bank_entry($correct,$reference,199).fin_bank_entry($unknown,'Ordinary non-market entry',199)));
+    foreach([$short,$unknown] as $source)fin_reject(fn()=>bank_approve($pdo,$admin['id'],fin_bank_entry_id($pdo,$source)),PaymentConflict::class);
+    bank_import($pdo,$admin['id'],fin_bank_xml(fin_bank_entry($correct,$reference,199,true)));
+    fin_reject(fn()=>bank_approve($pdo,$admin['id'],fin_bank_entry_id($pdo,$correct)),PaymentConflict::class);
+    fin_reject(fn()=>bank_approve($pdo,$admin['id'],fin_bank_entry_id($pdo,$correct,'reversal')),PaymentConflict::class);
+    finance_cancel($pdo,$id,$seller['id']);
+    $late='SYNTHETIC-LATE-'.bin2hex(random_bytes(8));
+    bank_import($pdo,$admin['id'],fin_bank_xml(fin_bank_entry($late,$reference,199)));
+    fin_reject(fn()=>bank_approve($pdo,$admin['id'],fin_bank_entry_id($pdo,$late)),PaymentConflict::class);
+    fin_assert(fin_status($pdo,$id)==='void'&&fin_document_id($pdo,$id)===0);
+   });
+  },
+  'bank_http_checkout_upload_review_and_approval_require_owner_mfa_csrf_and_actual_confirmation'=>static function()use($pdo,$category):void{
+   fin_bank_mode(static function()use($pdo,$category):void{
+    $seller=fin_user($pdo);$staff=fin_user($pdo,true);$secret=random_bytes(20);
+    $pdo->prepare('UPDATE users SET mfa_secret=? WHERE id=?')->execute([auth_secret_encrypt($secret),$staff['id']]);
+    $invoice=fin_order($pdo,$seller,$category);$path='/user/billing.php?order='.$invoice;
+    $account=fin_browser();$manager=fin_browser();$file=null;
+    try{
+     fin_bank_http_server(static function(int $port)use($pdo,$seller,$staff,$secret,$invoice,$path,$account,$manager,&$file):void{
+      [$code]=fin_request($account,$path,null,$port);fin_assert($code===303);
+      fin_login($account,$seller,$port);
+      [$code,$body]=fin_request($account,$path,null,$port);fin_assert($code===200&&str_contains($body,'name="provider" value="bank"'));
+      $form=['invoice_id'=>(string)$invoice,'provider'=>'bank'];
+      [$code]=fin_request($account,'/actions/payment-checkout.php',$form,$port);fin_assert($code===403);
+      [$code]=fin_request($account,'/actions/payment-checkout.php',$form+['csrf_token'=>fin_csrf($body)],$port);fin_assert($code===303);
+      $order=bank_order($pdo,$invoice);
+      [$code,$body]=fin_request($account,$path,null,$port);
+      fin_assert($code===200&&str_contains($body,$order['reference'])&&str_contains($body,$order['iban'])&&!str_contains($body,'name="cmd" value="_xclick"'));
+      [$code]=fin_request($account,'/admin/bank.php',null,$port);fin_assert($code===403);
+      fin_login($manager,$staff,$port);[$code]=fin_request($manager,'/admin/bank.php',null,$port);fin_assert(in_array($code,[303,403],true));
+      [$code,$body]=fin_request($manager,'/auth/mfa.php',null,$port);fin_assert($code===200);
+      [$code]=fin_request($manager,'/auth/mfa.php',['csrf_token'=>fin_csrf($body),'code'=>auth_totp($secret,intdiv(time(),30))],$port);fin_assert($code===303);
+      [$code,$body]=fin_request($manager,'/admin/bank.php',null,$port);fin_assert($code===200&&str_contains($body,'name="statement"'));
+      $source='SYNTHETIC-UPLOAD-'.bin2hex(random_bytes(8));
+      $file=tempnam(sys_get_temp_dir(),'gunindex-bank-test-');fin_assert(is_string($file));
+      fin_assert(file_put_contents($file,fin_bank_xml(fin_bank_entry($source,$order['reference'],199)))!==false);
+      $fields=['action'=>'import','csrf_token'=>fin_csrf($body),'statement'=>new CURLFile($file,'application/xml','statement.xml')];
+      [$code]=fin_request($manager,'/admin/bank.php',$fields,$port,true);fin_assert($code===422);
+      [$code]=fin_request($manager,'/admin/bank.php',$fields+['source_confirmed'=>'1'],$port,true);
+      fin_assert($code===303&&fin_status($pdo,$invoice)==='pending');
+      [$code,$body]=fin_request($manager,'/admin/bank.php',null,$port);
+      fin_assert($code===200&&str_contains($body,$source)&&str_contains($body,$order['reference']));
+      $approve=['action'=>'approve','entry_id'=>(string)fin_bank_entry_id($pdo,$source),'csrf_token'=>fin_csrf($body)];
+      [$code]=fin_request($manager,'/admin/bank.php',$approve,$port);
+      fin_assert($code===422&&fin_status($pdo,$invoice)==='pending');
+      [$code]=fin_request($manager,'/admin/bank.php',$approve+['review_confirmed'=>'1'],$port);
+      fin_assert($code===303&&fin_status($pdo,$invoice)==='paid');
+      [$code,$body]=fin_request($account,$path,null,$port);fin_assert($code===200&&str_contains($body,t('bank.completed')));
+     });
+    }finally{if(is_string($file)&&is_file($file))unlink($file);curl_close($account);curl_close($manager);}
+   });
   },
  ];
  foreach($tests as $name=>$run){$run();++$passed;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}fwrite(STDOUT,'Finance checks passed: '.$passed.PHP_EOL);

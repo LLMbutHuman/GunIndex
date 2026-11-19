@@ -15,9 +15,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
   paypal_refund_reconcile($pdo,(int)$admin['id'],$jobId,post_string('provider_id',64));
   $success=t('paypal_refunds.reconciled');
  }
- elseif($action==='refund'){
+ elseif(in_array($action,['refund','bank_refund'],true)){
   if(post_string('review_confirmed')!=='1')throw new InvalidArgumentException('Tatsächlich erfolgte Erstattung bestätigen.');
-  finance_record_refund($pdo,(int)$admin['id'],(int)post_string('invoice_id'),money_parse(post_string('amount')),post_string('transaction_id',64),post_string('reason',2000),post_string('request_id')!==''?(int)post_string('request_id'):null);$success='Die tatsächlich erfolgte Erstattung wurde dokumentiert. Diese Aktion hat kein Geld versendet.';
+  $bank=$action==='bank_refund';
+  finance_record_refund($pdo,(int)$admin['id'],(int)post_string('invoice_id'),money_parse(post_string('amount')),post_string('transaction_id',$bank?128:64),post_string('reason',2000),post_string('request_id')!==''?(int)post_string('request_id'):null,$bank?'bank':'paypal');
+  $success='Die tatsächlich erfolgte Erstattung wurde dokumentiert.';
  }elseif($action==='auction_waive'){
   auction_billing_waive($pdo,(int)$admin['id'],(int)post_string('invoice_id'),post_string('reason',2000));$success=t('auction_billing.waived');
  }elseif($action==='auction_correct'){
@@ -34,7 +36,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
 }catch(InvalidArgumentException|PaymentConflict|PaymentUnavailable|DomainException $e){http_response_code(422);$error=$e->getMessage();}}
 $taxes=$pdo->query('SELECT * FROM market_tax_rules ORDER BY country_code')->fetchAll();
 $paypalConfig=payments_config();$paypalRefundReason=paypal_refund_gate($pdo,$paypalConfig);
-$q=$pdo->prepare("SELECT r.*,i.invoice_number,i.gross_cents,u.username,j.id AS job_id,j.status AS job_status,j.reference,j.provider_refund_id,j.first_dispatch_at,j.context_hash,(SELECT a.mode FROM market_payment_attempts a WHERE a.invoice_id=i.id AND a.provider='paypal' AND a.status='paid' AND a.capture_id IS NOT NULL ORDER BY a.id DESC LIMIT 1) AS api_mode FROM market_refund_requests r JOIN market_invoices i ON i.id=r.invoice_id JOIN users u ON u.id=r.user_id LEFT JOIN market_paypal_refund_jobs j ON j.request_id=r.id ORDER BY (r.status='processing') DESC,r.id DESC LIMIT 100");
+$q=$pdo->prepare("SELECT r.*,i.invoice_number,i.gross_cents,u.username,j.id AS job_id,j.status AS job_status,j.reference,j.provider_refund_id,j.first_dispatch_at,j.context_hash,(SELECT a.mode FROM market_payment_attempts a WHERE a.invoice_id=i.id AND a.provider='paypal' AND a.status='paid' AND a.capture_id IS NOT NULL ORDER BY a.id DESC LIMIT 1) AS api_mode,EXISTS(SELECT 1 FROM market_bank_orders b WHERE b.invoice_id=i.id) AS bank_payment FROM market_refund_requests r JOIN market_invoices i ON i.id=r.invoice_id JOIN users u ON u.id=r.user_id LEFT JOIN market_paypal_refund_jobs j ON j.request_id=r.id ORDER BY (r.status='processing') DESC,r.id DESC LIMIT 100");
 $q->execute();$requests=$q->fetchAll();
 $documents=$pdo->query('SELECT * FROM market_invoice_documents ORDER BY id DESC LIMIT 100')->fetchAll();
 $auctionCharges=$pdo->query("SELECT i.id AS invoice_id,i.invoice_number,i.status,i.gross_cents,o.listing_id FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.service_code IN ('auction_listing','auction_success') AND i.status IN ('issued','pending','manual_rejected') ORDER BY i.id DESC LIMIT 100")->fetchAll();
@@ -90,11 +92,16 @@ include __DIR__.'/../includes/header.php';?>
 <form method="post" class="form-grid"><?=csrf_field()?>
 <input type="hidden" name="request_id" value="<?=(int)$r['id']?>">
 <input type="hidden" name="invoice_id" value="<?=(int)$r['invoice_id']?>">
-<label class="field">Entscheidung<select name="action"><?php if($r['api_mode']!=='sandbox'):?><option value="refund">Bereits tatsächlich ausgeführte Erstattung dokumentieren</option><?php endif;?><option value="reject">Anfrage begründet ablehnen</option></select></label>
+<label class="field">Entscheidung<select name="action"><?php if((int)$r['bank_payment']===1):?><option value="bank_refund"><?=h(t('bank.refund_record'))?></option><?php elseif($r['api_mode']!=='sandbox'):?><option value="refund">Bereits tatsächlich ausgeführte Erstattung dokumentieren</option><?php endif;?><option value="reject">Anfrage begründet ablehnen</option></select></label>
 <?php if($r['api_mode']!=='sandbox'):?>
 <label class="field">Tatsächlicher EUR-Erstattungsbetrag<input name="amount" inputmode="decimal" value="<?=h(payments_decimal((int)$r['requested_cents']))?>"></label>
+<?php if((int)$r['bank_payment']===1):?>
+<label class="field"><?=h(t('bank.refund_id'))?><input name="transaction_id" maxlength="128" autocomplete="off"></label>
+<label><input type="checkbox" name="review_confirmed" value="1"> <?=h(t('bank.refund_confirm'))?></label>
+<?php else:?>
 <label class="field">Tatsächliche PayPal-Erstattungskennung<input name="transaction_id" maxlength="64" autocomplete="off"></label>
 <label><input type="checkbox" name="review_confirmed" value="1"> Ich habe die abgeschlossene Erstattung direkt im tatsächlichen Zahlungskonto geprüft.</label>
+<?php endif;?>
 <?php endif;?>
 <label class="field">Begründung<textarea name="reason" minlength="10" maxlength="2000" required></textarea></label>
 <button class="button secondary" type="submit">Entscheidung protokollieren</button>

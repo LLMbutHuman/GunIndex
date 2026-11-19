@@ -26,7 +26,9 @@ $q=$pdo->prepare('SELECT COALESCE(SUM(c.remaining),0) FROM market_bump_credits c
 $q=$pdo->prepare('SELECT i.*,o.reference,o.recipient,o.quantity,o.terms_text,o.net_cents,o.tax_cents,o.customer_claimed_at FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.user_id=? ORDER BY i.id DESC LIMIT 100');$q->execute([$user['id']]);$orders=$q->fetchAll();
 $selected=null;if(isset($_GET['order'])){$raw=$_GET['order'];$id=is_string($raw)?filter_var($raw,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]):false;if(!$id)abort_request(404,'Zahlungsauftrag nicht gefunden.');$q=$pdo->prepare('SELECT i.*,o.reference,o.recipient,o.quantity,o.terms_text,o.net_cents,o.tax_cents,o.customer_claimed_at FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? AND i.user_id=?');$q->execute([$id,$user['id']]);$selected=$q->fetch();if(!$selected)abort_request(404,'Zahlungsauftrag nicht gefunden.');}
 $selectedPromotion=null;if($selected&&in_array($selected['service_code'],['category_top','home_top','banner_monthly'],true)){$q=$pdo->prepare('SELECT * FROM market_premium_bookings WHERE invoice_id=? AND user_id=?');$q->execute([$selected['id'],$user['id']]);$selectedPromotion=$q->fetch()?:null;}
-$selectedPayable=$selected&&in_array($selected['status'],['issued','pending','manual_rejected'],true)&&manual_payment_reason($pdo)===null;
+$bankOrder=$selected?bank_order($pdo,(int)$selected['id']):null;
+$bankAvailable=bank_gate($pdo)===null;
+$selectedPayable=$selected&&!$bankOrder&&filter_var($selected['recipient'],FILTER_VALIDATE_EMAIL)&&in_array($selected['status'],['issued','pending','manual_rejected'],true)&&manual_payment_reason($pdo)===null;
 $selectedAuction=$selected&&auction_billing_service($selected['service_code']);
 if($selectedAuction&&!finance_enabled($pdo))$selectedPayable=false;
 $feeReplacement=null;$feePredecessor=null;$feeReview=false;
@@ -40,9 +42,13 @@ if($selectedAuction){
   $selectedPayable=false;
  }
 }
-if($selectedPromotion&&($selectedPromotion['status']!=='reserved'||strtotime($selectedPromotion['reserved_until'].' UTC')<=time()||business_reason($pdo)!==null))$selectedPayable=false;
+if($selectedPromotion&&($selectedPromotion['status']!=='reserved'||strtotime($selectedPromotion['reserved_until'].' UTC')<=time()||business_reason($pdo)!==null)){
+ $selectedPayable=false;
+ $bankAvailable=false;
+}
+if($feeReview)$bankAvailable=false;
 
-$reason=manual_payment_reason($pdo);
+$reason=direct_payment_reason($pdo);
 try{$contractDocuments=consent_documents($pdo,'checkout',i18n_locale());}catch(InvalidArgumentException|DomainException $e){$reason=$e->getMessage();}
 include __DIR__.'/../includes/header.php';
 ?>
@@ -55,16 +61,19 @@ include __DIR__.'/../includes/header.php';
 <label class="field">Dein Inserat<select name="listing_id"><?php foreach($listings as $l):?><option value="<?=(int)$l['id']?>"><?=h($l['title'])?></option><?php endforeach;?></select></label>
 <label class="field">Leistung<select name="service"><?php foreach(['bump_single','bump_pack'] as $service):$quote=fees_quote($service,null,$pdo);?><option value="<?=h($service)?>"><?=h($quote['label'].' · '.money_eur($quote['gross_cents']))?></option><?php endforeach;?></select></label>
 <p>Der Gesamtbetrag einschließlich der konfigurierten Umsatzsteuer steht bei der Leistung. Der Artikelkaufpreis wird hier nicht eingezogen. Keine automatische Aktivierung, kein zugesicherter Verkauf. Nach manueller Zahlungsprüfung aktivierst du einen Bump selbst. Gesetzliche Verbraucherrechte bleiben bestehen. <a href="/marketplace/policy.php">Bedingungen lesen und speichern</a>.</p>
-<label><input type="checkbox" name="accept_terms" value="1" required> Ich bestelle die ausgewählte Option zu ihrem angezeigten Gesamtpreis und bestätige die Leistungsbedingungen: <?=h(manual_terms(1). ' Bei der Dreieroption umfasst das Guthaben drei Aktivierungen.')?></label><button class="button" type="submit">Zahlungspflichtig bestellen</button></form>
+<label><input type="checkbox" name="accept_terms" value="1" required> Ich bestelle die ausgewählte Option zu ihrem angezeigten Gesamtpreis und bestätige die Leistungsbedingungen: <?=h(manual_terms(1,bank_gate($pdo)===null). ' Bei der Dreieroption umfasst das Guthaben drei Aktivierungen.')?></label><button class="button" type="submit">Zahlungspflichtig bestellen</button></form>
 <?php endif;?></section><?php endif;?>
 <?php if($selected)consent_order_links($pdo,(int)$user['id'],(int)$selected['id']);?>
-<?php if($selected):?><section class="panel"><h2>Dein Zahlungsauftrag <?=h($selected['reference'])?></h2><p>Gesamt: <strong><?=h(money_eur((int)$selected['gross_cents']))?></strong> · Netto <?=h(money_eur((int)$selected['net_cents']))?> · Umsatzsteuer <?=h(money_eur((int)$selected['tax_cents']))?></p><p>Verwendungszweck: <strong><?=h($selected['reference'])?></strong><br>Empfänger: <?=h($selected['recipient'])?><br>Status: <?=h(payments_status_label($selected['status']))?></p>
+<?php if($selected):?><section class="panel"><h2>Dein Zahlungsauftrag <?=h($selected['reference'])?></h2><p>Gesamt: <strong><?=h(money_eur((int)$selected['gross_cents']))?></strong> · Netto <?=h(money_eur((int)$selected['net_cents']))?> · Umsatzsteuer <?=h(money_eur((int)$selected['tax_cents']))?></p>
+<?php if(!$bankOrder&&filter_var($selected['recipient'],FILTER_VALIDATE_EMAIL)):?><p>Verwendungszweck: <strong><?=h($selected['reference'])?></strong><br>Empfänger: <?=h($selected['recipient'])?></p><?php endif;?>
+<p>Status: <?=h(payments_status_label($selected['status']))?></p>
 <?php if($feeReplacement):?>
 <p class="notice"><?=h(t('auction_correction.obsolete'))?>
 <a href="?order=<?=(int)$feeReplacement['replacement_invoice_id']?>"><?=h(t('auction_correction.replacement'))?></a></p>
 <?php endif;?>
 <?php if($feePredecessor):?><p><a href="?order=<?=(int)$feePredecessor['previous_invoice_id']?>"><?=h(t('auction_correction.previous'))?></a></p><?php endif;?>
 <?php if($feeReview):?><p class="notice"><?=h(t('auction_correction.unresolved'))?></p><?php endif;?>
+<?php include __DIR__.'/../includes/bank-payment.php';?>
 <?php if($selectedPayable):?>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" rel="noopener noreferrer"><input type="hidden" name="cmd" value="_xclick"><input type="hidden" name="business" value="<?=h($selected['recipient'])?>"><input type="hidden" name="amount" value="<?=h(payments_decimal((int)$selected['gross_cents']))?>"><input type="hidden" name="currency_code" value="EUR"><input type="hidden" name="item_name" value="<?=h(site_setting($pdo,'brand_name').' · '.$selected['service_code'].' · '.$selected['reference'])?>"><input type="hidden" name="invoice" value="<?=h($selected['reference'])?>"><input type="hidden" name="custom" value="<?=h($selected['reference'])?>"><input type="hidden" name="no_shipping" value="1"><input type="hidden" name="charset" value="utf-8"><button class="button" type="submit">PayPal-Zahlungsauftrag öffnen · <?=h(money_eur((int)$selected['gross_cents']))?></button></form>
 <p>PayPal öffnet separat. Nutze die geschäftliche Zahlung für diese Leistung. Ob dein Empfängerkonto diesen Zahlungsbutton unterstützt, richtet sich nach PayPal. Eine Rückkehr zur Website bestätigt keinen Zahlungseingang.</p>

@@ -17,7 +17,7 @@ function business_country_enabled(PDO $pdo, string $country): bool
 function business_reason(PDO $pdo): ?string
 {
     if (site_setting($pdo, 'business_promotions_enabled', '0') !== '1') return 'Premiumplätze und Händlerwerbung sind noch nicht freigegeben.';
-    return manual_payment_reason($pdo);
+    return direct_payment_reason($pdo);
 }
 
 function business_terms(PDO $pdo,string $scope,array $listing):string

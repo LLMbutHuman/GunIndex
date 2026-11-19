@@ -83,7 +83,9 @@ Adresse. Live verlangt eine getrennte ausdrückliche Freigabe. Im Admin-Dashboar
 dürfen weder Geheimnisse noch diese Sicherheitsfreigaben durch Branding-Eingaben
 ersetzt werden.
 
-Banküberweisung und Bitcoin sind zentral sichtbar, aber serverseitig grundsätzlich
+Banküberweisungen sind mit separater Freigabe und Kontenabgleich implementiert.
+Die Einrichtung und Formatgrenzen stehen in [BANK_TRANSFERS.md](BANK_TRANSFERS.md).
+Bitcoin ist zentral sichtbar, aber serverseitig grundsätzlich
 deaktiviert. Es gibt keine IBAN, keine Blockchain-Bestätigung und keine frei
 wählbare Mock-Zahlung im Web. Treuhand ist nur eine gesperrte Gebührenvorschau.
 

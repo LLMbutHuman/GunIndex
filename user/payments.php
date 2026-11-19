@@ -14,7 +14,9 @@ if (isset($_GET['invoice_id'])) {
 }
 $query = $pdo->prepare('SELECT id,invoice_number,service_code,fee_version,gross_cents,currency,status,created_at  ,(SELECT mode FROM market_payment_attempts a WHERE a.invoice_id=market_invoices.id ORDER BY a.id DESC LIMIT 1) AS payment_mode FROM market_invoices WHERE user_id=? ORDER BY id DESC LIMIT 100');
 $query->execute([$user['id']]); $invoices = $query->fetchAll();
-$methods = payments_methods();
+$methods = payments_methods(null,$pdo);
+$bankAvailable=$methods['bank']['available'];
+$bankOrder=$selected?bank_order($pdo,(int)$selected['id']):null;
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="page-shell">
@@ -36,9 +38,10 @@ require __DIR__ . '/../includes/header.php';
   <section class="panel"><h2><?= h($selected['invoice_number'] ?: 'Rechnungsentwurf') ?></h2>
     <p><?= h($selected['service_code']) ?> · <?= h(money_eur((int)$selected['gross_cents'])) ?> · <?= h(payments_status_label($selected['status'],$selected['payment_mode']??null)) ?></p>
     <?php if (!empty($selected['is_manual'])):?><p><a class="button" href="/user/billing.php?order=<?=(int)$selected['id']?>"><?=h(t('auction_billing.open'))?></a></p>
-    <?php elseif (in_array($selected['status'], ['issued', 'pending'], true) && $methods['paypal']['available']): ?>
+    <?php elseif (!$bankOrder && in_array($selected['status'], ['issued', 'pending'], true) && $methods['paypal']['available']): ?>
     <form action="/actions/payment-checkout.php" method="post"><?= csrf_field() ?><input type="hidden" name="invoice_id" value="<?= (int)$selected['id'] ?>"><input type="hidden" name="provider" value="paypal"><p>Du wirst zur sicheren Bestätigung an PayPal weitergeleitet.</p><button class="button" type="submit">Zahlungspflichtig mit PayPal fortfahren</button></form>
-    <?php else: ?><p>Für diesen Datensatz steht aktuell kein Checkout zur Verfügung.</p><?php endif; ?>
+    <?php elseif (!$bankOrder && !$bankAvailable): ?><p>Für diesen Datensatz steht aktuell kein Checkout zur Verfügung.</p><?php endif; ?>
+    <?php if(empty($selected['is_manual']))include __DIR__.'/../includes/bank-payment.php';?>
   </section>
   <?php endif; ?>
   <section class="panel"><h2>Meine Rechnungsdatensätze</h2>

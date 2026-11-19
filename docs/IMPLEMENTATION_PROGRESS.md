@@ -1,5 +1,19 @@
 # Implementierungsfortschritt
 
+## Banküberweisungen und Kontenabgleich, 2026-11-19
+
+Migration 029 verknüpft freigegebene EUR-Aufträge mit einer eindeutigen
+Überweisungsreferenz und dem gespeicherten Empfängerkonto. Der neue
+Bankabgleich verarbeitet camt.053.001.08 mit geschütztem Import und
+separater Prüfung im tatsächlichen Bankkonto. Betragsabweichungen,
+Dubletten und Rückbuchungen werden vor der Freigabe geprüft.
+Die Buchung verwendet die bestehenden Rechnungs- und Leistungsabläufe.
+Extern ausgeführte Bankrückzahlungen können getrennt dokumentiert werden.
+
+Lokale Syntax, acht Kontoauszugstests, 21 Zahlungs-, 16 Gebühren- und
+sieben Geo-/Sprachprüfungen bestanden. MySQL, der echte Upload über HTTP
+und der Browser-Regressionslauf folgen in der GitHub-CI.
+
 ## Automatisierte PayPal-Erstattungen, 2026-11-19
 
 Migration 028 speichert die vom Finanzteam freigegebene Erstattung mit
@@ -26,10 +40,6 @@ signierten Statusabgleich, genau einen Korrekturbeleg, getrennte Sandbox-Buchung
 Freigabe nach endgültigem Abbruch sowie MFA und CSRF. Providerantworten waren
 synthetisch. Die Abnahme mit einem echten PayPal-Sandboxkonto und die
 produktive Anbieterfreigabe stehen aus.
-
-Wiederaufnahmepunkt: Banküberweisungsaufträge mit eindeutigen Referenzen und
-nachvollziehbarem Kontenabgleich. Die Verarbeitung importierter, überprüfbarer
-Bankbelege ist unabhängig von einer später freigegebenen Bankanbindung zu prüfen.
 
 ## Teilkorrektur unbezahlter Auktionsgebühren, 2026-11-19
 

@@ -51,13 +51,14 @@ function payments_paypal_reason(?array $config = null): ?string
     return null;
 }
 
-function payments_methods(?array $config = null): array
+function payments_methods(?array $config = null,?PDO $pdo=null): array
 {
     $reason = payments_paypal_reason($config);
+    $bankReason=$pdo===null?'Banküberweisung ist zurzeit nicht verfügbar.':bank_gate($pdo);
     return [
         'paypal' => ['label' => 'PayPal', 'available' => $reason === null, 'reason' => $reason ?? 'Offizieller PayPal Checkout'],
         'bitcoin' => ['label' => 'Bitcoin', 'available' => false, 'reason' => 'Aktuell nicht verfügbar. Eine geprüfte Node-Infrastruktur fehlt.'],
-        'bank' => ['label' => 'Banküberweisung', 'available' => false, 'reason' => 'Banküberweisung wird in Kürze verfügbar sein. Aktuell nicht verfügbar.'],
+        'bank' => ['label' => $pdo===null?'Banküberweisung':t('bank.bank_transfer'), 'available' => $bankReason===null, 'reason' => $bankReason??t('bank.start_help')],
     ];
 }
 
