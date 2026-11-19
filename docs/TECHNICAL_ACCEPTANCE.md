@@ -81,7 +81,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 15 | Benachrichtigungen | A | Preis, Vorablauf und Ablauf in MySQL geprüft, getrenntes Opt-out im Browser und Warteschlangenstopp im Mail-Testtransport |
 | 16 | Geräte/Einzelsitzungen | A | Private Übersicht, Einzelwiderruf und Abmeldung mit Konto- und CSRF-Grenzen in MySQL/Chromium geprüft. Passwortwechselregression grün |
 | 17 | Benutzer-2FA/Passkeys | A | Optionale TOTP-Anmeldung, einmalige Recovery-Codes und WebAuthn mit echtem Chromium-Authenticator-Verfahren grün. Zielsystem und physische Authenticatoren zur Betriebsabnahme |
-| 18 | Profilbilder/Händlerlogos | C | Sicherer Upload, Quoten und Integration |
+| 18 | Profilbilder/Händlerlogos | A | Größenbegrenzter WebP-Upload, Profilanzeige, revisionsgebundene Logo-Freigabe, Datenschutzexport und Entfernung in MySQL und Chromium geprüft |
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |
 | 20 | Händlerfunktionen | C | Mitarbeiterrollen, Abos, Warenwirtschaft und API |
 | 21 | Vollständiges SEO | C | Internationale URL-/hreflang-Strategie und vollständige Abnahme |

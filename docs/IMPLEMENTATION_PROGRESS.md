@@ -16,12 +16,23 @@ Kontoexport enthält die eigene Bilddatei, bei Anonymisierung wird sie entfernt.
 PHP- und JavaScript-Syntax, Sprachschlüssel und lokale Bildreihenfolge-Tests
 sind geprüft. Der erste Browserlauf auf `74577eb` scheiterte beim Uploadformular,
 weil die beiden Routen im öffentlichen Dispatcher fehlten. `c8d7d02` ergänzt
-sie sowie den HTTP-Test für den geschützten Einstieg. Windows und der isolierte
-MySQL-Teil einschließlich Migration 026 und Löschung bei Anonymisierung sind
-im [CI-Lauf 44512195727](https://github.com/LLMbutHuman/GunIndex/actions/runs/44512195727)
-bestanden. Die Browserabnahme wartete länger als zehn Minuten beim Einrichten
-von Chromium. Der erneute Lauf begrenzt diesen Schritt auf zehn Minuten und
-führt dieselben Prüfungen aus.
+sie sowie den HTTP-Test für den geschützten Einstieg.
+
+[CI 44512195727](https://github.com/LLMbutHuman/GunIndex/actions/runs/44512195727)
+ist für `c8d7d02` vollständig grün. Windowsjob `135518980260` und Linuxjob
+`135518979518` bestanden. MySQL prüfte Migration 026 und Löschung bei
+Anonymisierung. Chromium bestätigte WebP-Neukodierung, Bildgrenzen,
+CSRF-Sperre, private Logo-Vorschau, Ablehnung einer veralteten Freigabe sowie
+Freigabe, Export und sofortiges Entfernen. Die übrigen Regressionen bestanden.
+
+Die Chromium-Einrichtung dauerte im erfolgreichen Lauf rund zwölf Minuten.
+Die zwischenzeitliche Zehn-Minuten-Grenze aus `0e82d16` wurde nach der
+Zeitmessung zurückgenommen. Die bestehende Jobgrenze von 30 Minuten gilt.
+
+Wiederaufnahmepunkt: Teilkorrekturen unbezahlter Auktionsgebühren in
+`config/auction_billing.php` und `admin/finance.php`. Dabei Originalnachweis
+bewahren, eine neue eindeutige Zahlungsreferenz für den korrigierten Betrag
+einsetzen und eine Zahlung mit der alten Referenz in die Prüfung leiten.
 
 ## Optionale Benutzer-MFA und Passkeys, 2026-11-19
 
