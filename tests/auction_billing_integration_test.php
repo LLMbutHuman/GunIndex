@@ -803,6 +803,8 @@ try {
                 abt_check($status===303,'Verified late receipt was not routed to review.');
                 [$status,$body]=abt_request($owner,$newPath);
                 abt_check($status===200&&!str_contains($body,'name="cmd" value="_xclick"')&&str_contains($body,t('auction_correction.unresolved')),'Checkout stayed open with an unresolved late receipt.');
+                [$status]=abt_request($owner,$newPath,['csrf_token'=>abt_csrf($body),'invoice_id'=>(string)$replacement,'action'=>'claim']);
+                abt_check($status===422&&abt_status($pdo,$replacement)==='issued','Direct claim bypassed the open reconciliation case.');
                 [$status,$body]=abt_request($staff,'/admin/payments.php?invoice='.$original);
                 $attempt=(int)abt_scalar($pdo,'SELECT id FROM market_payment_attempts WHERE capture_id=?',[$capture]);
                 abt_check($status===200&&str_contains($body,'name="attempt_id" value="'.$attempt.'"'),'Late receipt not listed in reconciliation.');
@@ -811,6 +813,10 @@ try {
                 abt_check($status===200,'Completed full return not accepted.');
                 [$status,$body]=abt_request($owner,$newPath);
                 abt_check($status===200&&str_contains($body,'name="amount" value="0.35"'),'Checkout did not resume after reconciliation.');
+                manual_review($pdo,$admin['id'],$replacement,'','',0,'reject','Synthetic previous claim rejection fixture.');
+                [$status]=abt_request($owner,$newPath,['csrf_token'=>abt_csrf($body),'invoice_id'=>(string)$replacement,'action'=>'claim']);
+                abt_check($status===200&&abt_status($pdo,$replacement)==='pending','Customer cannot renew a rejected claim.');
+                abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_payment_attempts WHERE invoice_id=?',[$replacement])===0,'Claim created a confirmation.');
                 $export=privacy_export($pdo,$seller['id'],$seller['password']);
                 try{$data=json_decode(stream_get_contents($export),true,32,JSON_THROW_ON_ERROR);}
                 finally{fclose($export);}

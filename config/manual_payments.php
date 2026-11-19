@@ -38,6 +38,26 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
   $pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
+function manual_claim(PDO $pdo,int $userId,int $invoiceId): void {
+ $pdo->beginTransaction();
+ try{
+  $q=$pdo->prepare('SELECT i.status,i.service_code,o.customer_claimed_at FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id AND o.user_id=i.user_id WHERE i.id=? AND i.user_id=? FOR UPDATE');
+  $q->execute([$invoiceId,$userId]);$order=$q->fetch();
+  if(!$order||!in_array($order['status'],['issued','pending','manual_rejected'],true))
+   throw new PaymentConflict(t('auction_correction.claim_unavailable'));
+  if(auction_billing_service($order['service_code'])){
+   $charge=auction_fee_lock_charge($pdo,$invoiceId);
+   if(!$charge||$charge['waived_at']!==null||auction_fee_replacement($pdo,$invoiceId,true))
+    throw new PaymentConflict(t('auction_correction.claim_unavailable'));
+   auction_fee_assert_late_receipts_resolved($pdo,(int)$charge['id']);
+  }
+  if($order['status']!=='pending'||$order['customer_claimed_at']===null){
+   $pdo->prepare('UPDATE market_manual_orders SET customer_claimed_at=UTC_TIMESTAMP() WHERE invoice_id=?')->execute([$invoiceId]);
+   $pdo->prepare("UPDATE market_invoices SET status='pending' WHERE id=?")->execute([$invoiceId]);
+  }
+  $pdo->commit();
+ }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+}
 function manual_review(PDO $pdo,int $actorId,int $invoiceId,string $transaction,string $reference,int $received,string $decision,string $reason):void {
  if(function_exists('governance_assert_actor'))governance_assert_actor($pdo,$actorId,'finance.manage');else settings_assert_admin($pdo,$actorId);
  if(!in_array($decision,['approve','reject'],true)||strlen($reason)<10||strlen($reason)>1000)throw new InvalidArgumentException('Entscheidung und nachvollziehbare Begründung fehlen.');

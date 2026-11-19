@@ -13,14 +13,9 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
    $id=manual_order($pdo,(int)$user['id'],(int)post_string('listing_id'),post_string('service'),$key,null,$_POST);
    $_SESSION['billing_order_key']=bin2hex(random_bytes(32));redirect('/user/billing.php?order='.$id);
   }elseif($action==='claim'){
-   $claim=[(int)post_string('invoice_id'),$user['id'],$user['id']];
-   $q=$pdo->prepare("UPDATE market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id SET o.customer_claimed_at=COALESCE(o.customer_claimed_at,UTC_TIMESTAMP()),i.status=IF(i.status='issued','pending',i.status) WHERE o.invoice_id=? AND o.user_id=? AND i.user_id=? AND i.status IN ('issued','pending')");
-   $q->execute($claim);
-   if($q->rowCount()===0){
-    $q=$pdo->prepare("SELECT 1 FROM market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id WHERE o.invoice_id=? AND o.user_id=? AND i.user_id=? AND i.status='pending' AND o.customer_claimed_at IS NOT NULL");
-    $q->execute($claim);
-    if(!$q->fetchColumn())throw new PaymentConflict(t('auction_correction.claim_unavailable'));
-   }
+   $id=filter_var(post_string('invoice_id',20),FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+   if($id===false)throw new PaymentConflict(t('auction_correction.claim_unavailable'));
+   manual_claim($pdo,(int)$user['id'],$id);
    $success='Dein Hinweis wurde gespeichert. Die Zahlung bleibt bis zur tatsächlichen Prüfung unbestätigt.';
   }elseif($action==='bump'){manual_bump($pdo,(int)$user['id'],(int)post_string('listing_id'),post_string('immediate_start')==='1');$success='Dein Inserat wurde nach oben verschoben.';}
   else throw new InvalidArgumentException('Ungültige Aktion.');

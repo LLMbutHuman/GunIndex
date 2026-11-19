@@ -46,9 +46,12 @@ und konkret bestätigte Rechtsfassungen. Gebühren-/Leistungsbeginnbestätigung 
 kostenpflichtiger Veröffentlichen-Button sind ausdrücklich erforderlich.
 Bestehende gebührenfreie Auktionen werden nicht rückwirkend belastet. Forderung
 und tatsächlicher Zahlungseingang sind getrennt; Rechnungs-PDF nach verifizierter
-Zahlung. Unbezahlter vollständiger Erlass mit Begründung und verifizierte bezahlte
-Erstattungen sind vorhanden. Wiedereinstellung, unbezahlte Teilkorrekturen und
-automatischer Provider-Einzug dieser Forderungen bleiben offen.
+Zahlung. Teil- und Vollerlass unbezahlter Gebühren erfordern einen begründeten
+Prüfeintrag. Der Teilerlass ersetzt den Zahlungsauftrag durch eine referenzierte
+Restforderung mit den ursprünglichen Vertragsnachweisen. Verifizierte Eingänge
+auf ersetzte Referenzen werden getrennt erfasst und bis zur dokumentierten
+externen Rückzahlung geklärt. Der automatische Provider-Einzug dieser Forderungen
+bleibt offen.
 Details: [AUCTION_BILLING.md](AUCTION_BILLING.md).
 
 Bestehende Leistungsaufträge speichern Referenz, Betrag, Tarif-/Bedingungsfassung

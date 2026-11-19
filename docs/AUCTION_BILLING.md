@@ -59,19 +59,27 @@ Mail wird nur für bestätigte Adressen und als verschlüsselte Queue-Nachricht
 angelegt. Nullgebühren erzeugen keine Zahlungsaufforderung. Erzeugung eines
 Hinweises bedeutet weder Zahlungseingang noch bewiesene E-Mail-Zustellung.
 
-Verkäufer können entstandene Gebühren nicht selbst als unbenutzte Bestellung
-stornieren. `finance.manage` kann eine geprüfte unbezahlte Forderung vollständig
-erlassen; Begründung, Gegenbuchung und Audit bleiben erhalten. Behauptete, noch
-nicht abschließend geprüfte Zahlungen sperren diesen Erlass. Bereits bezahlte
-Gebühren verwenden die bestehende Verwaltung tatsächlich extern erfolgter
-Teil-/Vollerstattungen mit neuen Korrekturbelegen. Diese Bedienung versendet kein Geld.
+Der Erlass einer offenen Gebühr erfordert `finance.manage`, MFA und eine
+Begründung. Ein Teilerlass schließt den alten Auftrag und erzeugt einen
+verknüpften Auftrag mit neuer Referenz und verbleibendem Betrag.
+Rechnungsdaten und Zustimmungshistorie werden aus dem ursprünglichen Nachweis
+übernommen. Bei einem vollständigen Erlass wird der offene Rest gegengebucht.
+Ungeklärte Zahlungshinweise und Zahlungsversuche sperren die Korrektur.
+Bereits bezahlte Gebühren verwenden die bestehende Verwaltung tatsächlich
+extern erfolgter Teil- und Vollerstattungen mit neuen Korrekturbelegen.
+
+Die Zahlungsprüfung findet ersetzte Aufträge über ihre Referenz. Ein tatsächlich
+verifizierter später Eingang wird getrennt dokumentiert und sperrt die Zahlung
+des korrigierten Auftrags, solange die vollständige Rückzahlung ungeklärt ist.
+Die Rückzahlung wird im Zahlungskonto geprüft und anschließend protokolliert.
+Der alte Auftrag bleibt geschlossen.
 
 ## Grenzen und Nachweise
 
 Die vorhandene automatische PayPal-API nimmt diese manuellen Gebührenaufträge
 absichtlich nicht an. Automatische Gebühreneinziehung, automatische
-Providererstattung, Teilkorrektur einer unbezahlten Forderung und Verlängerungen
-sind weitere Anforderungen. Wiedereinstellung erfolgloser Auktionen ist als
+Providererstattung und weitere gebührenrelevante Verlängerungsfälle sind
+weitere Anforderungen. Wiedereinstellung erfolgloser Auktionen ist als
 eigener Durchlauf integriert. Keine Kundengeldverwahrung
 und kein Einzug des Warenkaufpreises. Finanz-/Bestandsseiten sind noch nicht
 durchgängig übersetzt; das neue Gebührenmodul umfasst alle acht Sprachen.
