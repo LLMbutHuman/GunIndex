@@ -29,8 +29,22 @@ eine erneute, unbestätigte Meldung nach Ablehnung. MySQL und HTTP bestanden in
 beiden Versuchen von [CI 44521029120](https://github.com/LLMbutHuman/GunIndex/actions/runs/44521029120).
 Chromium war durch HTTP 503 beim Ubuntu-Paketdownload blockiert. Auch ein
 Lauf mit dem offiziellen Ubuntu-Archiv scheiterte beim Paketindex.
-Die CI prüft jetzt zuerst den Start des fest versionierten Chromium auf
-dem Runner. Systempakete werden bei einem fehlgeschlagenen Start nachgeladen.
+Die CI installiert die gesperrte Playwright-Browserversion und prüft den
+Start mit den Browseroptionen der Tests. Systempakete werden bei einem
+fehlgeschlagenen Start nachgeladen. Der erfolgreiche Runner verwendete
+`/usr/bin/chromium`, wie im vorhandenen Browser-Helfer vorgesehen.
+
+[CI 44525631491](https://github.com/LLMbutHuman/GunIndex/actions/runs/44525631491)
+für `e1859f6` ist vollständig grün. Windowsjob `135565319284` und
+Linuxjob `135565318524` bestanden. Der Linuxjob bestätigte die 31
+Gebühren-Integrationstests einschließlich der zusätzlichen HTTP-Fälle für
+Zahlungshinweise und den Chromium-Regressionslauf mit Mobil- und
+Barrierefreiheitsprüfungen.
+
+Wiederaufnahmepunkt: Automatisierte Erstattungen über die bestehende
+PayPal-REST-Anbindung. `MarketPayPal::refund()` dient als Basis für
+persistente Erstattungsaufträge und den verifizierten Statusabgleich.
+Die produktive Freigabe erfordert die Abnahme der externen Integration.
 
 ## Profilbilder und Händlerlogos, 2026-11-19
 

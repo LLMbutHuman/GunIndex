@@ -23,6 +23,10 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
   24 DB-/HTTP-Gruppen einschließlich paralleler Sofortkäufe. Zehn zusätzliche
   Gebühren-Browser-Journeys in `9303510`, CI 41663795718, einschließlich acht mobiler
   Sprachen bestanden. Freigaben standardmäßig aus.
+- **A:** Teilkorrektur unbezahlter Auktionsgebühren und Klärung ersetzter
+  Zahlungsreferenzen. `e1859f6`, [CI 44525631491](https://github.com/LLMbutHuman/GunIndex/actions/runs/44525631491).
+  31 MySQL-/HTTP-Gruppen einschließlich Parallelkorrektur, Rückzahlungsnachweis
+  und korrigiertem PDF sowie die Browserregressionen bestanden.
 - **A:** Wartungszugriff, Worker-Barriere, Auktionsfrist-Pause und Healthdiagnose:
   durch `4add338`, CI 41666927670 erneut bestätigt; zwölf reine, neun DB-/Worker-
   und 14 HTTP-/RBAC-Gruppen bestanden. Gesamtanforderung 22 bleibt wegen der unten
