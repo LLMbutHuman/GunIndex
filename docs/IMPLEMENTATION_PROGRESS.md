@@ -1,5 +1,25 @@
 # Implementierungsfortschritt
 
+## Optionale Benutzer-MFA und Passkeys, 2026-11-19
+
+Migrationen 024 und 025 ergänzen optionale TOTP-Anmeldung, einmalige
+Wiederherstellungscodes und mehrere registrierbare Passkeys. Der TOTP-Schlüssel
+ist verschlüsselt. Recovery-Codes werden einmal angezeigt und als Hash
+gespeichert. Aktivierung, Wechsel und Widerruf erneuern die aktuelle Sitzung
+und sperren ältere Sitzungen. Der bestehende Passwortreset entfernt keinen
+zweiten Faktor. Die Pflicht-MFA für Personal bleibt erhalten.
+
+Passkeys verwenden `lbuchs/webauthn` 2.2.0 aus dem Composer-Lockfile.
+Serverseitig werden exakter Origin, RP-ID, einmalige Challenge, Besitz der
+registrierten Credential und Benutzerverifikation geprüft. Passkey-Anmeldung
+führt bei aktivem TOTP ebenfalls zur zweiten Prüfung. In Produktion müssen
+Browseradresse und HTTPS-`APP_URL` übereinstimmen. Der isolierte Browser-Test
+verwendet `http://localhost:8081` und einen virtuellen Authenticator.
+
+Lokale PHP- und JavaScript-Syntax, Grenzfalltests und Sprachschlüssel sind
+geprüft. MySQL- und Chromium-Abnahme folgt in CI. Nach erfolgreicher Abnahme
+folgen Profilbilder und Händlerlogos mit sicheren Uploads.
+
 ## Private Inseratentwürfe und Vorschau
 
 Der gemeinsame Abschlusslauf

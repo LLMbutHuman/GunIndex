@@ -25,7 +25,7 @@ $pageTitle=t('sessions.title');
 include __DIR__.'/../includes/header.php';
 ?>
 <main class="page"><div class="page-heading"><h1><?=h($pageTitle)?></h1><p><?=h(t('sessions.help'))?></p>
-<a href="/user/dashboard.php"><?=h(t('Zum Dashboard'))?></a></div>
+<a href="/user/dashboard.php"><?=h(t('Zum Dashboard'))?></a><?php if(!auth_requires_mfa($pdo,$user)):?> · <a href="/user/security.php"><?=h(t('user_security.title'))?></a><?php endif;?></div>
 <?php if(($_GET['saved']??null)==='1'):?><p role="status" class="notice success"><?=h(t('sessions.revoked'))?></p><?php endif;?>
 <?php if(!$sessions):?><p><?=h(t('sessions.empty'))?></p><?php endif;?>
 <?php foreach($sessions as $session):?>

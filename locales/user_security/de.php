@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Anmeldesicherheit',
+    'user_security.totp' => 'Zwei-Faktor-Anmeldung per App',
+    'user_security.factor_title' => 'Anmeldung bestätigen',
+    'user_security.factor' => 'App-Code oder Wiederherstellungscode',
+    'user_security.invalid' => 'Der Code ist ungültig, abgelaufen oder bereits verwendet.',
+    'user_security.unavailable' => 'Diese Aktion ist derzeit nicht verfügbar.',
+    'user_security.enabled' => 'Die Zwei-Faktor-Anmeldung ist aktiv.',
+    'user_security.off' => 'Die Zwei-Faktor-Anmeldung ist optional und derzeit deaktiviert.',
+    'user_security.begin' => 'Authenticator-App einrichten',
+    'user_security.setup_help' => 'Füge den Schlüssel in deiner TOTP-App hinzu. Wähle sechs Stellen und 30 Sekunden. Gib dann den aktuellen Code ein.',
+    'user_security.enable' => 'Zwei-Faktor-Anmeldung aktivieren',
+    'user_security.disable' => 'Zwei-Faktor-Anmeldung deaktivieren',
+    'user_security.rotate' => 'Neue Wiederherstellungscodes erzeugen',
+    'user_security.recovery' => 'Wiederherstellungscodes',
+    'user_security.recovery_help' => 'Speichere diese Codes jetzt an einem sicheren Ort. Jeder Code funktioniert einmalig zusammen mit deinem Passwort.',
+    'user_security.passkeys' => 'Passkeys',
+    'user_security.passkey_add' => 'Passkey hinzufügen',
+    'user_security.passkey_remove' => 'Passkey entfernen',
+    'user_security.passkey_login' => 'Mit Passkey anmelden',
+    'user_security.passkey_failed' => 'Der Passkey-Vorgang konnte nicht abgeschlossen werden.',
+    'user_security.passkey_label' => 'Name für dieses Gerät',
+    'user_security.passkey_limit' => 'Du kannst bis zu zehn Passkeys speichern.',
+    'user_security.passkey_origin' => 'Passkeys sind auf der konfigurierten HTTPS-Adresse verfügbar.',
+];

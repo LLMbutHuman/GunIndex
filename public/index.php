@@ -10,11 +10,14 @@ $allowed=array_merge($allowed,['user/checkout.php','user/offers.php','user/trade
 $allowed=array_merge($allowed,['marketplace/category-fields.php','marketplace/suggest.php','admin/category-attributes.php']);
 $allowed=array_merge($allowed,['user/listing-draft.php','user/listing-draft-image.php']);
 $allowed[]='user/sessions.php';
+$allowed=array_merge($allowed,['user/security.php','auth/user-factor.php']);
+$allowed=array_merge($allowed,['user/passkeys.php','auth/passkey.php']);
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 $static+=['/assets/css/e2ee.css'=>'text/css; charset=utf-8','/assets/js/e2ee-ui.mjs'=>'application/javascript; charset=utf-8','/assets/js/e2ee-crypto.mjs'=>'application/javascript; charset=utf-8','/assets/vendor/openpgp/openpgp.min.mjs'=>'application/javascript; charset=utf-8'];
 $static['/assets/css/trade.css']='text/css; charset=utf-8';
 $static['/assets/js/listing-draft.js']='application/javascript; charset=utf-8';
+$static['/assets/js/passkeys.js']='application/javascript; charset=utf-8';
 if(isset($static[$path])&&is_file($root.$path)){header('Content-Type: '.$static[$path]);header('X-Content-Type-Options: nosniff');if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')readfile($root.$path);exit;}
 if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route)){http_response_code(404);header('X-Robots-Tag: noindex');exit('Nicht gefunden.');}
 require_once $root.'/config/bootstrap.php';

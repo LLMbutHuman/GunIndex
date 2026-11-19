@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Zabezpečení přihlášení',
+    'user_security.totp' => 'Dvoufaktorové ověření pomocí aplikace',
+    'user_security.factor_title' => 'Potvrdit přihlášení',
+    'user_security.factor' => 'Kód z aplikace nebo obnovovací kód',
+    'user_security.invalid' => 'Kód je neplatný, vypršel nebo již byl použit.',
+    'user_security.unavailable' => 'Tato akce momentálně není dostupná.',
+    'user_security.enabled' => 'Dvoufaktorové ověření je aktivní.',
+    'user_security.off' => 'Dvoufaktorové ověření je volitelné a momentálně vypnuté.',
+    'user_security.begin' => 'Nastavit ověřovací aplikaci',
+    'user_security.setup_help' => 'Přidejte klíč do aplikace TOTP. Nastavte šest číslic a 30 sekund. Poté zadejte aktuální kód.',
+    'user_security.enable' => 'Zapnout dvoufaktorové ověření',
+    'user_security.disable' => 'Vypnout dvoufaktorové ověření',
+    'user_security.rotate' => 'Vygenerovat nové obnovovací kódy',
+    'user_security.recovery' => 'Obnovovací kódy',
+    'user_security.recovery_help' => 'Uložte kódy na bezpečné místo. Každý kód můžete jednou použít spolu s heslem.',
+    'user_security.passkeys' => 'Přístupové klíče',
+    'user_security.passkey_add' => 'Přidat přístupový klíč',
+    'user_security.passkey_remove' => 'Odebrat přístupový klíč',
+    'user_security.passkey_login' => 'Přihlásit se přístupovým klíčem',
+    'user_security.passkey_failed' => 'Operaci s přístupovým klíčem se nepodařilo dokončit.',
+    'user_security.passkey_label' => 'Název tohoto zařízení',
+    'user_security.passkey_limit' => 'Můžete uložit až deset přístupových klíčů.',
+    'user_security.passkey_origin' => 'Přístupové klíče jsou dostupné na nastavené adrese HTTPS.',
+];

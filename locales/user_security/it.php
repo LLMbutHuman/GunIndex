@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Sicurezza di accesso',
+    'user_security.totp' => 'Autenticazione a due fattori con app',
+    'user_security.factor_title' => 'Conferma accesso',
+    'user_security.factor' => 'Codice dell’app o di recupero',
+    'user_security.invalid' => 'Il codice non è valido, è scaduto oppure è già stato usato.',
+    'user_security.unavailable' => 'Questa azione non è disponibile al momento.',
+    'user_security.enabled' => 'L’autenticazione a due fattori è attiva.',
+    'user_security.off' => 'L’autenticazione a due fattori è facoltativa e disattivata.',
+    'user_security.begin' => 'Configura app di autenticazione',
+    'user_security.setup_help' => 'Aggiungi la chiave alla tua app TOTP. Imposta sei cifre e 30 secondi, poi inserisci il codice attuale.',
+    'user_security.enable' => 'Attiva autenticazione a due fattori',
+    'user_security.disable' => 'Disattiva autenticazione a due fattori',
+    'user_security.rotate' => 'Genera nuovi codici di recupero',
+    'user_security.recovery' => 'Codici di recupero',
+    'user_security.recovery_help' => 'Conserva i codici in un luogo sicuro. Puoi usare ciascun codice una volta insieme alla password.',
+    'user_security.passkeys' => 'Passkey',
+    'user_security.passkey_add' => 'Aggiungi passkey',
+    'user_security.passkey_remove' => 'Rimuovi passkey',
+    'user_security.passkey_login' => 'Accedi con passkey',
+    'user_security.passkey_failed' => 'L’operazione con la passkey non è riuscita.',
+    'user_security.passkey_label' => 'Nome per questo dispositivo',
+    'user_security.passkey_limit' => 'Puoi salvare fino a dieci passkey.',
+    'user_security.passkey_origin' => 'Le passkey sono disponibili all’indirizzo HTTPS configurato.',
+];

@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Aanmeldbeveiliging',
+    'user_security.totp' => 'Tweestapsverificatie via een app',
+    'user_security.factor_title' => 'Aanmelding bevestigen',
+    'user_security.factor' => 'Appcode of herstelcode',
+    'user_security.invalid' => 'De code is ongeldig, verlopen of al gebruikt.',
+    'user_security.unavailable' => 'Deze actie is momenteel niet beschikbaar.',
+    'user_security.enabled' => 'Tweestapsverificatie is ingeschakeld.',
+    'user_security.off' => 'Tweestapsverificatie is optioneel en momenteel uitgeschakeld.',
+    'user_security.begin' => 'Authenticator instellen',
+    'user_security.setup_help' => 'Voeg de sleutel toe aan je TOTP-app. Kies zes cijfers en 30 seconden. Voer daarna de huidige code in.',
+    'user_security.enable' => 'Tweestapsverificatie inschakelen',
+    'user_security.disable' => 'Tweestapsverificatie uitschakelen',
+    'user_security.rotate' => 'Nieuwe herstelcodes genereren',
+    'user_security.recovery' => 'Herstelcodes',
+    'user_security.recovery_help' => 'Bewaar deze codes nu op een veilige plaats. Elke code werkt één keer samen met je wachtwoord.',
+    'user_security.passkeys' => 'Passkeys',
+    'user_security.passkey_add' => 'Passkey toevoegen',
+    'user_security.passkey_remove' => 'Passkey verwijderen',
+    'user_security.passkey_login' => 'Aanmelden met een passkey',
+    'user_security.passkey_failed' => 'De actie met de passkey is mislukt.',
+    'user_security.passkey_label' => 'Naam voor dit apparaat',
+    'user_security.passkey_limit' => 'Je kunt maximaal tien passkeys opslaan.',
+    'user_security.passkey_origin' => 'Passkeys zijn beschikbaar op het ingestelde HTTPS-adres.',
+];

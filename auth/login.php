@@ -21,8 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['pending_admin_started'] = time();
                 redirect('/auth/mfa.php');
             }
-        } else { auth_issue_session($pdo,$user); redirect('/user/dashboard.php'); }
-    } catch (InvalidArgumentException $exception) { $error = $exception->getMessage(); http_response_code(422); }
+        } else { redirect(user_security_primary($pdo,$user)); }
+    } catch (InvalidArgumentException|DomainException $exception) { $error = $exception->getMessage(); http_response_code(422); }
 }
 $pageTitle = t('Anmelden'); require __DIR__ . '/../includes/header.php';
 ?>
@@ -33,6 +33,11 @@ $pageTitle = t('Anmelden'); require __DIR__ . '/../includes/header.php';
 <label class="field"><?=h(t('account.login_identifier'))?><input name="login" value="<?= h($login) ?>" maxlength="190" autocomplete="username" required></label>
 <label class="field"><?=h(t('Passwort'))?><input type="password" name="password" autocomplete="current-password" maxlength="1024" required></label>
 <button class="button" type="submit"><?=h(t('Anmelden'))?></button></form>
+<?php if($passkeys=passkey_config()):?>
+<script src="/assets/js/passkeys.js" defer></script>
+<form method="post" action="/auth/passkey.php" data-passkey="login" data-origin="<?=h($passkeys['origin'])?>" data-error="<?=h(t('user_security.passkey_failed'))?>">
+<?=csrf_field()?><button class="button secondary" type="button" disabled data-passkey-start><?=h(t('user_security.passkey_login'))?></button>
+<p data-passkey-error role="status"></p></form><?php endif;?>
 <p><a href="/auth/forgot-password.php"><?=h(t('Passwort vergessen?'))?></a></p>
 <p><?=h(t('account.no_account'))?> <a href="/auth/register.php"><?=h(t('account.register'))?></a></p></section></main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

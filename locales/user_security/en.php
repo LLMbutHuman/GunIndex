@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Sign-in security',
+    'user_security.totp' => 'Two-factor authentication with an app',
+    'user_security.factor_title' => 'Confirm sign-in',
+    'user_security.factor' => 'Authenticator or recovery code',
+    'user_security.invalid' => 'The code is invalid, expired, or already used.',
+    'user_security.unavailable' => 'This action is currently unavailable.',
+    'user_security.enabled' => 'Two-factor authentication is active.',
+    'user_security.off' => 'Two-factor authentication is optional and currently off.',
+    'user_security.begin' => 'Set up authenticator app',
+    'user_security.setup_help' => 'Add the key to your TOTP app. Use six digits and a 30-second interval. Enter the current code.',
+    'user_security.enable' => 'Enable two-factor authentication',
+    'user_security.disable' => 'Disable two-factor authentication',
+    'user_security.rotate' => 'Generate new recovery codes',
+    'user_security.recovery' => 'Recovery codes',
+    'user_security.recovery_help' => 'Save these codes somewhere safe now. Each code works once along with your password.',
+    'user_security.passkeys' => 'Passkeys',
+    'user_security.passkey_add' => 'Add passkey',
+    'user_security.passkey_remove' => 'Remove passkey',
+    'user_security.passkey_login' => 'Sign in with a passkey',
+    'user_security.passkey_failed' => 'The passkey action could not be completed.',
+    'user_security.passkey_label' => 'Name for this device',
+    'user_security.passkey_limit' => 'You can store up to ten passkeys.',
+    'user_security.passkey_origin' => 'Passkeys are available on the configured HTTPS address.',
+];

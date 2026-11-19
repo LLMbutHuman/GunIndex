@@ -4,11 +4,13 @@
   "type": "project",
   "require": {
     "php": "^8.4",
-    "dompdf/dompdf": "3.1.6",
     "ext-dom": "*",
     "ext-mbstring": "*",
+    "ext-openssl": "*",
     "ext-pdo": "*",
-    "ext-sodium": "*"
+    "ext-sodium": "*",
+    "dompdf/dompdf": "3.1.6",
+    "lbuchs/webauthn": "2.2.0"
   },
   "config": {
     "allow-plugins": false,

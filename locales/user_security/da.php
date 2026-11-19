@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Loginsikkerhed',
+    'user_security.totp' => 'Tofaktorgodkendelse med en app',
+    'user_security.factor_title' => 'Bekræft login',
+    'user_security.factor' => 'Appkode eller gendannelseskode',
+    'user_security.invalid' => 'Koden er ugyldig, udløbet eller allerede brugt.',
+    'user_security.unavailable' => 'Handlingen er ikke tilgængelig lige nu.',
+    'user_security.enabled' => 'Tofaktorgodkendelse er slået til.',
+    'user_security.off' => 'Tofaktorgodkendelse er valgfri og slået fra.',
+    'user_security.begin' => 'Konfigurer godkendelsesapp',
+    'user_security.setup_help' => 'Tilføj nøglen til din TOTP-app. Vælg seks cifre og 30 sekunder. Indtast derefter den aktuelle kode.',
+    'user_security.enable' => 'Slå tofaktorgodkendelse til',
+    'user_security.disable' => 'Slå tofaktorgodkendelse fra',
+    'user_security.rotate' => 'Generer nye gendannelseskoder',
+    'user_security.recovery' => 'Gendannelseskoder',
+    'user_security.recovery_help' => 'Gem koderne sikkert nu. Hver kode kan bruges én gang med din adgangskode.',
+    'user_security.passkeys' => 'Adgangsnøgler',
+    'user_security.passkey_add' => 'Tilføj adgangsnøgle',
+    'user_security.passkey_remove' => 'Fjern adgangsnøgle',
+    'user_security.passkey_login' => 'Log ind med adgangsnøgle',
+    'user_security.passkey_failed' => 'Handlingen med adgangsnøglen kunne ikke gennemføres.',
+    'user_security.passkey_label' => 'Navn på enheden',
+    'user_security.passkey_limit' => 'Du kan gemme op til ti adgangsnøgler.',
+    'user_security.passkey_origin' => 'Adgangsnøgler er tilgængelige på den konfigurerede HTTPS-adresse.',
+];

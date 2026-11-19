@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Bezpieczeństwo logowania',
+    'user_security.totp' => 'Uwierzytelnianie dwuskładnikowe w aplikacji',
+    'user_security.factor_title' => 'Potwierdź logowanie',
+    'user_security.factor' => 'Kod z aplikacji lub kod odzyskiwania',
+    'user_security.invalid' => 'Kod jest nieprawidłowy, wygasł lub został użyty.',
+    'user_security.unavailable' => 'Ta czynność jest chwilowo niedostępna.',
+    'user_security.enabled' => 'Uwierzytelnianie dwuskładnikowe jest aktywne.',
+    'user_security.off' => 'Uwierzytelnianie dwuskładnikowe jest opcjonalne i wyłączone.',
+    'user_security.begin' => 'Skonfiguruj aplikację uwierzytelniającą',
+    'user_security.setup_help' => 'Dodaj klucz do aplikacji TOTP. Wybierz sześć cyfr i 30 sekund, a następnie wpisz aktualny kod.',
+    'user_security.enable' => 'Włącz uwierzytelnianie dwuskładnikowe',
+    'user_security.disable' => 'Wyłącz uwierzytelnianie dwuskładnikowe',
+    'user_security.rotate' => 'Wygeneruj nowe kody odzyskiwania',
+    'user_security.recovery' => 'Kody odzyskiwania',
+    'user_security.recovery_help' => 'Zapisz kody w bezpiecznym miejscu. Każdego kodu możesz użyć raz razem z hasłem.',
+    'user_security.passkeys' => 'Klucze dostępu',
+    'user_security.passkey_add' => 'Dodaj klucz dostępu',
+    'user_security.passkey_remove' => 'Usuń klucz dostępu',
+    'user_security.passkey_login' => 'Zaloguj się kluczem dostępu',
+    'user_security.passkey_failed' => 'Operacja z kluczem dostępu nie powiodła się.',
+    'user_security.passkey_label' => 'Nazwa urządzenia',
+    'user_security.passkey_limit' => 'Możesz zapisać maksymalnie dziesięć kluczy dostępu.',
+    'user_security.passkey_origin' => 'Klucze dostępu są dostępne pod skonfigurowanym adresem HTTPS.',
+];

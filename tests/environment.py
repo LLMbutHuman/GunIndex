@@ -102,6 +102,8 @@ def test():
   docker('exec',APP,'php','tests/listing_alert_test.php')
   docker('exec',APP,'php','tests/auth_session_test.php')
   docker('exec',APP,'php','tests/auth_session_test.php','--database')
+  docker('exec',APP,'php','tests/user_security_test.php')
+  docker('exec',APP,'php','tests/user_security_test.php','--database')
   for suite in ('maintenance_test.php','maintenance_auction_test.php','maintenance_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
   docker('exec',APP,'php','tests/e2ee_integration_test.php')

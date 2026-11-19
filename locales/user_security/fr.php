@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'user_security.title' => 'Sécurité de connexion',
+    'user_security.totp' => 'Authentification à deux facteurs par application',
+    'user_security.factor_title' => 'Confirmer la connexion',
+    'user_security.factor' => 'Code d’authentification ou de récupération',
+    'user_security.invalid' => 'Le code est invalide, expiré ou déjà utilisé.',
+    'user_security.unavailable' => 'Cette action est temporairement indisponible.',
+    'user_security.enabled' => 'L’authentification à deux facteurs est activée.',
+    'user_security.off' => 'L’authentification à deux facteurs est facultative et désactivée.',
+    'user_security.begin' => 'Configurer l’application d’authentification',
+    'user_security.setup_help' => 'Ajoutez la clé dans votre application TOTP. Sélectionnez six chiffres et 30 secondes, puis saisissez le code actuel.',
+    'user_security.enable' => 'Activer les deux facteurs',
+    'user_security.disable' => 'Désactiver les deux facteurs',
+    'user_security.rotate' => 'Générer de nouveaux codes de récupération',
+    'user_security.recovery' => 'Codes de récupération',
+    'user_security.recovery_help' => 'Gardez ces codes en lieu sûr. Chacun peut être utilisé une fois avec votre mot de passe.',
+    'user_security.passkeys' => 'Clés d’accès',
+    'user_security.passkey_add' => 'Ajouter une clé d’accès',
+    'user_security.passkey_remove' => 'Supprimer la clé d’accès',
+    'user_security.passkey_login' => 'Se connecter avec une clé d’accès',
+    'user_security.passkey_failed' => 'L’opération avec la clé d’accès a échoué.',
+    'user_security.passkey_label' => 'Nom de cet appareil',
+    'user_security.passkey_limit' => 'Vous pouvez enregistrer jusqu’à dix clés d’accès.',
+    'user_security.passkey_origin' => 'Les clés d’accès sont disponibles à l’adresse HTTPS configurée.',
+];
