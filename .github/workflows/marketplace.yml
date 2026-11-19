@@ -38,10 +38,11 @@ jobs:
       - name: Install locked browser test dependencies
         run: |
           npm ci --ignore-scripts --prefix tests/browser-tools
-          # The default mirror repeatedly returned 503 for Ubuntu Noble packages.
-          # Keep Ubuntu's suites and signing settings and use the official archive directly.
-          sudo sed -i 's|^URIs: .*|URIs: https://archive.ubuntu.com/ubuntu|' /etc/apt/sources.list.d/ubuntu.sources
-          tests/browser-tools/node_modules/.bin/playwright install --with-deps chromium
+          tests/browser-tools/node_modules/.bin/playwright install chromium
+          # Install system packages if the pinned browser cannot run on this image.
+          if ! node -e 'const {playwright, launchOptions} = require("./tests/browser_tools"); playwright.chromium.launch({...launchOptions(), timeout: 10000}).then(browser => browser.close()).catch(error => { console.error(error.message); process.exitCode = 1; });'; then
+            tests/browser-tools/node_modules/.bin/playwright install-deps chromium
+          fi
       - name: Browser, international controls and automated accessibility
         run: |
           node tests/browser_smoke.js

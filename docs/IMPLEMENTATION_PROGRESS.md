@@ -27,8 +27,10 @@ synthetisch.
 `239fb47` bindet Zahlungshinweise an denselben Klärungsstatus und ermöglicht
 eine erneute, unbestätigte Meldung nach Ablehnung. MySQL und HTTP bestanden in
 beiden Versuchen von [CI 44521029120](https://github.com/LLMbutHuman/GunIndex/actions/runs/44521029120).
-Chromium war durch HTTP 503 beim Ubuntu-Paketdownload blockiert. Die CI
-bezieht die signierten Ubuntu-Pakete jetzt direkt aus dem offiziellen Archiv.
+Chromium war durch HTTP 503 beim Ubuntu-Paketdownload blockiert. Auch ein
+Lauf mit dem offiziellen Ubuntu-Archiv scheiterte beim Paketindex.
+Die CI prüft jetzt zuerst den Start des fest versionierten Chromium auf
+dem Runner. Systempakete werden bei einem fehlgeschlagenen Start nachgeladen.
 
 ## Profilbilder und Händlerlogos, 2026-11-19
 
