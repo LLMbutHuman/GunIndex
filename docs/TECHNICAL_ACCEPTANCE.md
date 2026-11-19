@@ -66,7 +66,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | --- | --- | --- | --- |
 | 1 | Auktions-Einstellgebühr | A | Neuer bestätigter Durchlauf atomar berechnet; Aktivierungsfreigaben und tatsächliche Zahlungen extern |
 | 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
-| 3 | Gebühren, Korrekturen, Rechnungen | C | Voller unbezahlter Erlass, verifizierte Erstattungen und Gebührenbindung bei erfolgloser Wiederholung geprüft; unbezahlte Teilkorrektur, weitere Durchlaufarten und Bestandsbehandlung offen |
+| 3 | Gebühren, Korrekturen, Rechnungen | C | Teil- und Vollerlass unbezahlter Gebühren, Klärung alter Referenzen, Rechnungs-PDF, verifizierte Erstattungen und Gebührenbindung bei erfolgloser Wiederholung geprüft. Weitere Durchlaufarten und Bestandsbehandlung offen |
 | 4 | Rechtsdokumentbindung | C | Bestehende Registrierungs-/Leistungsabläufe geprüft; neue Transaktionsarten und Pflichtzustimmung für Bestandskonten offen |
 | 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
 | 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |

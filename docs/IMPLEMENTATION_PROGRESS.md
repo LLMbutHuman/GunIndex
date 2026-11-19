@@ -16,9 +16,19 @@ tatsächlich extern abgeschlossene Rückzahlungen. Der Kunde erhält Verweise
 zwischen den Aufträgen und die korrigierte Rechnung nach bestätigter Zahlung.
 
 Lokal bestanden PHP-Syntax, 16 Gebühren-, 20 Zahlungs- und sieben Geo- und
-Sprachprüfungen. Die MySQL-, Parallelitäts- und HTTP-Prüfungen für Migration 027
-laufen in CI. Entwicklungstests verwenden ausschließlich synthetische
-Zahlungs- und Erstattungsnachweise.
+Sprachprüfungen. Der vollständige
+[CI-Lauf 44519911880](https://github.com/LLMbutHuman/GunIndex/actions/runs/44519911880)
+für `5b582f6` ist grün. Linuxjob `135545561521` bestätigte Migration 027,
+31 Gebühren-Integrationstests und den Chromium-Regressionslauf. Darunter
+sind zwei konkurrierende Korrekturen, unveränderte historische Nachweise,
+Rückzahlung ohne doppelte Buchung, PDF und Kontogrenzen. Die Nachweise sind
+synthetisch.
+
+`239fb47` bindet Zahlungshinweise an denselben Klärungsstatus und ermöglicht
+eine erneute, unbestätigte Meldung nach Ablehnung. MySQL und HTTP bestanden in
+beiden Versuchen von [CI 44521029120](https://github.com/LLMbutHuman/GunIndex/actions/runs/44521029120).
+Chromium war durch HTTP 503 beim Ubuntu-Paketdownload blockiert. Die CI
+bezieht die signierten Ubuntu-Pakete jetzt direkt aus dem offiziellen Archiv.
 
 ## Profilbilder und Händlerlogos, 2026-11-19
 
