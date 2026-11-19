@@ -140,6 +140,7 @@ function privacy_review_deletion(PDO $pdo,int $actor,int $requestId,string $deci
             $pdo->prepare('DELETE FROM market_auth_sessions WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare('DELETE FROM market_user_totp WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare('DELETE FROM market_passkey_accounts WHERE user_id=?')->execute([$row['user_id']]);
+            $pdo->prepare('DELETE FROM market_profile_images WHERE user_id=?')->execute([$row['user_id']]);
             foreach(['market_discovery_matches','market_discovery_digests','market_wanted','market_saved_searches','market_watchlist','market_notifications','market_notification_preferences','market_mail_queue','market_auth_tokens','market_billing_profiles','market_dealer_profiles'] as $table)$pdo->prepare('DELETE FROM '.$table.' WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare("UPDATE market_campaigns SET status='disabled' WHERE user_id=?")->execute([$row['user_id']]);
         }
@@ -259,6 +260,10 @@ function privacy_export(PDO $pdo,int $userId,string $password)
         $q=$pdo->prepare('SELECT editor_id,position,width,height,large_webp FROM market_listing_draft_images WHERE seller_id=? ORDER BY editor_id,position');$q->execute([$userId]);$first=true;
         while($image=$q->fetch()){$image['mime']='image/webp';$image['base64']=base64_encode($image['large_webp']);unset($image['large_webp']);$write(($first?'':',').json_encode($image,JSON_THROW_ON_ERROR));$first=false;}
         $write(']');
+        $images=$pdo->prepare('SELECT kind,webp,updated_at FROM market_profile_images WHERE user_id=? ORDER BY kind');$images->execute([$userId]);
+        $encoded=[];
+        while($image=$images->fetch()){$encoded[]=['kind'=>$image['kind'],'updated_at'=>$image['updated_at'],'mime'=>'image/webp','base64'=>base64_encode($image['webp'])];}
+        $write(',"profile_images":'.json_encode($encoded,JSON_THROW_ON_ERROR));
         $write(',"verification_documents":[');$q=$pdo->prepare('SELECT d.id,d.storage_key,r.id AS request_id FROM market_verification_documents d JOIN market_verification_requests r ON r.id=d.request_id WHERE r.user_id=? AND d.deleted_at IS NULL AND r.expires_at>UTC_TIMESTAMP() ORDER BY d.id');$q->execute([$userId]);$first=true;
         while($doc=$q->fetch()){$path=verification_document_path($doc['storage_key']);if(!is_file($path)||is_link($path)||filesize($path)>12*1024*1024)throw new RuntimeException('Ein eigenes Dokument konnte nicht in den Export aufgenommen werden.');$plain=crypto_decrypt('identity',file_get_contents($path));$write(($first?'':',').json_encode(['id'=>(int)$doc['id'],'request_id'=>(int)$doc['request_id'],'mime'=>'image/webp','base64'=>base64_encode($plain)],JSON_THROW_ON_ERROR));$first=false;}
         $write(']}');rewind($stream);audit_log($pdo,$userId,'privacy.exported',$userId,[]);return$stream;

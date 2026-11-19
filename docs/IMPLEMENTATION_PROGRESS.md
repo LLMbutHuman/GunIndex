@@ -1,5 +1,21 @@
 # Implementierungsfortschritt
 
+## Profilbilder und Händlerlogos, 2026-11-19
+
+Migration 026 ergänzt je Konto ein Profilbild und ein Händlerlogo. Der Upload
+übernimmt nur gültige JPEG-, PNG- oder WebP-Dateien bis 5 MiB und 20 Megapixel.
+Gespeichert wird ein neu kodiertes WebP von höchstens 400 Pixeln pro Seite und
+512 KiB. Originale werden verworfen. Die Bedienung ist in acht Sprachen verfügbar.
+
+Profilbilder sind am öffentlichen Profil sichtbar. Bei einem neuen Händlerlogo
+wird das Händlerprofil erneut zur Prüfung vorgelegt. Eigentümer und berechtigtes
+Personal mit MFA können das eingereichte Logo vorab ansehen. Die Entscheidung
+bindet die geprüfte Logorevision. Entfernen blendet das Bild sofort aus. Der
+Kontoexport enthält die eigene Bilddatei, bei Anonymisierung wird sie entfernt.
+
+PHP- und JavaScript-Syntax, Sprachschlüssel und lokale Bildreihenfolge-Tests
+sind geprüft. Der vollständige MySQL- und Chromium-Nachweis folgt in CI.
+
 ## Optionale Benutzer-MFA und Passkeys, 2026-11-19
 
 Migrationen 024 und 025 ergänzen optionale TOTP-Anmeldung, einmalige

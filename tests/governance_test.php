@@ -98,9 +98,14 @@ gov_test('deletion_request_disables_sessions_preserves_contract_records',static 
     $q=$pdo->prepare('SELECT status FROM market_listings WHERE id=?');$q->execute([$listing]);gov_check($q->fetchColumn()==='paused');$q=$pdo->prepare('SELECT id FROM market_invoices WHERE id=?');$q->execute([$invoice]);gov_check((int)$q->fetchColumn()===$invoice);
 });
 gov_test('anonymization_requires_retention_review_and_keeps_invoice',static function()use($pdo,$admin):void{
-    $user=gov_user($pdo);$q=$pdo->prepare("INSERT INTO market_invoices(user_id,service_code,fee_version,gross_cents,status) VALUES (?,'private_fixed','synthetic',0,'draft')");$q->execute([$user['id']]);$invoice=(int)$pdo->lastInsertId();privacy_request_deletion($pdo,$user['id'],$user['password'],'Synthetic account anonymization request.');
+    $user=gov_user($pdo);$q=$pdo->prepare("INSERT INTO market_invoices(user_id,service_code,fee_version,gross_cents,status) VALUES (?,'private_fixed','synthetic',0,'draft')");$q->execute([$user['id']]);$invoice=(int)$pdo->lastInsertId();
+    ob_start();imagewebp(imagecreatetruecolor(8,8));$webp=ob_get_clean();$revision=bin2hex(random_bytes(16));
+    $q=$pdo->prepare("INSERT INTO market_profile_images(user_id,kind,revision,webp) VALUES (?,'avatar',?,?)");$q->execute([$user['id'],$revision,$webp]);
+    privacy_request_deletion($pdo,$user['id'],$user['password'],'Synthetic account anonymization request.');
+    gov_check(profile_image_bytes($pdo,$user['id'],'avatar',$revision,false)===null);
     $q=$pdo->prepare('SELECT id FROM market_deletion_requests WHERE user_id=?');$q->execute([$user['id']]);$request=(int)$q->fetchColumn();gov_reject(static fn()=>privacy_review_deletion($pdo,$admin['id'],$request,'anonymized','Synthetic insufficient retention confirmation.',false));
     privacy_review_deletion($pdo,$admin['id'],$request,'anonymized','Synthetic retention review completed for this isolated fixture.',true);$q=$pdo->prepare('SELECT username,email,is_active FROM users WHERE id=?');$q->execute([$user['id']]);$row=$q->fetch();gov_check($row['username']!==$user['username']&&str_starts_with($row['username'],'deleted_')&&(int)$row['is_active']===0);$q=$pdo->prepare('SELECT id FROM market_invoices WHERE id=?');$q->execute([$invoice]);gov_check((int)$q->fetchColumn()===$invoice);
+    gov_check(profile_image_revision($pdo,$user['id'],'avatar')===null);
 });
 gov_test('delegated_administration_uses_site_permission_and_mfa_over_http',static function()use($pdo,$admin):void{
     $user=gov_user($pdo,false,true);governance_role_change($pdo,$admin['id'],$user['id'],'administrator',true);

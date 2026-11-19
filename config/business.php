@@ -52,7 +52,7 @@ function business_assert_manager(PDO $pdo,int $actorId):void
 
 function business_profile_revision(array $profile):string
 {
-    return hash('sha256',json_encode(array_intersect_key($profile,array_flip(['user_id','company_name','address_text','country_code','contact_email','website','legal_notice'])),JSON_THROW_ON_ERROR));
+    return hash('sha256',json_encode(array_intersect_key($profile,array_flip(['user_id','company_name','address_text','country_code','contact_email','website','legal_notice','logo_revision'])),JSON_THROW_ON_ERROR));
 }
 
 function business_review_dealer(PDO $pdo,int $actorId,int $userId,string $status,string $reason,string $revision):void

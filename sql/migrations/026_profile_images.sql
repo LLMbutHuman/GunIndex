@@ -1,0 +1,13 @@
+CREATE TABLE market_profile_images (
+ user_id INT NOT NULL,
+ kind ENUM('avatar','logo') NOT NULL,
+ revision CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ webp MEDIUMBLOB NOT NULL,
+ updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ PRIMARY KEY (user_id,kind),
+ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+ CHECK (OCTET_LENGTH(webp) BETWEEN 12 AND 524288)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE market_dealer_profiles
+ ADD COLUMN logo_revision CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL;

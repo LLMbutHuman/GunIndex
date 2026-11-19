@@ -69,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = t('account.profile_title'); require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container"><header class="page-heading"><p class="eyebrow"><?=h(t('account.account_label'))?></p><h1><?=h(t('account.profile_heading'))?></h1><p><?=h(t('Benutzername'))?>: <?= h($user['username']) ?></p></header>
+<p><a class="button secondary" href="/user/profile-image.php"><?=h(t('profile_images.avatar'))?></a></p>
 <?php if ($error !== ''): ?><p class="notice error" role="alert"><?= h($error) ?></p><?php endif; ?>
 <?php if ($success !== ''): ?><p class="notice success" role="status"><?= h($success) ?></p><?php endif; ?>
 <section class="panel"><h2><?=h(t('account.profile_section'))?></h2><form method="post" class="form-grid"><?= csrf_field() ?><input type="hidden" name="action" value="save">
