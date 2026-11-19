@@ -23,8 +23,13 @@ verbucht genau einen passenden bestätigten Ausgang. Abweichungen und
 Reorganisationen erscheinen im Finanzbereich. Regtest erzeugt keine
 Echtbuchung oder Leistung. Mainnet bleibt durch gesonderte Freigaben gesperrt.
 
-Der PHP-, Shell- und Adapter-Nachweis sowie der isolierte Node-Regtest
-werden getrennt dokumentiert. MySQL- und Browser-Nachweis folgen in CI.
+Lokale PHP-/Shell-Syntax und zehn RPC-Adapterfälle bestanden. Der Lauf
+[CI 44579766951](https://github.com/LLMbutHuman/GunIndex/actions/runs/44579766951)
+für `e69c32f` ist vollständig grün. Windowsjob `135756928616` und Linuxjob
+`135756928016` bestanden. Migration 030, 34 Finanzprüfungen, Bitcoin Core
+30.4 mit isolierter Watch-only-Wallet, exaktem Satoshi-Betrag, aktiver
+Kettenbestätigung und echter Reorganisation sowie die Browserregression
+bestanden. Ein tatsächlicher Mainnet-Betrieb bleibt gesondert abzunehmen.
 
 ## Banküberweisungen und Kontenabgleich, 2026-11-19
 

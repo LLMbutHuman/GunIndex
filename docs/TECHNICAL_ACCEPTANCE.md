@@ -91,7 +91,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 21 | Vollständiges SEO | C | Internationale URL-/hreflang-Strategie und vollständige Abnahme |
 | 22 | Wartungsmodus | C | Sperre/Fristfortsetzung und Healthdiagnose integriert und geprüft; Behandlung längerer Ausfälle und Werbezeiten offen |
 | 23 | Automatische Rückerstattungen | B | Freigabe, persistente Aufträge, Worker, verifizierter Statusabgleich und Korrekturbelege in MySQL/HTTP geprüft. Echte Sandbox- und Live-Anbieterabnahme offen. [CI 44540263687](https://github.com/LLMbutHuman/GunIndex/actions/runs/44540263687) |
-| 24 | Bitcoin | C | Node-Anbindung, Bestätigungen, Reorganisationen und Infrastruktur |
+| 24 | Bitcoin | B | Isolierte Bitcoin-Core-Wallet, exakte Satoshis, Bestätigung und Reorganisation geprüft. Quote, einmalige Verbuchung und Sperre verbleibender Leistungen im MySQL-Test grün. Mainnet-Infrastruktur und Freigabe ausstehend. [CI 44579766951](https://github.com/LLMbutHuman/GunIndex/actions/runs/44579766951) |
 | 25 | Banküberweisung | B | Eindeutige Referenzen, camt.053.001.08-Import, Abgleich mit separater Eingangsprüfung und einmaliger Buchung getestet. Originalexport des Betreiberkontos und Produktivfreigabe offen. [CI 44577373006](https://github.com/LLMbutHuman/GunIndex/actions/runs/44577373006) |
 | 26 | Treuhand | C | Vollständiger gesperrter Workflow und geeignete Providerinfrastruktur |
 
