@@ -86,6 +86,12 @@ Unklare Providerantworten halten die Forderung zur Klärung. Die separate
 Live-Freigabe und die Abnahme mit tatsächlichem PayPal-Konto stehen aus.
 Details: [FINANCE.md](FINANCE.md).
 
+Für Banküberweisungen gibt es eine eindeutige Auftragsreferenz und die
+geschützte Abstimmung gebuchter Kontoauszüge. Finanzpersonal prüft den
+Eingang direkt im Empfängerkonto vor der Freigabe. Die Bankverbindung
+und ihr Exportformat müssen vor dem Live-Betrieb abgenommen werden.
+Details: [BANK_TRANSFERS.md](BANK_TRANSFERS.md).
+
 Treuhand ist noch kein implementierter verwahrender Zahlungsdienst. Es gibt
 eine Gebührenvorschau, aber keinen vollständig freigegebenen Verwahrungs-/
 Auszahlungsworkflow. Auch Bitcoin und Banküberweisung sind nicht aktiviert.

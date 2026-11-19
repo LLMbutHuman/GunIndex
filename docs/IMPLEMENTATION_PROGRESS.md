@@ -11,8 +11,14 @@ Die Buchung verwendet die bestehenden Rechnungs- und Leistungsabläufe.
 Extern ausgeführte Bankrückzahlungen können getrennt dokumentiert werden.
 
 Lokale Syntax, acht Kontoauszugstests, 21 Zahlungs-, 16 Gebühren- und
-sieben Geo-/Sprachprüfungen bestanden. MySQL, der echte Upload über HTTP
-und der Browser-Regressionslauf folgen in der GitHub-CI.
+sieben Geo-/Sprachprüfungen bestanden.
+[CI 44577373006](https://github.com/LLMbutHuman/GunIndex/actions/runs/44577373006)
+für `84b78ab` ist vollständig grün. Windowsjob `135748401790` und
+Linuxjob `135748401103` bestanden. Migration 029, 30 Finanzprüfungen und
+acht camt.053-Prüfungen bestanden. Im HTTP-Fall wurden Auswahl im
+Checkout, echter Multipart-Upload, getrennte Eingangsbestätigung und
+Kontoberechtigungen geprüft. Der Chromium-Regressionslauf ist grün.
+Die Abnahme des tatsächlichen Bankkontos und seines Originalexports steht aus.
 
 ## Automatisierte PayPal-Erstattungen, 2026-11-19
 

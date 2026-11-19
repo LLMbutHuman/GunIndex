@@ -11,8 +11,8 @@ und eine MFA-Sitzung, für die Kontoauszüge einen genehmigten Bankzugang.
 Der Kunde wählt die Überweisung am offenen Auftrag. GunIndex speichert
 Empfänger und Betrag zusammen mit der eindeutigen Referenz `GI-B-…`.
 Die Zuordnung gilt für genau einen Zahlungsauftrag. Eine bereits begonnene
-Zahlung über einen anderen Kanal blockiert den Wechsel. Ein nach der Zahlung
-stornierter oder abgelaufener Vorgang bleibt zur Klärung sichtbar.
+Zahlung über einen anderen Kanal blockiert den Wechsel. Eingänge für einen
+stornierten oder abgelaufenen Auftrag bleiben zur Klärung sichtbar.
 
 Die Finanzseite **Bankabgleich** nimmt direkt aus dem Empfängerkonto
 exportierte Kontoauszüge als camt.053.001.08 XML bis 5 MiB entgegen. Der
