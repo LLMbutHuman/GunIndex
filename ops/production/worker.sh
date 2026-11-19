@@ -3,7 +3,7 @@ set -u
 stopping=0
 trap 'stopping=1' TERM INT
 while [ "$stopping" -eq 0 ]; do
-  for worker in auction mail discovery business privacy; do
+  for worker in auction mail discovery business privacy paypal-refund; do
     file="/app/ops/${worker}-worker.php"
     if [ -f "$file" ]; then
       if php "$file" --once; then

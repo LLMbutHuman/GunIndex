@@ -4,6 +4,8 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit(1); }
 require_once __DIR__ . '/../config/fees.php';
 require_once __DIR__ . '/../config/payments.php';
 require_once __DIR__ . '/../config/finance.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/paypal_refunds.php';
 
 $passed = 0;
 function same(mixed $expected, mixed $actual): void { if ($expected !== $actual) throw new RuntimeException('Assertion failed.'); }
@@ -122,6 +124,26 @@ test_payment('official_webhook_verifier_controls_acceptance', static function():
 test_payment('refund_adapter_exact_and_idempotent', static function(): void {
     $calls=[];$client=test_client($calls,static fn()=>['status'=>201,'body'=>['id'=>'REFUND123456','status'=>'COMPLETED']]);
     $client->refund('CAPTURE123456',199,'1234567890abcdef-refund');same('https://api-m.sandbox.paypal.com/v2/payments/captures/CAPTURE123456/refund',$calls[1][1]);same('1.99',json_decode($calls[1][3],true)['amount']['value']);
+});
+test_payment('refund_representation_binds_currency_capture_mode_and_unique_reference',static function():void{
+ $ref='GI-R-'.str_repeat('a',32);
+ $job=['mode'=>'sandbox','capture_id'=>'CAPTURE123456','provider_refund_id'=>null,'reference'=>$ref,'amount_cents'=>199];
+ $resource=['id'=>'REFUND123456','status'=>'COMPLETED','amount'=>['currency_code'=>'EUR','value'=>'1.99'],'custom_id'=>$ref,'links'=>[['method'=>'GET','rel'=>'up','href'=>'https://api.sandbox.paypal.com/v2/payments/captures/CAPTURE123456']]];
+ same(['REFUND123456','completed'],paypal_refund_verify($job,$resource));
+ foreach ([
+  ['custom_id'=>'OTHER-REFERENCE'],['id'=>'CAPTURE123456'],['status'=>'APPROVED'],
+  ['amount'=>['currency_code'=>'USD','value'=>'1.99']],['amount'=>['currency_code'=>'EUR','value'=>'1.98']],
+  ['links'=>[['method'=>'GET','rel'=>'up','href'=>'https://api.paypal.com/v2/payments/captures/CAPTURE123456']]],
+  ['links'=>[['method'=>'GET','rel'=>'up','href'=>'https://api.sandbox.paypal.com/v2/payments/captures/OTHER123456']]],
+ ] as $changes) rejected(fn()=>paypal_refund_verify($job,array_replace($resource,$changes)),PaymentConflict::class);
+ rejected(fn()=>paypal_refund_verify(array_replace($job,['provider_refund_id'=>'ANOTHERREFUND']),$resource),PaymentConflict::class);
+ $calls=[];$client=test_client($calls,static fn()=>['status'=>200,'body'=>$resource]);
+ $client->refund('CAPTURE123456',199,$ref,$ref);
+ $client->refundDetails('REFUND123456');
+ same($ref,json_decode($calls[1][3],true)['custom_id']);
+ same(true,in_array('Prefer: return=representation',$calls[1][2],true));
+ same('https://api-m.sandbox.paypal.com/v2/payments/refunds/REFUND123456',$calls[2][1]);
+ rejected(fn()=>$client->refundDetails('REFUND/OTHER'),PaymentConflict::class);
 });
 test_payment('remote_transport_failure_never_means_paid', static function(): void {
     $client=new MarketPayPal(test_config(),static fn()=>['status'=>500,'body'=>[]]);rejected(static fn()=>$client->order('ORDER123456'),PaymentUnavailable::class);

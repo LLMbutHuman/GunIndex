@@ -90,12 +90,16 @@ function finance_issue_invoice(PDO $pdo,int $invoiceId,?int $actor=null):int {
   if($own)$pdo->commit();return$id;
  }catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
+function finance_refunded_cents(PDO $pdo,int $invoiceId):int {
+ $q=$pdo->prepare("SELECT (SELECT COALESCE(SUM(amount_cents),0) FROM market_refunds WHERE invoice_id=?) + (SELECT COALESCE(SUM(amount_cents),0) FROM market_paypal_refund_jobs WHERE invoice_id=? AND mode='sandbox' AND status='completed')");
+ $q->execute([$invoiceId,$invoiceId]);return(int)$q->fetchColumn();
+}
 function finance_request_refund(PDO $pdo,int $userId,int $invoiceId,int $amount,string $reason):int {
  if($amount<1||mb_strlen(trim($reason))<10||mb_strlen($reason)>2000)throw new InvalidArgumentException('Betrag und nachvollziehbaren Grund angeben.');
  $pdo->beginTransaction();try{
   $q=$pdo->prepare("SELECT * FROM market_invoices WHERE id=? AND user_id=? AND status IN ('paid','partially_refunded') FOR UPDATE");$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Keine erstattungsfähige Zahlung gefunden.');
-  $q=$pdo->prepare('SELECT COALESCE(SUM(amount_cents),0) FROM market_refunds WHERE invoice_id=?');$q->execute([$invoiceId]);if($amount>(int)$invoice['gross_cents']-(int)$q->fetchColumn())throw new PaymentConflict('Der angefragte Betrag übersteigt die noch nicht erstattete Zahlung.');
-  $q=$pdo->prepare("SELECT COUNT(*) FROM market_refund_requests WHERE invoice_id=? AND status='requested'");$q->execute([$invoiceId]);if((int)$q->fetchColumn()>0)throw new PaymentConflict('Eine offene Erstattungsanfrage besteht bereits.');
+  if($amount>(int)$invoice['gross_cents']-finance_refunded_cents($pdo,$invoiceId))throw new PaymentConflict('Der angefragte Betrag übersteigt die noch nicht erstattete Zahlung.');
+  $q=$pdo->prepare("SELECT COUNT(*) FROM market_refund_requests WHERE invoice_id=? AND status IN ('requested','processing')");$q->execute([$invoiceId]);if((int)$q->fetchColumn()>0)throw new PaymentConflict('Eine offene Erstattungsanfrage besteht bereits.');
   $pdo->prepare('INSERT INTO market_refund_requests(invoice_id,user_id,requested_cents,reason) VALUES (?,?,?,?)')->execute([$invoiceId,$userId,$amount,trim($reason)]);$id=(int)$pdo->lastInsertId();audit_log($pdo,$userId,'finance.refund_requested',$invoiceId,['request_id'=>$id]);$pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
@@ -105,21 +109,32 @@ function finance_record_refund(PDO $pdo,int $actor,int $invoiceId,int $amount,st
  $pdo->beginTransaction();try{
   $q=$pdo->prepare('SELECT * FROM market_invoices WHERE id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Auftrag nicht gefunden.');
   $q=$pdo->prepare('SELECT * FROM market_refunds WHERE transaction_id=?');$q->execute([$transaction]);if($prior=$q->fetch()){if((int)$prior['invoice_id']===$invoiceId&&(int)$prior['amount_cents']===$amount){$pdo->commit();return(int)$prior['id'];}throw new PaymentConflict('Diese Erstattung wurde bereits anders zugeordnet.');}
+  $q=$pdo->prepare("SELECT id FROM market_paypal_refund_jobs WHERE invoice_id=? AND status IN ('queued','pending','review') LIMIT 1 FOR SHARE");$q->execute([$invoiceId]);if($q->fetchColumn())throw new PaymentConflict(t('paypal_refunds.in_progress'));
+  $q=$pdo->prepare("SELECT id FROM market_payment_attempts WHERE invoice_id=? AND provider='paypal' AND status='paid' AND mode='sandbox' LIMIT 1");$q->execute([$invoiceId]);if($q->fetchColumn())throw new PaymentConflict(t('paypal_refunds.sandbox'));
+  if($requestId!==null){$q=$pdo->prepare("SELECT * FROM market_refund_requests WHERE id=? AND invoice_id=? AND status='requested' FOR UPDATE");$q->execute([$requestId,$invoiceId]);if(!$q->fetch())throw new PaymentConflict('Erstattungsanfrage nicht offen.');}
+  $id=finance_book_verified_refund($pdo,$invoice,$actor,$amount,$transaction,trim($reason),$requestId,true);
+  $pdo->commit();return$id;
+ }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();if($e instanceof PDOException&&$e->getCode()==='23000')throw new PaymentConflict('Diese Erstattungskennung wurde bereits zugeordnet.');throw$e;}
+}
+
+/** Common ledger path for externally verified manual and REST refunds under the invoice lock. */
+function finance_book_verified_refund(PDO $pdo,array $invoice,int $actor,int $amount,string $transaction,string $reason,?int $requestId,bool $manual):int {
+  if(!$pdo->inTransaction())throw new LogicException('Refund booking requires an invoice lock.');
+  $invoiceId=(int)$invoice['id'];
   if(!in_array($invoice['status'],['paid','partially_refunded'],true))throw new PaymentConflict('Diese Zahlung ist nicht erstattungsfähig.');
   $q=$pdo->prepare('SELECT 1 FROM market_payment_attempts WHERE capture_id=?');$q->execute([$transaction]);if($q->fetchColumn())throw new PaymentConflict('Die ursprüngliche Zahlung ist kein Erstattungsnachweis.');
-  $q=$pdo->prepare('SELECT COALESCE(SUM(amount_cents),0) FROM market_refunds WHERE invoice_id=?');$q->execute([$invoiceId]);$before=(int)$q->fetchColumn();$total=$before+$amount;if($total>(int)$invoice['gross_cents'])throw new PaymentConflict('Übererstattung wird verweigert.');
-  if($requestId!==null){$q=$pdo->prepare("SELECT * FROM market_refund_requests WHERE id=? AND invoice_id=? AND status='requested' FOR UPDATE");$q->execute([$requestId,$invoiceId]);if(!$q->fetch())throw new PaymentConflict('Erstattungsanfrage nicht offen.');}
-  $pdo->prepare('INSERT INTO market_refunds(invoice_id,request_id,transaction_id,amount_cents,verified_by,reason) VALUES (?,?,?,?,?,?)')->execute([$invoiceId,$requestId,$transaction,$amount,$actor,trim($reason)]);$id=(int)$pdo->lastInsertId();$document=null;
+  $before=finance_refunded_cents($pdo,$invoiceId);$total=$before+$amount;
+  if($amount<1||$total>(int)$invoice['gross_cents'])throw new PaymentConflict('Übererstattung wird verweigert.');
+  $pdo->prepare('INSERT INTO market_refunds(invoice_id,request_id,transaction_id,amount_cents,verified_by,reason) VALUES (?,?,?,?,?,?)')->execute([$invoiceId,$requestId,$transaction,$amount,$actor,$reason]);$id=(int)$pdo->lastInsertId();$document=null;
   $q=$pdo->prepare("SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?");$q->execute([$invoiceId]);$original=$q->fetchColumn();
   if($original){$payload=finance_snapshot($pdo,$invoiceId);$afterTax=fees_tax_split($total,(int)$payload['tax_bps'],true);$beforeTax=fees_tax_split($before,(int)$payload['tax_bps'],true);$payload['gross_cents']=$amount;$payload['net_cents']=$afterTax['net_cents']-$beforeTax['net_cents'];$payload['tax_cents']=$amount-$payload['net_cents'];$payload['correction_reason']=trim($reason);$document=finance_write_document($pdo,$invoice,$payload,'credit_note',$amount,$actor,(int)$original);$pdo->prepare('UPDATE market_refunds SET credit_document_id=? WHERE id=?')->execute([$document,$id]);}
   $pdo->prepare("UPDATE market_invoices SET status=? WHERE id=?")->execute([$total===(int)$invoice['gross_cents']?'refunded':'partially_refunded',$invoiceId]);
   $pdo->prepare('UPDATE market_bump_credits SET remaining=0 WHERE invoice_id=?')->execute([$invoiceId]);if(function_exists('business_refund_invoice'))business_refund_invoice($pdo,$invoiceId);
   $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'cash_refund',?,?)")->execute([$invoiceId,$actor,-$amount,'refund:'.$transaction]);
   if($requestId!==null)$pdo->prepare("UPDATE market_refund_requests SET status='recorded',decision_reason=? WHERE id=?")->execute([trim($reason),$requestId]);
-  audit_log($pdo,$actor,'finance.refund_recorded',$invoiceId,['refund_id'=>$id,'document_id'=>$document,'verified_manually'=>true,'remaining_entitlements_suspended'=>true]);
+  audit_log($pdo,$actor,'finance.refund_recorded',$invoiceId,['refund_id'=>$id,'document_id'=>$document,'verified_manually'=>$manual,'remaining_entitlements_suspended'=>true]);
   if(function_exists('notify_user'))notify_user($pdo,(int)$invoice['user_id'],'refund:'.$id,i18n_user_text($pdo,(int)$invoice['user_id'],'notification.refund_recorded.title'),i18n_user_text($pdo,(int)$invoice['user_id'],'notification.refund_recorded.body',['reference'=>$invoice['invoice_number']]),'/user/invoices.php',true);
-  $pdo->commit();return$id;
- }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();if($e instanceof PDOException&&$e->getCode()==='23000')throw new PaymentConflict('Diese Erstattungskennung wurde bereits zugeordnet.');throw$e;}
+  return$id;
 }
 function finance_cancel(PDO $pdo,int $invoiceId,int $userId):void {
  $pdo->beginTransaction();try{

@@ -26,8 +26,8 @@ function fin_pay(PDO $pdo,int $admin,int $invoice,?string $transaction=null):str
  $transaction??='FINPAY'.strtoupper(bin2hex(random_bytes(12)));manual_review($pdo,$admin,$invoice,$transaction,$order['reference'],(int)$order['gross_cents'],'approve','Synthetic direct account verification, not an actual payment.');return$transaction;
 }
 /** Only synthetic adapters below; no network transport or provider credentials are used. */
-function fin_provider_mode(string $mode,callable $run):void{
- $values=['PAYPAL_ENABLED'=>'1','PAYPAL_MODE'=>$mode,'PAYPAL_ACCOUNT_TYPE'=>'business','PAYPAL_BUSINESS_SCOPE'=>'general_only','PLATFORM_BILLING_APPROVED'=>'1','PAYPAL_LIVE_APPROVED'=>'1','PAYPAL_CLIENT_ID'=>'synthetic-client','PAYPAL_CLIENT_SECRET'=>'synthetic-secret','PAYPAL_MERCHANT_ID'=>'SYNTHETICMERCH','PAYPAL_WEBHOOK_ID'=>'SYNTHETICHOOK','APP_URL'=>'https://synthetic.example.invalid'];$before=[];
+function fin_provider_mode(string $mode,callable $run,array $overrides=[]):void{
+ $values=array_replace(['PAYPAL_ENABLED'=>'1','PAYPAL_MODE'=>$mode,'PAYPAL_ACCOUNT_TYPE'=>'business','PAYPAL_BUSINESS_SCOPE'=>'general_only','PLATFORM_BILLING_APPROVED'=>'1','PAYPAL_LIVE_APPROVED'=>'1','PAYPAL_REFUNDS_ENABLED'=>'0','PAYPAL_REFUNDS_LIVE_APPROVED'=>'0','PAYPAL_CLIENT_ID'=>'synthetic-client','PAYPAL_CLIENT_SECRET'=>'synthetic-secret','PAYPAL_MERCHANT_ID'=>'SYNTHETICMERCH','PAYPAL_WEBHOOK_ID'=>'SYNTHETICHOOK','APP_URL'=>'https://synthetic.example.invalid'],$overrides);$before=[];
  foreach($values as $key=>$value){$before[$key]=getenv($key);putenv($key.'='.$value);}try{$run();}finally{foreach($before as $key=>$value)putenv($value===false?$key:$key.'='.$value);}
 }
 function fin_auto_order(PDO $pdo,array $user,string $mode):array{
@@ -47,10 +47,38 @@ function fin_auto_client(array $fixture,array &$calls,bool $signature=true,bool 
   if($path==='/v1/notifications/verify-webhook-signature')return ['status'=>200,'body'=>['verification_status'=>$signature?'SUCCESS':'FAILURE']];
   if($path==='/v2/checkout/orders/'.$fixture['order'].'/capture'){$completed=true;return ['status'=>201,'body'=>['status'=>'COMPLETED']];}
   if($path!=='/v2/checkout/orders/'.$fixture['order']||$method!=='GET')throw new RuntimeException('Unexpected synthetic provider operation.');
-  $i=$fixture['invoice'];$amount=['currency_code'=>'EUR','value'=>payments_decimal((int)$i['gross_cents'])];
-  $unit=['reference_id'=>'invoice:'.$i['id'],'custom_id'=>(string)$i['id'],'invoice_id'=>$i['invoice_number'],'payee'=>['merchant_id'=>'SYNTHETICMERCH'],'amount'=>$amount];
-  if($completed)$unit['payments']=['captures'=>[['id'=>$fixture['capture'],'status'=>'COMPLETED','final_capture'=>true,'amount'=>$amount]]];
-  return ['status'=>200,'body'=>['id'=>$fixture['order'],'intent'=>'CAPTURE','status'=>$completed?'COMPLETED':'APPROVED','purchase_units'=>[$unit]]];
+  return ['status'=>200,'body'=>fin_provider_order($fixture,$completed)];
+ });
+}
+function fin_provider_order(array $fixture,bool $completed=true,string $captureStatus='COMPLETED'):array{
+ $i=$fixture['invoice'];$amount=['currency_code'=>'EUR','value'=>payments_decimal((int)$i['gross_cents'])];
+ $unit=['reference_id'=>'invoice:'.$i['id'],'custom_id'=>(string)$i['id'],'invoice_id'=>$i['invoice_number'],'payee'=>['merchant_id'=>'SYNTHETICMERCH'],'amount'=>$amount];
+ if($completed)$unit['payments']=['captures'=>[['id'=>$fixture['capture'],'status'=>$captureStatus,'final_capture'=>true,'amount'=>$amount]]];
+ return ['id'=>$fixture['order'],'intent'=>'CAPTURE','status'=>$completed?'COMPLETED':'APPROVED','purchase_units'=>[$unit]];
+}
+function fin_refund_fixture(PDO $pdo,array $admin,int $amount):array{
+ $fixture=fin_auto_order($pdo,fin_user($pdo),payments_config()['mode']);$calls=[];
+ $invoice=(int)$fixture['invoice']['id'];$owner=(int)$fixture['invoice']['user_id'];
+ payments_capture($pdo,$invoice,$owner,fin_auto_client($fixture,$calls));
+ $request=finance_request_refund($pdo,$owner,$invoice,$amount,'Synthetic requested PayPal API refund.');
+ $reason='Synthetic approval for isolated refund tests.';
+ $jobId=paypal_refund_queue($pdo,$admin['id'],$request,$amount,$reason);
+ fin_assert(paypal_refund_queue($pdo,$admin['id'],$request,$amount,$reason)===$jobId);
+ return [$fixture,paypal_refund_find($pdo,$jobId)];
+}
+function fin_refund_resource(array $job,string $status):array{
+ $host=$job['mode']==='live'?'api.paypal.com':'api.sandbox.paypal.com';
+ return ['id'=>'RF'.strtoupper(substr(hash('sha256',$job['reference']),0,22)),'status'=>$status,
+  'amount'=>['currency_code'=>'EUR','value'=>payments_decimal((int)$job['amount_cents'])],'custom_id'=>$job['reference'],
+  'links'=>[['method'=>'GET','rel'=>'up','href'=>'https://'.$host.'/v2/payments/captures/'.$job['capture_id']]]];
+}
+function fin_refund_transport(array $fixture,callable $refund,bool $signature=true): MarketPayPal {
+ return new MarketPayPal(payments_config(),static function($method,$url,$headers,$body)use($fixture,$refund,$signature):array{
+  $path=parse_url($url,PHP_URL_PATH);
+  if($path==='/v1/oauth2/token')return ['status'=>200,'body'=>['access_token'=>'synthetic-token']];
+  if($path==='/v1/notifications/verify-webhook-signature')return ['status'=>200,'body'=>['verification_status'=>$signature?'SUCCESS':'FAILURE']];
+  if($path==='/v2/checkout/orders/'.$fixture['order']&&$method==='GET')return ['status'=>200,'body'=>fin_provider_order($fixture)];
+  return $refund($method,$path,$headers,$body);
  });
 }
 function fin_auto_event(array $fixture):array{return ['id'=>'EVENT-'.strtoupper(bin2hex(random_bytes(10))),'event_type'=>'PAYMENT.CAPTURE.COMPLETED','resource'=>['id'=>$fixture['capture'],'amount'=>['currency_code'=>'EUR','value'=>payments_decimal((int)$fixture['invoice']['gross_cents'])],'supplementary_data'=>['related_ids'=>['order_id'=>$fixture['order']]]]];}
@@ -102,6 +130,101 @@ try{
   'sandbox_confirmation_never_creates_real_invoice_or_cash_entry'=>static function()use($pdo):void{fin_provider_mode('sandbox',static function()use($pdo):void{
    $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'sandbox');$id=(int)$fixture['invoice']['id'];$calls=[];payments_capture($pdo,$id,$user['id'],fin_auto_client($fixture,$calls));fin_assert(fin_status($pdo,$id)==='paid'&&fin_document_id($pdo,$id)===0);$q=$pdo->prepare('SELECT COUNT(*) FROM market_finance_events WHERE invoice_id=?');$q->execute([$id]);fin_assert((int)$q->fetchColumn()===0);
   });},
+  'paypal_refund_live_gate_and_finance_permission_are_independent'=>static function()use($pdo,$admin):void{
+   fin_provider_mode('live',static function()use($pdo,$admin):void{
+    fin_reject(fn()=>paypal_refund_queue($pdo,$admin['id'],1,25,'Synthetic approval without live gate.'),PaymentUnavailable::class);
+    fin_assert(!paypal_refund_next($pdo,payments_config(),new MarketPayPal(payments_config(),static function(){throw new RuntimeException('Disabled worker contacted provider.');})));
+   },['PAYPAL_REFUNDS_ENABLED'=>'1']);
+   fin_provider_mode('sandbox',static function()use($pdo):void{
+    $user=fin_user($pdo);
+    fin_reject(fn()=>paypal_refund_queue($pdo,$user['id'],1,25,'Synthetic approval without finance role.'),DomainException::class);
+   },['PAYPAL_REFUNDS_ENABLED'=>'1']);
+  },
+  'paypal_pending_webhook_and_replays_post_one_verified_credit_document'=>static function()use($pdo,$admin):void{
+   fin_provider_mode('live',static function()use($pdo,$admin):void{
+    [$fixture,$job]=fin_refund_fixture($pdo,$admin,50);
+    $invoice=(int)$job['invoice_id'];$request=(int)$job['request_id'];$id=(int)$job['id'];
+    $original=fin_document_id($pdo,$invoice);$resource=fin_refund_resource($job,'PENDING');$posts=0;$gets=0;
+    $client=fin_refund_transport($fixture,static function($method,$path,$headers,$body)use($pdo,$job,&$resource,&$posts,&$gets):array{
+     if($method==='POST'){
+      ++$posts;fin_assert($path==='/v2/payments/captures/'.$job['capture_id'].'/refund');
+      fin_assert(in_array('PayPal-Request-Id: '.$job['reference'],$headers,true));
+      fin_assert(json_decode($body,true,8,JSON_THROW_ON_ERROR)===['amount'=>['currency_code'=>'EUR','value'=>'0.50'],'custom_id'=>$job['reference']]);
+      fin_assert(!paypal_refund_next($pdo,payments_config(),new MarketPayPal(payments_config(),static function(){throw new RuntimeException('Worker lease allowed double submission.');})));
+     }else{++$gets;fin_assert($path==='/v2/payments/refunds/'.$resource['id']);}
+     return ['status'=>200,'body'=>$resource];
+    });
+    fin_reject(fn()=>finance_record_refund($pdo,$admin['id'],$invoice,50,'EXTERNALREFUND123','Synthetic competing manual transaction.'),PaymentConflict::class);
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&$posts===1);
+    fin_assert(paypal_refund_find($pdo,$id)['status']==='pending'&&finance_refunded_cents($pdo,$invoice)===0&&fin_status($pdo,$invoice)==='paid');
+    $resource['status']='COMPLETED';
+    $event=['event_type'=>'PAYMENT.CAPTURE.REFUNDED','resource'=>$resource];
+    $invalid=fin_refund_transport($fixture,static function(){throw new RuntimeException('Invalid webhook reached the refund endpoint.');},false);
+    fin_assert(!payments_webhook($pdo,fin_auto_headers(),$event,$invalid)&&finance_refunded_cents($pdo,$invoice)===0);
+    fin_assert(payments_webhook($pdo,fin_auto_headers(),$event,$client)&&payments_webhook($pdo,fin_auto_headers(),$event,$client));
+    fin_assert($posts===1&&$gets===1&&paypal_refund_find($pdo,$id)['status']==='completed');
+    fin_assert(fin_status($pdo,$invoice)==='partially_refunded'&&finance_refunded_cents($pdo,$invoice)===50&&fin_document_id($pdo,$invoice)===$original);
+    $q=$pdo->prepare("SELECT credit_document_id FROM market_refunds WHERE request_id=? AND transaction_id=? AND amount_cents=50");
+    $q->execute([$request,$resource['id']]);$credit=(int)$q->fetchColumn();
+    $doc=finance_document($pdo,$credit,(int)$fixture['invoice']['user_id']);
+    fin_assert($doc['document_type']==='credit_note'&&(int)$doc['related_document_id']===$original&&str_starts_with(finance_pdf($doc),'%PDF'));
+    $q=$pdo->prepare("SELECT COUNT(*) FROM market_finance_events WHERE invoice_id=? AND kind='cash_refund'");
+    $q->execute([$invoice]);fin_assert((int)$q->fetchColumn()===1);
+    payments_capture($pdo,$invoice,(int)$fixture['invoice']['user_id'],$client);
+    fin_assert(fin_status($pdo,$invoice)==='partially_refunded');
+   },['PAYPAL_REFUNDS_ENABLED'=>'1','PAYPAL_REFUNDS_LIVE_APPROVED'=>'1']);
+  },
+  'paypal_timeout_reuses_key_then_stops_posting_and_recovers_from_verified_get'=>static function()use($pdo,$admin):void{
+   fin_provider_mode('live',static function()use($pdo,$admin):void{
+    [$fixture,$job]=fin_refund_fixture($pdo,$admin,199);$invoice=(int)$job['invoice_id'];$id=(int)$job['id'];$seen=[];
+    $resource=fin_refund_resource($job,'COMPLETED');
+    $client=fin_refund_transport($fixture,static function($method,$path,$headers,$body)use(&$seen,&$resource):array{
+     if($method==='POST'){
+      $seen[]=array_values(array_filter($headers,static fn($header)=>str_starts_with($header,'PayPal-Request-Id:')))[0];
+      return ['status'=>503,'body'=>[]];
+     }
+     return ['status'=>200,'body'=>$resource];
+    });
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&!paypal_refund_next($pdo,payments_config(),$client));
+    $q=$pdo->prepare('UPDATE market_paypal_refund_jobs SET next_check_at=UTC_TIMESTAMP() WHERE id=?');$q->execute([$id]);
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&$seen===array_fill(0,2,'PayPal-Request-Id: '.$job['reference']));
+    $pdo->prepare('UPDATE market_paypal_refund_jobs SET first_dispatch_at=UTC_TIMESTAMP()-INTERVAL 2 HOUR,next_check_at=UTC_TIMESTAMP() WHERE id=?')->execute([$id]);
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&count($seen)===2&&paypal_refund_find($pdo,$id)['status']==='review');
+    fin_assert(finance_refunded_cents($pdo,$invoice)===0);
+    $event=['event_type'=>'PAYMENT.CAPTURE.REFUNDED','resource'=>$resource];
+    $resource['amount']['value']='1.98';
+    fin_reject(fn()=>payments_webhook($pdo,fin_auto_headers(),$event,$client),PaymentConflict::class);
+    fin_assert(finance_refunded_cents($pdo,$invoice)===0);
+    $resource['amount']['value']='1.99';
+    fin_assert(payments_webhook($pdo,fin_auto_headers(),$event,$client)&&finance_refunded_cents($pdo,$invoice)===199);
+    fin_assert(fin_status($pdo,$invoice)==='refunded'&&count($seen)===2);
+   },['PAYPAL_REFUNDS_ENABLED'=>'1','PAYPAL_REFUNDS_LIVE_APPROVED'=>'1']);
+  },
+  'paypal_sandbox_refund_uses_worker_polling_without_live_accounting'=>static function()use($pdo,$admin):void{
+   fin_provider_mode('sandbox',static function()use($pdo,$admin):void{
+    [$fixture,$job]=fin_refund_fixture($pdo,$admin,199);$invoice=(int)$job['invoice_id'];$id=(int)$job['id'];$resource=fin_refund_resource($job,'PENDING');$gets=0;
+    $client=fin_refund_transport($fixture,static function($method,$path)use(&$resource,&$gets):array{
+     if($method==='GET'){++$gets;fin_assert($path==='/v2/payments/refunds/'.$resource['id']);}
+     return ['status'=>200,'body'=>$resource];
+    });
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&paypal_refund_find($pdo,$id)['status']==='pending');
+    $resource['status']='COMPLETED';
+    $pdo->prepare('UPDATE market_paypal_refund_jobs SET next_check_at=UTC_TIMESTAMP() WHERE id=?')->execute([$id]);
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&$gets===1&&fin_status($pdo,$invoice)==='refunded'&&finance_refunded_cents($pdo,$invoice)===199);
+    foreach(['market_finance_events','market_invoice_documents','market_refunds'] as $table){
+     $q=$pdo->prepare('SELECT COUNT(*) FROM '.$table.' WHERE invoice_id=?');$q->execute([$invoice]);fin_assert((int)$q->fetchColumn()===0);
+    }
+   },['PAYPAL_REFUNDS_ENABLED'=>'1']);
+  },
+  'paypal_cancelled_job_releases_request_without_issuing_credit'=>static function()use($pdo,$admin):void{
+   fin_provider_mode('live',static function()use($pdo,$admin):void{
+    [$fixture,$job]=fin_refund_fixture($pdo,$admin,25);
+    $client=fin_refund_transport($fixture,static fn()=>['status'=>200,'body'=>fin_refund_resource($job,'CANCELLED')]);
+    fin_assert(paypal_refund_next($pdo,payments_config(),$client)&&paypal_refund_find($pdo,(int)$job['id'])['status']==='cancelled');
+    $q=$pdo->prepare('SELECT status FROM market_refund_requests WHERE id=?');$q->execute([$job['request_id']]);
+    fin_assert($q->fetchColumn()==='requested'&&finance_refunded_cents($pdo,(int)$job['invoice_id'])===0);
+   },['PAYPAL_REFUNDS_ENABLED'=>'1','PAYPAL_REFUNDS_LIVE_APPROVED'=>'1']);
+  },
   'invalid_signature_or_amount_cannot_create_payment_or_invoice'=>static function()use($pdo):void{fin_provider_mode('live',static function()use($pdo):void{
    $user=fin_user($pdo);$fixture=fin_auto_order($pdo,$user,'live');$id=(int)$fixture['invoice']['id'];$calls=[];$event=fin_auto_event($fixture);fin_assert(!payments_webhook($pdo,fin_auto_headers(),$event,fin_auto_client($fixture,$calls,false)));
    $event['resource']['amount']['value']='2.00';fin_reject(fn()=>payments_webhook($pdo,fin_auto_headers(),$event,fin_auto_client($fixture,$calls)),PaymentConflict::class);fin_assert(fin_status($pdo,$id)==='issued'&&fin_document_id($pdo,$id)===0);
@@ -168,6 +291,23 @@ try{
   'http_finance_mutations_require_csrf_and_owner'=>static function()use($pdo,$admin,$category):void{
    $user=fin_user($pdo);$other=fin_user($pdo);$invoice=fin_order($pdo,$user,$category);fin_pay($pdo,$admin['id'],$invoice);$browser=fin_browser();
    try{fin_login($browser,$other);[$code,$body]=fin_request($browser,'/user/invoices.php');fin_assert($code===200);[$code]=fin_request($browser,'/user/invoices.php',['action'=>'refund','invoice_id'=>(string)$invoice,'amount'=>'0.01','reason'=>'Synthetic foreign refund']);fin_assert($code===403);[$code]=fin_request($browser,'/user/invoices.php',['csrf_token'=>fin_csrf($body),'action'=>'refund','invoice_id'=>(string)$invoice,'amount'=>'0.01','reason'=>'Synthetic foreign refund']);fin_assert($code===422);[$code]=fin_request($browser,'/admin/finance.php');fin_assert($code===403);fin_assert(fin_status($pdo,$invoice)==='paid');}finally{curl_close($browser);}
+  },
+  'http_paypal_refund_requires_finance_mfa_csrf_and_enabled_environment'=>static function()use($pdo,$admin,$category):void{
+   $seller=fin_user($pdo);$staff=fin_user($pdo,true);$secret=random_bytes(20);
+   $pdo->prepare('UPDATE users SET mfa_secret=? WHERE id=?')->execute([auth_secret_encrypt($secret),$staff['id']]);
+   $invoice=fin_order($pdo,$seller,$category);fin_pay($pdo,$admin['id'],$invoice);
+   $request=finance_request_refund($pdo,$seller['id'],$invoice,25,'Synthetic isolated HTTP refund request.');
+   $browser=fin_browser();$path='/admin/finance.php';
+   try{
+    fin_login($browser,$staff);[$code]=fin_request($browser,$path);fin_assert(in_array($code,[303,403],true));
+    [$code,$body]=fin_request($browser,'/auth/mfa.php');fin_assert($code===200);
+    [$code]=fin_request($browser,'/auth/mfa.php',['csrf_token'=>fin_csrf($body),'code'=>auth_totp($secret,intdiv(time(),30))]);fin_assert($code===303);
+    [$code,$body]=fin_request($browser,$path);fin_assert($code===200&&str_contains($body,t('paypal_refunds.disabled')));
+    $fields=['action'=>'paypal_refund','request_id'=>(string)$request,'amount'=>'0.25','reason'=>'Synthetic disabled refund attempt.','review_confirmed'=>'1'];
+    [$code]=fin_request($browser,$path,$fields);fin_assert($code===403);
+    [$code]=fin_request($browser,$path,$fields+['csrf_token'=>fin_csrf($body)]);fin_assert($code===422);
+    $q=$pdo->prepare('SELECT COUNT(*) FROM market_paypal_refund_jobs WHERE request_id=?');$q->execute([$request]);fin_assert((int)$q->fetchColumn()===0);
+   }finally{curl_close($browser);}
   },
  ];
  foreach($tests as $name=>$run){$run();++$passed;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}fwrite(STDOUT,'Finance checks passed: '.$passed.PHP_EOL);

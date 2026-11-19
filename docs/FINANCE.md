@@ -88,12 +88,36 @@ die korrigierte Zahlung gesperrt. Die Kasse dokumentiert beide Geldbewegungen.
 Der ersetzte Auftrag bleibt geschlossen. Die Oberfläche dokumentiert
 abgeschlossene Rückzahlungen, die im Zahlungskonto geprüft wurden.
 
+## Automatisierte Erstattungen für PayPal-REST-Zahlungen
+
+Das Finanzteam gibt einen Kundenantrag mit Betrag und Begründung frei. Der
+Worker verarbeitet den gespeicherten Erstattungsauftrag zu dem verifizierten
+ursprünglichen Capture. Pro Rechnung kann ein offener Auftrag bestehen.
+Im unklaren Zustand verwendet der Worker höchstens eine Stunde lang dieselbe
+PayPal-Anfrage-ID. Danach braucht er einen Statusnachweis zu der vorhandenen
+Operation. Sobald die Provider-ID bekannt ist, erfolgen Statusabfragen über
+GET. Signierte Refund-Webhooks dienen als zusätzlicher Auslöser für den Abgleich.
+
+Nur der bestätigte Abschluss mit passendem Capture, Produktiv- oder
+Testkontext, EUR-Betrag und eigener Referenz erzeugt die Statusänderung. Bei
+Echtabrechnungen entstehen dabei der bestehende Ledger-Eintrag und der
+Korrekturbeleg zur ursprünglichen Rechnung. Sandbox-Erstattungen werden als
+Testvorgänge geführt. Eine endgültige Ablehnung durch PayPal gibt den
+Kundenantrag für die erneute Prüfung frei. Bei ungeklärtem Ausgang kann das
+Finanzteam die PayPal-Erstattungskennung abgleichen. Der ursprüngliche API-
+Kontext aus Umgebung, Händlerkennung und Client-ID muss weiterhin passen.
+
+Sowohl `PAYPAL_REFUNDS_ENABLED` als auch `PAYPAL_REFUNDS_LIVE_APPROVED`
+sind standardmäßig aus. Für den Live-Betrieb gelten zusätzlich die vorhandenen
+PayPal- und Rechnungsfreigaben. Manuell bestätigte Zahlungseingänge verwenden
+weiterhin die dokumentierte externe Erstattung. Die Ausführung gegen ein
+tatsächliches PayPal-Konto erfordert eine gesonderte Anbieterabnahme.
+[PayPal Payments API](https://developer.paypal.com/checkout/refund-payment)
+
 ## Grenzen
 
 - Die Freigabe im Dashboard ersetzt keine fachliche steuerliche Prüfung.
-- Der aktuelle vollständige Ablauf verwendet die manuell geprüften PayPal-Aufträge.
-  Automatisierte Live-Erstattungen und die Zahlungsanbieter-Freigabe sind eigenständige
-  Voraussetzungen und werden durch das Finanzdashboard nicht vorgetäuscht.
+- Die produktive Anbieterabnahme für REST-Erstattungen steht aus.
 - Alte bezahlte Aufträge ohne eingefrorenen Rechnungssnapshot werden nicht automatisch
   mit heutigen Betreiber- und Steuerangaben zu angeblich historischen Rechnungen.
 - Die Aufbewahrung unveränderlicher Finanzbelege muss mit der Datenschutz- und

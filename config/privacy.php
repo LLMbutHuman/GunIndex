@@ -236,6 +236,7 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'deletion_requests'=>['market_deletion_requests','user_id=?',[$userId],['id','status','request_reason','review_reason','created_at','reviewed_at']],
             'billing_profile'=>['market_billing_profiles','user_id=?',[$userId],['legal_name','address_line1','address_line2','postal_code','city','country_code','vat_id','updated_at'],'user_id'],
             'refund_requests'=>['market_refund_requests','user_id=?',[$userId],['id','invoice_id','requested_cents','status','reason','decision_reason','created_at','updated_at']],
+            'paypal_refund_jobs'=>['market_paypal_refund_jobs','invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['id','request_id','invoice_id','amount_cents','mode','reference','provider_refund_id','status','created_at','updated_at']],
             'refunds'=>['market_refunds','invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['id','invoice_id','request_id','transaction_id','amount_cents','currency','reason','credit_document_id','created_at']],
             'invoice_snapshots'=>['market_invoice_snapshots','user_id=?',[$userId],['invoice_id','payload_hash','payload','created_at'],'invoice_id'],
             'auction_fee_corrections'=>['market_auction_fee_corrections','previous_invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['previous_invoice_id','replacement_invoice_id','previous_cents','remaining_cents','created_at'],'previous_invoice_id'],

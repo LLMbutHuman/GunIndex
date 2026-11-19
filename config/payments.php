@@ -14,6 +14,8 @@ function payments_config(): array
         'account_type' => $read('PAYPAL_ACCOUNT_TYPE', 'personal'),
         'billing_approved' => $read('PLATFORM_BILLING_APPROVED', '0') === '1',
         'live_approved' => $read('PAYPAL_LIVE_APPROVED', '0') === '1',
+        'refunds_enabled' => $read('PAYPAL_REFUNDS_ENABLED', '0') === '1',
+        'refunds_live_approved' => $read('PAYPAL_REFUNDS_LIVE_APPROVED', '0') === '1',
         'client_id' => $read('PAYPAL_CLIENT_ID'), 'client_secret' => $read('PAYPAL_CLIENT_SECRET'),
         'merchant_id' => $read('PAYPAL_MERCHANT_ID'), 'webhook_id' => $read('PAYPAL_WEBHOOK_ID'),
         'app_url' => $read('APP_URL'),
@@ -93,7 +95,7 @@ final class MarketPayPal
     }
     private function request(string $method, string $path, array $headers, string $body = ''): array
     {
-        if (!preg_match('~\A/(?:v1/oauth2/token|v1/notifications/verify-webhook-signature|v2/checkout/orders(?:/[A-Z0-9]{6,64}(?:/capture)?)?|v2/payments/captures/[A-Z0-9]{6,64}/refund)\z~', $path)) {
+        if (!preg_match('~\A/(?:v1/oauth2/token|v1/notifications/verify-webhook-signature|v2/checkout/orders(?:/[A-Z0-9]{6,64}(?:/capture)?)?|v2/payments/(?:captures/[A-Z0-9]{6,64}/refund|refunds/[A-Z0-9]{6,64}))\z~', $path)) {
             throw new PaymentConflict('Ungültiger Providerpfad.');
         }
         $origin = $this->config['mode'] === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
@@ -118,7 +120,7 @@ final class MarketPayPal
         if (!is_array($decoded)) throw new PaymentUnavailable('Ungültige Antwort des Zahlungsanbieters.');
         return $decoded;
     }
-    private function api(string $method, string $path, ?array $body = null, ?string $requestId = null): array
+    private function api(string $method, string $path, ?array $body = null, ?string $requestId = null, bool $representation = false): array
     {
         if ($this->token === null) {
             $auth = $this->request('POST', '/v1/oauth2/token', ['Authorization: Basic ' . base64_encode($this->config['client_id'] . ':' . $this->config['client_secret']), 'Content-Type: application/x-www-form-urlencoded'], 'grant_type=client_credentials');
@@ -126,6 +128,7 @@ final class MarketPayPal
             $this->token = $auth['access_token'];
         }
         $headers = ['Authorization: Bearer ' . $this->token, 'Content-Type: application/json', 'Accept: application/json'];
+        if ($representation) $headers[] = 'Prefer: return=representation';
         if ($requestId !== null) {
             if (!preg_match('/\A[a-zA-Z0-9-]{16,64}\z/', $requestId)) throw new PaymentConflict('Ungültige Zahlungsreferenz.');
             $headers[] = 'PayPal-Request-Id: ' . $requestId;
@@ -163,7 +166,7 @@ final class MarketPayPal
         }
         throw new PaymentConflict('Die Checkoutadresse konnte nicht bestätigt werden.');
     }
-    public function validate(array $order, array $invoice, string $orderId, bool $completed): ?string
+    public function validate(array $order, array $invoice, string $orderId, bool $completed, bool $forRefund = false): ?string
     {
         if (($order['id'] ?? null) !== $orderId || ($order['intent'] ?? null) !== 'CAPTURE' || ($order['status'] ?? null) !== ($completed ? 'COMPLETED' : 'APPROVED') || count($order['purchase_units'] ?? []) !== 1) throw new PaymentConflict('Der Providerauftrag passt nicht zur Rechnung.');
         $unit = $order['purchase_units'][0];
@@ -172,7 +175,8 @@ final class MarketPayPal
         $captures = $unit['payments']['captures'] ?? [];
         if (count($captures) !== 1) throw new PaymentConflict('Unvollständige oder mehrteilige Zahlung.');
         $capture = $captures[0];
-        if (($capture['status'] ?? null) !== 'COMPLETED' || payments_api_cents($capture['amount'] ?? null) !== (int)$invoice['gross_cents'] || ($capture['final_capture'] ?? true) !== true) throw new PaymentConflict('Die vollständige Zahlung ist nicht bestätigt.');
+        $states = $forRefund ? ['COMPLETED','PARTIALLY_REFUNDED','REFUNDED'] : ['COMPLETED'];
+        if (!in_array($capture['status'] ?? null,$states,true) || payments_api_cents($capture['amount'] ?? null) !== (int)$invoice['gross_cents'] || ($capture['final_capture'] ?? true) !== true) throw new PaymentConflict('Die vollständige Zahlung ist nicht bestätigt.');
         return $this->orderId((string)($capture['id'] ?? ''));
     }
     public function verifyWebhook(array $headers, array $event): bool
@@ -186,10 +190,16 @@ final class MarketPayPal
         $answer = $this->api('POST', '/v1/notifications/verify-webhook-signature', ['auth_algo' => $headers['paypal-auth-algo'], 'cert_url' => $headers['paypal-cert-url'], 'transmission_id' => $headers['paypal-transmission-id'], 'transmission_sig' => $headers['paypal-transmission-sig'], 'transmission_time' => $headers['paypal-transmission-time'], 'webhook_id' => $this->config['webhook_id'], 'webhook_event' => $event]);
         return ($answer['verification_status'] ?? null) === 'SUCCESS';
     }
-    public function refund(string $captureId, int $cents, string $requestId): array
+    public function refund(string $captureId, int $cents, string $requestId, ?string $reference=null): array
     {
-        return $this->api('POST', '/v2/payments/captures/' . $this->orderId($captureId) . '/refund', ['amount' => ['currency_code' => 'EUR', 'value' => payments_decimal($cents)]], $requestId);
+        $payload=['amount'=>['currency_code'=>'EUR','value'=>payments_decimal($cents)]];
+        if ($reference!==null) {
+            if (!preg_match('/\AGI-R-[a-f0-9]{32}\z/',$reference)) throw new PaymentConflict('Ungültige Erstattungsreferenz.');
+            $payload['custom_id']=$reference;
+        }
+        return $this->api('POST','/v2/payments/captures/'.$this->orderId($captureId).'/refund',$payload,$requestId,true);
     }
+    public function refundDetails(string $id): array { return $this->api('GET','/v2/payments/refunds/'.$this->orderId($id)); }
 }
 
 function payments_invoice(PDO $pdo, int $invoiceId, int $userId, bool $lock = false): array
@@ -246,7 +256,7 @@ function payments_begin(PDO $pdo, int $invoiceId, int $userId, string $provider)
 function payments_record_paid(PDO $pdo, array $invoice, array $attempt, string $capture, string $eventId, string $payloadHash): void
 {
     if (!$pdo->inTransaction()) throw new LogicException('Payment booking requires transaction.');
-    if ($invoice['status'] === 'paid') {
+    if (in_array($invoice['status'],['paid','partially_refunded','refunded'],true)) {
         if ($attempt['status'] !== 'paid' || $attempt['capture_id'] !== $capture) throw new PaymentConflict('Eine andere Zahlung ist bereits zugeordnet.');
     } else {
         payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
@@ -258,7 +268,7 @@ function payments_record_paid(PDO $pdo, array $invoice, array $attempt, string $
     if ($existing !== false && (int)$existing !== (int)$attempt['id']) throw new PaymentConflict('Zahlungsereignis ist bereits anderweitig zugeordnet.');
     if ($existing === false) { $query = $pdo->prepare("INSERT INTO market_payment_events(attempt_id,provider_event_id,kind,payload_hash,created_at) VALUES (?,?,'capture.completed',?,UTC_TIMESTAMP())"); $query->execute([$attempt['id'], $eventId, $payloadHash]); }
     // Both capture and verified webhook use this same transaction and idempotent issuer.
-    if(function_exists('finance_issue_invoice'))finance_issue_invoice($pdo,(int)$invoice['id']);
+    if(function_exists('finance_issue_invoice')&&!in_array($invoice['status'],['partially_refunded','refunded'],true))finance_issue_invoice($pdo,(int)$invoice['id']);
 }
 
 function payments_capture(PDO $pdo, int $invoiceId, int $userId, ?MarketPayPal $client=null): void
@@ -267,19 +277,20 @@ function payments_capture(PDO $pdo, int $invoiceId, int $userId, ?MarketPayPal $
     $pdo->beginTransaction();
     try {
         $invoice = payments_invoice($pdo, $invoiceId, $userId, true);
-        if ($invoice['status'] !== 'paid') payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
+        $settled=in_array($invoice['status'],['paid','partially_refunded','refunded'],true);
+        if (!$settled) payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
         $query = $pdo->prepare("SELECT * FROM market_payment_attempts WHERE invoice_id=? AND provider='paypal' ORDER BY id DESC LIMIT 1 FOR UPDATE"); $query->execute([$invoiceId]); $attempt = $query->fetch();
         if (!$attempt || !$attempt['provider_order_id'] || $attempt['mode'] !== $config['mode'] || !in_array($attempt['status'], ['created', 'pending', 'paid'], true)) throw new PaymentConflict('Kein bestätigbarer Zahlungsversuch.');
         if(function_exists('finance_assert_payable'))finance_assert_payable($pdo,$invoice,$attempt['mode']);
-        if ($invoice['status'] === 'paid' && $attempt['status'] !== 'paid') throw new PaymentConflict('Eine andere Zahlung ist bereits zugeordnet.');
+        if ($settled && $attempt['status'] !== 'paid') throw new PaymentConflict('Eine andere Zahlung ist bereits zugeordnet.');
         $order = $client->order($attempt['provider_order_id']);
         if (($order['status'] ?? '') !== 'COMPLETED') {
-            if ($invoice['status'] === 'paid') throw new PaymentConflict('Der Providerstand muss geprüft werden.');
+            if ($settled) throw new PaymentConflict('Der Providerstand muss geprüft werden.');
             $client->validate($order, $invoice, $attempt['provider_order_id'], false);
             $client->capture($attempt['provider_order_id'], $attempt['idempotency_key'] . '-capture');
             $order = $client->order($attempt['provider_order_id']);
         }
-        $capture = $client->validate($order, $invoice, $attempt['provider_order_id'], true);
+        $capture = $client->validate($order, $invoice, $attempt['provider_order_id'], true,$settled);
         payments_record_paid($pdo, $invoice, $attempt, $capture, 'capture:' . $capture, hash('sha256', json_encode($order, JSON_THROW_ON_ERROR)));
         $pdo->commit();
     } catch (Throwable $error) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $error; }
@@ -289,6 +300,10 @@ function payments_webhook(PDO $pdo, array $headers, array $event, ?MarketPayPal 
 {
     $config = payments_config(); payments_assert_provider('paypal', $config); $client ??= new MarketPayPal($config);
     if (!$client->verifyWebhook($headers, $event)) return false;
+    if (in_array($event['event_type']??null,['PAYMENT.CAPTURE.REFUNDED','PAYMENT.REFUND.PENDING','PAYMENT.REFUND.FAILED'],true)) {
+        if (function_exists('paypal_refund_webhook')) paypal_refund_webhook($pdo,$config,$client,$event);
+        return true;
+    }
     if (($event['event_type'] ?? '') !== 'PAYMENT.CAPTURE.COMPLETED') return true;
     $eventId = $event['id'] ?? null; $orderId = $event['resource']['supplementary_data']['related_ids']['order_id'] ?? null;
     if (!is_string($eventId) || !preg_match('/\A[A-Z0-9-]{6,100}\z/', $eventId) || !is_string($orderId)) throw new PaymentConflict('Ungültiges Zahlungsereignis.');
@@ -297,10 +312,11 @@ function payments_webhook(PDO $pdo, array $headers, array $event, ?MarketPayPal 
     $pdo->beginTransaction();
     try {
         $invoice = payments_invoice($pdo, (int)$reference['invoice_id'], (int)$reference['user_id'], true);
-        if ($invoice['status'] !== 'paid') payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
+        $settled=in_array($invoice['status'],['paid','partially_refunded','refunded'],true);
+        if (!$settled) payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
         $query = $pdo->prepare('SELECT * FROM market_payment_attempts WHERE id=? FOR UPDATE'); $query->execute([$reference['id']]); $attempt = $query->fetch();
         if (!$attempt || $attempt['mode'] !== $config['mode'] || !in_array($attempt['status'], ['pending', 'paid'], true)) throw new PaymentConflict('Zahlungsversuch muss geprüft werden.');
-        $order = $client->order($orderId); $capture = $client->validate($order, $invoice, $orderId, true);
+        $order = $client->order($orderId); $capture = $client->validate($order, $invoice, $orderId, true,$settled);
         if (($event['resource']['id'] ?? '') !== $capture || payments_api_cents($event['resource']['amount'] ?? null) !== (int)$invoice['gross_cents']) throw new PaymentConflict('Webhook und Providerauftrag stimmen nicht überein.');
         payments_record_paid($pdo, $invoice, $attempt, $capture, $eventId, hash('sha256', json_encode($event, JSON_THROW_ON_ERROR)));
         $pdo->commit(); return true;

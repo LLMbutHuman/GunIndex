@@ -1,5 +1,23 @@
 # Implementierungsfortschritt
 
+## Automatisierte PayPal-Erstattungen, 2026-11-19
+
+Migration 028 speichert die vom Finanzteam freigegebene Erstattung mit
+Capture-Bezug, Betrag, PayPal-Anfrageschlüssel und festem Konto-/Moduskontext.
+Ein Worker übermittelt sie und gleicht ausstehende Status ab. Signierte
+Webhooks lösen eine validierte PayPal-Statusabfrage aus. Unklare Ergebnisse
+verwenden ein begrenztes Wiederholungsfenster mit derselben Anfragereferenz
+und bleiben danach zur Klärung gesperrt.
+
+Die bestehende Rechnungs- und Ledgerlogik bucht bestätigte Live-Erstattungen.
+Der Sandbox-Ablauf ist als Testvorgang sichtbar. Rollen, CSRF, Finanzfreigabe
+und die zusätzlichen standardmäßig deaktivierten Erstattungsschalter
+begrenzen den Einstieg. Bedienung und Status sind in acht Sprachen verfügbar.
+
+PHP-Syntax, Shell-Syntax und 21 Zahlungs-, 16 Gebühren- sowie sieben Geo- und
+Sprachprüfungen sind lokal bestanden. MySQL-, HTTP- und Browser-Nachweis folgt
+in CI. Die Anbieterabnahme gegen ein tatsächliches Konto steht aus.
+
 ## Teilkorrektur unbezahlter Auktionsgebühren, 2026-11-19
 
 Migration 027 verknüpft den ersetzten Auftrag, den verbleibenden Centbetrag
@@ -40,11 +58,6 @@ Linuxjob `135565318524` bestanden. Der Linuxjob bestätigte die 31
 Gebühren-Integrationstests einschließlich der zusätzlichen HTTP-Fälle für
 Zahlungshinweise und den Chromium-Regressionslauf mit Mobil- und
 Barrierefreiheitsprüfungen.
-
-Wiederaufnahmepunkt: Automatisierte Erstattungen über die bestehende
-PayPal-REST-Anbindung. `MarketPayPal::refund()` dient als Basis für
-persistente Erstattungsaufträge und den verifizierten Statusabgleich.
-Die produktive Freigabe erfordert die Abnahme der externen Integration.
 
 ## Profilbilder und Händlerlogos, 2026-11-19
 
