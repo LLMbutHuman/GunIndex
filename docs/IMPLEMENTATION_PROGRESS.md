@@ -1,5 +1,25 @@
 # Implementierungsfortschritt
 
+## Teilkorrektur unbezahlter Auktionsgebühren, 2026-11-19
+
+Migration 027 verknüpft den ersetzten Auftrag, den verbleibenden Centbetrag
+und die neue Zahlungsreferenz. Die ursprüngliche Gebühr, der verschlüsselte
+Rechnungsnachweis und die Rechtszustimmungen bleiben erhalten. Finanzpersonal
+mit MFA kann offene Gebühren begründet mindern oder vollständig erlassen.
+Wiederholungen und konkurrierende Teilkorrekturen sind über Auftragssperren und
+eindeutige Nachfolger abgesichert.
+
+Ein verifizierter Eingang auf eine ersetzte Referenz wird als separater
+Klärungsfall erfasst. Bis zur dokumentierten vollständigen Rückzahlung ist
+die korrigierte Zahlung gesperrt. Die Plattform protokolliert dabei
+tatsächlich extern abgeschlossene Rückzahlungen. Der Kunde erhält Verweise
+zwischen den Aufträgen und die korrigierte Rechnung nach bestätigter Zahlung.
+
+Lokal bestanden PHP-Syntax, 16 Gebühren-, 20 Zahlungs- und sieben Geo- und
+Sprachprüfungen. Die MySQL-, Parallelitäts- und HTTP-Prüfungen für Migration 027
+laufen in CI. Entwicklungstests verwenden ausschließlich synthetische
+Zahlungs- und Erstattungsnachweise.
+
 ## Profilbilder und Händlerlogos, 2026-11-19
 
 Migration 026 ergänzt je Konto ein Profilbild und ein Händlerlogo. Der Upload
@@ -28,11 +48,6 @@ Freigabe, Export und sofortiges Entfernen. Die übrigen Regressionen bestanden.
 Die Chromium-Einrichtung dauerte im erfolgreichen Lauf rund zwölf Minuten.
 Die zwischenzeitliche Zehn-Minuten-Grenze aus `0e82d16` wurde nach der
 Zeitmessung zurückgenommen. Die bestehende Jobgrenze von 30 Minuten gilt.
-
-Wiederaufnahmepunkt: Teilkorrekturen unbezahlter Auktionsgebühren in
-`config/auction_billing.php` und `admin/finance.php`. Dabei Originalnachweis
-bewahren, eine neue eindeutige Zahlungsreferenz für den korrigierten Betrag
-einsetzen und eine Zahlung mit der alten Referenz in die Prüfung leiten.
 
 ## Optionale Benutzer-MFA und Passkeys, 2026-11-19
 

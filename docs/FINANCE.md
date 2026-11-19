@@ -72,6 +72,22 @@ Teilerstattungen bei einer vollständigen Rückzahlung exakt die ursprünglichen
 Netto- und Steuerbeträge ergeben. Restliche Bumps und Platzierungen werden gesperrt;
 bereits verwendete Leistungen und ihre Historie werden nicht rückwirkend entfernt.
 
+## Teilkorrekturen unbezahlter Auktionsgebühren
+
+Finanzpersonal mit MFA kann einen begründeten Teilbetrag vom offenen
+Auktionsentgelt abziehen. Der ursprüngliche Auftrag bleibt mit seinem
+Rechnungsnachweis und den angenommenen Rechtsversionen als ersetzt erhalten.
+Der neue Auftrag übernimmt die historischen Rechnungsdaten und den Steuersatz
+und erhält eine neue Zahlungsreferenz. Ein vollständiger Erlass schließt nur
+den verbleibenden offenen Betrag. Die Rechnung entsteht nach bestätigter Zahlung.
+
+Wenn im tatsächlichen PayPal-Konto ein Eingang auf eine ersetzte Referenz
+festgestellt wird, kann das Personal den Eingang unter dieser Referenz erfassen.
+Bis zur Prüfung und Erfassung der vollständigen externen Rückzahlung ist
+die korrigierte Zahlung gesperrt. Die Kasse dokumentiert beide Geldbewegungen.
+Der ersetzte Auftrag bleibt geschlossen. Die Oberfläche dokumentiert
+abgeschlossene Rückzahlungen, die im Zahlungskonto geprüft wurden.
+
 ## Grenzen
 
 - Die Freigabe im Dashboard ersetzt keine fachliche steuerliche Prüfung.

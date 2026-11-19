@@ -173,6 +173,22 @@ function abt_mfa(PDO $pdo, CurlHandle $browser, int $user): void
     abt_check($status===303,'Synthetic MFA login failed.');
 }
 
+if (($argv[1]??'')==='--correction-race') {
+    $request=json_decode(stream_get_contents(STDIN,4097),true,8,JSON_THROW_ON_ERROR);
+    abt_check(is_array($request)&&is_int($request['invoice']??null)&&is_int($request['actor']??null)
+        &&is_int($request['start']??null)&&in_array($request['reduction']??null,[11,12],true),'Invalid correction fixture.');
+    abt_check((int)abt_scalar($pdo,"SELECT COUNT(*) FROM market_invoices i JOIN users u ON u.id=i.user_id JOIN market_auction_fee_charges c ON c.invoice_id=i.id WHERE i.id=? AND u.full_name='Synthetic auction billing fixture' AND u.email LIKE '%@example.invalid'",[$request['invoice']])===1,'Correction race requires a synthetic fee.');
+    abt_check((int)abt_scalar($pdo,"SELECT COUNT(*) FROM users WHERE id=? AND is_admin=1 AND full_name='Synthetic auction billing fixture' AND email LIKE '%@example.invalid'",[$request['actor']])===1,'Correction race requires a synthetic reviewer.');
+    $delay=$request['start']-(int)(microtime(true)*1000);
+    abt_check($delay>=-5000&&$delay<=10000,'Concurrent test start is out of range.');
+    if($delay>0)usleep($delay*1000);
+    try {
+        auction_fee_correct($pdo,$request['actor'],$request['invoice'],$request['reduction'],'Synthetic concurrent partial fee correction.');
+        echo 'corrected';
+    } catch (PaymentConflict) {echo 'conflict';}
+    exit;
+}
+
 // Child mode inherits only the guarded synthetic DB. It never changes settings.
 if (($argv[1]??'')==='--buyout-race') {
     try {
@@ -539,6 +555,102 @@ try {
             abt_check(abt_status($pdo,$invoice)==='issued','Invoice with an attempt was waived.');
             abt_check(abt_scalar($pdo,'SELECT waived_at FROM market_auction_fee_charges WHERE invoice_id=?',[$invoice])===null,'Attempt guard changed waiver evidence.');
         },
+        'partial_correction_preserves_original_snapshot_receipts_and_exact_balance'=>static function() use($pdo,$category,$admin): void {
+            $seller=abt_user($pdo);$fixture=abt_publish($pdo,$seller['id'],$category);$original=$fixture['invoice'];
+            $originalSnapshot=finance_snapshot($pdo,$original);
+            $receiptSql='SELECT document_id,content_hash,created_at FROM market_contract_receipts WHERE invoice_id=? ORDER BY document_id';
+            $q=$pdo->prepare($receiptSql);$q->execute([$original]);$acceptances=$q->fetchAll();
+            $reason='Synthetic fee partial correction evidence.';
+            abt_reject(fn()=>auction_fee_correct($pdo,$seller['id'],$original,11,$reason),DomainException::class);
+            foreach([0,50,51] as $invalid) abt_reject(fn()=>auction_fee_correct($pdo,$admin['id'],$original,$invalid,$reason),InvalidArgumentException::class);
+            $pdo->prepare("UPDATE market_manual_orders SET customer_claimed_at=UTC_TIMESTAMP() WHERE invoice_id=?")->execute([$original]);
+            abt_reject(fn()=>auction_fee_correct($pdo,$admin['id'],$original,11,$reason),PaymentConflict::class);
+            $pdo->prepare("UPDATE market_invoices SET status='manual_rejected' WHERE id=?")->execute([$original]);
+            $replacement=auction_fee_correct($pdo,$admin['id'],$original,11,$reason);
+            abt_check(auction_fee_correct($pdo,$admin['id'],$original,11,$reason)===$replacement,'Exact retry issued a second payable reference.');
+            abt_reject(fn()=>auction_fee_correct($pdo,$admin['id'],$original,12,$reason),PaymentConflict::class);
+            abt_check(abt_status($pdo,$original)==='void'&&abt_status($pdo,$replacement)==='issued','Correction left multiple payable orders.');
+            $snapshot=finance_snapshot($pdo,$replacement);
+            abt_check($snapshot['gross_cents']===39&&$snapshot['net_cents']===33&&$snapshot['tax_cents']===6,'Corrected tax and gross do not match.');
+            abt_check($snapshot['previous_order_reference']===$originalSnapshot['order_reference']&&$snapshot['order_reference']!==$originalSnapshot['order_reference'],'Replacement reference was not linked or distinct.');
+            foreach(['operator','buyer','tax_bps','fee_version','service_description'] as $field)
+                abt_check($snapshot[$field]===$originalSnapshot[$field],'Correction changed historical terms.');
+            $q->execute([$replacement]);
+            abt_check($acceptances!==[]&&$q->fetchAll()===$acceptances,'Original consent evidence was not retained exactly.');
+            abt_check(finance_snapshot($pdo,$original)===$originalSnapshot,'Original invoice snapshot was rewritten.');
+            abt_check((int)abt_scalar($pdo,'SELECT SUM(amount_cents) FROM market_finance_events WHERE invoice_id IN (?,?)',[$original,$replacement])===39,'Receivable balance was double-counted.');
+            abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_invoice_documents WHERE invoice_id IN (?,?)',[$original,$replacement])===0,'Unpaid correction issued a fiscal document.');
+            abt_check(abt_retry_charge($pdo,$fixture['id'],'listing',null)===$original,'Assessment replay duplicated a fee.');
+            abt_charge_count($pdo,$fixture['id'],1);
+        },
+        'late_reference_receipts_are_unique_and_clear_only_after_verified_full_return'=>static function() use($pdo,$category,$admin): void {
+            $seller=abt_user($pdo);$original=abt_publish($pdo,$seller['id'],$category)['invoice'];
+            $reason='Synthetic isolated late receipt reconciliation.';
+            $replacement=auction_fee_correct($pdo,$admin['id'],$original,10,$reason);
+            $reference=finance_snapshot($pdo,$original)['order_reference'];
+            $transaction='ABLATE'.strtoupper(bin2hex(random_bytes(10)));
+            abt_reject(fn()=>auction_fee_record_late_receipt($pdo,$admin['id'],$original,'WRONG',$transaction,55,$reason),PaymentConflict::class);
+            abt_reject(fn()=>abt_pay($pdo,$admin['id'],$original,$transaction),PaymentConflict::class);
+            $attempt=auction_fee_record_late_receipt($pdo,$admin['id'],$original,$reference,$transaction,55,$reason);
+            abt_check(auction_fee_record_late_receipt($pdo,$admin['id'],$original,$reference,$transaction,55,$reason)===$attempt,'Late receipt retry created another capture.');
+            abt_reject(fn()=>auction_fee_record_late_receipt($pdo,$admin['id'],$original,$reference,$transaction,54,$reason),PaymentConflict::class);
+            abt_reject(fn()=>abt_pay($pdo,$admin['id'],$replacement),PaymentConflict::class);
+            abt_reject(fn()=>auction_fee_correct($pdo,$admin['id'],$replacement,1,$reason),PaymentConflict::class);
+            abt_reject(fn()=>auction_billing_waive($pdo,$admin['id'],$replacement,$reason),PaymentConflict::class);
+            abt_check(abt_status($pdo,$original)==='void'&&abt_status($pdo,$replacement)==='issued','Late receipt paid an auction fee.');
+            abt_check((int)abt_scalar($pdo,'SELECT COUNT(*) FROM market_invoice_documents WHERE invoice_id IN (?,?)',[$original,$replacement])===0,'Late receipt generated a fee invoice.');
+            $returned='ABRETURN'.strtoupper(bin2hex(random_bytes(10)));
+            abt_reject(fn()=>auction_fee_record_late_refund($pdo,$admin['id'],$attempt,54,$returned,$reason),PaymentConflict::class);
+            abt_reject(fn()=>auction_fee_record_late_refund($pdo,$admin['id'],$attempt,55,$transaction,$reason),PaymentConflict::class);
+            $refund=auction_fee_record_late_refund($pdo,$admin['id'],$attempt,55,$returned,$reason);
+            abt_check(auction_fee_record_late_refund($pdo,$admin['id'],$attempt,55,$returned,$reason)===$refund,'Return retry duplicated cash accounting.');
+            abt_check((int)abt_scalar($pdo,"SELECT SUM(amount_cents) FROM market_finance_events WHERE invoice_id=? AND kind IN ('cash_in','cash_refund')",[$original])===0,'Returned surplus left a cash balance.');
+            abt_reject(fn()=>abt_pay($pdo,$admin['id'],$replacement,$transaction),PaymentConflict::class);
+            abt_pay($pdo,$admin['id'],$replacement);
+            $document=(int)abt_scalar($pdo,'SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?',[$replacement]);
+            $final=finance_document($pdo,$document,$seller['id']);
+            abt_check($final['payload']['gross_cents']===40&&$final['payload']['previous_order_reference']===$reference,'Paid invoice lacks corrected fee and lineage.');
+            abt_check(str_starts_with(finance_pdf($final),'%PDF'),'Corrected fee PDF failed.');
+        },
+        'multiple_corrections_followed_by_full_waiver_reverse_only_outstanding_cents'=>static function() use($pdo,$category,$admin): void {
+            $seller=abt_user($pdo);$original=abt_publish($pdo,$seller['id'],$category)['invoice'];
+            $reason='Synthetic linked fee correction and waiver.';
+            $first=auction_fee_correct($pdo,$admin['id'],$original,19,$reason);
+            $second=auction_fee_correct($pdo,$admin['id'],$first,20,$reason);
+            abt_reject(fn()=>auction_billing_waive($pdo,$admin['id'],$first,$reason),PaymentConflict::class);
+            auction_billing_waive($pdo,$admin['id'],$second,$reason);
+            auction_billing_waive($pdo,$admin['id'],$second,$reason);
+            abt_check(abt_status($pdo,$second)==='void','Waiver did not close the latest order.');
+            abt_check((int)abt_scalar($pdo,"SELECT SUM(amount_cents) FROM market_finance_events WHERE invoice_id=? AND kind='fee_waived'",[$second])===-11,'Waiver reversed the original fee instead of the remainder.');
+            abt_check((int)abt_scalar($pdo,'SELECT SUM(amount_cents) FROM market_finance_events WHERE invoice_id IN (?,?,?)',[$original,$first,$second])===0,'Fee chain ended with incorrect receivable balance.');
+        },
+        'parallel_partial_corrections_issue_only_one_new_payable_order'=>static function() use($pdo,$category,$admin): void {
+            $seller=abt_user($pdo);$original=abt_publish($pdo,$seller['id'],$category)['invoice'];
+            $children=[];$results=[];$start=(int)(microtime(true)*1000)+1500;
+            try {
+                foreach([11,12] as $reduction){
+                    $pipes=[];
+                    $process=proc_open([PHP_BINARY,__FILE__,'--correction-race'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
+                    abt_check(is_resource($process),'Unable to start a real correction process.');
+                    $children[]=[$process,$pipes];
+                    fwrite($pipes[0],json_encode(['invoice'=>$original,'actor'=>$admin['id'],'reduction'=>$reduction,'start'=>$start],JSON_THROW_ON_ERROR));
+                    fclose($pipes[0]);
+                }
+                foreach($children as $index=>[$process,$pipes]){
+                    $results[]=stream_get_contents($pipes[1]);$stderr=stream_get_contents($pipes[2]);
+                    fclose($pipes[1]);fclose($pipes[2]);$exit=proc_close($process);unset($children[$index]);
+                    abt_check($exit===0&&$stderr==='','Concurrent correction failed: '.substr($stderr,0,360));
+                }
+            } finally {
+                foreach($children as [$process,$pipes]){
+                    foreach($pipes as $pipe)if(is_resource($pipe))fclose($pipe);
+                    if(is_resource($process)){proc_terminate($process);proc_close($process);}
+                }
+            }
+            sort($results);
+            abt_check($results===['conflict','corrected'],'Concurrent corrections did not serialize.');
+            abt_check((int)abt_scalar($pdo,"SELECT COUNT(*) FROM market_invoices WHERE user_id=? AND status='issued'",[$seller['id']])===1,'Concurrent corrections created multiple payable orders.');
+        },
         'paid_fees_support_existing_partial_full_refunds_without_duplicate_credit'=>static function() use($pdo,$category,$admin): void {
             $seller=abt_user($pdo); $fixture=abt_publish($pdo,$seller['id'],$category); $invoice=$fixture['invoice']; abt_pay($pdo,$admin['id'],$invoice);
             $request=finance_request_refund($pdo,$seller['id'],$invoice,20,'Synthetic partial fee correction requested.');
@@ -655,6 +767,55 @@ try {
                 abt_check($status===200&&abt_status($pdo,$invoice)==='void','MFA-authorized waiver failed.');
                 abt_check((int)abt_scalar($pdo,"SELECT COUNT(*) FROM market_finance_events WHERE invoice_id=? AND actor_id=? AND kind='fee_waived'",[$invoice,$admin['id']])===1,'HTTP waiver lacks unique actor-bound reversal.');
             } finally { curl_close($browser); }
+        },
+        'http_correction_and_reconciliation_forms_follow_real_permissions_and_references'=>static function() use($pdo,$category): void {
+            $admin=abt_user($pdo,true);$seller=abt_user($pdo);$other=abt_user($pdo);
+            $original=abt_publish($pdo,$seller['id'],$category)['invoice'];
+            $reference=finance_snapshot($pdo,$original)['order_reference'];
+            $staff=abt_browser();$owner=abt_browser();$foreign=abt_browser();
+            try {
+                abt_login($staff,$admin);abt_mfa($pdo,$staff,$admin['id']);
+                [$status,$body]=abt_request($staff,'/admin/finance.php');
+                abt_check($status===200&&str_contains($body,'value="auction_correct"'),'Correction action missing.');
+                $fields=['action'=>'auction_correct','invoice_id'=>(string)$original,'reduction'=>'0.15','reason'=>'Synthetic HTTP auction fee correction.'];
+                [$status]=abt_request($staff,'/admin/finance.php',$fields);
+                abt_check($status===403,'Correction accepted without CSRF.');
+                [$status]=abt_request($staff,'/admin/finance.php',$fields+['csrf_token'=>abt_csrf($body)]);
+                abt_check($status===303,'Correction submit did not redirect to the new reference.');
+                $replacement=(int)auction_fee_replacement($pdo,$original)['replacement_invoice_id'];
+                abt_login($owner,$seller);
+                $oldPath='/user/billing.php?order='.$original;$newPath='/user/billing.php?order='.$replacement;
+                [$status,$body]=abt_request($owner,$oldPath);
+                abt_check($status===200&&str_contains($body,'href="?order='.$replacement.'"')&&!str_contains($body,'name="cmd" value="_xclick"'),'Old customer order can still pay or lacks replacement link.');
+                [$status]=abt_request($owner,$oldPath,['csrf_token'=>abt_csrf($body),'invoice_id'=>(string)$original,'action'=>'claim']);
+                abt_check($status===422,'Old order accepts a payment claim.');
+                [$status,$body]=abt_request($owner,$newPath);
+                abt_check($status===200&&str_contains($body,'name="amount" value="0.35"'),'Corrected checkout has the wrong amount.');
+                abt_login($foreign,$other);
+                foreach([$oldPath,$newPath] as $path) abt_check(abt_request($foreign,$path)[0]===404,'Buyer can see another account’s order.');
+                [$status,$body]=abt_request($staff,'/admin/payments.php?reference='.rawurlencode($reference));
+                abt_check($status===200&&str_contains($body,'value="late_receipt"'),'Searching for a replaced reference did not expose the review operation.');
+                $capture='ABHTTP'.strtoupper(bin2hex(random_bytes(10)));
+                $fields=['decision'=>'late_receipt','invoice_id'=>(string)$original,'transaction_id'=>$capture,'received_amount'=>'0.50','reference'=>$reference,'reason'=>'Synthetic HTTP late receipt verified for fixture.','csrf_token'=>abt_csrf($body)];
+                [$status]=abt_request($staff,'/admin/payments.php',$fields);
+                abt_check($status===422,'Receipt was recorded without verified-payment confirmation.');
+                [$status]=abt_request($staff,'/admin/payments.php',$fields+['review_confirmed'=>'1']);
+                abt_check($status===303,'Verified late receipt was not routed to review.');
+                [$status,$body]=abt_request($owner,$newPath);
+                abt_check($status===200&&!str_contains($body,'name="cmd" value="_xclick"')&&str_contains($body,t('auction_correction.unresolved')),'Checkout stayed open with an unresolved late receipt.');
+                [$status,$body]=abt_request($staff,'/admin/payments.php?invoice='.$original);
+                $attempt=(int)abt_scalar($pdo,'SELECT id FROM market_payment_attempts WHERE capture_id=?',[$capture]);
+                abt_check($status===200&&str_contains($body,'name="attempt_id" value="'.$attempt.'"'),'Late receipt not listed in reconciliation.');
+                $fields=['decision'=>'late_refund','attempt_id'=>(string)$attempt,'transaction_id'=>'ABREFUND'.strtoupper(bin2hex(random_bytes(10))),'received_amount'=>'0.50','reason'=>'Synthetic HTTP full return verified for fixture.','csrf_token'=>abt_csrf($body),'review_confirmed'=>'1'];
+                [$status]=abt_request($staff,'/admin/payments.php',$fields);
+                abt_check($status===200,'Completed full return not accepted.');
+                [$status,$body]=abt_request($owner,$newPath);
+                abt_check($status===200&&str_contains($body,'name="amount" value="0.35"'),'Checkout did not resume after reconciliation.');
+                $export=privacy_export($pdo,$seller['id'],$seller['password']);
+                try{$data=json_decode(stream_get_contents($export),true,32,JSON_THROW_ON_ERROR);}
+                finally{fclose($export);}
+                abt_check(count($data['auction_fee_corrections'])===1&&count($data['late_auction_receipts'])===1,'Owner export lacks correction or late receipt.');
+            } finally {curl_close($staff);curl_close($owner);curl_close($foreign);}
         },
     ];
     foreach ($tests as $name=>$run) { $run(); ++$passed; fwrite(STDOUT,'PASS '.$name.PHP_EOL); }

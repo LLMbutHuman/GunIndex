@@ -238,6 +238,8 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'refund_requests'=>['market_refund_requests','user_id=?',[$userId],['id','invoice_id','requested_cents','status','reason','decision_reason','created_at','updated_at']],
             'refunds'=>['market_refunds','invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['id','invoice_id','request_id','transaction_id','amount_cents','currency','reason','credit_document_id','created_at']],
             'invoice_snapshots'=>['market_invoice_snapshots','user_id=?',[$userId],['invoice_id','payload_hash','payload','created_at'],'invoice_id'],
+            'auction_fee_corrections'=>['market_auction_fee_corrections','previous_invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['previous_invoice_id','replacement_invoice_id','previous_cents','remaining_cents','created_at'],'previous_invoice_id'],
+            'late_auction_receipts'=>['market_auction_late_receipts','previous_invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['attempt_id','previous_invoice_id','amount_cents','refund_id','created_at'],'attempt_id'],
             'invoice_documents'=>['market_invoice_documents','invoice_id IN (SELECT id FROM market_invoices WHERE user_id=?)',[$userId],['id','invoice_id','document_number','document_type','related_document_id','amount_cents','currency','content_hash','payload','issued_at']],
         ];
         foreach($sources as $name=>$source){

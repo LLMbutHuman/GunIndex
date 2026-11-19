@@ -9,6 +9,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
   finance_record_refund($pdo,(int)$admin['id'],(int)post_string('invoice_id'),money_parse(post_string('amount')),post_string('transaction_id',64),post_string('reason',2000),post_string('request_id')!==''?(int)post_string('request_id'):null);$success='Die tatsächlich erfolgte Erstattung wurde dokumentiert. Diese Aktion hat kein Geld versendet.';
  }elseif($action==='auction_waive'){
   auction_billing_waive($pdo,(int)$admin['id'],(int)post_string('invoice_id'),post_string('reason',2000));$success=t('auction_billing.waived');
+ }elseif($action==='auction_correct'){
+  $invoiceId=filter_var(post_string('invoice_id',20),FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+  if($invoiceId===false)throw new InvalidArgumentException(t('auction_correction.ineligible'));
+  $replacement=auction_fee_correct($pdo,(int)$admin['id'],$invoiceId,money_parse(post_string('reduction',11)),post_string('reason',2000));
+  redirect('/admin/payments.php?invoice='.$replacement);
  }elseif($action==='reject'){
   $reason=trim(post_string('reason',2000));if(mb_strlen($reason)<10)throw new InvalidArgumentException('Eine nachvollziehbare Begründung ist erforderlich.');
   $q=$pdo->prepare("UPDATE market_refund_requests SET status='rejected',decision_reason=? WHERE id=? AND status='requested'");$q->execute([$reason,(int)post_string('request_id')]);audit_log($pdo,(int)$admin['id'],'finance.refund_rejected',(int)post_string('request_id'),[]);$success='Die Ablehnung ist dokumentiert.';
@@ -17,12 +22,24 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
 $taxes=$pdo->query('SELECT * FROM market_tax_rules ORDER BY country_code')->fetchAll();
 $requests=$pdo->query("SELECT r.*,i.invoice_number,i.gross_cents,u.username FROM market_refund_requests r JOIN market_invoices i ON i.id=r.invoice_id JOIN users u ON u.id=r.user_id ORDER BY r.id DESC LIMIT 100")->fetchAll();
 $documents=$pdo->query('SELECT * FROM market_invoice_documents ORDER BY id DESC LIMIT 100')->fetchAll();
-$auctionCharges=$pdo->query("SELECT c.*,i.invoice_number,i.status FROM market_auction_fee_charges c JOIN market_invoices i ON i.id=c.invoice_id WHERE c.waived_at IS NULL AND i.status IN ('issued','pending','manual_rejected') ORDER BY c.id DESC LIMIT 100")->fetchAll();
+$auctionCharges=$pdo->query("SELECT i.id AS invoice_id,i.invoice_number,i.status,i.gross_cents,o.listing_id FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.service_code IN ('auction_listing','auction_success') AND i.status IN ('issued','pending','manual_rejected') ORDER BY i.id DESC LIMIT 100")->fetchAll();
 include __DIR__.'/../includes/header.php';?>
 <main class="container admin-page"><div class="page-heading"><p class="eyebrow">Finanzen</p><h1>Belege und Korrekturen.</h1><p>Rechnungen bleiben unverändert. Stornos und Gutschriften sind neue, verknüpfte Dokumente.</p></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php';?><div class="admin-content">
 <?php if($error):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?><?php if($success):?><p class="notice success"><?=h($success)?></p><?php endif;?>
 <section class="panel"><h2><?=h(t('auction_billing.heading'))?></h2><p><?=h(t('auction_billing.waive_help'))?></p>
-<?php foreach($auctionCharges as $charge):?><article><h3><?=h($charge['invoice_number'])?> · <?=h(money_eur((int)$charge['gross_cents']))?></h3><p>#<?=(int)$charge['listing_id']?> · <?=h(payments_status_label($charge['status']))?></p><form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="auction_waive"><input type="hidden" name="invoice_id" value="<?=(int)$charge['invoice_id']?>"><label class="field"><?=h(t('auction_billing.reason'))?><textarea name="reason" minlength="10" maxlength="2000" required></textarea></label><button class="button secondary" type="submit"><?=h(t('auction_billing.waive'))?></button></form></article><?php endforeach;?></section>
+<?php foreach($auctionCharges as $charge):?>
+<article><h3><?=h($charge['invoice_number'])?> · <?=h(money_eur((int)$charge['gross_cents']))?></h3>
+<p>#<?=(int)$charge['listing_id']?> · <?=h(payments_status_label($charge['status']))?></p>
+<form method="post" class="form-grid"><?=csrf_field()?>
+<input type="hidden" name="invoice_id" value="<?=(int)$charge['invoice_id']?>">
+<label class="field"><?=h(t('auction_billing.reason'))?><textarea name="reason" minlength="10" maxlength="2000" required></textarea></label>
+<?php if((int)$charge['gross_cents']>1):?>
+<label class="field"><?=h(t('auction_correction.reduction'))?><input name="reduction" inputmode="decimal" maxlength="11"></label>
+<button class="button" type="submit" name="action" value="auction_correct"><?=h(t('auction_correction.submit'))?></button>
+<?php endif;?>
+<button class="button secondary" type="submit" name="action" value="auction_waive"><?=h(t('auction_billing.waive'))?></button>
+</form></article>
+<?php endforeach;?></section>
 <section class="panel"><h2>Ausstellung freigeben</h2><p>Vor Aktivierung sind Betreiberanschrift, zutreffende Steuer-/Registerkennungen und die Behandlung jedes tatsächlich bedienten Rechnungslands fachlich zu prüfen. Eine Käufer-USt-ID erzeugt keine automatische Steuerbefreiung.</p><a class="button secondary" href="/admin/settings.php">Betreiberangaben und Rechnungsfunktion</a><a class="button secondary" href="/admin/payments.php">Zahlungseingänge</a></section>
 <section class="panel"><h2>Landesspezifische Steuerregeln</h2><?php foreach($taxes as $tax):?><p><?=h($tax['country_code'])?> · <?=(int)$tax['basis_points']?> Basispunkte · <?=h($tax['explanation'])?></p><?php endforeach;?>
 <form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="tax"><label class="field">Rechnungsland<select name="country_code"><?php foreach(geo_countries() as $code=>$name):?><option value="<?=h($code)?>"><?=h($name)?></option><?php endforeach;?></select></label><label class="field">Geprüfter Steuersatz in Basispunkten<input type="number" name="basis_points" min="0" max="10000" required><small>1900 entspricht 19 %. Keine automatische Länder- oder Steuerberatung.</small></label><label class="field">Rechts-/Steuergrundlage und Behandlung<textarea name="explanation" minlength="10" maxlength="300" required></textarea></label><label><input type="checkbox" name="review_confirmed" value="1" required> Die steuerliche Behandlung dieser Plattformleistung für dieses Rechnungsland ist fachlich geprüft.</label><button class="button">Steuerregel speichern</button></form></section>

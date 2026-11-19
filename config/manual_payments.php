@@ -55,13 +55,16 @@ function manual_review(PDO $pdo,int $actorId,int $invoiceId,string $transaction,
   if(!in_array($invoice['status'],['issued','pending','manual_rejected'],true))throw new PaymentConflict('Dieser Auftrag kann nicht freigegeben werden.');
   if($decision==='approve'){
    if(!hash_equals($invoice['reference'],$reference)||$received!==(int)$invoice['gross_cents']||$invoice['currency']!=='EUR')throw new PaymentConflict('Betrag, Währung oder Zahlungsreferenz stimmen nicht überein.');
+   $auctionFee=auction_billing_service($invoice['service_code']);
+   if($auctionFee)auction_billing_verify_payment($pdo,$invoice);
    $q=$pdo->prepare("INSERT INTO market_payment_attempts(invoice_id,provider,status,capture_id,idempotency_key,mode) VALUES (?,'paypal_manual','manual_verified',?,?,'live')");$q->execute([$invoiceId,$transaction,bin2hex(random_bytes(16))]);$attempt=(int)$pdo->lastInsertId();
    $pdo->prepare("INSERT INTO market_payment_events(attempt_id,provider_event_id,kind,payload_hash) VALUES (?,?,'manual_verified',?)")->execute([$attempt,'manual:'.$transaction,hash('sha256',$reference.':'.$received.':'.$invoice['recipient'])]);
    $pdo->prepare("UPDATE market_invoices SET status='paid' WHERE id=?")->execute([$invoiceId]);
    if(in_array($invoice['service_code'],['bump_single','bump_pack'],true))$pdo->prepare('INSERT INTO market_bump_credits(invoice_id,user_id,quantity,remaining) VALUES (?,?,?,?)')->execute([$invoiceId,$invoice['user_id'],$invoice['quantity'],$invoice['quantity']]);
-   elseif(auction_billing_service($invoice['service_code']))auction_billing_verify_payment($pdo,$invoice);
-   elseif(function_exists('business_fulfill_manual'))business_fulfill_manual($pdo,$invoiceId);
-   else throw new PaymentConflict('Die gebuchte Leistung ist nicht zur Freigabe verfügbar.');
+   elseif(!$auctionFee){
+    if(!function_exists('business_fulfill_manual'))throw new PaymentConflict('Die gebuchte Leistung ist nicht zur Freigabe verfügbar.');
+    business_fulfill_manual($pdo,$invoiceId);
+   }
    if(function_exists('finance_issue_invoice'))finance_issue_invoice($pdo,$invoiceId,$actorId);
   }else{$pdo->prepare("UPDATE market_invoices SET status='manual_rejected' WHERE id=?")->execute([$invoiceId]);}
   if($decision==='approve'&&function_exists('notify_user'))notify_user($pdo,(int)$invoice['user_id'],'payment:'.$invoiceId,i18n_user_text($pdo,(int)$invoice['user_id'],'notification.payment_confirmed.title'),i18n_user_text($pdo,(int)$invoice['user_id'],'notification.payment_confirmed.body',['reference'=>$invoice['invoice_number']]),'/user/billing.php?order='.$invoiceId,true);

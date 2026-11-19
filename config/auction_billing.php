@@ -145,8 +145,11 @@ function auction_billing_charge(PDO $pdo,int $listingId,string $kind,?int $sale)
 }
 function auction_billing_verify_payment(PDO $pdo,array $invoice): void {
     if(!finance_enabled($pdo))throw new PaymentUnavailable(t('auction_billing.unavailable'));
-    $q=$pdo->prepare('SELECT gross_cents,waived_at FROM market_auction_fee_charges WHERE invoice_id=?');$q->execute([$invoice['id']]);$charge=$q->fetch();
-    if(!$charge||$charge['waived_at']!==null||(int)$charge['gross_cents']!==(int)$invoice['gross_cents'])throw new PaymentConflict(t('auction_billing.changed'));
+    $invoiceId=(int)$invoice['id'];
+    $charge=auction_fee_lock_charge($pdo,$invoiceId);
+    if(!$charge||$charge['waived_at']!==null||$charge['payable_cents']!==(int)$invoice['gross_cents']
+        ||auction_fee_replacement($pdo,$invoiceId,true))throw new PaymentConflict(t('auction_billing.changed'));
+    auction_fee_assert_late_receipts_resolved($pdo,(int)$charge['id']);
     finance_assert_invoice_snapshot($invoice,finance_snapshot($pdo,(int)$invoice['id']));
 }
 /** Waiver of a reviewed unpaid receivable. Paid amounts use verified refund records. */
@@ -157,18 +160,18 @@ function auction_billing_waive(PDO $pdo,int $actor,int $invoiceId,string $reason
         governance_assert_actor($pdo,$actor,'finance.manage');
         $q=$pdo->prepare('SELECT i.*,o.customer_claimed_at FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();
         if(!$invoice||!auction_billing_service($invoice['service_code'])||!in_array($invoice['status'],['issued','pending','manual_rejected','void'],true))throw new PaymentConflict(t('auction_billing.invalid_waiver'));
-        $q=$pdo->prepare('SELECT * FROM market_auction_fee_charges WHERE invoice_id=? FOR UPDATE');$q->execute([$invoiceId]);$charge=$q->fetch();
-        if(!$charge)throw new PaymentConflict(t('auction_billing.invalid_waiver'));
+        $charge=auction_fee_lock_charge($pdo,$invoiceId);
+        if(!$charge||$charge['payable_cents']!==(int)$invoice['gross_cents']||auction_fee_replacement($pdo,$invoiceId,true))throw new PaymentConflict(t('auction_billing.invalid_waiver'));
         if($charge['waived_at']!==null){$pdo->commit();return;}
-        $q=$pdo->prepare('SELECT COUNT(*) FROM market_payment_attempts WHERE invoice_id=?');$q->execute([$invoiceId]);
-        if((int)$q->fetchColumn()>0||$invoice['status']==='void'||($invoice['customer_claimed_at']!==null&&$invoice['status']!=='manual_rejected'))throw new PaymentConflict(t('auction_billing.invalid_waiver'));
+        auction_fee_assert_revisable($pdo,$invoice);
+        auction_fee_assert_late_receipts_resolved($pdo,(int)$charge['id']);
         $pdo->prepare("UPDATE market_invoices SET status='void' WHERE id=?")->execute([$invoiceId]);
         $pdo->prepare('UPDATE market_auction_fee_charges SET waived_by=?,waiver_reason=?,waived_at=UTC_TIMESTAMP() WHERE id=?')->execute([$actor,$reason,$charge['id']]);
-        $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'fee_waived',?,?)")->execute([$invoiceId,$actor,-(int)$charge['gross_cents'],'auction-waiver:'.$charge['id']]);
+        $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'fee_waived',?,?)")->execute([$invoiceId,$actor,-(int)$invoice['gross_cents'],'auction-waiver:'.$charge['id']]);
         audit_log($pdo,$actor,'auction.fee_waived',(int)$charge['listing_id'],['invoice_id'=>$invoiceId,'reason'=>$reason]);
         $seller=(int)$invoice['user_id'];
         notify_user($pdo,$seller,'auction-fee-waived:'.$charge['id'],i18n_user_text($pdo,$seller,'auction_billing.waived_title'),
-            i18n_user_text($pdo,$seller,'auction_billing.waived_body',['amount'=>money_eur((int)$charge['gross_cents']),'reference'=>$invoice['invoice_number']]),
+            i18n_user_text($pdo,$seller,'auction_billing.waived_body',['amount'=>money_eur((int)$invoice['gross_cents']),'reference'=>$invoice['invoice_number']]),
             '/user/billing.php?order='.$invoiceId,true);
         $pdo->commit();
     }catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw $error;}

@@ -13,7 +13,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
    $id=manual_order($pdo,(int)$user['id'],(int)post_string('listing_id'),post_string('service'),$key,null,$_POST);
    $_SESSION['billing_order_key']=bin2hex(random_bytes(32));redirect('/user/billing.php?order='.$id);
   }elseif($action==='claim'){
-   $pdo->prepare("UPDATE market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id SET o.customer_claimed_at=COALESCE(o.customer_claimed_at,UTC_TIMESTAMP()),i.status=IF(i.status='issued','pending',i.status) WHERE o.invoice_id=? AND o.user_id=? AND i.status IN ('issued','pending')")->execute([(int)post_string('invoice_id'),$user['id']]);
+   $claim=[(int)post_string('invoice_id'),$user['id'],$user['id']];
+   $q=$pdo->prepare("UPDATE market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id SET o.customer_claimed_at=COALESCE(o.customer_claimed_at,UTC_TIMESTAMP()),i.status=IF(i.status='issued','pending',i.status) WHERE o.invoice_id=? AND o.user_id=? AND i.user_id=? AND i.status IN ('issued','pending')");
+   $q->execute($claim);
+   if($q->rowCount()===0){
+    $q=$pdo->prepare("SELECT 1 FROM market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id WHERE o.invoice_id=? AND o.user_id=? AND i.user_id=? AND i.status='pending' AND o.customer_claimed_at IS NOT NULL");
+    $q->execute($claim);
+    if(!$q->fetchColumn())throw new PaymentConflict(t('auction_correction.claim_unavailable'));
+   }
    $success='Dein Hinweis wurde gespeichert. Die Zahlung bleibt bis zur tatsächlichen Prüfung unbestätigt.';
   }elseif($action==='bump'){manual_bump($pdo,(int)$user['id'],(int)post_string('listing_id'),post_string('immediate_start')==='1');$success='Dein Inserat wurde nach oben verschoben.';}
   else throw new InvalidArgumentException('Ungültige Aktion.');
@@ -27,6 +34,17 @@ $selectedPromotion=null;if($selected&&in_array($selected['service_code'],['categ
 $selectedPayable=$selected&&in_array($selected['status'],['issued','pending','manual_rejected'],true)&&manual_payment_reason($pdo)===null;
 $selectedAuction=$selected&&auction_billing_service($selected['service_code']);
 if($selectedAuction&&!finance_enabled($pdo))$selectedPayable=false;
+$feeReplacement=null;$feePredecessor=null;$feeReview=false;
+if($selectedAuction){
+ $feeReplacement=auction_fee_replacement($pdo,(int)$selected['id']);
+ $q=$pdo->prepare('SELECT previous_invoice_id,charge_id FROM market_auction_fee_corrections WHERE replacement_invoice_id=?');
+ $q->execute([$selected['id']]);$feePredecessor=$q->fetch()?:null;
+ $related=$feePredecessor??$feeReplacement;
+ if($related&&auction_fee_has_open_late_receipts($pdo,(int)$related['charge_id'])){
+  $feeReview=true;
+  $selectedPayable=false;
+ }
+}
 if($selectedPromotion&&($selectedPromotion['status']!=='reserved'||strtotime($selectedPromotion['reserved_until'].' UTC')<=time()||business_reason($pdo)!==null))$selectedPayable=false;
 
 $reason=manual_payment_reason($pdo);
@@ -46,6 +64,12 @@ include __DIR__.'/../includes/header.php';
 <?php endif;?></section><?php endif;?>
 <?php if($selected)consent_order_links($pdo,(int)$user['id'],(int)$selected['id']);?>
 <?php if($selected):?><section class="panel"><h2>Dein Zahlungsauftrag <?=h($selected['reference'])?></h2><p>Gesamt: <strong><?=h(money_eur((int)$selected['gross_cents']))?></strong> · Netto <?=h(money_eur((int)$selected['net_cents']))?> · Umsatzsteuer <?=h(money_eur((int)$selected['tax_cents']))?></p><p>Verwendungszweck: <strong><?=h($selected['reference'])?></strong><br>Empfänger: <?=h($selected['recipient'])?><br>Status: <?=h(payments_status_label($selected['status']))?></p>
+<?php if($feeReplacement):?>
+<p class="notice"><?=h(t('auction_correction.obsolete'))?>
+<a href="?order=<?=(int)$feeReplacement['replacement_invoice_id']?>"><?=h(t('auction_correction.replacement'))?></a></p>
+<?php endif;?>
+<?php if($feePredecessor):?><p><a href="?order=<?=(int)$feePredecessor['previous_invoice_id']?>"><?=h(t('auction_correction.previous'))?></a></p><?php endif;?>
+<?php if($feeReview):?><p class="notice"><?=h(t('auction_correction.unresolved'))?></p><?php endif;?>
 <?php if($selectedPayable):?>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" rel="noopener noreferrer"><input type="hidden" name="cmd" value="_xclick"><input type="hidden" name="business" value="<?=h($selected['recipient'])?>"><input type="hidden" name="amount" value="<?=h(payments_decimal((int)$selected['gross_cents']))?>"><input type="hidden" name="currency_code" value="EUR"><input type="hidden" name="item_name" value="<?=h(site_setting($pdo,'brand_name').' · '.$selected['service_code'].' · '.$selected['reference'])?>"><input type="hidden" name="invoice" value="<?=h($selected['reference'])?>"><input type="hidden" name="custom" value="<?=h($selected['reference'])?>"><input type="hidden" name="no_shipping" value="1"><input type="hidden" name="charset" value="utf-8"><button class="button" type="submit">PayPal-Zahlungsauftrag öffnen · <?=h(money_eur((int)$selected['gross_cents']))?></button></form>
 <p>PayPal öffnet separat. Nutze die geschäftliche Zahlung für diese Leistung. Ob dein Empfängerkonto diesen Zahlungsbutton unterstützt, richtet sich nach PayPal. Eine Rückkehr zur Website bestätigt keinen Zahlungseingang.</p>
