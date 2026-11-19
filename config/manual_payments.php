@@ -10,11 +10,11 @@ function manual_payment_reason(PDO $pdo):?string {
 }
 function direct_payment_reason(PDO $pdo):?string {
  $paypal=manual_payment_reason($pdo);
- return $paypal!==null&&bank_gate($pdo)!==null?$paypal:null;
+ return $paypal!==null&&bank_gate($pdo)!==null&&bitcoin_gate($pdo,null,true)!==null?$paypal:null;
 }
-function manual_terms(int $quantity,bool $bank=false):string {
- $channel=$bank?'Zahlung wird vom Betreiber anhand des tatsächlichen Eingangs bei der Bank oder bei PayPal geprüft.':'Zahlung wird vom Betreiber anhand des tatsächlichen PayPal-Eingangs geprüft.';
- return 'Bump-Guthaben: '.$quantity.' Aktivierung(en). Ein Bump pro Inserat alle 72 Stunden; verändert nur die Sortieraktualität. Keine Reichweiten- oder Verkaufsgarantie. '.$channel.' Guthaben entsteht erst nach Prüfung und wird vom Nutzer gesondert aktiviert. Gesetzliche Verbraucherrechte bleiben bestehen. Kein vorzeitiger Leistungsbeginn wird mit der Bestellung erklärt. Version manual-bump-'.($bank?'1.1.':'1.0.');
+function manual_terms(int $quantity,bool $additionalMethod=false):string {
+ $channel=$additionalMethod?'Zahlung wird anhand des tatsächlichen Eingangs im gewählten Zahlungsweg geprüft.':'Zahlung wird vom Betreiber anhand des tatsächlichen PayPal-Eingangs geprüft.';
+ return 'Bump-Guthaben: '.$quantity.' Aktivierung(en). Ein Bump pro Inserat alle 72 Stunden; verändert nur die Sortieraktualität. Keine Reichweiten- oder Verkaufsgarantie. '.$channel.' Guthaben entsteht erst nach Prüfung und wird vom Nutzer gesondert aktiviert. Gesetzliche Verbraucherrechte bleiben bestehen. Kein vorzeitiger Leistungsbeginn wird mit der Bestellung erklärt. Version manual-bump-'.($additionalMethod?'1.1.':'1.0.');
 }
 function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string $requestKey,?int $campaignId=null,array $consent=[]):int {
  if(($reason=direct_payment_reason($pdo))!==null)throw new PaymentUnavailable($reason);
@@ -23,7 +23,7 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
  $promotion=in_array($service,['category_top','home_top','banner_monthly'],true);
  if($promotion&&(!function_exists('business_reserve_order')||($businessReason=business_reason($pdo))!==null))throw new PaymentUnavailable($businessReason??'Die Platzierungsverwaltung ist noch nicht verfügbar.');
  $quote=fees_quote($service,null,$pdo);if($quote['gross_cents']<1)throw new PaymentConflict('Für kostenlose Guthaben ist dieser Zahlungsweg nicht vorgesehen.');
- $quantity=$service==='bump_pack'?3:1;$terms=$promotion?business_terms($pdo,$service,$listing):manual_terms($quantity,bank_gate($pdo)===null);
+ $quantity=$service==='bump_pack'?3:1;$terms=$promotion?business_terms($pdo,$service,$listing):manual_terms($quantity,bank_gate($pdo)===null||bitcoin_gate($pdo,null,true)===null);
  $tax=fees_tax_split($quote['gross_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),true);
  $pdo->beginTransaction();
  try{
@@ -51,6 +51,7 @@ function manual_claim(PDO $pdo,int $userId,int $invoiceId): void {
   if(!$order||!in_array($order['status'],['issued','pending','manual_rejected'],true))
    throw new PaymentConflict(t('auction_correction.claim_unavailable'));
   if(bank_order($pdo,$invoiceId))throw new PaymentConflict(t('bank.conflict'));
+  if(bitcoin_order($pdo,$invoiceId))throw new PaymentConflict(t('bitcoin.conflict'));
   if(auction_billing_service($order['service_code'])){
    $charge=auction_fee_lock_charge($pdo,$invoiceId);
    if(!$charge||$charge['waived_at']!==null||auction_fee_replacement($pdo,$invoiceId,true))
@@ -74,6 +75,7 @@ function manual_review(PDO $pdo,int $actorId,int $invoiceId,string $transaction,
   if(function_exists('governance_assert_actor'))governance_assert_actor($pdo,$actorId,'finance.manage');else settings_assert_admin($pdo,$actorId);
   $q=$pdo->prepare('SELECT i.*,o.reference,o.quantity,o.recipient FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Zahlungsauftrag nicht gefunden.');
   if(bank_order($pdo,$invoiceId))throw new PaymentConflict(t('bank.conflict'));
+  if(bitcoin_order($pdo,$invoiceId))throw new PaymentConflict(t('bitcoin.conflict'));
   if($invoice['status']==='paid'){
    $q=$pdo->prepare("SELECT capture_id FROM market_payment_attempts WHERE invoice_id=? AND provider='paypal_manual' AND status='manual_verified'");$q->execute([$invoiceId]);
    if($decision==='approve'&&$transaction===$q->fetchColumn()){$pdo->commit();return;}

@@ -55,9 +55,10 @@ function payments_methods(?array $config = null,?PDO $pdo=null): array
 {
     $reason = payments_paypal_reason($config);
     $bankReason=$pdo===null?'Banküberweisung ist zurzeit nicht verfügbar.':bank_gate($pdo);
+    $bitcoinReason=$pdo===null?'Bitcoin ist zurzeit nicht verfügbar.':bitcoin_gate($pdo,null,true);
     return [
         'paypal' => ['label' => 'PayPal', 'available' => $reason === null, 'reason' => $reason ?? 'Offizieller PayPal Checkout'],
-        'bitcoin' => ['label' => 'Bitcoin', 'available' => false, 'reason' => 'Aktuell nicht verfügbar. Eine geprüfte Node-Infrastruktur fehlt.'],
+        'bitcoin' => ['label' => 'Bitcoin', 'available' => $bitcoinReason===null, 'reason' => $bitcoinReason??t('bitcoin.start_help')],
         'bank' => ['label' => $pdo===null?'Banküberweisung':t('bank.bank_transfer'), 'available' => $bankReason===null, 'reason' => $bankReason??t('bank.start_help')],
     ];
 }
@@ -216,6 +217,14 @@ function payments_assert_invoice(array $invoice): void
 {
     if (!in_array($invoice['status'] ?? '', ['issued', 'pending'], true) || !is_string($invoice['invoice_number'] ?? null) || !preg_match('/\A[A-Za-z0-9-]{1,64}\z/', $invoice['invoice_number']) || ($invoice['currency'] ?? '') !== 'EUR') throw new PaymentConflict('Diese Rechnung ist nicht zahlbar.');
     payments_decimal((int)$invoice['gross_cents']);
+}
+
+function direct_checkout_can_start(PDO $pdo,array $invoice): bool
+{
+    if (!in_array($invoice['status'],['issued','pending'],true)||$invoice['currency']!=='EUR'||(int)$invoice['gross_cents']<1) return false;
+    $q=$pdo->prepare('SELECT EXISTS(SELECT 1 FROM market_invoice_snapshots WHERE invoice_id=?) AND NOT EXISTS(SELECT 1 FROM market_payment_attempts WHERE invoice_id=?) AND NOT EXISTS(SELECT 1 FROM market_manual_orders WHERE invoice_id=? AND customer_claimed_at IS NOT NULL)');
+    $q->execute([$invoice['id'],$invoice['id'],$invoice['id']]);
+    return (bool)$q->fetchColumn();
 }
 
 function payments_begin(PDO $pdo, int $invoiceId, int $userId, string $provider): string

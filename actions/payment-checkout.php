@@ -7,8 +7,9 @@ $invoice = is_string($_POST['invoice_id'] ?? null) ? filter_var($_POST['invoice_
 $provider = $_POST['provider'] ?? null;
 if (!$invoice || !is_string($provider)) abort_request(422, 'Ungültige Zahlungsanforderung.');
 try {
-    if ($provider==='bank') {
-        bank_start($pdo,$invoice,(int)$user['id']);
+    if (in_array($provider,['bank','bitcoin'],true)) {
+        if ($provider==='bank') bank_start($pdo,$invoice,(int)$user['id']);
+        else bitcoin_start($pdo,$invoice,(int)$user['id']);
         $order=payments_invoice($pdo,$invoice,(int)$user['id']);
         redirect(!empty($order['is_manual'])?'/user/billing.php?order='.$invoice:'/user/payments.php?invoice_id='.$invoice);
     }

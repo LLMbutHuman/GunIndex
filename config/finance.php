@@ -111,6 +111,7 @@ function finance_record_refund(PDO $pdo,int $actor,int $invoiceId,int $amount,st
  if(!in_array($channel,['paypal','bank'],true)||$amount<1||!$validReference||mb_strlen(trim($reason))<10||mb_strlen($reason)>2000)throw new InvalidArgumentException('Tatsächlichen Erstattungsbetrag, Transaktionskennung und Begründung angeben.');
  $pdo->beginTransaction();try{
   $q=$pdo->prepare('SELECT * FROM market_invoices WHERE id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Auftrag nicht gefunden.');
+  if(bitcoin_order($pdo,$invoiceId))throw new PaymentConflict(t('bitcoin.review_required'));
   $order=bank_order($pdo,$invoiceId);
   if($bank!==($order!==null))throw new PaymentConflict(t('bank.conflict'));
   $transaction=$bank?'BANK'.strtoupper(substr(hash('sha256',$order['account_hash'].':'.$transaction),0,60)):strtoupper($transaction);

@@ -17,6 +17,10 @@ $query->execute([$user['id']]); $invoices = $query->fetchAll();
 $methods = payments_methods(null,$pdo);
 $bankAvailable=$methods['bank']['available'];
 $bankOrder=$selected?bank_order($pdo,(int)$selected['id']):null;
+$bitcoinCanStart=$methods['bitcoin']['available'];
+$bitcoinAvailable=bitcoin_gate($pdo)===null;
+$bitcoinOrder=$selected?bitcoin_order($pdo,(int)$selected['id']):null;
+$canStartDirect=$selected&&($bankAvailable||$bitcoinCanStart)&&direct_checkout_can_start($pdo,$selected);
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="page-shell">
@@ -38,10 +42,10 @@ require __DIR__ . '/../includes/header.php';
   <section class="panel"><h2><?= h($selected['invoice_number'] ?: 'Rechnungsentwurf') ?></h2>
     <p><?= h($selected['service_code']) ?> · <?= h(money_eur((int)$selected['gross_cents'])) ?> · <?= h(payments_status_label($selected['status'],$selected['payment_mode']??null)) ?></p>
     <?php if (!empty($selected['is_manual'])):?><p><a class="button" href="/user/billing.php?order=<?=(int)$selected['id']?>"><?=h(t('auction_billing.open'))?></a></p>
-    <?php elseif (!$bankOrder && in_array($selected['status'], ['issued', 'pending'], true) && $methods['paypal']['available']): ?>
+    <?php elseif (!$bankOrder && !$bitcoinOrder && in_array($selected['status'], ['issued', 'pending'], true) && $methods['paypal']['available']): ?>
     <form action="/actions/payment-checkout.php" method="post"><?= csrf_field() ?><input type="hidden" name="invoice_id" value="<?= (int)$selected['id'] ?>"><input type="hidden" name="provider" value="paypal"><p>Du wirst zur sicheren Bestätigung an PayPal weitergeleitet.</p><button class="button" type="submit">Zahlungspflichtig mit PayPal fortfahren</button></form>
-    <?php elseif (!$bankOrder && !$bankAvailable): ?><p>Für diesen Datensatz steht aktuell kein Checkout zur Verfügung.</p><?php endif; ?>
-    <?php if(empty($selected['is_manual']))include __DIR__.'/../includes/bank-payment.php';?>
+    <?php elseif (!$bankOrder && !$bitcoinOrder && !$canStartDirect): ?><p>Für diesen Datensatz steht aktuell kein Checkout zur Verfügung.</p><?php endif; ?>
+    <?php if(empty($selected['is_manual'])){include __DIR__.'/../includes/bank-payment.php';include __DIR__.'/../includes/bitcoin-payment.php';}?>
   </section>
   <?php endif; ?>
   <section class="panel"><h2>Meine Rechnungsdatensätze</h2>

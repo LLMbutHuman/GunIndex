@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Bitcoin-Eingänge und Reorganisationen, 2026-11-19
+
+Migration 030 speichert Bitcoin-Aufträge mit Kursfrist, Satoshis und
+Netzwerk. Die Empfangsadresse stammt aus einer Watch-only-Wallet. Der
+Worker liest den Eingang von Bitcoin Core, prüft die aktive Kette und
+verbucht genau einen passenden bestätigten Ausgang. Abweichungen und
+Reorganisationen erscheinen im Finanzbereich. Regtest erzeugt keine
+Echtbuchung oder Leistung. Mainnet bleibt durch gesonderte Freigaben gesperrt.
+
+Der PHP-, Shell- und Adapter-Nachweis sowie der isolierte Node-Regtest
+werden getrennt dokumentiert. MySQL- und Browser-Nachweis folgen in CI.
+
 ## Banküberweisungen und Kontenabgleich, 2026-11-19
 
 Migration 029 verknüpft freigegebene EUR-Aufträge mit einer eindeutigen

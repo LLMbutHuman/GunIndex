@@ -4,6 +4,7 @@ $navUser=current_user($pdo);$permissions=$navUser?rbac_permissions($pdo,(int)$na
 $adminLinks=[
  '/admin/setup.php'=>['setup.ui.nav_label','site.manage'],
  '/admin/bank.php'=>['bank.admin_title','finance.manage'],
+ '/admin/bitcoin.php'=>['bitcoin.admin_title','finance.manage'],
  '/admin/trades.php'=>['trade.admin','reports.review'],
  '/admin/index.php'=>['Übersicht','dashboard.read'],'/admin/settings.php'=>['Marke & Website','site.manage'],'/admin/geography.php'=>['Länder & Sprachen','site.manage'],
  '/admin/categories.php'=>['Kategorien','categories.manage'],'/admin/users.php'=>['Benutzerkonten','users.manage'],'/admin/roles.php'=>['Rollen & Rechte','roles.manage'],

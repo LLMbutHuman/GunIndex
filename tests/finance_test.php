@@ -135,6 +135,26 @@ function fin_bank_http_server(callable $run):void{
   $run($port);
  }finally{proc_terminate($process);proc_close($process);}
 }
+function fin_bitcoin_mode(string $chain,callable $run,array $overrides=[]):void{
+ $config=array_replace(['BITCOIN_ENABLED'=>'1','BITCOIN_LIVE_APPROVED'=>'1','BITCOIN_NETWORK'=>$chain,
+  'BITCOIN_RPC_URL'=>'http://127.0.0.1:18443','BITCOIN_RPC_USER'=>'fixture-test','BITCOIN_RPC_PASSWORD'=>'synthetic-node-test',
+  'BITCOIN_WALLET'=>'fixture-wallet','BITCOIN_RATE_CENTS'=>'6100000','BITCOIN_RATE_UNTIL'=>gmdate('Y-m-d\TH:i:s\Z',time()+2400),
+  'BITCOIN_CONFIRMATIONS'=>'2','APP_ENV'=>'development'],$overrides);
+ $saved=[];foreach($config as $key=>$value){$saved[$key]=getenv($key);putenv($key.'='.$value);}
+ try{$run();}finally{foreach($saved as $key=>$value)putenv($value===false?$key:$key.'='.$value);}
+}
+function fin_bitcoin_apply(PDO $pdo,int $invoice,array $receipts):void{
+ $order=bitcoin_order($pdo,$invoice);
+ $lease=bin2hex(random_bytes(16));
+ $q=$pdo->prepare("UPDATE market_bitcoin_orders SET lease_token=?,status=IF(status='allocating','pending',status) WHERE id=?");
+ $q->execute([$lease,$order['id']]);
+ bitcoin_apply_receipts($pdo,$order,$receipts,$lease);
+}
+function fin_bitcoin_receipt(array $order,int $confirmations=2):array{
+ $txid=hash('sha256','synthetic bitcoin tx '.$order['reference']);
+ return ['txid'=>$txid,'vout'=>0,'satoshis'=>(int)$order['amount_sats'],'confirmations'=>$confirmations,
+  'block_hash'=>$confirmations>0?hash('sha256','synthetic block '.$txid):null,'received_at'=>time()];
+}
 
 if(($argv[1]??'')==='--automatic-race'){
  try{
@@ -447,6 +467,72 @@ try{
      });
     }finally{if(is_string($file)&&is_file($file))unlink($file);curl_close($account);curl_close($manager);}
    });
+  },
+  'bitcoin_quote_and_payment_channel_are_exclusive_and_require_live_approval'=>static function()use($pdo,$admin,$category):void{
+   $seller=fin_user($pdo);$id=fin_order($pdo,$seller,$category);
+   fin_bitcoin_mode('main',static function()use($pdo,$id,$seller):void{
+    fin_reject(fn()=>bitcoin_start($pdo,$id,$seller['id']),PaymentUnavailable::class);
+    fin_assert(bitcoin_order($pdo,$id)===null);
+   },['BITCOIN_LIVE_APPROVED'=>'0']);
+   fin_bank_mode(static function()use($pdo,$id,$seller,$admin):void{
+    fin_bitcoin_mode('main',static function()use($pdo,$id,$seller,$admin):void{
+     fin_assert(bitcoin_quote_sats(199,6100000)===3263&&bitcoin_decimal(3263)==='0.00003263');
+     bitcoin_start($pdo,$id,$seller['id']);
+     $order=bitcoin_order($pdo,$id);
+     bitcoin_start($pdo,$id,$seller['id']);
+     fin_assert($order===bitcoin_order($pdo,$id)&&(int)$order['amount_sats']===3263);
+     fin_reject(fn()=>bank_start($pdo,$id,$seller['id']),PaymentConflict::class);
+     fin_reject(fn()=>manual_claim($pdo,$seller['id'],$id),PaymentConflict::class);
+     fin_reject(fn()=>fin_pay($pdo,$admin['id'],$id),PaymentConflict::class);
+    });
+   });
+  },
+  'bitcoin_exact_output_booked_once_and_reorg_suspends_remaining_service'=>static function()use($pdo,$category):void{
+   fin_bitcoin_mode('main',static function()use($pdo,$category):void{
+    $seller=fin_user($pdo);$id=fin_order($pdo,$seller,$category);bitcoin_start($pdo,$id,$seller['id']);
+    $order=bitcoin_order($pdo,$id);
+    $observed=fin_bitcoin_receipt($order,1);
+    fin_bitcoin_apply($pdo,$id,[$observed]);
+    fin_assert(fin_status($pdo,$id)==='pending'&&fin_document_id($pdo,$id)===0);
+    $observed['confirmations']=2;
+    fin_bitcoin_apply($pdo,$id,[$observed]);
+    fin_bitcoin_apply($pdo,$id,[$observed]);
+    fin_assert(fin_status($pdo,$id)==='paid'&&fin_document_id($pdo,$id)>0);
+    $q=$pdo->prepare("SELECT COUNT(*) FROM market_finance_events WHERE invoice_id=? AND kind='cash_in' AND amount_cents=199");
+    $q->execute([$id]);fin_assert((int)$q->fetchColumn()===1);
+    $q=$pdo->prepare('SELECT remaining FROM market_bump_credits WHERE invoice_id=?');
+    $q->execute([$id]);fin_assert((int)$q->fetchColumn()===1);
+    $observed['confirmations']=0;$observed['block_hash']=null;
+    fin_bitcoin_apply($pdo,$id,[$observed]);
+    $after=bitcoin_order($pdo,$id);
+    fin_assert($after['status']==='review'&&$after['review_reason']==='reorg'&&$after['txid']===$observed['txid']&&fin_status($pdo,$id)==='paid');
+    $q->execute([$id]);fin_assert((int)$q->fetchColumn()===0);
+   });
+  },
+  'bitcoin_late_wrong_multiple_and_cancelled_outputs_stay_for_review'=>static function()use($pdo,$category):void{
+   fin_bitcoin_mode('main',static function()use($pdo,$category):void{
+    foreach(['late','amount','multiple','cancelled'] as $reason){
+     $seller=fin_user($pdo);$id=fin_order($pdo,$seller,$category);bitcoin_start($pdo,$id,$seller['id']);
+     $order=bitcoin_order($pdo,$id);$receipt=fin_bitcoin_receipt($order);
+     if($reason==='late')$receipt['received_at']=strtotime($order['expires_at'].' UTC')+1;
+     if($reason==='amount')$receipt['satoshis']++;
+     if($reason==='cancelled')finance_cancel($pdo,$id,$seller['id']);
+     $receipts=[$receipt];if($reason==='multiple')$receipts[]=array_replace($receipt,['vout'=>1]);
+     fin_bitcoin_apply($pdo,$id,$receipts);
+     $after=bitcoin_order($pdo,$id);
+     fin_assert($after['status']==='review'&&$after['review_reason']===$reason&&fin_document_id($pdo,$id)===0);
+    }
+   });
+  },
+  'bitcoin_regtest_receipt_creates_no_real_service_or_accounting'=>static function()use($pdo,$category):void{
+   fin_bitcoin_mode('regtest',static function()use($pdo,$category):void{
+    $seller=fin_user($pdo);$id=fin_order($pdo,$seller,$category);bitcoin_start($pdo,$id,$seller['id']);
+    $receipt=fin_bitcoin_receipt(bitcoin_order($pdo,$id));fin_bitcoin_apply($pdo,$id,[$receipt]);
+    fin_assert(bitcoin_order($pdo,$id)['status']==='confirmed'&&fin_status($pdo,$id)==='paid');
+    foreach(['market_finance_events','market_invoice_documents','market_bump_credits'] as $table){
+     $q=$pdo->prepare('SELECT COUNT(*) FROM '.$table.' WHERE invoice_id=?');$q->execute([$id]);fin_assert((int)$q->fetchColumn()===0);
+    }
+   },['BITCOIN_LIVE_APPROVED'=>'0']);
   },
  ];
  foreach($tests as $name=>$run){$run();++$passed;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}fwrite(STDOUT,'Finance checks passed: '.$passed.PHP_EOL);

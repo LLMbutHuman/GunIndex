@@ -36,7 +36,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
 }catch(InvalidArgumentException|PaymentConflict|PaymentUnavailable|DomainException $e){http_response_code(422);$error=$e->getMessage();}}
 $taxes=$pdo->query('SELECT * FROM market_tax_rules ORDER BY country_code')->fetchAll();
 $paypalConfig=payments_config();$paypalRefundReason=paypal_refund_gate($pdo,$paypalConfig);
-$q=$pdo->prepare("SELECT r.*,i.invoice_number,i.gross_cents,u.username,j.id AS job_id,j.status AS job_status,j.reference,j.provider_refund_id,j.first_dispatch_at,j.context_hash,(SELECT a.mode FROM market_payment_attempts a WHERE a.invoice_id=i.id AND a.provider='paypal' AND a.status='paid' AND a.capture_id IS NOT NULL ORDER BY a.id DESC LIMIT 1) AS api_mode,EXISTS(SELECT 1 FROM market_bank_orders b WHERE b.invoice_id=i.id) AS bank_payment FROM market_refund_requests r JOIN market_invoices i ON i.id=r.invoice_id JOIN users u ON u.id=r.user_id LEFT JOIN market_paypal_refund_jobs j ON j.request_id=r.id ORDER BY (r.status='processing') DESC,r.id DESC LIMIT 100");
+$q=$pdo->prepare("SELECT r.*,i.invoice_number,i.gross_cents,u.username,j.id AS job_id,j.status AS job_status,j.reference,j.provider_refund_id,j.first_dispatch_at,j.context_hash,(SELECT a.mode FROM market_payment_attempts a WHERE a.invoice_id=i.id AND a.provider='paypal' AND a.status='paid' AND a.capture_id IS NOT NULL ORDER BY a.id DESC LIMIT 1) AS api_mode,EXISTS(SELECT 1 FROM market_bank_orders b WHERE b.invoice_id=i.id) AS bank_payment,(SELECT k.chain FROM market_bitcoin_orders k WHERE k.invoice_id=i.id) AS bitcoin_chain FROM market_refund_requests r JOIN market_invoices i ON i.id=r.invoice_id JOIN users u ON u.id=r.user_id LEFT JOIN market_paypal_refund_jobs j ON j.request_id=r.id ORDER BY (r.status='processing') DESC,r.id DESC LIMIT 100");
 $q->execute();$requests=$q->fetchAll();
 $documents=$pdo->query('SELECT * FROM market_invoice_documents ORDER BY id DESC LIMIT 100')->fetchAll();
 $auctionCharges=$pdo->query("SELECT i.id AS invoice_id,i.invoice_number,i.status,i.gross_cents,o.listing_id FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.service_code IN ('auction_listing','auction_success') AND i.status IN ('issued','pending','manual_rejected') ORDER BY i.id DESC LIMIT 100")->fetchAll();
@@ -68,6 +68,7 @@ include __DIR__.'/../includes/header.php';?>
 <h3>#<?=(int)$r['id']?> · <?=h($r['invoice_number'])?></h3>
 <p><?=h($r['username'])?> · <?=h(money_eur((int)$r['requested_cents']))?> · <?=h(t('paypal_refunds.request_'.$r['status']))?><br><?=h($r['reason'])?></p>
 <?php if($r['api_mode']==='sandbox'):?><p><?=h(t('paypal_refunds.sandbox'))?></p><?php endif;?>
+<?php if($r['bitcoin_chain']!==null):?><p><a href="/admin/bitcoin.php"><?=h(t('bitcoin.admin_title'))?></a> · <?=h(t('bitcoin.review_required'))?></p><?php endif;?>
 <?php if($r['job_id']!==null):?>
 <p><?=h(t('paypal_refunds.status_'.$r['job_status']))?> · <code><?=h($r['reference'])?></code></p>
 <?php if($paypalRefundReason===null&&$r['context_hash']===paypal_refund_context($paypalConfig)&&$r['first_dispatch_at']!==null&&$r['status']==='processing'):?>
@@ -92,8 +93,8 @@ include __DIR__.'/../includes/header.php';?>
 <form method="post" class="form-grid"><?=csrf_field()?>
 <input type="hidden" name="request_id" value="<?=(int)$r['id']?>">
 <input type="hidden" name="invoice_id" value="<?=(int)$r['invoice_id']?>">
-<label class="field">Entscheidung<select name="action"><?php if((int)$r['bank_payment']===1):?><option value="bank_refund"><?=h(t('bank.refund_record'))?></option><?php elseif($r['api_mode']!=='sandbox'):?><option value="refund">Bereits tatsächlich ausgeführte Erstattung dokumentieren</option><?php endif;?><option value="reject">Anfrage begründet ablehnen</option></select></label>
-<?php if($r['api_mode']!=='sandbox'):?>
+<label class="field">Entscheidung<select name="action"><?php if((int)$r['bank_payment']===1):?><option value="bank_refund"><?=h(t('bank.refund_record'))?></option><?php elseif($r['api_mode']!=='sandbox'&&$r['bitcoin_chain']===null):?><option value="refund">Bereits tatsächlich ausgeführte Erstattung dokumentieren</option><?php endif;?><option value="reject">Anfrage begründet ablehnen</option></select></label>
+<?php if($r['api_mode']!=='sandbox'&&$r['bitcoin_chain']===null):?>
 <label class="field">Tatsächlicher EUR-Erstattungsbetrag<input name="amount" inputmode="decimal" value="<?=h(payments_decimal((int)$r['requested_cents']))?>"></label>
 <?php if((int)$r['bank_payment']===1):?>
 <label class="field"><?=h(t('bank.refund_id'))?><input name="transaction_id" maxlength="128" autocomplete="off"></label>

@@ -27,14 +27,6 @@ function bank_order(PDO $pdo,int $invoiceId): ?array
     return $q->fetch() ?: null;
 }
 
-function bank_can_start(PDO $pdo,array $invoice): bool
-{
-    if (!in_array($invoice['status'],['issued','pending'],true)||$invoice['currency']!=='EUR'||(int)$invoice['gross_cents']<1) return false;
-    $q=$pdo->prepare('SELECT EXISTS(SELECT 1 FROM market_invoice_snapshots WHERE invoice_id=?) AND NOT EXISTS(SELECT 1 FROM market_payment_attempts WHERE invoice_id=?) AND NOT EXISTS(SELECT 1 FROM market_manual_orders WHERE invoice_id=? AND customer_claimed_at IS NOT NULL)');
-    $q->execute([$invoice['id'],$invoice['id'],$invoice['id']]);
-    return (bool)$q->fetchColumn();
-}
-
 function bank_start(PDO $pdo,int $invoiceId,int $userId): void
 {
     $config=bank_config();

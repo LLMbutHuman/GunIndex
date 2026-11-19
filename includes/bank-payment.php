@@ -21,7 +21,7 @@ declare(strict_types=1);
 <p><?=h(t('bank.expired'))?></p>
 <?php endif; ?>
 </section>
-<?php elseif ($bankAvailable&&bank_can_start($pdo,$selected)): ?>
+<?php elseif ($bankAvailable&&$canStartDirect): ?>
 <form action="/actions/payment-checkout.php" method="post" class="form-grid">
 <?=csrf_field()?>
 <input type="hidden" name="invoice_id" value="<?=(int)$selected['id']?>">

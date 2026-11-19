@@ -85,9 +85,9 @@ ersetzt werden.
 
 Banküberweisungen sind mit separater Freigabe und Kontenabgleich implementiert.
 Die Einrichtung und Formatgrenzen stehen in [BANK_TRANSFERS.md](BANK_TRANSFERS.md).
-Bitcoin ist zentral sichtbar, aber serverseitig grundsätzlich
-deaktiviert. Es gibt keine IBAN, keine Blockchain-Bestätigung und keine frei
-wählbare Mock-Zahlung im Web. Treuhand ist nur eine gesperrte Gebührenvorschau.
+Bitcoin ist für eine freigegebene Watch-only-Node vorbereitet und
+standardmäßig deaktiviert. Die Anforderungen an Node, Netzwerk und Kurs
+stehen in [BITCOIN.md](BITCOIN.md). Treuhand ist eine gesperrte Gebührenvorschau.
 
 ## Prüfungen und Grenzen
 
