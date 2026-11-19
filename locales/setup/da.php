@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'Sæt APP_URL til dit eget HTTPS-domæne; kontrollér DNS, certifikatkæden og fornyelse på målsystemet.',
     'setup.mail.title' => 'E-mail og DNS',
     'setup.mail.detail' => 'Transportkonfigurationen og mislykkede køposter kontrolleres. Accept fra mailserveren beviser ikke levering til indbakken.',
-    'setup.mail.next' => 'Konfigurér Postfix eller dets SMTP-relay med TLS. Kontrollér SPF, DKIM og DMARC; følg en testbesked helt frem til indbakken. Guiden til SMTP-konfiguration mangler stadig.',
+    'setup.mail.next' => 'Vælg en lokal mailserver eller et SMTP-relay med TLS og godkendelse. Kontrollér SPF, DKIM og DMARC og bekræft, at testbeskeden når indbakken.',
     'setup.geography.title' => 'Lande og postnumre',
     'setup.geography.detail' => 'Aktive lande: {countries}. Uden godkendte koordinater: {missing}. Der hævdes ikke fuld national dækning.',
     'setup.geography.next' => 'Validér først licenserede filer med ops/import-postcodes.php og --dry-run, og foretag derefter en kontrolleret import.',

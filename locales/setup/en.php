@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'Set APP_URL to your HTTPS domain; check DNS, the certificate chain and renewal on the target system.',
     'setup.mail.title' => 'Email and DNS',
     'setup.mail.detail' => 'Transport configuration and failed queue entries are checked. Acceptance by the mail server does not prove inbox delivery.',
-    'setup.mail.next' => 'Configure Postfix or its SMTP relay with TLS. Check SPF, DKIM and DMARC; follow a test message through to the inbox. The SMTP configuration wizard remains outstanding.',
+    'setup.mail.next' => 'Configure a local mail server or an authenticated SMTP relay with TLS. Check SPF, DKIM and DMARC and confirm the test message reaches the inbox.',
     'setup.geography.title' => 'Countries and postcodes',
     'setup.geography.detail' => 'Active countries: {countries}. Without approved coordinates: {missing}. Complete national coverage is not claimed.',
     'setup.geography.next' => 'Validate licensed files with ops/import-postcodes.php and --dry-run first, then perform a controlled import.',

@@ -3,6 +3,7 @@ declare(strict_types=1);
 $navUser=current_user($pdo);$permissions=$navUser?rbac_permissions($pdo,(int)$navUser['id']):[];
 $adminLinks=[
  '/admin/setup.php'=>['setup.ui.nav_label','site.manage'],
+ '/admin/mail-setup.php'=>['mail_setup.admin_title','site.manage'],
  '/admin/bank.php'=>['bank.admin_title','finance.manage'],
  '/admin/bitcoin.php'=>['bitcoin.admin_title','finance.manage'],
  '/admin/trades.php'=>['trade.admin','reports.review'],

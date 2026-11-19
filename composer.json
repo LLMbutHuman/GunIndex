@@ -10,7 +10,8 @@
     "ext-pdo": "*",
     "ext-sodium": "*",
     "dompdf/dompdf": "3.1.6",
-    "lbuchs/webauthn": "2.2.0"
+    "lbuchs/webauthn": "2.2.0",
+    "phpmailer/phpmailer": "7.2.0"
   },
   "config": {
     "allow-plugins": false,

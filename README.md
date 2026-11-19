@@ -35,7 +35,7 @@ Neue Module und genaue Prüfgrenzen: [Admin-Einrichtung](docs/ADMIN_SETUP.md),
 [IMPLEMENTATION_PROGRESS.md](docs/IMPLEMENTATION_PROGRESS.md).
 
 - [Ubuntu 22.04: Befehle und Installationsdatei](docs/UBUNTU_22_04.md), [Installation](docs/INSTALLATION.md), [Deployment](docs/DEPLOYMENT.md)
-- [Implementierungsbericht](docs/IMPLEMENTATION_REPORT.md), [Architektur](docs/ARCHITECTURE.md), [Datenbank/Migrationen](docs/DATABASE.md)
+- [Implementierungsbericht](docs/IMPLEMENTATION_REPORT.md), [Architektur](docs/ARCHITECTURE.md), [Datenbank/Migrationen](docs/DATABASE.md), [Mail-Einrichtung](docs/MAIL_SETUP.md)
 - [Administration](docs/ADMIN_GUIDE.md), [Authentifizierung](docs/AUTH.md), [E-Mail und Benachrichtigungen](docs/EMAIL_NOTIFICATIONS.md)
 - [Länder, Sprachen und PLZ](docs/INTERNATIONAL.md), [Gesuche und Suchalarme](docs/DISCOVERY.md), [Händler und Werbung](docs/BUSINESS.md)
 - [Manuelle PayPal-Prüfung](docs/MANUAL_PAYMENTS.md), [API-Zahlungen](docs/PAYMENTS.md), [Finanzen](docs/FINANCE.md), [Gebühren](docs/FEES.md)

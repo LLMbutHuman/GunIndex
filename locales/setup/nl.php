@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'Stel APP_URL in op uw HTTPS-domein; controleer DNS, de certificaatketen en verlenging op het doelsysteem.',
     'setup.mail.title' => 'E-mail en DNS',
     'setup.mail.detail' => 'De transportconfiguratie en mislukte wachtrij-items worden gecontroleerd. Acceptatie door de mailserver bewijst geen ontvangst in de inbox.',
-    'setup.mail.next' => 'Configureer Postfix of de bijbehorende SMTP-relay met TLS. Controleer SPF, DKIM en DMARC; volg een testbericht tot in de inbox. De SMTP-configuratiewizard moet nog worden gemaakt.',
+    'setup.mail.next' => 'Stel een lokale mailserver of een geauthenticeerde SMTP-relay met TLS in. Controleer SPF, DKIM en DMARC en bevestig dat het testbericht de inbox bereikt.',
     'setup.geography.title' => 'Landen en postcodes',
     'setup.geography.detail' => 'Actieve landen: {countries}. Zonder goedgekeurde coördinaten: {missing}. Er wordt geen volledige landelijke dekking geclaimd.',
     'setup.geography.next' => 'Valideer bestanden met gebruiksrechten eerst via ops/import-postcodes.php en --dry-run, en voer daarna een gecontroleerde import uit.',

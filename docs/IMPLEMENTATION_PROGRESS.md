@@ -1,5 +1,19 @@
 # Implementierungsfortschritt
 
+## Mail-Einrichtung und SMTP-Relay, 2026-11-19
+
+Migration 031 speichert eine verschlüsselte Konfiguration für lokalen Versand
+oder ein authentifiziertes TLS-Relay. Die geschützte Seite ist in acht Sprachen
+verfügbar und mit der Mailwarteschlange und dem Admin-Assistenten verbunden.
+SPF, DKIM und DMARC werden am DNS geprüft. Ein Testauftrag geht an die
+Adresse des angemeldeten Administratorkontos, gebunden an die Konfiguration.
+Die Transportannahme und die tatsächliche Empfängerzustellung sind getrennt.
+
+Lokale SMTP- und DNS-Tests verwenden ausschließlich synthetische Werte.
+MySQL-/HTTP-Test und vollständige Regression laufen in CI. Für die
+Produktivprüfung werden Betreiber-Domain, Mailanbieter und DNS benötigt.
+[Mail-Einrichtung](MAIL_SETUP.md)
+
 ## Bitcoin-Eingänge und Reorganisationen, 2026-11-19
 
 Migration 030 speichert Bitcoin-Aufträge mit Kursfrist, Satoshis und

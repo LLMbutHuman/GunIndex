@@ -72,27 +72,44 @@ function notification_unread_count(PDO $pdo, int $userId): int
     $query->execute([$userId]); return (int)$query->fetchColumn();
 }
 
-function mail_transport_reason(): ?string
+function mail_runtime_config(?PDO $pdo = null, bool $lock = false): array
 {
-    $transport = getenv('MAIL_TRANSPORT') ?: 'none';
+    $config = mail_setup_config($pdo, $lock);
+    if (getenv('MAIL_TRANSPORT') === 'test') {
+        $config['mode'] = 'test';
+        $config['revision'] = hash('sha256', 'test:' . $config['revision']);
+    }
+    return $config;
+}
+
+function mail_transport_reason(?PDO $pdo = null, ?array $config = null): ?string
+{
+    $config ??= mail_runtime_config($pdo);
+    $transport = $config['mode'];
     if ($transport === 'test') {
         return str_ends_with((string)getenv('DB_DATABASE'), '_test') && getenv('APP_ENV') === 'development'
             ? null : 'Test transport is restricted to the isolated development database.';
     }
+    if ($transport === 'off') return 'Mail delivery is not configured.';
+    if (!mail_address_valid($config['from'])) return 'A valid sender address is required.';
+    if ($transport === 'smtp') {
+        return extension_loaded('openssl') && is_readable(dirname(__DIR__) . '/vendor/autoload.php')
+            ? null : 'SMTP transport dependencies are unavailable.';
+    }
     if ($transport !== 'sendmail') return 'Mail delivery is not configured.';
     $path = getenv('MAIL_SENDMAIL_PATH') ?: '/usr/sbin/sendmail';
     if (!preg_match('~\A/[a-zA-Z0-9_./-]+\z~', $path) || !is_file($path) || !is_executable($path)) return 'Local sendmail transport is unavailable.';
-    if (!mail_address_valid((string)getenv('MAIL_FROM'))) return 'A valid sender address is required.';
     return null;
 }
 
 /** A local MTA handles SMTP/TLS; argv prevents shell or option injection. */
-function mail_send_local(array $message, string $dedupe): void
+function mail_send_local(array $message, string $dedupe, ?array $config = null): void
 {
-    if (getenv('MAIL_TRANSPORT') !== 'sendmail' || mail_transport_reason() !== null) throw new RuntimeException('Local mail transport is not configured.');
+    $config ??= mail_runtime_config();
+    if ($config['mode'] !== 'sendmail' || mail_transport_reason(null, $config) !== null) throw new RuntimeException('Local mail transport is not configured.');
     if (!mail_address_valid($message['to'] ?? '') || !is_string($message['subject'] ?? null) || !is_string($message['body'] ?? null)
         || preg_match('/[\r\n\x00]/', $message['subject'])) throw new RuntimeException('Invalid queued mail.');
-    $from = (string)getenv('MAIL_FROM'); $host = substr($from, strpos($from, '@') + 1);
+    $from = $config['from']; $host = substr($from, strrpos($from, '@') + 1);
     $subject = mb_encode_mimeheader($message['subject'], 'UTF-8', 'B', "\r\n", strlen('Subject: '));
     $headers = 'From: ' . $from . "\r\nTo: " . $message['to'] . "\r\nSubject: " . $subject . "\r\n"
         . 'Message-ID: <' . hash('sha256', $dedupe) . '@' . $host . ">\r\n"
@@ -141,7 +158,7 @@ function mail_worker_once(PDO $pdo, int $limit = 25): array
     $pdo->exec("UPDATE market_mail_queue SET payload_ciphertext='',status='expired',processing_token=NULL,locked_until=NULL WHERE status IN ('pending','failed','processing') AND (locked_until IS NULL OR locked_until<UTC_TIMESTAMP()) AND ((dedupe_key LIKE 'account:reset:%' AND created_at<=UTC_TIMESTAMP()-INTERVAL 30 MINUTE) OR (dedupe_key LIKE 'account:verify:%' AND created_at<=UTC_TIMESTAMP()-INTERVAL 1 DAY))");
     $pdo->exec("UPDATE market_mail_queue SET payload_ciphertext='',status='expired',processing_token=NULL,locked_until=NULL WHERE status IN ('pending','failed','processing') AND created_at<UTC_TIMESTAMP()-INTERVAL " . $retention . " DAY AND (locked_until IS NULL OR locked_until<UTC_TIMESTAMP())");
     $pdo->exec('DELETE FROM market_auth_tokens WHERE expires_at<UTC_TIMESTAMP()-INTERVAL ' . $retention . ' DAY');
-    if (mail_transport_reason() !== null) {
+    if (mail_transport_reason($pdo) !== null) {
         $counts['deferred'] = (int)$pdo->query("SELECT COUNT(*) FROM market_mail_queue WHERE status IN ('pending','processing')")->fetchColumn();
         return $counts;
     }
@@ -161,23 +178,43 @@ function mail_worker_once(PDO $pdo, int $limit = 25): array
             // suspension cannot commit between this check and MTA acceptance.
             $pdo->beginTransaction();
             $active = true;
+            $accountEmail = null;
             if ($item['user_id'] !== null) {
-                $query=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');$query->execute([$item['user_id']]);
-                $active=(int)$query->fetchColumn()===1;
+                $query=$pdo->prepare('SELECT is_active,email FROM users WHERE id=? FOR SHARE');$query->execute([$item['user_id']]);
+                $account=$query->fetch();
+                $active=(int)($account['is_active'] ?? 0)===1;
+                $accountEmail=$account['email'] ?? null;
                 if ($active&&preg_match('/\Anotification:[1-9][0-9]*:listing-alert:[1-9][0-9]*\z/',$item['dedupe_key'])) {
                     $preferences=notification_preferences($pdo,(int)$item['user_id'],true);
                     $active=(int)$preferences['mail_enabled']===1&&(int)$preferences['listing_alerts_enabled']===1;
                 }
             }
+            $transport = mail_runtime_config($pdo, true);
+            $test = str_starts_with($item['dedupe_key'], 'mail-setup:');
+            if ($test) {
+                $active = $active && str_starts_with($item['dedupe_key'], mail_setup_test_prefix((int)$item['user_id'], $transport))
+                    && rbac_has_permission($pdo, (int)$item['user_id'], 'site.manage');
+            }
             $query=$pdo->prepare('SELECT status,processing_token FROM market_mail_queue WHERE id=? FOR UPDATE');$query->execute([$item['id']]);$current=$query->fetch();
             if (!$current || $current['status']!=='processing' || !hash_equals((string)$current['processing_token'],$lease)) {$pdo->commit();++$counts['deferred'];continue;}
+            if ($active && mail_transport_reason($pdo, $transport) !== null) {
+                $pdo->prepare("UPDATE market_mail_queue SET status='pending',attempts=attempts-1,processing_token=NULL,locked_until=NULL WHERE id=?")->execute([$item['id']]);
+                $pdo->commit();++$counts['deferred'];break;
+            }
+            if ($active) {
+                $payload = json_decode(crypto_decrypt('mail', $item['payload_ciphertext']), true, 8, JSON_THROW_ON_ERROR);
+                if (!is_array($payload) || !mail_address_valid($payload['to'] ?? '') || !is_string($payload['subject'] ?? null) || !is_string($payload['body'] ?? null)) throw new RuntimeException('Invalid queue payload.');
+                if ($test && $accountEmail !== $payload['to']) $active = false;
+            }
             if (!$active) {
                 $pdo->prepare("UPDATE market_mail_queue SET status='cancelled',payload_ciphertext='',processing_token=NULL,locked_until=NULL WHERE id=?")->execute([$item['id']]);
                 $pdo->commit();++$counts['deferred'];continue;
             }
-            $payload = json_decode(crypto_decrypt('mail', $item['payload_ciphertext']), true, 8, JSON_THROW_ON_ERROR);
-            if (!is_array($payload) || !mail_address_valid($payload['to'] ?? '') || !is_string($payload['subject'] ?? null) || !is_string($payload['body'] ?? null)) throw new RuntimeException('Invalid queue payload.');
-            if (getenv('MAIL_TRANSPORT') !== 'test') mail_send_local($payload, $item['dedupe_key']);
+            match ($transport['mode']) {
+                'test' => null,
+                'sendmail' => mail_send_local($payload, $item['dedupe_key'], $transport),
+                'smtp' => mail_smtp_send($transport, $payload, $item['dedupe_key']),
+            };
             $query = $pdo->prepare("UPDATE market_mail_queue SET status='delivered',payload_ciphertext='',delivered_at=UTC_TIMESTAMP(),processing_token=NULL,locked_until=NULL,last_error_code=NULL WHERE id=? AND status='processing' AND processing_token=?");
             $query->execute([$item['id'],$lease]); $counts['delivered'] += $query->rowCount();$pdo->commit();
         } catch (Throwable) {

@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'Ustaw APP_URL na własną domenę HTTPS; sprawdź DNS, łańcuch certyfikatów i odnawianie w systemie docelowym.',
     'setup.mail.title' => 'E-mail i DNS',
     'setup.mail.detail' => 'Sprawdzana jest konfiguracja transportu oraz nieudane wpisy kolejki. Przyjęcie przez serwer pocztowy nie dowodzi dostarczenia do skrzynki odbiorczej.',
-    'setup.mail.next' => 'Skonfiguruj Postfix lub jego przekaźnik SMTP z TLS. Sprawdź SPF, DKIM i DMARC; prześledź wiadomość testową aż do skrzynki odbiorczej. Kreator konfiguracji SMTP pozostaje do wykonania.',
+    'setup.mail.next' => 'Skonfiguruj lokalny serwer pocztowy lub przekaźnik SMTP z TLS i uwierzytelnianiem. Sprawdź SPF, DKIM i DMARC oraz potwierdź dotarcie wiadomości testowej.',
     'setup.geography.title' => 'Kraje i kody pocztowe',
     'setup.geography.detail' => 'Aktywne kraje: {countries}. Bez zatwierdzonych współrzędnych: {missing}. Nie potwierdza to pełnego pokrycia kraju.',
     'setup.geography.next' => 'Najpierw sprawdź licencjonowane pliki poleceniem ops/import-postcodes.php z --dry-run, a następnie wykonaj kontrolowany import.',

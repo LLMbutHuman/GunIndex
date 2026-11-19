@@ -14,6 +14,9 @@ require_once __DIR__.'/bank_statement.php';
 require_once __DIR__.'/bank_transfers.php';
 require_once __DIR__.'/bitcoin_rpc.php';
 require_once __DIR__.'/bitcoin_payments.php';
+require_once __DIR__.'/mail_smtp.php';
+require_once __DIR__.'/mail_dns.php';
+require_once __DIR__.'/mail_setup.php';
 require_once __DIR__.'/market_search_text.php';
 foreach(['settings','crypto','geo','i18n','catalog','money','governance','consent','auth','mail','account_tokens','images','image_order','market','discovery','business','fees','payments','finance','manual_payments','chat','privacy','setup','seo','personal','auction_billing','maintenance','relisting','e2ee','trade'] as $module){
  $path=__DIR__.'/'.$module.'.php';

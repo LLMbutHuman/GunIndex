@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'APP_URL auf die eigene HTTPS-Domain setzen; DNS, Zertifikatskette und Erneuerung am Zielsystem prüfen.',
     'setup.mail.title' => 'E-Mail und DNS',
     'setup.mail.detail' => 'Geprüft werden Transportkonfiguration und fehlgeschlagene Queue-Einträge. Die Annahme durch den Mailserver belegt keinen Postfacheingang.',
-    'setup.mail.next' => 'Postfix oder dessen SMTP-Relay mit TLS konfigurieren. SPF, DKIM und DMARC prüfen; eine Testnachricht bis zum Posteingang verfolgen. Der SMTP-Eingabeassistent ist noch offen.',
+    'setup.mail.next' => 'Lokalen Mailserver oder ein SMTP-Relay mit TLS und Anmeldung einrichten. SPF, DKIM und DMARC prüfen und den Eingang der Testmail im Postfach bestätigen.',
     'setup.geography.title' => 'Länder und PLZ-Daten',
     'setup.geography.detail' => 'Aktive Länder: {countries}. Davon ohne freigegebene Koordinaten: {missing}. Vollständige nationale Abdeckung wird nicht behauptet.',
     'setup.geography.next' => 'Lizenzierte Dateien über ops/import-postcodes.php zuerst mit --dry-run prüfen, danach kontrolliert importieren.',

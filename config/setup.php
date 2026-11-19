@@ -57,7 +57,7 @@ function setup_collect(PDO $pdo, int $actor): array
     $settings = site_settings($pdo, true);
     $facts = ['checked_at'=>gmdate('c'), 'database'=>false, 'query_errors'=>[],
         'brand'=>trim($settings['brand_name'] ?? '') !== '' && filter_var($settings['contact_email'] ?? '', FILTER_VALIDATE_EMAIL) !== false,
-        'operator'=>false, 'origin'=>false, 'https'=>false, 'mail_transport'=>(getenv('MAIL_TRANSPORT') ?: 'none'),
+        'operator'=>false, 'origin'=>false, 'https'=>false, 'mail_transport'=>'off',
         'mail_ready'=>false, 'keys'=>false, 'secure_cookies'=>(bool)(session_get_cookie_params()['secure'] ?? false),
         'manual_enabled'=>($settings['manual_paypal_enabled'] ?? '0') === '1',
         'manual_recipient'=>filter_var($settings['manual_paypal_recipient'] ?? '', FILTER_VALIDATE_EMAIL) !== false,
@@ -78,7 +78,11 @@ function setup_collect(PDO $pdo, int $actor): array
     }
     try { finance_operator($pdo); $facts['operator'] = true; } catch (Throwable) {}
     try { $origin = mail_origin(); $facts['origin'] = true; $facts['https'] = str_starts_with($origin, 'https://'); } catch (Throwable) {}
-    try { $facts['mail_ready'] = mail_transport_reason() === null; } catch (Throwable) {}
+    try {
+        $transport = mail_runtime_config($pdo);
+        $facts['mail_transport'] = $transport['mode'];
+        $facts['mail_ready'] = mail_transport_reason($pdo, $transport) === null;
+    } catch (Throwable) {}
     try { crypto_master_keys(); $facts['keys'] = extension_loaded('sodium'); } catch (Throwable) {}
     $queries = [
         'countries'=>'SELECT COUNT(*) FROM market_countries WHERE is_active=1',
@@ -124,9 +128,9 @@ function setup_steps(array $facts): array
     $add('https', $yes('origin')?($yes('https')?'external':'disabled'):'missing');
 
     $transport = $facts['mail_transport'] ?? 'none';
-    $mailStatus = $transport === 'test' ? 'disabled' : ($yes('mail_ready') && $transport === 'sendmail' ? 'external' : 'missing');
+    $mailStatus = $transport === 'test' ? 'disabled' : ($yes('mail_ready') && in_array($transport, ['sendmail', 'smtp'], true) ? 'external' : 'missing');
     if (($count('mail_failed') ?? 0) > 0) $mailStatus = 'error';
-    $add('mail', $mailStatus);
+    $add('mail', $mailStatus, [], '/admin/mail-setup.php');
 
     $geoStatus = $count('countries') === null || $count('countries_without_geo') === null ? 'error'
         : (($count('countries') > 0 && $count('countries_without_geo') === 0) ? 'configured' : 'missing');

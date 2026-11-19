@@ -92,6 +92,12 @@ Eingang direkt im Empfängerkonto vor der Freigabe. Die Bankverbindung
 und ihr Exportformat müssen vor dem Live-Betrieb abgenommen werden.
 Details: [BANK_TRANSFERS.md](BANK_TRANSFERS.md).
 
+Bitcoin-Eingänge für Betreiberleistungen nutzen eine getrennte Empfangswallet,
+eine begrenzte Kursgültigkeit und eine Prüfung gegen die aktive Bitcoin-Kette.
+Regtest bleibt eine isolierte Simulation. Vor aktiviertem Mainnet-Betrieb sind
+Node, Wallet, Kursverfahren und Umgang mit Reorganisationen und Erstattungen
+fachlich und technisch abzunehmen. Details: [BITCOIN.md](BITCOIN.md).
+
 Treuhand ist noch kein implementierter verwahrender Zahlungsdienst. Es gibt
 eine Gebührenvorschau, aber keinen vollständig freigegebenen Verwahrungs-/
 Auszahlungsworkflow. Auch Bitcoin und Banküberweisung sind nicht aktiviert.
@@ -123,8 +129,10 @@ benötigen fachliche Prüfung. Ohne Geräte oder aktuellen Recoverycode ist kein
 Betreiberentschlüsselung möglich. Ein kompromittierter Autoritätsschlüssel kann
 derzeit nicht innerhalb desselben Kontos ersetzt werden.
 Identitätsprüfung hat eigene deaktivierte Freigaben und Aufbewahrungseinstellungen.
-E-Mail-Bestätigung beweist weder Identität noch Erwerbsberechtigung. Empfänger-
-zustellung und externe Mail-/DNS-Infrastruktur sind nicht abgenommen. E2EE-Anhänge
+E-Mail-Bestätigung beweist weder Identität noch Erwerbsberechtigung. Der geschützte
+Mail-Assistent unterstützt lokalen Versand und TLS-Relay. Die tatsächliche
+Empfängerzustellung und Betreiber-DNS müssen geprüft werden. [Mail-Einrichtung](MAIL_SETUP.md).
+E2EE-Anhänge
 besitzen einen erfolgreichen isolierten technischen Nachweis (CI 43648359381),
 aber noch keine unabhängige Sicherheits- oder Produktivabnahme.
 

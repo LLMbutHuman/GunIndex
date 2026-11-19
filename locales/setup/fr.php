@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'Définir APP_URL avec votre domaine HTTPS ; vérifier le DNS, la chaîne de certificats et le renouvellement sur le système cible.',
     'setup.mail.title' => 'E-mail et DNS',
     'setup.mail.detail' => 'La configuration du transport et les entrées de file en échec sont vérifiées. L’acceptation par le serveur de messagerie ne prouve pas la réception dans la boîte de réception.',
-    'setup.mail.next' => 'Configurer Postfix ou son relais SMTP avec TLS. Vérifier SPF, DKIM et DMARC ; suivre un message de test jusqu’à la boîte de réception. L’assistant de configuration SMTP reste à réaliser.',
+    'setup.mail.next' => 'Configurer un serveur de messagerie local ou un relais SMTP avec TLS et authentification. Vérifier SPF, DKIM et DMARC et confirmer la réception du message de test.',
     'setup.geography.title' => 'Pays et codes postaux',
     'setup.geography.detail' => 'Pays actifs : {countries}. Sans coordonnées approuvées : {missing}. Aucune couverture nationale complète n’est revendiquée.',
     'setup.geography.next' => 'Valider d’abord les fichiers sous licence avec ops/import-postcodes.php et --dry-run, puis effectuer un import contrôlé.',

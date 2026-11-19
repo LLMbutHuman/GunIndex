@@ -91,6 +91,9 @@ def test():
    docker('exec',APP,'php','tests/'+suite,*arguments)
   for suite in ('bank_statement_test.php','bitcoin_rpc_test.php','auction_billing_test.php','auction_billing_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
+  docker('exec',APP,'php','tests/mail_smtp_test.php','--wire')
+  for suite in ('mail_dns_test.php','mail_setup_integration_test.php'):
+   docker('exec',APP,'php','tests/'+suite)
   for suite in ('relisting_test.php','relisting_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
   for suite in ('trade_test.php','trade_integration_test.php','relisting_lifecycle_test.php','relisting_lifecycle_integration_test.php'):

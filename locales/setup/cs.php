@@ -36,7 +36,7 @@ return [
     'setup.https.next' => 'Nastavte APP_URL na vlastní HTTPS doménu; na cílovém systému ověřte DNS, řetězec certifikátů a obnovování.',
     'setup.mail.title' => 'E-mail a DNS',
     'setup.mail.detail' => 'Kontroluje se konfigurace přenosu a neúspěšné položky fronty. Přijetí poštovním serverem nedokládá doručení do schránky.',
-    'setup.mail.next' => 'Nastavte Postfix nebo jeho SMTP relay s TLS. Zkontrolujte SPF, DKIM a DMARC; sledujte zkušební zprávu až do schránky. Průvodce nastavením SMTP zatím není dokončen.',
+    'setup.mail.next' => 'Vyberte místní poštovní server nebo ověřovaný přenos SMTP s TLS. Zkontrolujte SPF, DKIM a DMARC a ověřte doručení zkušební zprávy do schránky.',
     'setup.geography.title' => 'Země a PSČ',
     'setup.geography.detail' => 'Aktivní země: {countries}. Bez schválených souřadnic: {missing}. Úplné pokrytí zemí se nepotvrzuje.',
     'setup.geography.next' => 'Licencované soubory nejprve ověřte pomocí ops/import-postcodes.php a --dry-run, poté proveďte řízený import.',

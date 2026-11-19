@@ -134,6 +134,50 @@ try {
         setup_integration_check($before === $pdo->query('SELECT setting_key,setting_value,updated_at FROM system_settings ORDER BY setting_key')->fetchAll());
     });
 
+    setup_integration_test('mail_setup_http_mfa_csrf_settings_and_personal_test_queue', static function () use ($pdo, $browser, $admin, $ordinary): void {
+        $path = '/admin/mail-setup.php';
+        $unprivileged = setup_integration_browser();
+        try {
+            setup_integration_check(setup_integration_request($unprivileged, $path)['status'] === 303);
+            setup_integration_login($unprivileged, $ordinary);
+            setup_integration_check(setup_integration_request($unprivileged, $path)['status'] === 403);
+        } finally { curl_close($unprivileged); }
+
+        $saved = $pdo->query('SELECT revision,payload_ciphertext,updated_at FROM market_mail_setup WHERE id=1')->fetch();
+        try {
+            $form = setup_integration_request($browser, $path);
+            setup_integration_check($form['status'] === 200 && str_contains($form['headers']['cache-control'] ?? '', 'no-store'));
+            setup_integration_check(!str_contains($form['body'], 'name="recipient"'));
+            $password = bin2hex(random_bytes(24));
+            $fields = [
+                'action'=>'save', 'mode'=>'smtp', 'from'=>'mail@example.com', 'host'=>'smtp.example.com', 'port'=>'465',
+                'username'=>'Synthetic SMTP account', 'password'=>$password, 'selector'=>'fixture',
+                'revision'=>mail_setup_view($pdo)['revision'],
+            ];
+            setup_integration_check(setup_integration_request($browser, $path, $fields)['status'] === 403);
+            $fields['csrf_token'] = setup_integration_csrf($form['body']);
+            setup_integration_check(setup_integration_request($browser, $path, $fields)['status'] === 303);
+            $result = setup_integration_request($browser, $path);
+            setup_integration_check($result['status'] === 200 && str_contains($result['body'], 'smtp.example.com'));
+            setup_integration_check(!str_contains($result['body'], $password) && mail_setup_view($pdo)['password_set']);
+            setup_integration_check(setup_integration_request($browser, $path, $fields)['status'] === 409);
+            $send = ['action'=>'test', 'csrf_token'=>setup_integration_csrf($result['body'])];
+            setup_integration_check(setup_integration_request($browser, $path, $send)['status'] === 422);
+            $send['test_confirmed'] = '1';
+            $send['recipient'] = 'ignored-recipient@example.invalid';
+            setup_integration_check(setup_integration_request($browser, $path, $send)['status'] === 303);
+            $query = $pdo->prepare("SELECT m.payload_ciphertext,u.email FROM market_mail_queue m JOIN users u ON u.id=m.user_id WHERE m.user_id=? AND m.dedupe_key LIKE 'mail-setup:%'");
+            $query->execute([$admin['id']]);
+            $queued = $query->fetch();
+            $payload = json_decode(crypto_decrypt('mail', $queued['payload_ciphertext']), true, 8, JSON_THROW_ON_ERROR);
+            setup_integration_check($payload['to'] === $queued['email'] && $payload['to'] !== $send['recipient']);
+        } finally {
+            $pdo->prepare('UPDATE market_mail_setup SET revision=?,payload_ciphertext=?,updated_at=? WHERE id=1')
+                ->execute([$saved['revision'], $saved['payload_ciphertext'], $saved['updated_at']]);
+            $pdo->prepare("DELETE FROM market_mail_queue WHERE user_id=? AND dedupe_key LIKE 'mail-setup:%'")->execute([$admin['id']]);
+        }
+    });
+
     setup_integration_test('diagnostics_do_not_disclose_secrets_or_private_settings', static function () use ($pdo, $browser, $admin): void {
         $sentinels = [
             'manual_paypal_recipient'=>'synthetic-'.bin2hex(random_bytes(8)).'@example.invalid',
