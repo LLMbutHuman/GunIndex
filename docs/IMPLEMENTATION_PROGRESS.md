@@ -15,8 +15,21 @@ und die zusätzlichen standardmäßig deaktivierten Erstattungsschalter
 begrenzen den Einstieg. Bedienung und Status sind in acht Sprachen verfügbar.
 
 PHP-Syntax, Shell-Syntax und 21 Zahlungs-, 16 Gebühren- sowie sieben Geo- und
-Sprachprüfungen sind lokal bestanden. MySQL-, HTTP- und Browser-Nachweis folgt
-in CI. Die Anbieterabnahme gegen ein tatsächliches Konto steht aus.
+Sprachprüfungen sind lokal bestanden.
+[CI 44540263687](https://github.com/LLMbutHuman/GunIndex/actions/runs/44540263687)
+für `02c2818` ist vollständig grün. Windowsjob `135616379371` und Linuxjob
+`135616378700` bestanden. Der Linuxjob bestätigte Migration 028, 21
+Zahlungs-Unitprüfungen, 27 Finanzprüfungen, 31 Gebühren-Integrationstests und
+den Chromium-Lauf einschließlich Mobil- und Barrierefreiheitsprüfungen.
+Die neuen Fälle prüften getrennte Freigaben, sicheren Wiederanlauf,
+signierten Statusabgleich, genau einen Korrekturbeleg, getrennte Sandbox-Buchung,
+Freigabe nach endgültigem Abbruch sowie MFA und CSRF. Providerantworten waren
+synthetisch. Die Abnahme mit einem echten PayPal-Sandboxkonto und die
+produktive Anbieterfreigabe stehen aus.
+
+Wiederaufnahmepunkt: Banküberweisungsaufträge mit eindeutigen Referenzen und
+nachvollziehbarem Kontenabgleich. Die Verarbeitung importierter, überprüfbarer
+Bankbelege ist unabhängig von einer später freigegebenen Bankanbindung zu prüfen.
 
 ## Teilkorrektur unbezahlter Auktionsgebühren, 2026-11-19
 

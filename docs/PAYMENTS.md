@@ -32,9 +32,9 @@ keine Anbieterzusage. Die Art der Plattformleistung muss korrekt offengelegt sei
 
 ## Implementierter Baustein
 
-`config/payments.php` stellt einen REST-Adapter für OAuth, Orders, Capture,
-serverseitiges Nachlesen, offizielle Webhook-Verifizierung und einen vorbereiteten
-Refund-Aufruf bereit. Es werden ausschließlich feste offizielle API-Ursprünge
+`config/payments.php` stellt den REST-Adapter für OAuth, Orders, Capture,
+Erstattungen, Statusabfragen und offizielle Webhook-Verifizierung bereit.
+Es werden ausschließlich feste offizielle API-Ursprünge
 verwendet. TLS-/Hostprüfung bleiben aktiv; API-Redirects werden nicht verfolgt.
 Eine vom Webhook genannte Zertifikatadresse wird niemals selbst abgerufen.
 
@@ -93,10 +93,10 @@ wählbare Mock-Zahlung im Web. Treuhand ist nur eine gesperrte Gebührenvorschau
 injiziertem Transport. Dadurch wird keine echte Sandboxzahlung ausgeführt. Die
 ausgeführte Testzahl muss im Abschlussbericht aus dem tatsächlichen Lauf stammen.
 
-Noch offen: produktive Rechnungsnummern-/Steuersnapshots/PDFs, rechtlich geprüfter
-Bestell-/Widerrufsprozess, automatische Gebührenausstellung, vollständiger
-Refund-/Storno-/Chargeback-Workflow, Premium-Freischaltung und Entzug, betriebener
-Zahlungsabgleich mit Wiederholungsqueue sowie echte Sandbox-/Liveabnahme. Der
-Refund-Adapter allein stellt noch keine benutzbare Rückerstattungsverwaltung dar.
-Providerfehler dürfen deshalb keine Premiumleistung oder Kaufpreiszahlung
-vortäuschen. Es werden keine Warenkaufpreise oder fremden Treuhandgelder verwahrt.
+Die REST-Erstattung hat einen persistenten Auftrag, eine geschützte Freigabe
+und einen Worker für Übermittlung und Statusabgleich. Die Buchung erfolgt
+nach bestätigtem Abschluss. Manuell bestätigte Zahlungen nutzen die separate
+Erstattungsdokumentation. Konfiguration und Abnahme stehen in [FINANCE.md](FINANCE.md).
+
+Offen sind die echte Sandbox- und Liveabnahme, die fachliche Freigabe des
+Bestell- und Widerrufsprozesses sowie der vollständige Chargeback-Ablauf.

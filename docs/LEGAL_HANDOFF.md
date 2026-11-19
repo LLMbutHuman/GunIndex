@@ -79,6 +79,13 @@ Bestätigung prüft Auftrag, Empfänger, Referenz, Währung und vollständigen C
 Webhook-Signaturprüfung erfolgt über die Provider-Schnittstelle. Tests verwenden
 synthetische Adapter. Es wurden keine echten Gelder transferiert.
 
+Die Erstattungsfreigabe für REST-Zahlungen erfordert eine Finanzberechtigung,
+MFA, einen Kundenantrag und den geprüften Betrag. Eine abgeschlossene
+PayPal-Erstattung erzeugt die verknüpfte Finanzbuchung und den Korrekturbeleg.
+Unklare Providerantworten halten die Forderung zur Klärung. Die separate
+Live-Freigabe und die Abnahme mit tatsächlichem PayPal-Konto stehen aus.
+Details: [FINANCE.md](FINANCE.md).
+
 Treuhand ist noch kein implementierter verwahrender Zahlungsdienst. Es gibt
 eine Gebührenvorschau, aber keinen vollständig freigegebenen Verwahrungs-/
 Auszahlungsworkflow. Auch Bitcoin und Banküberweisung sind nicht aktiviert.
