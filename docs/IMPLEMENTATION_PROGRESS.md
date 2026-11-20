@@ -8,7 +8,12 @@ Sicherung, Wiederherstellung in eine neue Datenbank, Dateiintegrität und
 Heartbeats der sieben Worker. Der Migrationsrunner erkennt eine bereits
 angelegte, exakt passende ENUM-Spalte nach einer Unterbrechung und verbucht
 die Migration nach der Fortsetzung. Die SQL-Datei 038 bleibt unverändert.
-Lokal wurden Bash- und PHP-Syntax geprüft. Der isolierte Lauf steht aus.
+Der erste isolierte Lauf hat das Produktionsimage gebaut und das verschlüsselte
+Backup verifiziert. Beim simulierten Wiederanlauf fiel die mehrzeilige Anweisung
+aus der bestehenden Erkennung für `ADD COLUMN`; MySQL meldete eine doppelte Spalte.
+Die Erkennung prüft jetzt auch mehrzeilige Anweisungen. PHP-Syntax und Erkennung
+der konkreten Migration bestanden lokal. Die erneute Gesamtprobe steht aus.
+[Erster CI-Lauf 44838139417](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838139417)
 
 ## Finanzverwaltung in acht Sprachen, 2026-11-21
 

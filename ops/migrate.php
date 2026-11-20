@@ -11,7 +11,7 @@ try {
   if($version==='001_manual_billing.sql'){$q=$pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='market_listings' AND column_name='bumped_at'");if((int)$q->fetchColumn()===0)$pdo->exec('ALTER TABLE market_listings ADD COLUMN bumped_at DATETIME NULL');}
   $sql=preg_replace('/^--.*$/m','',file_get_contents($file));foreach(explode(';',$sql) as $statement){
    $statement=trim($statement);if($statement==='')continue;
-   if(preg_match('/\AALTER TABLE `?([a-z_]+)`? ADD COLUMN `?([a-z_]+)`? (.+)\z/is',$statement,$add)){
+   if(preg_match('/\AALTER\s+TABLE\s+`?([a-z_][a-z0-9_]*)`?\s+ADD\s+COLUMN\s+`?([a-z_][a-z0-9_]*)`?\s+(.+)\z/is',$statement,$add)){
     $column=$pdo->prepare('SELECT COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?');$column->execute([$add[1],$add[2]]);$present=$column->fetch();
     if($present){
      if(!preg_match('/\A((?:VARCHAR|CHAR|DECIMAL)\([0-9, ]+\)|(?:DATETIME|TIMESTAMP)(?:\([0-9]+\))?|(?:TINYINT|BIGINT|INT)(?:\([0-9]+\))?|ENUM\(\x27[a-z0-9_-]+\x27(?:\s*,\s*\x27[a-z0-9_-]+\x27)*\)|MEDIUMTEXT|TEXT)(?:\s+(UNSIGNED))?(?=\s|\z)/i',$add[3],$type))throw new RuntimeException('Unsupported additive column type');
@@ -26,7 +26,7 @@ try {
      continue;
     }
    }
-   if(preg_match('/\AALTER TABLE `?([a-z_]+)`? ADD INDEX `?([a-z_]+)`?\s*\(([^)]+)\)\z/i',$statement,$index)){
+   if(preg_match('/\AALTER\s+TABLE\s+`?([a-z_][a-z0-9_]*)`?\s+ADD\s+INDEX\s+`?([a-z_][a-z0-9_]*)`?\s*\(([^)]+)\)\z/i',$statement,$index)){
     $q=$pdo->prepare('SELECT COLUMN_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND INDEX_NAME=? ORDER BY SEQ_IN_INDEX');$q->execute([$index[1],$index[2]]);$present=$q->fetchAll(PDO::FETCH_COLUMN);
     if($present){$expected=array_map(static fn($value)=>trim($value,' `'),explode(',',$index[3]));if($present!==$expected)throw new RuntimeException('Existing index differs');continue;}
    }
