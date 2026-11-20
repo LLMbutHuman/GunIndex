@@ -11,14 +11,19 @@ if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'gunindex_rebuild_test')
 
 $passed = 0;
 function setup_integration_check(bool $condition): void {
-    if (!$condition) throw new RuntimeException('Setup integration assertion failed.');
+    if (!$condition) {
+        $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+        throw new RuntimeException('Assertion at ' . basename($caller['file']) . ':' . $caller['line']);
+    }
 }
 function setup_integration_test(string $name, callable $run): void {
     global $passed;
     try { $run(); $passed++; fwrite(STDOUT, 'PASS '.$name."\n"); }
     catch (Throwable $error) {
         // Never log fixture credentials, SQL statements, response bodies or configuration.
-        fwrite(STDERR, 'FAIL '.$name.' ('.get_class($error).' at '.basename($error->getFile()).':'.$error->getLine().")\n");
+        $location = preg_match('/\AAssertion at [a-z0-9_]+\.php:\d+\z/', $error->getMessage())
+            ? $error->getMessage() : 'at '.basename($error->getFile()).':'.$error->getLine();
+        fwrite(STDERR, 'FAIL '.$name.' ('.get_class($error).' '.$location.")\n");
         exit(1);
     }
 }
