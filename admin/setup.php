@@ -25,6 +25,9 @@ include __DIR__.'/../includes/header.php';
                 <p class="eyebrow"><?=h(t('setup.ui.step', ['current'=>$index+1,'total'=>count($steps)]))?></p>
                 <h2 id="heading-<?=h($step['id'])?>"><?=h($step['title'])?></h2>
                 <p class="notice<?=$step['status']==='error'?' error':''?>"><strong><?=h($labels[$step['status']])?></strong></p>
+                <?php if (isset($step['providers'])): ?><ul><?php foreach ($step['providers'] as $provider=>$status): ?>
+                    <li data-provider="<?=h($provider)?>" data-status="<?=h($status)?>"><?=h(t('setup.provider.'.$provider))?> · <?=h($labels[$status])?></li>
+                <?php endforeach; ?></ul><?php endif; ?>
                 <p><?=h($step['detail'])?></p><p><strong><?=h(t('setup.ui.next'))?></strong> <?=h($step['next'])?></p>
                 <?php if ($step['href'] !== null && rbac_has_permission($pdo, (int)$admin['id'], $step['permission'])): ?><a class="button secondary" href="<?=h($step['href'])?>"><?=h(t('setup.ui.settings', ['title'=>$step['title']]))?></a><?php endif; ?>
             </section>

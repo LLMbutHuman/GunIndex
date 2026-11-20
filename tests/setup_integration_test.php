@@ -120,6 +120,10 @@ try {
         setup_integration_check(str_contains($result['headers']['cache-control'] ?? '', 'no-store'));
         setup_integration_check(str_contains($result['headers']['x-robots-tag'] ?? '', 'noindex'));
         setup_integration_check(preg_match_all('/id="setup-[a-z]+"/', $result['body']) === 18);
+        foreach(['paypal','paypal_refund','bank','bitcoin','escrow'] as $provider){
+            setup_integration_check(str_contains($result['body'],'data-provider="'.$provider.'"'));
+        }
+        setup_integration_check(str_contains($result['body'],'data-provider="escrow" data-status="disabled"'));
     });
 
     setup_integration_test('mfa_finance_role_still_lacks_setup_permission', static function () use ($finance): void {

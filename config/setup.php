@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/i18n.php';
+require_once __DIR__.'/worker_health.php';
 
 /** Read-only setup diagnostics. Results contain booleans/counts, never secrets. */
 function setup_status_labels(): array
@@ -8,18 +9,6 @@ function setup_status_labels(): array
     $labels = [];
     foreach (['configured','tested','missing','external','disabled','error'] as $status) $labels[$status] = t('setup.status.'.$status);
     return $labels;
-}
-
-function setup_heartbeat(?string $success, ?string $failure, int $now, int $maximumAge): bool
-{
-    $parse = static function (?string $value): ?int {
-        if ($value === null || !preg_match('/\A[0-9]{1,12}\s*\z/', $value)) return null;
-        return (int)trim($value);
-    };
-    $last = $parse($success);
-    $failed = $parse($failure);
-    return $last !== null && $last > 0 && $last <= $now && $now - $last <= $maximumAge
-        && ($failure === null || ($failed !== null && $failed < $last));
 }
 
 /** realpath resolves symlinked ancestors; lexical prefix alone is insufficient. */
@@ -40,21 +29,11 @@ function setup_private_directory(string $directory, string $webroot): bool
     return $permissions !== false && ($permissions & 0077) === 0;
 }
 
-/** Only fixed filenames in the existing worker heartbeat directory are read. */
-function setup_read_heartbeat(string $path): ?string
-{
-    if (!is_file($path)) return null;
-    if (is_link($path) || !is_readable($path)) return '';
-    $handle = @fopen($path, 'rb');
-    if ($handle === false) return '';
-    try { $text = fread($handle, 32); return is_string($text) && feof($handle) ? $text : ''; }
-    finally { fclose($handle); }
-}
-
 function setup_collect(PDO $pdo, int $actor): array
 {
     governance_assert_actor($pdo, $actor, 'site.manage');
     $settings = site_settings($pdo, true);
+    $paypal=payments_config();$bank=bank_config();$bitcoin=bitcoin_config();
     $facts = ['checked_at'=>gmdate('c'), 'database'=>false, 'query_errors'=>[],
         'brand'=>trim($settings['brand_name'] ?? '') !== '' && filter_var($settings['contact_email'] ?? '', FILTER_VALIDATE_EMAIL) !== false,
         'operator'=>false, 'origin'=>false, 'https'=>false, 'mail_transport'=>'off',
@@ -62,8 +41,10 @@ function setup_collect(PDO $pdo, int $actor): array
         'manual_enabled'=>($settings['manual_paypal_enabled'] ?? '0') === '1',
         'manual_recipient'=>filter_var($settings['manual_paypal_recipient'] ?? '', FILTER_VALIDATE_EMAIL) !== false,
         'manual_ready'=>manual_payment_reason($pdo) === null,
-        'paypal_enabled'=>(getenv('PAYPAL_ENABLED') ?: '0') === '1',
-        'paypal_ready'=>payments_paypal_reason() === null,
+        'paypal_enabled'=>$paypal['enabled'], 'paypal_ready'=>payments_paypal_reason($paypal) === null,
+        'paypal_refund_enabled'=>$paypal['refunds_enabled'], 'paypal_refund_ready'=>paypal_refund_gate($pdo,$paypal) === null,
+        'bank_enabled'=>$bank['enabled'], 'bank_ready'=>bank_gate($pdo,$bank) === null,
+        'bitcoin_enabled'=>$bitcoin['enabled'], 'bitcoin_ready'=>bitcoin_gate($pdo,$bitcoin,true) === null,
         'finance_enabled'=>($settings['finance_enabled'] ?? '0') === '1',
         'legal_enabled'=>($settings['legal_publication_enabled'] ?? '0') === '1',
         'legal_binding'=>false,
@@ -104,9 +85,9 @@ function setup_collect(PDO $pdo, int $actor): array
         if (!setup_private_directory($directory, $webroot)) $facts['storage'] = false;
     }
     $now = time();
-    foreach (['auction'=>120,'mail'=>180,'discovery'=>240,'business'=>180,'privacy'=>900] as $worker=>$maximum) {
+    foreach (worker_heartbeat_limits() as $worker=>$maximum) {
         $base = '/var/lib/gunindex/heartbeats/'.$worker;
-        $facts['workers'][$worker] = setup_heartbeat(setup_read_heartbeat($base.'.ok'), setup_read_heartbeat($base.'.failed'), $now, $maximum);
+        $facts['workers'][$worker] = worker_heartbeat_status(worker_read_heartbeat($base.'.ok'), worker_read_heartbeat($base.'.failed'), $now, $maximum)['ready'];
     }
     return $facts;
 }
@@ -141,7 +122,14 @@ function setup_steps(array $facts): array
 
     $manual = !$yes('manual_recipient') ? 'missing' : (!$yes('manual_enabled') ? 'disabled' : ($yes('manual_ready') ? 'external' : 'error'));
     $add('paypal', $manual, [], '/admin/settings.php');
-    $add('providers', !$yes('paypal_enabled')?'disabled':($yes('paypal_ready')?'external':'error'), [], '/admin/payments.php', 'finance.manage');
+    $providerStates=[];
+    foreach (['paypal','paypal_refund','bank','bitcoin'] as $provider) {
+        $providerStates[$provider]=!$yes($provider.'_enabled')?'disabled':($yes($provider.'_ready')?'external':'error');
+    }
+    $providerStates['escrow']='disabled';
+    $providerStatus=in_array('error',$providerStates,true)?'error':(in_array('external',$providerStates,true)?'external':'disabled');
+    $add('providers', $providerStatus, [], '/admin/payments.php', 'finance.manage');
+    $steps[array_key_last($steps)]['providers']=$providerStates;
     $finance = !$yes('finance_enabled') ? 'disabled'
         : (!$yes('operator') || $count('countries_without_tax') === null || $count('countries_without_tax') > 0 ? 'error' : 'external');
     $add('finance', $finance, ['rules'=>$count('tax_countries') ?? t('setup.unknown')], '/admin/finance.php', 'finance.manage');
@@ -152,7 +140,7 @@ function setup_steps(array $facts): array
 
     $workers = $facts['workers'] ?? [];
     $workerReady = true;
-    foreach (['auction','mail','discovery','business','privacy'] as $worker) if (($workers[$worker] ?? false) !== true) $workerReady = false;
+    foreach (worker_heartbeat_limits() as $worker=>$maximum) if (($workers[$worker] ?? false) !== true) $workerReady = false;
     $add('workers', $workerReady?'tested':'error');
     $add('backups', 'external');
     $add('monitoring', 'external');

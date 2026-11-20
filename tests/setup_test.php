@@ -10,7 +10,7 @@ function setup_step(array $facts, string $id): array {
 $tests = [
     'eight_complete_catalogs_with_placeholder_parity' => static function (): void {
         $base = require __DIR__.'/../locales/setup/de.php';
-        setup_assert(count($base) === 77, 'Unexpected setup catalog coverage.');
+        setup_assert(count($base) === 82, 'Unexpected setup catalog coverage.');
         foreach (i18n_locales() as $locale=>$label) {
             $catalog = require __DIR__.'/../locales/setup/'.$locale.'.php';
             setup_assert(array_keys($catalog) === array_keys($base), 'Missing or unexpected setup translation in '.$locale);
@@ -51,13 +51,17 @@ $tests = [
     },
     'template_keys_exist_and_parameters_preserve_operator_text' => static function (): void {
         $source = file_get_contents(__DIR__.'/../admin/setup.php');
-        preg_match_all("/t\\('(setup\\.[a-z_.]+)'/", $source, $matches);
+        preg_match_all("/t\\('(setup\\.[a-z_.]+)'\\s*(?=,|\\))/", $source, $matches);
         setup_assert(count($matches[1]) >= 10, 'Expected localized UI labels missing.');
         $previous = $_SESSION['locale'] ?? null;
         try {
             foreach (i18n_locales() as $locale=>$label) {
                 $_SESSION['locale'] = $locale;
                 foreach ($matches[1] as $key) setup_assert(isset(i18n_dictionary()[$key]), 'Untranslated template key.');
+                foreach (array_keys(setup_step([], 'providers')['providers']) as $provider) {
+                    $key='setup.provider.'.$provider;
+                    setup_assert(isset(i18n_dictionary($locale)[$key]), 'Untranslated provider label.');
+                }
                 $text = 'Operator authored <text> & name';
                 setup_assert(str_contains(t('setup.ui.settings', ['title'=>$text]), $text), 'Operator parameter was translated or changed.');
                 $step = t('setup.ui.step', ['current'=>2,'total'=>18]);
@@ -87,22 +91,28 @@ $tests = [
         $facts['manual_enabled'] = false;
         setup_assert(setup_step($facts, 'paypal')['status'] === 'disabled', 'Disabled flag ignored.');
     },
+    'provider_states_are_independent_and_do_not_enable_escrow' => static function (): void {
+        $facts=['paypal_enabled'=>true,'paypal_ready'=>true,'paypal_refund_enabled'=>true,'paypal_refund_ready'=>false,
+            'bank_enabled'=>true,'bank_ready'=>true,'bitcoin_enabled'=>false,'bitcoin_ready'=>true,'escrow_ready'=>true];
+        $step=setup_step($facts,'providers');
+        setup_assert($step['status']==='error'&&$step['providers']===['paypal'=>'external','paypal_refund'=>'error','bank'=>'external','bitcoin'=>'disabled','escrow'=>'disabled'], 'Provider states were conflated.');
+    },
     'partial_geo_and_tax_coverage_is_visible' => static function (): void {
         setup_assert(setup_step(['countries'=>11,'countries_without_geo'=>1], 'geography')['status'] === 'missing', 'Partial geo coverage hidden.');
         setup_assert(setup_step(['countries'=>11,'countries_without_geo'=>0], 'geography')['status'] === 'configured', 'Present country sources not recognized.');
         setup_assert(setup_step(['finance_enabled'=>true,'operator'=>true,'countries_without_tax'=>1], 'finance')['status'] === 'error', 'Missing tax country accepted.');
     },
     'heartbeat_freshness_failure_and_future_are_checked' => static function (): void {
-        setup_assert(setup_heartbeat('990', null, 1000, 120), 'Fresh heartbeat not recognized.');
-        foreach ([['800',null],['1001',null],['990','990'],['990','995'],['990','invalid'],['x',null],[null,null]] as [$ok,$failed]) {
-            setup_assert(!setup_heartbeat($ok, $failed, 1000, 120), 'Invalid or failing heartbeat accepted.');
+        setup_assert(worker_heartbeat_status('990', null, 1000, 120)['ready'], 'Fresh heartbeat not recognized.');
+        foreach ([['800',null],['1001',null],['990','990'],['990','995'],['990','1001'],['990','invalid'],['x',null],[null,null]] as [$ok,$failed]) {
+            setup_assert(!worker_heartbeat_status($ok, $failed, 1000, 120)['ready'], 'Invalid or failing heartbeat accepted.');
         }
-        setup_assert(setup_heartbeat('990', '980', 1000, 120), 'Older failure obscures newer success.');
+        setup_assert(worker_heartbeat_status('990', '980', 1000, 120)['ready'], 'Older failure obscures newer success.');
     },
     'all_workers_required' => static function (): void {
-        $workers = array_fill_keys(['auction','mail','discovery','business','privacy'], true);
+        $workers = array_fill_keys(array_keys(worker_heartbeat_limits()), true);
         setup_assert(setup_step(['workers'=>$workers], 'workers')['status'] === 'tested', 'Complete heartbeat set not recognized.');
-        unset($workers['privacy']);
+        unset($workers['paypal-refund']);
         setup_assert(setup_step(['workers'=>$workers], 'workers')['status'] === 'error', 'Missing worker accepted.');
     },
     'no_secret_values_or_claimed_final_acceptance' => static function (): void {

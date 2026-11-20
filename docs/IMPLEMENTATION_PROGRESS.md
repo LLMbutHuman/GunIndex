@@ -1,5 +1,19 @@
 # Implementierungsfortschritt
 
+## Zahlungs- und Workerdiagnose im Admin-Setup, 2026-11-21
+
+Der geschützte Einrichtungsassistent zeigt den Konfigurationsstatus von PayPal
+Checkout, PayPal-Erstattungen, Banküberweisung, Bitcoin und Treuhand einzeln an.
+Der Assistent bewertet vorhandene Konfiguration und Freigabeschalter anhand
+der bestehenden Zahlungsprüfungen. Die Treuhand-Live-Funktion steht auf
+deaktiviert. Admin-Setup und Healthcheck verwenden die gleiche Prüfung der
+sieben Heartbeats; gleichzeitige, neuere oder ungültige Fehlermeldungen führen
+zu einer Warnung.
+
+Lokal bestanden zwölf Setup-Gruppen, Übersetzungsprüfung in acht Sprachen,
+14 PHP-Syntaxprüfungen und Bash-Syntax. HTTP- und Produktionsimage-Läufe
+prüfen die sichtbaren Statusangaben und den Healthcheck mit sieben Workern.
+
 ## Prüfsummengebundener PLZ-Import, 2026-11-21
 
 Der Importer kann die eingelesene CSV an einen erwarteten SHA-256-Wert binden.
@@ -35,7 +49,9 @@ markiert. Die Buchung und die ausdrückliche Startfreigabe sind getrennte Schrit
 Lokal bestanden 13 Syntaxprüfungen, sieben Geo-/Sprachgruppen sowie Schlüssel-
 und Platzhalterprüfung für 37 Texte in acht Sprachen. Die isolierten Tests
 prüfen die echte Buchungsseite je Sprache und eine einzelne französische
-Bestätigung nach wiederholter Zahlungsprüfung.
+Bestätigung nach wiederholter Zahlungsprüfung. Beide Jobs bestanden,
+einschließlich zwölf Werbe- und 38 Finanzprüfgruppen sowie Chromium.
+[CI 44838930427](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838930427)
 
 ## Isolierte Installations- und Wiederherstellungsprobe, 2026-11-21
 

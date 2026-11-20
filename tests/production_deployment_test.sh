@@ -76,4 +76,16 @@ for ((attempt=0;attempt<45;attempt++)); do
 done
 [[ "$ready" == 1 ]]
 "$compose" exec -T php php ops/health.php --core-only
+health_status=0
+"$compose" exec -T php php ops/health.php > "$deployment/health.json" || health_status=$?
+[[ "$health_status" == 2 ]]
+python3 - "$deployment/health.json" <<'PY'
+import json, sys
+from pathlib import Path
+
+report=json.loads(Path(sys.argv[1]).read_text())
+expected={'auction','mail','discovery','business','privacy','paypal-refund','bitcoin'}
+assert report['status']=='degraded' and report['warnings']==['mail_not_configured']
+assert set(report['workers'])==expected and all(worker['ready'] for worker in report['workers'].values())
+PY
 printf '%s\n' 'Verified production image, additive migration recovery, authenticated backup and restore, writable private storage and seven worker heartbeats.'
