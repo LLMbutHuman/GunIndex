@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Händler-API, 2026-11-20
+
+Migration 035 ergänzt begrenzte, widerrufbare API-Schlüssel. Der Inhaber
+erzeugt den Schlüssel nach Passwortprüfung und sieht das Geheimnis einmal.
+Der private JSON-Endpunkt liefert Bestand und Bestellübersicht und verbucht
+autorisierte, wiederholbar abgesicherte Bestandsbewegungen. Mandant und Scope
+stammen aus dem Schlüssel. Der Endpunkt ist standardmäßig deaktiviert.
+[Händler-API](DEALER_API.md)
+
 ## Händlerteams und Warenbestand, 2026-11-20
 
 Migrationen 033 und 034 ergänzen Einladungen, getrennte Rollen und einen
@@ -8,8 +17,10 @@ Der Bestandsverlauf speichert Zu- und Abgänge mit Revisionsschutz und
 Wiedererkennung identischer Anfragen. Die Bestellübersicht zeigt nur Referenz,
 Betrag, Status und Versandart. Team- und Bestandsseiten sind achtsprachig.
 
-Der isolierte Test prüft Mandantentrennung, Entzug, Sperrung, wiederholte
-Buchungen und die Begrenzung der Bestellansicht. Der Datenbanknachweis folgt.
+Migrationen und Einladungstests wurden in CI bestätigt. Der erste Bestandslauf
+erwartete die Mitarbeiterkennung fälschlich in der Leseansicht. Der Test prüft
+sie jetzt im internen Bewegungsprotokoll und prüft zusätzlich ihre Abwesenheit
+im Leseergebnis. Vollständige Regression folgt mit der Händler-API.
 Als nächstes stehen externe Händler-API, automatischer Bestandsabgleich und
 Abonnements aus. [Händlerteam und Bestand](ARCHITECTURE.md#händlerteam-und-bestand)
 
@@ -21,8 +32,11 @@ gewählte Sprache. Canonicals, Product-URL und HTML-/XML-Alternativen verwenden
 denselben Pfad. Indexierung bleibt freigabepflichtig. Texte aus Inseraten
 bleiben in der vom Verkäufer verfassten Sprache. [SEO](SEO.md)
 
-13 lokale SEO-Fälle bestanden. Die HTTP- und Browserregression wird in CI
-geprüft. Vor öffentlicher Indexierung steht die Abnahme am HTTPS-Ziel aus.
+13 lokale SEO-Fälle, fünf HTTP-Gruppen und MySQL-Sitemapabgrenzung bestanden.
+[CI 44788077123](https://github.com/LLMbutHuman/GunIndex/actions/runs/44788077123)
+für `104030e` ist vollständig grün. Dazu gehören beide Windows-/Linux-Jobs und
+die Chromium-Regression. Vor öffentlicher Indexierung steht die Abnahme am
+HTTPS-Ziel aus.
 
 ## Treuhandablauf im Testsystem, 2026-11-19
 
@@ -33,11 +47,13 @@ Freigabe, Storno, Erstattung, Rückbuchung und Fristen sind rollen- und
 versionsgebunden. Der Anbieterablauf verwendet ausschließlich den internen
 Simulator im isolierten Entwicklungsschema. [Treuhandablauf](ESCROW.md)
 
-Lokale Zustands- und Syntaxprüfungen sind bestanden. Migration 032 wurde im
-isolierten MySQL-Lauf angewendet. Der HTTP-Test fand in der Detailansicht eine
-Namenskollision mit dem gemeinsamen Layout. Die Korrektur wird im nächsten
-integrierten Lauf geprüft, der auch konkurrierende Annahmen abdeckt.
-Für Live-Betrieb fehlen der zugelassene Provider und die Treuhandbedingungen.
+Der HTTP-Test der Vorläufer `78269a8` und `fa988cf` fand eine Namenskollision
+mit dem gemeinsamen Layout. `4d24dc7` behebt sie. Der Gesamtlauf für
+`104030e` ist vollständig grün. Er bestätigt Migration 032, die
+Zustandsregeln, vier MySQL-Gruppen, beide Chatansichten und die Finanzansicht
+über HTTP sowie zwei gleichzeitig ausgeführte Annahmen. Genau eine reserviert
+den Artikel. Für Live-Betrieb fehlen eine echte Providerintegration und die
+freigegebenen Treuhandbedingungen. [CI 44788077123](https://github.com/LLMbutHuman/GunIndex/actions/runs/44788077123)
 
 ## Mail-Einrichtung und SMTP-Relay, 2026-11-19
 

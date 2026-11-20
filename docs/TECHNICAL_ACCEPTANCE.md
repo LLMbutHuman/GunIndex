@@ -87,13 +87,13 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 17 | Benutzer-2FA/Passkeys | A | Optionale TOTP-Anmeldung, einmalige Recovery-Codes und WebAuthn mit echtem Chromium-Authenticator-Verfahren grün. Zielsystem und physische Authenticatoren zur Betriebsabnahme |
 | 18 | Profilbilder/Händlerlogos | A | Größenbegrenzter WebP-Upload, Profilanzeige, revisionsgebundene Logo-Freigabe, Datenschutzexport und Entfernung in MySQL und Chromium geprüft |
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |
-| 20 | Händlerfunktionen | C | Mitarbeiterrollen, Abos, Warenwirtschaft und API |
-| 21 | Vollständiges SEO | C | Internationale URL-/hreflang-Strategie und vollständige Abnahme |
+| 20 | Händlerfunktionen | C | Teamrollen, Warenbestand und eingeschränkte Bestellübersicht implementiert. Händler-Abos, Bestandsabgleich und externe API offen |
+| 21 | Vollständiges SEO | B | Acht Sprachpfade, Canonicals, hreflang, strukturierte Daten und Sitemap-Freigabe lokal, in MySQL und HTTP geprüft. Prüfung am öffentlichen HTTPS-Ziel ausstehend. [CI 44788077123](https://github.com/LLMbutHuman/GunIndex/actions/runs/44788077123) |
 | 22 | Wartungsmodus | C | Sperre/Fristfortsetzung und Healthdiagnose integriert und geprüft; Behandlung längerer Ausfälle und Werbezeiten offen |
 | 23 | Automatische Rückerstattungen | B | Freigabe, persistente Aufträge, Worker, verifizierter Statusabgleich und Korrekturbelege in MySQL/HTTP geprüft. Echte Sandbox- und Live-Anbieterabnahme offen. [CI 44540263687](https://github.com/LLMbutHuman/GunIndex/actions/runs/44540263687) |
 | 24 | Bitcoin | B | Isolierte Bitcoin-Core-Wallet, exakte Satoshis, Bestätigung und Reorganisation geprüft. Quote, einmalige Verbuchung und Sperre verbleibender Leistungen im MySQL-Test grün. Mainnet-Infrastruktur und Freigabe ausstehend. [CI 44579766951](https://github.com/LLMbutHuman/GunIndex/actions/runs/44579766951) |
 | 25 | Banküberweisung | B | Eindeutige Referenzen, camt.053.001.08-Import, Abgleich mit separater Eingangsprüfung und einmaliger Buchung getestet. Originalexport des Betreiberkontos und Produktivfreigabe offen. [CI 44577373006](https://github.com/LLMbutHuman/GunIndex/actions/runs/44577373006) |
-| 26 | Treuhand | C | Vollständiger gesperrter Workflow und geeignete Providerinfrastruktur |
+| 26 | Treuhand | C | Simulierter Ablauf von Angebot bis Auszahlung, Streit, Erstattung und Rückbuchung in MySQL, HTTP und im Paralleltest bestätigt. Live-Adapter und freigegebene Infrastruktur fehlen. [CI 44788077123](https://github.com/LLMbutHuman/GunIndex/actions/runs/44788077123) |
 
 Der Mail-Assistent mit verschlüsselter Relay-Konfiguration, acht Sprachfassungen,
 DNS-Prüfung und simulierten Testaufträgen ist in MySQL und HTTP bestätigt. Ein

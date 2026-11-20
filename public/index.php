@@ -31,6 +31,7 @@ $allowed[]='admin/bank.php';
 $allowed[]='admin/bitcoin.php';
 $allowed=array_merge($allowed,['user/escrow.php','admin/escrow.php']);
 $allowed=array_merge($allowed,['user/dealer-team.php','user/dealer-stock.php']);
+$allowed=array_merge($allowed,['user/dealer-api-keys.php','api/dealer/v1.php']);
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 $static+=['/assets/css/e2ee.css'=>'text/css; charset=utf-8','/assets/js/e2ee-ui.mjs'=>'application/javascript; charset=utf-8','/assets/js/e2ee-crypto.mjs'=>'application/javascript; charset=utf-8','/assets/vendor/openpgp/openpgp.min.mjs'=>'application/javascript; charset=utf-8'];
@@ -39,6 +40,7 @@ $static['/assets/js/listing-draft.js']='application/javascript; charset=utf-8';
 $static['/assets/js/passkeys.js']='application/javascript; charset=utf-8';
 if(isset($static[$path])&&is_file($root.$path)){header('Content-Type: '.$static[$path]);header('X-Content-Type-Options: nosniff');if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')readfile($root.$path);exit;}
 if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route)){http_response_code(404);header('X-Robots-Tag: noindex');exit('Nicht gefunden.');}
+if ($route === 'api/dealer/v1.php') define('GUNINDEX_STATELESS_REQUEST', true);
 require_once $root.'/config/bootstrap.php';
 maintenance_enforce_http($pdo,$route);
 require $root.'/'.$route;

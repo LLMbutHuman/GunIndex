@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
 
+/** API requests already hold their key authorization in the outer transaction. */
+function dealer_inventory_transaction(PDO $pdo, callable $operation): mixed
+{
+    if (!$pdo->inTransaction()) return trade_transaction($pdo, $operation);
+    maintenance_assert_market_available($pdo);
+    return $operation();
+}
+
 function dealer_inventory_sku(string $sku): string
 {
     $sku = strtoupper(trim($sku));
@@ -19,7 +27,7 @@ function dealer_inventory_text(string $value, int $limit): string
 
 function dealer_inventory_list(PDO $pdo, int $actor, int $owner, int $after = 0): array
 {
-    return trade_transaction($pdo, static function () use ($pdo,$actor,$owner,$after): array {
+    return dealer_inventory_transaction($pdo, static function () use ($pdo,$actor,$owner,$after): array {
         dealer_team_assert($pdo, $actor, $owner, 'inventory.read', true);
         $query = $pdo->prepare('SELECT id,sku,label,quantity,version,updated_at FROM market_dealer_inventory WHERE owner_id=? AND id>? ORDER BY id LIMIT 51');
         $query->execute([$owner, max(0, $after)]);
@@ -32,7 +40,7 @@ function dealer_inventory_list(PDO $pdo, int $actor, int $owner, int $after = 0)
 
 function dealer_inventory_details(PDO $pdo, int $actor, int $owner, int $id): array
 {
-    return trade_transaction($pdo, static function () use ($pdo,$actor,$owner,$id): array {
+    return dealer_inventory_transaction($pdo, static function () use ($pdo,$actor,$owner,$id): array {
         dealer_team_assert($pdo, $actor, $owner, 'inventory.read', true);
         $query = $pdo->prepare('SELECT id,sku,label,quantity,version,updated_at FROM market_dealer_inventory WHERE owner_id=? AND id=?');
         $query->execute([$owner,$id]);
@@ -75,7 +83,7 @@ function dealer_inventory_rename(PDO $pdo, int $actor, int $owner, int $id, int 
     });
 }
 
-function dealer_inventory_adjust(PDO $pdo, int $actor, int $owner, int $id, int $version, string $request, string $amount, string $reason): void
+function dealer_inventory_adjust(PDO $pdo, int $actor, int $owner, int $id, int $version, string $request, string $amount, string $reason): bool
 {
     $request = trade_hex($request);
     $reason = dealer_inventory_text($reason, 240);
@@ -83,7 +91,7 @@ function dealer_inventory_adjust(PDO $pdo, int $actor, int $owner, int $id, int 
         throw new InvalidArgumentException(t('dealer_stock.invalid'));
     }
     $delta = (int)$amount;
-    trade_transaction($pdo, static function () use ($pdo,$actor,$owner,$id,$version,$request,$reason,$delta): void {
+    return dealer_inventory_transaction($pdo, static function () use ($pdo,$actor,$owner,$id,$version,$request,$reason,$delta): bool {
         dealer_team_assert($pdo, $actor, $owner, 'inventory.write', true);
         $item = $pdo->prepare('SELECT quantity,version FROM market_dealer_inventory WHERE owner_id=? AND id=? FOR UPDATE');
         $item->execute([$owner,$id]);
@@ -93,7 +101,7 @@ function dealer_inventory_adjust(PDO $pdo, int $actor, int $owner, int $id, int 
         $previous->execute([$owner,$request]);
         if ($existing = $previous->fetch()) {
             if ((int)$existing['item_id'] === $id && (int)$existing['actor_id'] === $actor && (int)$existing['delta'] === $delta
-                && (int)$existing['version_after'] === $version + 1 && $existing['reason'] === $reason) return;
+                && (int)$existing['version_after'] === $version + 1 && $existing['reason'] === $reason) return false;
             throw new MarketConflictException(t('dealer_stock.changed'));
         }
         if ((int)$current['version'] !== $version) throw new MarketConflictException(t('dealer_stock.changed'));
@@ -102,12 +110,13 @@ function dealer_inventory_adjust(PDO $pdo, int $actor, int $owner, int $id, int 
         $pdo->prepare('UPDATE market_dealer_inventory SET quantity=?,version=version+1 WHERE owner_id=? AND id=?')->execute([$quantity,$owner,$id]);
         $pdo->prepare('INSERT INTO market_dealer_stock_movements(owner_id,item_id,actor_id,request_key,delta,quantity_after,version_after,reason) VALUES (?,?,?,?,?,?,?,?)')
             ->execute([$owner,$id,$actor,$request,$delta,$quantity,$version+1,$reason]);
+        return true;
     });
 }
 
 function dealer_order_list(PDO $pdo, int $actor, int $owner): array
 {
-    return trade_transaction($pdo, static function () use ($pdo,$actor,$owner): array {
+    return dealer_inventory_transaction($pdo, static function () use ($pdo,$actor,$owner): array {
         dealer_team_assert($pdo, $actor, $owner, 'orders.read', true);
         $query = $pdo->prepare('SELECT reference,status,delivery,total_cents,created_at,updated_at FROM market_trades WHERE seller_id=? ORDER BY id DESC LIMIT 50');
         $query->execute([$owner]);

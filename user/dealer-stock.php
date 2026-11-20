@@ -82,7 +82,7 @@ $pageTitle = t('dealer_stock.title');
 include __DIR__ . '/../includes/header.php';
 ?>
 <main class="container narrow" id="main-content">
-    <div class="page-heading"><h1><?=h($pageTitle)?></h1><a href="/user/dealer-team.php"><?=h(t('dealer_team.title'))?></a></div>
+    <div class="page-heading"><h1><?=h($pageTitle)?></h1><div class="button-row"><a href="/user/dealer-team.php"><?=h(t('dealer_team.title'))?></a><?php if ($stockTeams['owned']): ?><a href="/user/dealer-api-keys.php"><?=h(t('dealer_api.title'))?></a><?php endif; ?></div></div>
     <?php if ($stockNote): ?><p class="notice success" role="status"><?=h(t('dealer_stock.saved'))?></p><?php endif; ?>
     <?php if ($stockError !== ''): ?><p class="notice error" role="alert"><?=h($stockError)?></p><?php endif; ?>
     <?php if ($stockData === null): ?>

@@ -21,6 +21,7 @@ require_once __DIR__.'/escrow_workflow.php';
 require_once __DIR__.'/escrow.php';
 require_once __DIR__.'/dealer_team.php';
 require_once __DIR__.'/dealer_inventory.php';
+require_once __DIR__.'/dealer_api.php';
 require_once __DIR__.'/market_search_text.php';
 foreach(['settings','crypto','geo','i18n','catalog','money','governance','consent','auth','mail','account_tokens','images','image_order','market','discovery','business','fees','payments','finance','manual_payments','chat','privacy','setup','seo','personal','auction_billing','maintenance','relisting','e2ee','trade'] as $module){
  $path=__DIR__.'/'.$module.'.php';

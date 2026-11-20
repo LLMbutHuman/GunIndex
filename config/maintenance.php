@@ -163,6 +163,19 @@ function maintenance_response(mixed $locale, string $method = 'GET'): array
  * Router hook: call after bootstrap and canonical-route validation, before the
  * destination script executes. The lease also drains in-flight public requests.
  */
+function maintenance_stop_http(string $method, bool $json): never
+{
+    $response = maintenance_response(i18n_locale(), $method);
+    if ($json) {
+        $response['headers']['Content-Type'] = 'application/json; charset=utf-8';
+        $response['body'] = $method === 'HEAD' ? '' : '{"error":"maintenance"}';
+    }
+    http_response_code($response['status']);
+    foreach ($response['headers'] as $name=>$value) header($name.': '.$value);
+    echo $response['body'];
+    exit;
+}
+
 function maintenance_enforce_http(PDO $pdo, string $route): void
 {
     if (PHP_SAPI === 'cli') return;
@@ -178,8 +191,7 @@ function maintenance_enforce_http(PDO $pdo, string $route): void
         }
     }catch(Throwable $error){
         error_log('Maintenance barrier unavailable: '.get_class($error));
-        $response=maintenance_response(i18n_locale(),$method);
-        http_response_code($response['status']);foreach($response['headers'] as $name=>$value)header($name.': '.$value);echo $response['body'];exit;
+        maintenance_stop_http($method, $route === 'api/dealer/v1.php');
     }
     $settings=['maintenance_enabled'=>'1'];
     if (maintenance_allows_request($settings, $route, $method)) return;
@@ -190,9 +202,5 @@ function maintenance_enforce_http(PDO $pdo, string $route): void
         $administrator = maintenance_admin_session($user, $_SESSION ?? [], $canManage, time());
     }
     if (maintenance_allows_request($settings, $route, $method, $administrator)) return;
-    $response = maintenance_response(i18n_locale(), $method);
-    http_response_code($response['status']);
-    foreach ($response['headers'] as $name=>$value) header($name.': '.$value);
-    echo $response['body'];
-    exit;
+    maintenance_stop_http($method, $route === 'api/dealer/v1.php');
 }

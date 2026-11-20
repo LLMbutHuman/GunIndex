@@ -228,6 +228,7 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'dealer_profile'=>['market_dealer_profiles','user_id=?',[$userId],['company_name','address_text','country_code','contact_email','website','legal_notice','status','moderation_reason','created_at','updated_at'],'user_id'],
             'dealer_team_memberships'=>['market_dealer_team','member_id=?',[$userId],['owner_id','role','status','expires_at','created_at','updated_at'],'owner_id'],
             'dealer_inventory'=>['market_dealer_inventory','owner_id=?',[$userId],['id','sku','label','quantity','version','created_at','updated_at']],
+            'dealer_api_keys'=>['market_dealer_api_keys','owner_id=?',[$userId],['id','label','scopes','created_at','expires_at','revoked_at']],
             'dealer_stock_activity'=>['market_dealer_stock_movements','actor_id=?',[$userId],['id','owner_id','item_id','delta','quantity_after','reason','created_at']],
             'campaigns'=>['market_campaigns','user_id=?',[$userId],['id','country_code','category_id','title','target_url','status','moderation_reason','created_at','updated_at']],
             'premium_bookings'=>['market_premium_bookings','user_id=?',[$userId],['id','invoice_id','listing_id','campaign_id','country_code','scope','category_id','status','reserved_until','starts_at','ends_at','immediate_start_at','created_at']],

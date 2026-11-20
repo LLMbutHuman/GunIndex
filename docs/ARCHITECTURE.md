@@ -57,8 +57,9 @@ Ein Bestandseintrag hat je Betrieb eine eindeutige Artikelnummer. Zu- und
 Abgänge ändern Menge und Revisionsnummer gemeinsam mit dem unveränderlichen
 Bewegungseintrag. Der Anfrageschlüssel verhindert eine erneute Buchung bei
 Wiederholung. Widerruf und Sperrung werden bei jedem Zugriff geprüft.
-Der Zählbestand wird manuell geführt. Ein automatischer Bestandsabgleich im
-Checkout, Händler-Abonnements und die externe Händler-API folgen gesondert.
+Der Zählbestand wird manuell oder über die gesondert freizugebende API
+geführt. Ein automatischer Bestandsabgleich im Checkout und
+Händler-Abonnements folgen gesondert. [Händler-API](DEALER_API.md)
 
 ## Länder, Sprache und Oberfläche
 
