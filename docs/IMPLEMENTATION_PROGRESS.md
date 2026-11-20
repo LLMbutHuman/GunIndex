@@ -1,5 +1,12 @@
 # Implementierungsfortschritt
 
+## Rechnungsübersicht und Rechnungsanschrift in acht Sprachen, 2026-11-21
+
+Rechnungsübersicht, Dokumentarten, Storno- und Erstattungsformulare,
+Rechnungsanschrift und häufige Validierungsfehler verwenden acht Sprachen.
+Laufende HTTP-Prüfungen decken die Ansichten und ungültige Eingaben je Sprache
+ab. Die bereits gespeicherten Rechnungsnachweise behalten ihre Inhalte.
+
 ## Zahlungsübersicht und PayPal-Rückkehr in acht Sprachen, 2026-11-20
 
 Die Zahlungsübersicht, Statusbezeichnungen, Preisvorschau und PayPal-Rückkehr

@@ -4,15 +4,16 @@ require_once __DIR__.'/i18n.php';
 
 function finance_enabled(PDO $pdo): bool { return site_setting($pdo,'finance_enabled','0')==='1'; }
 function finance_text(array $values,string $key,int $max,bool $required=true): string {
- $value=$values[$key]??'';if(!is_string($value)||!preg_match('//u',$value)||preg_match('/[\x00-\x1f\x7f]/u',$value)||mb_strlen(trim($value))>$max||($required&&trim($value)===''))throw new InvalidArgumentException('Bitte vollständige, gültige Rechnungsangaben eingeben.');
+ $value=$values[$key]??'';if(!is_string($value)||!preg_match('//u',$value)||preg_match('/[\x00-\x1f\x7f]/u',$value)||mb_strlen(trim($value))>$max||($required&&trim($value)===''))throw new InvalidArgumentException(t('finance_customer.billing_invalid'));
  return trim($value);
 }
 function finance_billing_profile(PDO $pdo,int $userId):?array {
  $q=$pdo->prepare('SELECT * FROM market_billing_profiles WHERE user_id=?');$q->execute([$userId]);return $q->fetch()?:null;
 }
 function finance_save_profile(PDO $pdo,int $userId,array $values):void {
- $country=geo_country(finance_text($values,'country_code',2));$postal=finance_text($values,'postal_code',16);
- if(!geo_validate_postcode($country,$postal))throw new InvalidArgumentException('Die Postleitzahl passt nicht zum Rechnungsland.');
+ try{$country=geo_country(finance_text($values,'country_code',2));}catch(InvalidArgumentException){throw new InvalidArgumentException(t('finance_customer.billing_invalid'));}
+ $postal=finance_text($values,'postal_code',16);
+ if(!geo_validate_postcode($country,$postal))throw new InvalidArgumentException(t('finance_customer.postal_mismatch'));
  $data=[$userId,finance_text($values,'legal_name',150),finance_text($values,'address_line1',150),finance_text($values,'address_line2',150,false),geo_normalize_postcode($country,$postal),finance_text($values,'city',100),$country,finance_text($values,'vat_id',40,false)];
  $q=$pdo->prepare('INSERT INTO market_billing_profiles(user_id,legal_name,address_line1,address_line2,postal_code,city,country_code,vat_id) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE legal_name=VALUES(legal_name),address_line1=VALUES(address_line1),address_line2=VALUES(address_line2),postal_code=VALUES(postal_code),city=VALUES(city),country_code=VALUES(country_code),vat_id=VALUES(vat_id)');
  $q->execute($data);audit_log($pdo,$userId,'finance.billing_updated',$userId,[]);
@@ -95,11 +96,11 @@ function finance_refunded_cents(PDO $pdo,int $invoiceId):int {
  $q->execute([$invoiceId,$invoiceId]);return(int)$q->fetchColumn();
 }
 function finance_request_refund(PDO $pdo,int $userId,int $invoiceId,int $amount,string $reason):int {
- if($amount<1||mb_strlen(trim($reason))<10||mb_strlen($reason)>2000)throw new InvalidArgumentException('Betrag und nachvollziehbaren Grund angeben.');
+ if($amount<1||mb_strlen(trim($reason))<10||mb_strlen($reason)>2000)throw new InvalidArgumentException(t('finance_customer.refund_invalid'));
  $pdo->beginTransaction();try{
-  $q=$pdo->prepare("SELECT * FROM market_invoices WHERE id=? AND user_id=? AND status IN ('paid','partially_refunded') FOR UPDATE");$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Keine erstattungsfähige Zahlung gefunden.');
-  if($amount>(int)$invoice['gross_cents']-finance_refunded_cents($pdo,$invoiceId))throw new PaymentConflict('Der angefragte Betrag übersteigt die noch nicht erstattete Zahlung.');
-  $q=$pdo->prepare("SELECT COUNT(*) FROM market_refund_requests WHERE invoice_id=? AND status IN ('requested','processing')");$q->execute([$invoiceId]);if((int)$q->fetchColumn()>0)throw new PaymentConflict('Eine offene Erstattungsanfrage besteht bereits.');
+  $q=$pdo->prepare("SELECT * FROM market_invoices WHERE id=? AND user_id=? AND status IN ('paid','partially_refunded') FOR UPDATE");$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict(t('finance_customer.refund_ineligible'));
+  if($amount>(int)$invoice['gross_cents']-finance_refunded_cents($pdo,$invoiceId))throw new PaymentConflict(t('finance_customer.refund_exceeds'));
+  $q=$pdo->prepare("SELECT COUNT(*) FROM market_refund_requests WHERE invoice_id=? AND status IN ('requested','processing')");$q->execute([$invoiceId]);if((int)$q->fetchColumn()>0)throw new PaymentConflict(t('finance_customer.refund_pending'));
   $pdo->prepare('INSERT INTO market_refund_requests(invoice_id,user_id,requested_cents,reason) VALUES (?,?,?,?)')->execute([$invoiceId,$userId,$amount,trim($reason)]);$id=(int)$pdo->lastInsertId();audit_log($pdo,$userId,'finance.refund_requested',$invoiceId,['request_id'=>$id]);$pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
@@ -151,7 +152,7 @@ function finance_book_verified_refund(PDO $pdo,array $invoice,int $actor,int $am
 }
 function finance_cancel(PDO $pdo,int $invoiceId,int $userId):void {
  $pdo->beginTransaction();try{
-  $q=$pdo->prepare("SELECT * FROM market_invoices WHERE id=? AND user_id=? FOR UPDATE");$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice||!in_array($invoice['status'],['issued','pending','manual_rejected'],true))throw new PaymentConflict('Nur unbezahlte Aufträge können hier storniert werden.');
+  $q=$pdo->prepare("SELECT * FROM market_invoices WHERE id=? AND user_id=? FOR UPDATE");$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice||!in_array($invoice['status'],['issued','pending','manual_rejected'],true))throw new PaymentConflict(t('finance_customer.cancel_ineligible'));
   if(auction_billing_service($invoice['service_code']))throw new PaymentConflict(t('auction_billing.due'));
   if(function_exists('business_cancel_invoice'))business_cancel_invoice($pdo,$invoiceId);
   $q=$pdo->prepare('SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?');$q->execute([$invoiceId]);$original=$q->fetchColumn();
@@ -165,7 +166,7 @@ function finance_document(PDO $pdo,int $documentId,int $userId,bool $staff=false
  $json=crypto_decrypt('finance',$row['payload_ciphertext']);if(!hash_equals($row['content_hash'],hash('sha256',$json)))throw new RuntimeException('Invoice integrity failed.');$row['payload']=json_decode($json,true,32,JSON_THROW_ON_ERROR);return$row;
 }
 function finance_pdf(array $document):string {
- $autoload=dirname(__DIR__).'/vendor/autoload.php';if(!is_file($autoload))throw new PaymentUnavailable('Die lokale PDF-Bibliothek ist noch nicht installiert.');require_once$autoload;
+ $autoload=dirname(__DIR__).'/vendor/autoload.php';if(!is_file($autoload))throw new PaymentUnavailable(t('finance_customer.pdf_unavailable'));require_once$autoload;
  $p=$document['payload'];$type=$document['document_type'];$lang=$p['locale']??'de';
  $titles=['de'=>['invoice'=>'Rechnung','credit_note'=>'Gutschrift','cancellation'=>'Stornorechnung'],'en'=>['invoice'=>'Invoice','credit_note'=>'Credit note','cancellation'=>'Cancellation invoice'],'fr'=>['invoice'=>'Facture','credit_note'=>'Avoir','cancellation'=>'Facture annulée'],'nl'=>['invoice'=>'Factuur','credit_note'=>'Creditnota','cancellation'=>'Annulering'],'pl'=>['invoice'=>'Faktura','credit_note'=>'Nota kredytowa','cancellation'=>'Anulowanie'],'cs'=>['invoice'=>'Faktura','credit_note'=>'Dobropis','cancellation'=>'Storno'],'da'=>['invoice'=>'Faktura','credit_note'=>'Kreditnota','cancellation'=>'Annullering'],'it'=>['invoice'=>'Fattura','credit_note'=>'Nota di credito','cancellation'=>'Storno']];
  $title=$titles[$lang][$type]??$titles['de'][$type];$operator=$p['operator'];$buyer=$p['buyer'];$sign=$type==='invoice'?'':'− ';
