@@ -28,7 +28,7 @@ function rel_test_events(): array
 }
 function rel_test_link(): array
 {
-    return ['root_listing_id'=>10,'parent_listing_id'=>10,'child_listing_id'=>11,'seller_id'=>7,'published_at'=>null];
+    return ['root_listing_id'=>10,'parent_listing_id'=>10,'child_listing_id'=>11,'seller_id'=>7,'published_at'=>null,'source_outcome'=>'no_bid'];
 }
 function rel_test_chain(): array
 {
@@ -97,6 +97,30 @@ try {
             $source=rel_test_source(); $source['type']='fixed';
             rel_test_check(!relisting_source_eligible($source,rel_test_events(),false,$now),'Fixed listing accepted by auction-only relisting.');
         },
+        'sold_relisting_requires_matching_buyout_or_bid_close_evidence'=>static function() use($now): void {
+            $source=array_replace(rel_test_source(),['highest_bidder_id'=>'9','current_bid_cents'=>'1500']);
+            $close=['event_type'=>'close','idempotency_key'=>'close-10','user_id'=>9,'amount_cents'=>1500];
+            rel_test_check(relisting_auction_sale_eligible($source,$close,true,$now),'A real auction close was rejected.');
+            rel_test_check(!relisting_auction_sale_eligible($source,$close,false,$now),'Bid close without a proxy was accepted.');
+            foreach (['user_id'=>8,'amount_cents'=>1499,'event_type'=>'close_no_bid','idempotency_key'=>'close-11'] as $key=>$value) {
+                rel_test_check(!relisting_auction_sale_eligible($source,array_replace($close,[$key=>$value]),true,$now),'A mismatched close was accepted.');
+            }
+            $source['status']='sold';
+            $buyout=array_replace($close,['event_type'=>'buyout','idempotency_key'=>'buyout-10']);
+            rel_test_check(relisting_auction_sale_eligible($source,$buyout,false,$now),'An exact buyout was rejected.');
+            rel_test_check(!relisting_auction_sale_eligible($source,$buyout,true,$now),'Buyout with conflicting bids was accepted.');
+        },
+        'sold_relisting_never_consumes_an_unused_discount'=>static function(): void {
+            $unused=rel_test_context();
+            $sold=array_replace($unused,['source_outcome'=>'sold']);
+            $base=rel_test_quote(80);
+            $paid=relisting_quote_apply($base,$sold);
+            $discount=relisting_quote_apply($base,$unused);
+            rel_test_check($paid['hash']!==$discount['hash']&&$paid['payload']['tariff']['listing_cents']===80,'A sold auction inherited the no-bid discount.');
+            rel_test_check(!relisting_quote_claim($paid['payload'],$sold),'Paid listing consumed the free entitlement.');
+            rel_test_reject(fn()=>relisting_quote_claim($discount['payload'],$sold));
+            rel_test_reject(fn()=>relisting_quote_claim($paid['payload'],$unused));
+        },
         'proxy_winner_or_price_evidence_blocks_unsold_relisting'=>static function() use($now): void {
             rel_test_check(!relisting_source_eligible(rel_test_source(),rel_test_events(),true,$now),'Existing proxy bid was ignored.');
             foreach (['highest_bidder_id','current_bid_cents'] as $field) {
@@ -142,7 +166,7 @@ try {
             $chain['root_listing_id']='10'; $chain['seller_id']='7';
             $context=relisting_context_values($link,$chain,7);
             rel_test_check($context===['root_listing_id'=>10,'parent_listing_id'=>10,'child_listing_id'=>11,'seller_id'=>7,
-                'published_at'=>null,'free_available'=>true,'consumed_by'=>null],'Lineage normalized incorrectly.');
+                'published_at'=>null,'free_available'=>true,'consumed_by'=>null,'source_outcome'=>'no_bid'],'Lineage normalized incorrectly.');
         },
         'lineage_context_rejects_wrong_owner_cycles_and_inconsistent_claim'=>static function(): void {
             rel_test_reject(fn()=>relisting_context_values(rel_test_link(),rel_test_chain(),8));

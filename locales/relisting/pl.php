@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'Nowa aukcja podlega opłacie wyświetlonej przed publikacją. Bezpłatne ponowne wystawienie aukcji bez ofert nie zostaje wykorzystane.',
     'relisting.action' => 'Wystaw aukcję ponownie',
     'relisting.heading' => 'Opublikuj aukcję ponownie',
     'relisting.help' => 'Pierwotna aukcja i złożone oferty pozostają zachowane. Powstaje nowy szkic z kopiami zdjęć produktu. Publikacja odbywa się w osobnym kroku.',

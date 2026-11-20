@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'Le tarif affiché avant publication s’applique à la nouvelle enchère. Cette publication ne consomme pas le droit de republier gratuitement une enchère sans offre.',
     'relisting.action' => 'Remettre aux enchères',
     'relisting.heading' => 'Publier à nouveau l’enchère',
     'relisting.help' => 'L’enchère d’origine et ses offres sont conservées. Un nouveau brouillon est créé avec des copies des images du produit. La publication se fait séparément.',

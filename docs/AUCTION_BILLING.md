@@ -79,8 +79,10 @@ Der alte Auftrag bleibt geschlossen.
 Die vorhandene automatische PayPal-API nimmt diese manuellen Gebührenaufträge
 absichtlich nicht an. Automatische Gebühreneinziehung, automatische
 Providererstattung und weitere gebührenrelevante Verlängerungsfälle sind
-weitere Anforderungen. Wiedereinstellung erfolgloser Auktionen ist als
-eigener Durchlauf integriert. Keine Kundengeldverwahrung
+weitere Anforderungen. Wiedereinstellungen nach Abschluss ohne Gebot,
+Zuschlag und Sofortkauf erzeugen einen eigenen Durchlauf. Ein verkauftes
+Angebot benötigt eine Bestätigung des zusätzlichen Bestands und verwendet
+den zum Zeitpunkt der Veröffentlichung angezeigten Tarif. Keine Kundengeldverwahrung
 und kein Einzug des Warenkaufpreises. Finanz-/Bestandsseiten sind noch nicht
 durchgängig übersetzt; das neue Gebührenmodul umfasst alle acht Sprachen.
 

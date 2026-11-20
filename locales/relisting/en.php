@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'The new auction uses the fee shown before publication. This leaves the free relisting for an auction without bids available if it has not already been used.',
     'relisting.action' => 'Relist auction',
     'relisting.heading' => 'Publish the auction again',
     'relisting.help' => 'The original auction and its bids are preserved. A new draft is created with copies of the product images. Publication is a separate step.',

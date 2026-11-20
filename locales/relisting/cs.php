@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'Pro novou aukci platí poplatek zobrazený před zveřejněním. Nárok na bezplatné opětovné vystavení aukce bez příhozů se tím nevyčerpá.',
     'relisting.action' => 'Znovu vystavit aukci',
     'relisting.heading' => 'Znovu zveřejnit aukci',
     'relisting.help' => 'Původní aukce i její příhozy zůstanou zachovány. Vytvoří se nový koncept s kopiemi obrázků produktu. Zveřejnění proběhne samostatně.',

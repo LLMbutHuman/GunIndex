@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Neuer Auktionsdurchlauf nach Verkauf, 2026-11-21
+
+Der Verkäufer kann eine per Gebot oder Sofortkauf abgeschlossene Auktion
+nach ausdrücklicher Bestätigung eines weiteren Exemplars erneut einstellen.
+Abschlussereignis, Gewinner und Preis müssen zusammenpassen. Der neue Entwurf
+behält die Versandkosten und verwendet bei Veröffentlichung den aktuellen
+Tarif. Der vorhandene Rabatt für einen späteren Abschluss ohne Gebote bleibt
+verfügbar. Bestandsverknüpfungen bleiben durch Migration 038 kompatibel.
+
+Lokal bestanden 13 PHP-Syntaxprüfungen und 24 reine Wiedereinstellungsgruppen.
+Der isolierte MySQL-/HTTP-Test prüft beide Verkaufswege samt Bestätigung,
+Gebühr und unveränderter Vorgeschichte. Sein Lauf steht aus.
+
 ## Werbelaufzeiten bei Wartung, 2026-11-21
 
 Die Wiedereröffnung erhält die Restlaufzeit laufender bezahlter Werbung und
@@ -22,6 +35,9 @@ geprüften Snapshot. Die PDFs verwenden auch nach einem späteren Sprachwechsel
 die gespeicherten Texte. Das gilt für neue Standard- und Auktionsaufträge.
 Ältere Snapshots behalten ihr Layout. Beträge und vom Betreiber verfasste
 Steuer- und Rechtstexte werden aus dem ursprünglichen Nachweis übernommen.
+Beide CI-Jobs bestanden. Die 37 Finanzgruppen enthalten die echte PDF-Erzeugung
+mit stabiler Beschriftung nach einem Sprachwechsel in allen acht Sprachen.
+[CI 44834934106](https://github.com/LLMbutHuman/GunIndex/actions/runs/44834934106)
 
 ## Manuelle Zahlungsaufträge und Guthaben in acht Sprachen, 2026-11-21
 
@@ -29,6 +45,8 @@ Die manuelle Auftragsseite, Guthabenauswahl, Zahlungshinweise und
 Freigabegründe verwenden die gewählte Sprache. Die kanonischen und
 bereits gespeicherten Vertragsbedingungen bleiben in ihrer Originalsprache.
 Die HTTP-Prüfung umfasst auch die fehlende ausdrückliche Bestätigung.
+Der vollständige Lauf einschließlich Browser/Barrierefreiheit war erfolgreich.
+[CI 44834451740](https://github.com/LLMbutHuman/GunIndex/actions/runs/44834451740)
 
 ## Rechnungsübersicht und Rechnungsanschrift in acht Sprachen, 2026-11-21
 

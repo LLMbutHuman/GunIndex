@@ -38,6 +38,26 @@ function relisting_source_eligible(array $source, array $events, bool $hasProxy,
         &&array_key_exists('amount_cents',$event)&&$event['amount_cents']===null;
 }
 
+/** A sold copy must match the actual closing or buyout event. */
+function relisting_auction_sale_eligible(array $source, array $event, bool $hasProxy, ?int $now=null): bool
+{
+    try {
+        $id=relisting_integer($source['id']??null);
+        $seller=relisting_integer($source['seller_id']??null);
+        $winner=relisting_integer($source['highest_bidder_id']??null);
+        $price=relisting_integer($source['current_bid_cents']??null);
+        $eventBuyer=relisting_integer($event['user_id']??null);
+        $eventPrice=relisting_integer($event['amount_cents']??null);
+    } catch (DomainException) { return false; }
+    if (($source['type']??null)!=='auction'||$winner===$seller||$winner!==$eventBuyer||$price!==$eventPrice) return false;
+    if (($source['status']??null)==='sold') {
+        return !$hasProxy&&($event['event_type']??null)==='buyout'&&($event['idempotency_key']??null)==='buyout-'.$id;
+    }
+    $end=relisting_timestamp($source['ends_at']??null);
+    return ($source['status']??null)==='ended'&&$hasProxy&&$end!==null&&$end<=($now??time())
+        &&($event['event_type']??null)==='close'&&($event['idempotency_key']??null)==='close-'.$id;
+}
+
 /** Closed general-goods listings can be copied, never revived in place. */
 function relisting_general_eligible(array $source, array $events, bool $hasProxy, ?int $now=null): bool
 {
@@ -114,12 +134,22 @@ function relisting_source(PDO $pdo, int $seller, int $parentId, bool $lock=false
     if (!$source) throw new DomainException(t('relisting.unavailable'));
     $q=$pdo->prepare('SELECT id FROM market_proxy_bids WHERE listing_id=? LIMIT 1'.($lock?' FOR SHARE':''));
     $q->execute([$parentId]); $hasProxy=$q->fetchColumn()!==false;
+    if ($source['type']==='auction'&&$source['highest_bidder_id']!==null) {
+        $key=($source['status']==='sold'?'buyout-':'close-').$parentId;
+        $q=$pdo->prepare('SELECT event_type,idempotency_key,user_id,amount_cents FROM market_bids WHERE listing_id=? AND idempotency_key=?'.($lock?' FOR SHARE':''));
+        $q->execute([$parentId,$key]); $event=$q->fetch();
+        if (!$event||!relisting_auction_sale_eligible($source,$event,$hasProxy)||!trade_listing_available($pdo,$parentId)) throw new DomainException(t('relisting.unavailable'));
+        return $source+['source_outcome'=>'sold'];
+    }
     $q=$pdo->prepare('SELECT event_type,idempotency_key,user_id,amount_cents FROM market_bids WHERE listing_id=? ORDER BY id LIMIT 2'.($lock?' FOR SHARE':''));
     $q->execute([$parentId]);
     $events=$q->fetchAll();
     if (in_array($source['type'],['fixed','negotiated'],true)) {
         if (!relisting_general_eligible($source,$events,$hasProxy)||!trade_listing_available($pdo,$parentId)) throw new DomainException(t('relisting.general_unavailable'));
-    } elseif (!relisting_source_eligible($source,$events,$hasProxy)) throw new DomainException(t('relisting.unavailable'));
+    } else {
+        if (!relisting_source_eligible($source,$events,$hasProxy)) throw new DomainException(t('relisting.unavailable'));
+        $source['source_outcome']='no_bid';
+    }
     return $source;
 }
 
@@ -133,6 +163,7 @@ function relisting_context_values(array $link, array $chain, int $owner): array
         ||relisting_integer($chain['root_listing_id']??null)!==$root
         ||relisting_integer($chain['seller_id']??null)!==$seller
         ||!array_key_exists('free_listing_id',$chain)||!array_key_exists('free_used_at',$chain)
+        ||!in_array($link['source_outcome']??null,['no_bid','sold'],true)
         ||!array_key_exists('published_at',$link)) throw new DomainException(t('relisting.conflict'));
     $used=$chain['free_listing_id']===null?null:relisting_integer($chain['free_listing_id']);
     if (($used===null)!==($chain['free_used_at']===null)||($used!==null&&$used<=$root)
@@ -140,7 +171,7 @@ function relisting_context_values(array $link, array $chain, int $owner): array
         ||($link['published_at']!==null&&relisting_timestamp($link['published_at'])===null)
         ||($used!==null&&$used>=$child&&$link['published_at']===null)) throw new DomainException(t('relisting.conflict'));
     return ['root_listing_id'=>$root,'parent_listing_id'=>$parent,'child_listing_id'=>$child,'seller_id'=>$seller,
-        'published_at'=>$link['published_at'],'free_available'=>$used===null,'consumed_by'=>$used];
+        'published_at'=>$link['published_at'],'free_available'=>$used===null,'consumed_by'=>$used,'source_outcome'=>$link['source_outcome']];
 }
 
 /**
@@ -257,7 +288,7 @@ function relisting_prepare_images(array $rows): array
     } catch (Throwable $error) { market_remove_prepared_images($prepared); throw $error; }
 }
 
-/** Own transaction; only completed, unsold auction sources may create a new draft. */
+/** Own transaction; an auction requires a verified closure or buyout. */
 function relisting_create_draft(PDO $pdo, int $seller, int $parentId, bool $confirmInventory=false): int
 {
     if ($pdo->inTransaction()) throw new LogicException('Relisting draft creation owns its transaction.');
@@ -284,27 +315,29 @@ function relisting_create_draft(PDO $pdo, int $seller, int $parentId, bool $conf
             $source=relisting_source($pdo,$seller,$parentId,true);
             $q=$pdo->prepare('SELECT * FROM market_relistings WHERE parent_listing_id=? FOR SHARE'); $q->execute([$parentId]); $link=$q->fetch();
             if ($link) {
-                relisting_context_values($link,$chain,$seller);
+                $context=relisting_context_values($link,$chain,$seller);
+                if ($context['source_outcome']!==$source['source_outcome']) throw new DomainException(t('relisting.conflict'));
                 // Another creator may have committed while we waited for the root.
                 // A consistent snapshot taken before that wait cannot see its child.
                 $q=$pdo->prepare('SELECT seller_id FROM market_listings WHERE id=? FOR SHARE'); $q->execute([$link['child_listing_id']]);
                 if ((int)$q->fetchColumn()!==$seller) throw new DomainException(t('relisting.conflict'));
                 $committing=true; $pdo->commit(); return (int)$link['child_listing_id'];
             }
+            if ($source['source_outcome']==='sold'&&!$confirmInventory) throw new DomainException(t('relisting.inventory_confirm'));
             if (!geo_country_locked_enabled($pdo,$source['country_code'])||!market_category_locked_allowed($pdo,(int)$source['category_id'])
                 ||!catalog_text_allowed($source['title'].' '.$source['description'])) throw new DomainException(t('relisting.unavailable'));
             $q=$pdo->prepare('SELECT storage_key,position,width,height FROM market_images WHERE listing_id=? ORDER BY position FOR SHARE');
             $q->execute([$parentId]); $prepared=relisting_prepare_images($q->fetchAll());
-            $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,buyout_cents,status,zip,city,country_code,latitude,longitude,pickup,shipping,condition_label,auction_fee_eligible) VALUES (?,?,?,?,'auction',?,?,'draft',?,?,?,?,?,?,?,?,1)")
+            $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,buyout_cents,status,zip,city,country_code,latitude,longitude,pickup,shipping,shipping_cents,condition_label,auction_fee_eligible) VALUES (?,?,?,?,'auction',?,?,'draft',?,?,?,?,?,?,?,?,?,1)")
                 ->execute([$seller,$source['category_id'],$source['title'],$source['description'],$source['price_cents'],$source['buyout_cents'],
-                    $source['zip'],$source['city'],$source['country_code'],$source['latitude'],$source['longitude'],$source['pickup'],$source['shipping'],$source['condition_label']]);
+                    $source['zip'],$source['city'],$source['country_code'],$source['latitude'],$source['longitude'],$source['pickup'],$source['shipping'],$source['shipping_cents'],$source['condition_label']]);
             $child=(int)$pdo->lastInsertId();
             classification_copy($pdo,$parentId,$child);
-            $pdo->prepare('INSERT INTO market_relistings(parent_listing_id,child_listing_id,root_listing_id,seller_id) VALUES (?,?,?,?)')->execute([$parentId,$child,$root,$seller]);
+            $pdo->prepare('INSERT INTO market_relistings(parent_listing_id,child_listing_id,root_listing_id,seller_id,source_outcome) VALUES (?,?,?,?,?)')->execute([$parentId,$child,$root,$seller,$source['source_outcome']]);
             foreach ($prepared as $position=>$image) {
                 $pdo->prepare('INSERT INTO market_images(listing_id,storage_key,position,width,height) VALUES (?,?,?,?,?)')->execute([$child,$image['key'],$position,$image['width'],$image['height']]);
             }
-            audit_log($pdo,$seller,'auction.relist_draft_created',$child,['parent_listing_id'=>$parentId,'root_listing_id'=>$root,'image_count'=>count($prepared)]);
+            audit_log($pdo,$seller,'auction.relist_draft_created',$child,['parent_listing_id'=>$parentId,'root_listing_id'=>$root,'source_outcome'=>$source['source_outcome'],'inventory_confirmed'=>$source['source_outcome']==='sold','image_count'=>count($prepared)]);
             $committing=true; $pdo->commit(); return $child;
         } catch (Throwable $error) {
             if ($pdo->inTransaction()) { try { $pdo->rollBack(); $rolledBack=true; } catch (Throwable) {} }
@@ -425,6 +458,7 @@ function relisting_quote_context(array $payload, array $context): void
     $seller=relisting_integer($context['seller_id']??null);
     if ($root>$parent||$parent>=$child||!array_key_exists('published_at',$context)||$context['published_at']!==null
         ||!is_bool($context['free_available']??null)||!array_key_exists('consumed_by',$context)
+        ||!in_array($context['source_outcome']??null,['no_bid','sold'],true)
         ||$context['free_available']!==($context['consumed_by']===null)
         ||!is_array($payload['buyer']??null)||($payload['buyer']['user_id']??null)!==$seller
         ||($payload['currency']??null)!=='EUR'||!is_string($payload['locale']??null)||!isset(i18n_locales()[$payload['locale']])) throw new DomainException(t('relisting.conflict'));
@@ -454,9 +488,10 @@ function relisting_quote_apply(array $quote, array $context): array
     $original=auction_billing_amount($quote['payload'],'listing',null);
     $root=relisting_integer($context['root_listing_id']??null); $parent=relisting_integer($context['parent_listing_id']??null); $child=relisting_integer($context['child_listing_id']??null);
     if ($root>$parent||$parent>=$child) throw new DomainException(t('relisting.conflict'));
-    $applied=$context['free_available']&&$original>0;
+    $applied=$context['source_outcome']==='no_bid'&&$context['free_available']&&$original>0;
     $meta=['version'=>'relisting-1','root_listing_id'=>$root,'parent_listing_id'=>$parent,'child_listing_id'=>$child,
         'original_listing_cents'=>$original,'discount_cents'=>$applied?$original:0,'free_applied'=>$applied];
+    if ($context['source_outcome']==='sold') $meta['source_outcome']='sold';
     $quote['payload']['relisting']=$meta;
     $quote['payload']['tariff']['listing_cents']=$original-$meta['discount_cents'];
     $quote['payload']['fee_version']='abr1-'.substr(hash('sha256',auction_billing_json(['tariff'=>$quote['payload']['tariff'],'relisting'=>$meta])),0,20);
@@ -481,12 +516,13 @@ function relisting_quote_claim(array $payload, array $context): bool
     relisting_quote_context($payload,$context);
     $meta=$payload['relisting']??null;
     if (!is_array($meta)||($meta['version']??null)!=='relisting-1'
+        ||($meta['source_outcome']??'no_bid')!==$context['source_outcome']
         ||!is_bool($meta['free_applied']??null)||!is_bool($context['free_available']??null)
         ||!is_int($meta['original_listing_cents']??null)||$meta['original_listing_cents']<0||$meta['original_listing_cents']>9999999
         ||!is_int($meta['discount_cents']??null)) throw new DomainException(t('relisting.conflict'));
     foreach (['root_listing_id','parent_listing_id','child_listing_id'] as $field)
         if (!is_int($meta[$field]??null)||$meta[$field]!==($context[$field]??null)) throw new DomainException(t('relisting.conflict'));
-    $applied=$context['free_available']&&$meta['original_listing_cents']>0;
+    $applied=$context['source_outcome']==='no_bid'&&$context['free_available']&&$meta['original_listing_cents']>0;
     $discount=$applied?$meta['original_listing_cents']:0;
     if ($meta['free_applied']!==$applied||$meta['discount_cents']!==$discount
         ||auction_billing_amount($payload,'listing',null)!==$meta['original_listing_cents']-$discount) throw new DomainException(t('relisting.conflict'));

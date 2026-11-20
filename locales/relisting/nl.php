@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'Voor de nieuwe veiling geldt het tarief dat vóór publicatie wordt getoond. Hiermee gebruik je de gratis herplaatsing voor een veiling zonder biedingen niet.',
     'relisting.action' => 'Veiling opnieuw plaatsen',
     'relisting.heading' => 'Veiling opnieuw publiceren',
     'relisting.help' => 'De oorspronkelijke veiling en de biedingen blijven behouden. Er wordt een nieuw concept gemaakt met kopieën van de productafbeeldingen. Publiceren gebeurt in een aparte stap.',

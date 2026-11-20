@@ -1,10 +1,12 @@
-# Wiedereinstellung erfolgloser Auktionen
+# Wiedereinstellung von Auktionen
 
 Eine eigene Auktion kann nach einem tatsächlichen Abschluss ohne Gebot erneut
 angeboten werden. Bloßer Zeitablauf oder ein fehlender Gewinner genügen nicht:
 der ursprüngliche `close_no_bid`-Abschluss muss vorhanden sein, Gebote und
-Sofortkaufereignisse dürfen dem nicht widersprechen. Verkaufte, gesperrte oder
-fremde Angebote erhalten keinen Wiedereinstellungsanspruch.
+Sofortkaufereignisse dürfen dem nicht widersprechen. Ein Verkauf per Zuschlag
+oder Sofortkauf erlaubt einen neuen Durchlauf nach ausdrücklicher Bestätigung,
+dass ein weiteres Exemplar verfügbar ist. Der Server prüft das Abschlussereignis
+gegen Käufer und Verkaufspreis. Gesperrte oder fremde Angebote sind ausgeschlossen.
 
 ## Kundenablauf
 
@@ -34,6 +36,11 @@ gebunden. Eine nachträgliche Änderung verlangt neue Zustimmung. Die normale
 Erfolgsprovision bleibt bestehen. Nullgebühren erzeugen einen Ereignisnachweis,
 keine Rechnung über einen erfundenen Zahlungseingang. Weitere Nachfolger derselben
 Kette verwenden nach Anspruchsverbrauch den aktuell angebotenen Einstelltarif.
+Ein Nachfolger eines verkauften Angebots verwendet ebenfalls den aktuellen
+Einstelltarif. Das Abschlussmerkmal der Quelle wird ab Migration 038 gespeichert
+und an die Quote gebunden. Ein ungenutzter Rabatt bleibt für einen späteren
+Abschluss ohne Gebote verfügbar. Bestehende Verknüpfungen stammen aus dem bis
+dahin möglichen Ablauf ohne Gebote und werden entsprechend markiert.
 
 ## Schutz und technische Grenzen
 
@@ -47,9 +54,10 @@ Ein neuer Durchlauf bleibt eine Auktion. Nach seiner Veröffentlichung kann er n
 zum Entwurf zurückgesetzt werden; Pausieren/Fortsetzen erhält seine Endzeit.
 Der ursprüngliche Durchlauf wird weder verlängert noch wiederbelebt.
 
-Diese Etappe betrifft erfolglos beendete Auktionen. Weitere Inseratarten, explizite
-Verlängerungen und die restlichen Handelsabläufe aus Masteranforderung 11 bleiben
-offen. Live-Zahlungs-/Finanzfreigaben werden durch die Funktion nicht aktiviert.
+Festpreis- und Verhandlungsangebote verwenden einen eigenen Kopierablauf.
+Aktive berechtigte Inserate können einmal verlängert werden. Beide Abläufe sind
+in den Lifecycle-Tests abgedeckt. Die Veröffentlichung verwendet die jeweils
+freigegebenen Finanz- und Rechtskonfigurationen.
 
 ## Prüfungen
 

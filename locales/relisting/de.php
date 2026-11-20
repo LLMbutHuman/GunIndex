@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'Für die neue Auktion gilt der zum Zeitpunkt der Veröffentlichung angezeigte Tarif. Der Rabatt für eine Auktion ohne Gebote wird dabei nicht verbraucht.',
     'relisting.action' => 'Auktion wieder einstellen',
     'relisting.heading' => 'Auktion erneut veröffentlichen',
     'relisting.help' => 'Die ursprüngliche Auktion und ihre Gebote bleiben erhalten. Es entsteht ein neuer Entwurf mit kopierten Produktbildern. Die Veröffentlichung erfolgt separat.',

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'La nuova asta segue la tariffa mostrata prima della pubblicazione. La ripubblicazione gratuita prevista per un’asta senza offerte non viene utilizzata.',
     'relisting.action' => 'Rimetti l’asta in vendita',
     'relisting.heading' => 'Pubblica nuovamente l’asta',
     'relisting.help' => 'L’asta originale e le relative offerte vengono conservate. Viene creata una nuova bozza con copie delle immagini del prodotto. La pubblicazione avviene in un passaggio separato.',

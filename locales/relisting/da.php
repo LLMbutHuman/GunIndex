@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
+    'relisting.sold_fee' => 'For den nye auktion gælder det gebyr, der vises før offentliggørelse. Den gratis genoprettelse for en auktion uden bud bruges ikke.',
     'relisting.action' => 'Sæt auktionen til salg igen',
     'relisting.heading' => 'Offentliggør auktionen igen',
     'relisting.help' => 'Den oprindelige auktion og dens bud bevares. Der oprettes en ny kladde med kopier af produktbillederne. Offentliggørelse sker i et separat trin.',

@@ -13,6 +13,8 @@ $seller=(int)$user['id'];$error='';
 try{$source=relisting_source($pdo,$seller,$parentId);}
 catch(DomainException $exception){abort_request(404,$exception->getMessage());}
 $auction=$source['type']==='auction';
+$soldAuction=($source['source_outcome']??null)==='sold';
+$requiresInventory=$soldAuction||(!$auction&&$source['status']==='sold');
 if($method==='POST'){
     try{
         if(($_POST['confirm_relist']??null)!=='1')throw new DomainException(t($auction?'relisting.confirm':'relisting.general_confirm'));
@@ -23,7 +25,7 @@ if($method==='POST'){
     }
 }
 $freeAvailable=false;
-if($auction){
+if($auction&&!$soldAuction){
     $context=relisting_context($pdo,$seller,$parentId);
     $rootId=$context['root_listing_id']??$parentId;
     $q=$pdo->prepare('SELECT free_listing_id FROM market_relisting_chains WHERE root_listing_id=? AND seller_id=?');
@@ -41,7 +43,7 @@ include __DIR__.'/../includes/header.php';
 <h2><?=h($source['title'])?></h2>
 <p><a href="/marketplace/<?=$auction?'view-auction.php':'view-item.php'?>?id=<?=$parentId?>"><?=h(t($auction?'relisting.source':'relisting.general_source',['listing'=>$parentId]))?></a></p>
 <p><?=h(t($auction?'relisting.help':'relisting.general_help'))?></p>
-<?php if($auction): ?><p><?=h(t($freeAvailable?'relisting.free_available':'relisting.free_used'))?></p><?php endif; ?>
+<?php if($auction): ?><p><?=h(t($soldAuction?'relisting.sold_fee':($freeAvailable?'relisting.free_available':'relisting.free_used')))?></p><?php endif; ?>
 <?php if($error!==''): ?><p class="notice notice-error" role="alert"><?=h($error)?></p><?php endif; ?>
 <?php if($child): ?>
 <a class="button" href="<?=$child['status']==='draft'?'/user/edit-listing.php?id='.(int)$child['id']:'/user/dashboard.php'?>"><?=h(t($child['status']==='draft'?($auction?'relisting.open_draft':'relisting.general_open_draft'):'dashboard.title'))?></a>
@@ -49,7 +51,7 @@ include __DIR__.'/../includes/header.php';
 <form method="post" action="/user/relist.php">
 <?=csrf_field()?><input type="hidden" name="listing_id" value="<?=$parentId?>">
 <label class="check"><input type="checkbox" name="confirm_relist" value="1" required> <?=h(t($auction?'relisting.confirm':'relisting.general_confirm'))?></label>
-<?php if(!$auction&&$source['status']==='sold'): ?><label class="check"><input type="checkbox" name="confirm_inventory" value="1" required> <?=h(t('relisting.inventory_confirm'))?></label><?php endif; ?>
+<?php if($requiresInventory): ?><label class="check"><input type="checkbox" name="confirm_inventory" value="1" required> <?=h(t('relisting.inventory_confirm'))?></label><?php endif; ?>
 <button class="button" type="submit"><?=h(t($auction?'relisting.action':'relisting.general_action'))?></button>
 </form>
 <?php endif; ?>

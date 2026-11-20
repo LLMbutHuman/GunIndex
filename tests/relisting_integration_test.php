@@ -218,7 +218,7 @@ try {
             rli_check((int)rli_scalar($pdo,'SELECT COUNT(*) FROM market_relistings WHERE parent_listing_id=?',[$parent])===1,'Duplicate lineage row.');
             rli_check($before===rli_listing_snapshot($pdo,$parent) && $finances===rli_financial_counts($pdo,$seller['id']),'Draft changed source or financial records.');
         },
-        'wrong_owners_and_non_unsold_sources_cannot_create_a_successor'=>static function() use ($pdo,$category): void {
+        'wrong_owners_and_sources_without_a_proven_close_cannot_create_a_successor'=>static function() use ($pdo,$category): void {
             $seller=rli_user($pdo); $other=rli_user($pdo); $parent=rli_source($pdo,$seller['id'],$category);
             $before=rli_listing_snapshot($pdo,$parent);
             rli_reject(fn()=>relisting_create_draft($pdo,$other['id'],$parent),DomainException::class);
@@ -238,6 +238,48 @@ try {
             finally { $pdo->prepare('DELETE FROM market_bids WHERE id=?')->execute([$event]); }
             rli_check((int)rli_scalar($pdo,'SELECT COUNT(*) FROM market_relistings WHERE parent_listing_id=?',[$parent])===0,'Rejected source acquired a successor.');
             rli_check($before===rli_listing_snapshot($pdo,$parent),'Rejected source was mutated.');
+        },
+        'sold_auctions_require_new_stock_and_assess_the_current_tariff'=>static function() use ($pdo,$category): void {
+            $seller=rli_user($pdo); $buyer=rli_user($pdo);
+            $browser=rli_browser(); rli_login($browser,$seller);
+            foreach (['buyout','bids'] as $route) {
+                $base=auction_billing_quote($pdo,$seller['id']);
+                $parent=market_save_listing($pdo,$seller['id'],array_replace(rli_input($category,['shipping_price'=>'3.50']),rli_accept($base)));
+                if ($route==='buyout') {
+                    market_buy_now($pdo,$parent,$buyer['id']);
+                } else {
+                    market_bid($pdo,$parent,$buyer['id'],1500);
+                    $pdo->prepare("UPDATE market_listings SET ends_at='1000-01-01 00:00:00' WHERE id=?")->execute([$parent]);
+                    rli_check(market_close_due($pdo,1)===1,'Worker did not close the successful auction.');
+                }
+                $before=rli_listing_snapshot($pdo,$parent);
+                rli_check((int)$before[0]['highest_bidder_id']===$buyer['id']&&count($before['market_auction_fee_charges'])===2,'The source must already have its original sale and charges.');
+                $dashboard=rli_http($browser,'/user/dashboard.php');
+                rli_check(str_contains($dashboard['body'],'/user/relist.php?id='.$parent.'"'),'Seller cannot find a sold auction in the dashboard.');
+                $form=rli_http($browser,'/user/relist.php?id='.$parent);
+                rli_check($form['status']===200&&str_contains($form['body'],'name="confirm_inventory"'),'The real route did not ask to confirm new stock.');
+                $formData=['listing_id'=>(string)$parent,'confirm_relist'=>'1','csrf_token'=>rli_csrf($form)];
+                rli_check(rli_http($browser,'/user/relist.php','POST',$formData)['status']===422,'A seller could relist without confirming another item.');
+                rli_reject(fn()=>relisting_create_draft($pdo,$buyer['id'],$parent,true),DomainException::class);
+                $response=rli_http($browser,'/user/relist.php','POST',$formData+['confirm_inventory'=>'1']);
+                rli_check($response['status']===303&&preg_match('~\A/user/edit-listing\.php\?id=([1-9][0-9]*)&relisted=1\z~',$response['headers']['location']??'',$match)===1,'Sold auction relist did not open a draft.');
+                $child=(int)$match[1];
+                rli_check(relisting_create_draft($pdo,$seller['id'],$parent,true)===$child,'A replay created another draft.');
+                $copy=rli_row($pdo,'SELECT status,highest_bidder_id,current_bid_cents,shipping_cents FROM market_listings WHERE id=?',[$child]);
+                rli_check($copy['status']==='draft'&&$copy['highest_bidder_id']===null&&$copy['current_bid_cents']===null&&(int)$copy['shipping_cents']===350,'Draft copied a sale or lost a shipping price.');
+                $quote=rli_quote($pdo,$seller['id'],$child);
+                $fee=$base['payload']['tariff']['listing_cents'];
+                rli_check($quote['payload']['tariff']['listing_cents']===$fee&&$fee>0&&!$quote['payload']['relisting']['free_applied'],'The sold auction wrongly received a discount.');
+                rli_publish($pdo,$seller['id'],$category,$child,$quote);
+                $charge=rli_row($pdo,"SELECT c.gross_cents,i.status FROM market_auction_fee_charges c JOIN market_invoices i ON i.id=c.invoice_id WHERE c.listing_id=? AND c.kind='listing'",[$child]);
+                rli_check((int)$charge['gross_cents']===$fee&&$charge['status']==='issued','The new auction did not produce one correct charge.');
+                rli_end_unsold($pdo,$child);
+                $next=relisting_create_draft($pdo,$seller['id'],$child);
+                $nextQuote=rli_quote($pdo,$seller['id'],$next);
+                rli_check($nextQuote['payload']['relisting']['free_applied']&&$nextQuote['payload']['tariff']['listing_cents']===0,'Paid relisting consumed the later no-bid discount.');
+                rli_publish($pdo,$seller['id'],$category,$next,$nextQuote);
+                rli_check(relisting_context($pdo,$seller['id'],$next)['consumed_by']===$next&&$before===rli_listing_snapshot($pdo,$parent),'The new auction changed the original sale or its fee history.');
+            }
         },
         'images_are_independent_private_files_and_owner_only_draft_previews'=>static function() use ($pdo,$category): void {
             $seller=rli_user($pdo); $parent=rli_source($pdo,$seller['id'],$category); $original=rli_images($pdo,$parent,2);
