@@ -2,7 +2,7 @@
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit(1);}
 require_once __DIR__.'/../config/geo.php';
-$options=getopt('',['country:','file:','source:','license-note:','license-reviewed','format:','dry-run']);
+$options=getopt('',['country:','file:','source:','license-note:','license-reviewed','format:','expected-sha256:','dry-run']);
 try{
     if(!is_string($options['country']??null))throw new InvalidArgumentException('An explicit --country code is required.');
     $country=geo_country($options['country']);
@@ -10,7 +10,17 @@ try{
     if(!is_string($file)||!is_file($file)||is_link($file)||filesize($file)>33554432||!in_array($format,['standard','legacy-de'],true)||($format==='legacy-de'&&$country!=='DE'))throw new InvalidArgumentException('Expected a regular CSV file up to 32 MiB and a valid format/country.');
     $source=$options['source']??'';$license=$options['license-note']??'';
     if(!$dry&&(!array_key_exists('license-reviewed',$options)||!is_string($source)||strlen(trim($source))<3||strlen($source)>200||!is_string($license)||strlen(trim($license))<10||strlen($license)>2000||!preg_match('//u',$source.$license)))throw new InvalidArgumentException('A source description, license note and explicit --license-reviewed are required before importing.');
-    $handle=fopen($file,'rb');if($handle===false)throw new RuntimeException('Cannot read CSV.');$records=[];$line=0;$duplicate=0;
+    $expected=$options['expected-sha256']??null;
+    if($expected!==null&&(!is_string($expected)||!preg_match('/\A[0-9a-f]{64}\z/i',$expected)))throw new InvalidArgumentException('Expected a SHA-256 digest of 64 hexadecimal characters.');
+    $input=fopen($file,'rb');if($input===false)throw new InvalidArgumentException('Cannot read CSV.');
+    $handle=fopen('php://temp','w+b');if($handle===false){fclose($input);throw new RuntimeException('Cannot store CSV snapshot.');}
+    try{$bytes=stream_copy_to_stream($input,$handle,33554433);}finally{fclose($input);}
+    if($bytes===false||$bytes>33554432||!rewind($handle))throw new InvalidArgumentException('Expected a readable CSV file up to 32 MiB.');
+    $hash=hash_init('sha256');
+    if(hash_update_stream($hash,$handle)!==$bytes||!rewind($handle))throw new RuntimeException('Cannot verify CSV snapshot.');
+    $digest=hash_final($hash);
+    if($expected!==null&&!hash_equals(strtolower($expected),$digest))throw new InvalidArgumentException('The CSV does not match the expected SHA-256 digest.');
+    $records=[];$line=0;$duplicate=0;
     if($format==='standard'){$header=fgetcsv($handle,0,';','"','');$line++;if(!is_array($header))throw new InvalidArgumentException('CSV header missing.');$header[0]=preg_replace('/^\xEF\xBB\xBF/','',$header[0]);if($header!==['postal_code','city','latitude','longitude'])throw new InvalidArgumentException('Required header: postal_code;city;latitude;longitude');}
     while(($row=fgetcsv($handle,0,';','"',''))!==false){
         $line++;if($row===[null])continue;if(count($row)!==4)throw new InvalidArgumentException('CSV column count is invalid at line '.$line.'.');
@@ -21,7 +31,7 @@ try{
         if(isset($records[$postal])){if($records[$postal]!==$value)throw new InvalidArgumentException('Conflicting duplicate postcode at line '.$line.'. Aggregate or correct this source explicitly.');$duplicate++;continue;}
         $records[$postal]=$value;if(count($records)>100000)throw new InvalidArgumentException('Split this source into reviewed CSV parts of at most 100000 unique postcodes. Existing locations from other parts are retained.');
     }
-    fclose($handle);if(!$records)throw new InvalidArgumentException('No valid locations in CSV.');$digest=hash_file('sha256',$file);
+    fclose($handle);if(!$records)throw new InvalidArgumentException('No valid locations in CSV.');
     if($dry){fwrite(STDOUT,'Validated '.count($records).' locations for '.$country.'; duplicates: '.$duplicate.'; SHA256 '.$digest.". No database changes.\n");exit(0);}
     require_once __DIR__.'/../config/bootstrap.php';$pdo->beginTransaction();
     $lock=$pdo->prepare('SELECT code FROM market_countries WHERE code=? FOR UPDATE');$lock->execute([$country]);if(!$lock->fetchColumn())throw new RuntimeException('Country schema is missing. Apply migrations first.');

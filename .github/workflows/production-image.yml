@@ -1,10 +1,10 @@
 name: Production image from release archive
 on:
   pull_request:
-    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'sql/**', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/import-postcodes.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'tests/production_postcodes_test.php', 'sql/**', 'ZIP/PLZ.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
   push:
     branches: [feature/general-marketplace-rebuild]
-    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'sql/**', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/import-postcodes.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'tests/production_postcodes_test.php', 'sql/**', 'ZIP/PLZ.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
 permissions:
   contents: read
 jobs:

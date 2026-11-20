@@ -77,6 +77,7 @@ php ops/import-postcodes.php --country=DE --file=/private/postcodes.csv \
 
 # Vorhandenes altes Format ausschließlich nach geklärten Rechten:
 php ops/import-postcodes.php --country=DE --file=ZIP/PLZ.csv --format=legacy-de \
+  --expected-sha256=3f8a041a81caceb948ba30b285ba80281d464cd22fc4a049eba4bebdd8aab59b \
   --source='Geprüfte tatsächliche Herkunft' \
   --license-note='Geprüfte Nutzungsrechte dieses Bestands' --license-reviewed
 ```
@@ -86,6 +87,8 @@ Quell- und Länderabdeckung sind im geschützten Administrationsbereich sichtbar
 Eine deaktivierte Datenquelle wird nicht weiter zur Entfernungssuche verwendet.
 Erfolgreiche Importe ersetzen nur ihre konkret enthaltenen PLZ-Punkte in einer
 Transaktion und schreiben einen technischen Audit-Eintrag ohne lokale Dateipfade.
+Der optionale SHA-256-Wert bindet Prüfung und Import an dieselben eingelesenen
+Bytes. Bei abweichendem Hash endet der Import vor dem Datenbankzugriff.
 
 ## Prüfungen
 

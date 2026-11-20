@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Prüfsummengebundener PLZ-Import, 2026-11-21
+
+Der Importer kann die eingelesene CSV an einen erwarteten SHA-256-Wert binden.
+Validierung, Quellnachweis und Import beziehen sich auf dieselbe Momentaufnahme.
+Lokal ergab die bereitgestellte Datei 8.289 eindeutige PLZ. Eine abweichende
+Prüfsumme wurde vor einem Datenbankzugriff abgewiesen.
+
+Die isolierte Installationsprobe importiert die vollständige Benutzerdatei mit
+ihrer dokumentierten Rechtebestätigung für diesen Test. Sie prüft führende Nullen,
+Landesgrenzen, exakte PLZ und Umkreissuche mit den tatsächlichen Koordinaten der
+Datei. Die Ausführung steht aus. Weitere Länderquellen benötigen eigene Nachweise.
+
 ## Belege und Korrekturen je Auktion, 2026-11-21
 
 Der Link auf einem Gebührenauftrag öffnet die Rechnungsübersicht für die
