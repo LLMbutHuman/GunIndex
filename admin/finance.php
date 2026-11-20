@@ -1,9 +1,15 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../config/bootstrap.php';$admin=require_permission($pdo,'finance.manage');$pageTitle='Finanzverwaltung';$error='';$success='';
+require_once __DIR__.'/../config/bootstrap.php';$admin=require_permission($pdo,'finance.manage');$pageTitle=t('finance_admin.title');$error='';$success='';
 if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
  $action=post_string('action');
- if($action==='tax'){if(post_string('review_confirmed')!=='1')throw new InvalidArgumentException('Fachliche Prüfung bestätigen.');finance_save_tax($pdo,(int)$admin['id'],post_string('country_code'),(int)post_string('basis_points'),post_string('explanation',300));$success='Die landesspezifische Steuerregel wurde protokolliert gespeichert.';}
+ if($action==='tax'){
+  if(post_string('review_confirmed')!=='1')throw new InvalidArgumentException(t('finance_admin.tax_confirm_required'));
+  $basisPoints=filter_var(post_string('basis_points',5),FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>10000]]);
+  $country=post_string('country_code',2);
+  if($basisPoints===false||!isset(geo_countries()[$country]))throw new InvalidArgumentException(t('finance_admin.tax_invalid'));
+  finance_save_tax($pdo,(int)$admin['id'],$country,$basisPoints,post_string('explanation',300));$success=t('finance_admin.tax_saved');
+ }
  elseif($action==='paypal_refund'){
   $requestId=filter_var(post_string('request_id',20),FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
   if(!$requestId||post_string('review_confirmed')!=='1')throw new InvalidArgumentException(t('paypal_refunds.ineligible'));
@@ -16,10 +22,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
   $success=t('paypal_refunds.reconciled');
  }
  elseif(in_array($action,['refund','bank_refund'],true)){
-  if(post_string('review_confirmed')!=='1')throw new InvalidArgumentException('Tatsächlich erfolgte Erstattung bestätigen.');
+  if(post_string('review_confirmed')!=='1')throw new InvalidArgumentException(t('finance_admin.refund_confirm_required'));
   $bank=$action==='bank_refund';
   finance_record_refund($pdo,(int)$admin['id'],(int)post_string('invoice_id'),money_parse(post_string('amount')),post_string('transaction_id',$bank?128:64),post_string('reason',2000),post_string('request_id')!==''?(int)post_string('request_id'):null,$bank?'bank':'paypal');
-  $success='Die tatsächlich erfolgte Erstattung wurde dokumentiert.';
+  $success=t('finance_admin.refund_saved');
  }elseif($action==='auction_waive'){
   auction_billing_waive($pdo,(int)$admin['id'],(int)post_string('invoice_id'),post_string('reason',2000));$success=t('auction_billing.waived');
  }elseif($action==='auction_correct'){
@@ -28,11 +34,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){require_csrf();try{
   $replacement=auction_fee_correct($pdo,(int)$admin['id'],$invoiceId,money_parse(post_string('reduction',11)),post_string('reason',2000));
   redirect('/admin/payments.php?invoice='.$replacement);
  }elseif($action==='reject'){
-  $reason=trim(post_string('reason',2000));if(mb_strlen($reason)<10)throw new InvalidArgumentException('Eine nachvollziehbare Begründung ist erforderlich.');
-  $q=$pdo->prepare("UPDATE market_refund_requests SET status='rejected',decision_reason=? WHERE id=? AND status='requested'");$q->execute([$reason,(int)post_string('request_id')]);
-  if($q->rowCount()!==1)throw new PaymentConflict(t('paypal_refunds.ineligible'));
-  audit_log($pdo,(int)$admin['id'],'finance.refund_rejected',(int)post_string('request_id'),[]);$success='Die Ablehnung ist dokumentiert.';
- }else throw new InvalidArgumentException('Ungültige Aktion.');
+  $requestId=filter_var(post_string('request_id',20),FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+  if($requestId===false)throw new InvalidArgumentException(t('paypal_refunds.ineligible'));
+  finance_reject_refund_request($pdo,(int)$admin['id'],$requestId,post_string('reason',2000));$success=t('finance_admin.decision_saved');
+ }else throw new InvalidArgumentException(t('finance_customer.invalid_action'));
 }catch(InvalidArgumentException|PaymentConflict|PaymentUnavailable|DomainException $e){http_response_code(422);$error=$e->getMessage();}}
 $taxes=$pdo->query('SELECT * FROM market_tax_rules ORDER BY country_code')->fetchAll();
 $paypalConfig=payments_config();$paypalRefundReason=paypal_refund_gate($pdo,$paypalConfig);
@@ -41,7 +46,7 @@ $q->execute();$requests=$q->fetchAll();
 $documents=$pdo->query('SELECT * FROM market_invoice_documents ORDER BY id DESC LIMIT 100')->fetchAll();
 $auctionCharges=$pdo->query("SELECT i.id AS invoice_id,i.invoice_number,i.status,i.gross_cents,o.listing_id FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.service_code IN ('auction_listing','auction_success') AND i.status IN ('issued','pending','manual_rejected') ORDER BY i.id DESC LIMIT 100")->fetchAll();
 include __DIR__.'/../includes/header.php';?>
-<main class="container admin-page"><div class="page-heading"><p class="eyebrow">Finanzen</p><h1>Belege und Korrekturen.</h1><p>Rechnungen bleiben unverändert. Stornos und Gutschriften sind neue, verknüpfte Dokumente.</p></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php';?><div class="admin-content">
+<main class="container admin-page"><div class="page-heading"><p class="eyebrow"><?=h(t('finance_admin.eyebrow'))?></p><h1><?=h(t('finance_admin.heading'))?></h1><p><?=h(t('finance_admin.document_integrity'))?></p></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php';?><div class="admin-content">
 <?php if($error):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?><?php if($success):?><p class="notice success"><?=h($success)?></p><?php endif;?>
 <section class="panel"><h2><?=h(t('auction_billing.heading'))?></h2><p><?=h(t('auction_billing.waive_help'))?></p>
 <?php foreach($auctionCharges as $charge):?>
@@ -57,12 +62,12 @@ include __DIR__.'/../includes/header.php';?>
 <button class="button secondary" type="submit" name="action" value="auction_waive"><?=h(t('auction_billing.waive'))?></button>
 </form></article>
 <?php endforeach;?></section>
-<section class="panel"><h2>Ausstellung freigeben</h2><p>Vor Aktivierung sind Betreiberanschrift, zutreffende Steuer-/Registerkennungen und die Behandlung jedes tatsächlich bedienten Rechnungslands fachlich zu prüfen. Eine Käufer-USt-ID erzeugt keine automatische Steuerbefreiung.</p><a class="button secondary" href="/admin/settings.php">Betreiberangaben und Rechnungsfunktion</a><a class="button secondary" href="/admin/payments.php">Zahlungseingänge</a></section>
-<section class="panel"><h2>Landesspezifische Steuerregeln</h2><?php foreach($taxes as $tax):?><p><?=h($tax['country_code'])?> · <?=(int)$tax['basis_points']?> Basispunkte · <?=h($tax['explanation'])?></p><?php endforeach;?>
-<form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="tax"><label class="field">Rechnungsland<select name="country_code"><?php foreach(geo_countries() as $code=>$name):?><option value="<?=h($code)?>"><?=h($name)?></option><?php endforeach;?></select></label><label class="field">Geprüfter Steuersatz in Basispunkten<input type="number" name="basis_points" min="0" max="10000" required><small>1900 entspricht 19 %. Keine automatische Länder- oder Steuerberatung.</small></label><label class="field">Rechts-/Steuergrundlage und Behandlung<textarea name="explanation" minlength="10" maxlength="300" required></textarea></label><label><input type="checkbox" name="review_confirmed" value="1" required> Die steuerliche Behandlung dieser Plattformleistung für dieses Rechnungsland ist fachlich geprüft.</label><button class="button">Steuerregel speichern</button></form></section>
-<section class="panel"><h2>Erstattungsanfragen</h2>
+<section class="panel"><h2><?=h(t('finance_admin.issue_setup'))?></h2><p><?=h(t('finance_admin.issue_help'))?></p><a class="button secondary" href="/admin/settings.php"><?=h(t('finance_admin.operator_settings'))?></a><a class="button secondary" href="/admin/payments.php"><?=h(t('finance_admin.payments'))?></a></section>
+<section class="panel"><h2><?=h(t('finance_admin.taxes'))?></h2><?php foreach($taxes as $tax):?><p><?=h($tax['country_code'])?> · <?=(int)$tax['basis_points']?> <?=h(t('finance_admin.basis_points_unit'))?> · <?=h($tax['explanation'])?></p><?php endforeach;?>
+<form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="tax"><label class="field"><?=h(t('finance_admin.country'))?><select name="country_code"><?php foreach(geo_countries() as $code=>$name):?><option value="<?=h($code)?>"><?=h($name)?></option><?php endforeach;?></select></label><label class="field"><?=h(t('finance_admin.basis_points'))?><input type="number" name="basis_points" min="0" max="10000" required><small><?=h(t('finance_admin.basis_points_example'))?></small></label><label class="field"><?=h(t('finance_admin.tax_basis'))?><textarea name="explanation" minlength="10" maxlength="300" required></textarea></label><label><input type="checkbox" name="review_confirmed" value="1" required> <?=h(t('finance_admin.tax_confirm'))?></label><button class="button"><?=h(t('finance_admin.tax_save'))?></button></form></section>
+<section class="panel"><h2><?=h(t('finance_admin.refunds'))?></h2>
 <?php if($paypalRefundReason!==null):?><p><?=h($paypalRefundReason)?></p><?php endif;?>
-<?php if(!$requests):?><p>Keine Anfragen.</p><?php endif;?>
+<?php if(!$requests):?><p><?=h(t('finance_admin.refunds_empty'))?></p><?php endif;?>
 <?php foreach($requests as $r):?>
 <article class="panel" id="refund-<?=(int)$r['id']?>">
 <h3>#<?=(int)$r['id']?> · <?=h($r['invoice_number'])?></h3>
@@ -93,23 +98,23 @@ include __DIR__.'/../includes/header.php';?>
 <form method="post" class="form-grid"><?=csrf_field()?>
 <input type="hidden" name="request_id" value="<?=(int)$r['id']?>">
 <input type="hidden" name="invoice_id" value="<?=(int)$r['invoice_id']?>">
-<label class="field">Entscheidung<select name="action"><?php if((int)$r['bank_payment']===1):?><option value="bank_refund"><?=h(t('bank.refund_record'))?></option><?php elseif($r['api_mode']!=='sandbox'&&$r['bitcoin_chain']===null):?><option value="refund">Bereits tatsächlich ausgeführte Erstattung dokumentieren</option><?php endif;?><option value="reject">Anfrage begründet ablehnen</option></select></label>
+<label class="field"><?=h(t('finance_admin.decision'))?><select name="action"><?php if((int)$r['bank_payment']===1):?><option value="bank_refund"><?=h(t('bank.refund_record'))?></option><?php elseif($r['api_mode']!=='sandbox'&&$r['bitcoin_chain']===null):?><option value="refund"><?=h(t('finance_admin.record_refund'))?></option><?php endif;?><option value="reject"><?=h(t('finance_admin.reject_request'))?></option></select></label>
 <?php if($r['api_mode']!=='sandbox'&&$r['bitcoin_chain']===null):?>
-<label class="field">Tatsächlicher EUR-Erstattungsbetrag<input name="amount" inputmode="decimal" value="<?=h(payments_decimal((int)$r['requested_cents']))?>"></label>
+<label class="field"><?=h(t('finance_admin.refund_eur'))?><input name="amount" inputmode="decimal" value="<?=h(payments_decimal((int)$r['requested_cents']))?>"></label>
 <?php if((int)$r['bank_payment']===1):?>
 <label class="field"><?=h(t('bank.refund_id'))?><input name="transaction_id" maxlength="128" autocomplete="off"></label>
 <label><input type="checkbox" name="review_confirmed" value="1"> <?=h(t('bank.refund_confirm'))?></label>
 <?php else:?>
-<label class="field">Tatsächliche PayPal-Erstattungskennung<input name="transaction_id" maxlength="64" autocomplete="off"></label>
-<label><input type="checkbox" name="review_confirmed" value="1"> Ich habe die abgeschlossene Erstattung direkt im tatsächlichen Zahlungskonto geprüft.</label>
+<label class="field"><?=h(t('finance_admin.refund_paypal_id'))?><input name="transaction_id" maxlength="64" autocomplete="off"></label>
+<label><input type="checkbox" name="review_confirmed" value="1"> <?=h(t('finance_admin.refund_verify'))?></label>
 <?php endif;?>
 <?php endif;?>
-<label class="field">Begründung<textarea name="reason" minlength="10" maxlength="2000" required></textarea></label>
-<button class="button secondary" type="submit">Entscheidung protokollieren</button>
+<label class="field"><?=h(t('finance_admin.reason'))?><textarea name="reason" minlength="10" maxlength="2000" required></textarea></label>
+<button class="button secondary" type="submit"><?=h(t('finance_admin.decision'))?> protokollieren</button>
 </form>
 <?php endif;?>
 </article>
 <?php endforeach;?>
 </section>
-<section class="panel"><h2>Unveränderliche Dokumente</h2><div class="table-wrap"><table><thead><tr><th>Dokument</th><th>Art</th><th>Betrag</th><th>Datum</th></tr></thead><tbody><?php foreach($documents as $d):?><tr><td><a href="/user/invoices.php?download=<?=(int)$d['id']?>&amp;staff=1"><?=h($d['document_number'])?> · PDF</a></td><td><?=h($d['document_type'])?></td><td><?=h(money_eur((int)$d['amount_cents']))?></td><td><?=h($d['issued_at'])?> UTC</td></tr><?php endforeach;?></tbody></table></div></section>
+<section class="panel"><h2><?=h(t('finance_admin.documents'))?></h2><div class="table-wrap"><table><thead><tr><th><?=h(t('finance_customer.document'))?></th><th><?=h(t('finance_customer.kind'))?></th><th><?=h(t('Betrag'))?></th><th><?=h(t('payment_customer.date'))?></th></tr></thead><tbody><?php foreach($documents as $d):?><tr><td><a href="/user/invoices.php?download=<?=(int)$d['id']?>&amp;staff=1"><?=h($d['document_number'])?> · PDF</a></td><td><?=h(in_array($d['document_type'],['invoice','credit_note','cancellation'],true)?t('finance_customer.'.$d['document_type']):$d['document_type'])?></td><td><?=h(money_eur((int)$d['amount_cents']))?></td><td><?=h($d['issued_at'])?> UTC</td></tr><?php endforeach;?></tbody></table></div></section>
 </div></div></main><?php include __DIR__.'/../includes/footer.php';?>

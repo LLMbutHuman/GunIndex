@@ -29,7 +29,7 @@ function finance_operator(PDO $pdo):array {
 }
 function finance_save_tax(PDO $pdo,int $actor,string $country,int $bps,string $explanation):void {
  governance_assert_actor($pdo,$actor,'finance.manage');$country=geo_country($country);
- if($bps<0||$bps>10000||mb_strlen(trim($explanation))<10||mb_strlen($explanation)>300)throw new InvalidArgumentException('Geprüften Steuersatz und nachvollziehbare Erläuterung angeben.');
+ if($bps<0||$bps>10000||mb_strlen(trim($explanation))<10||mb_strlen($explanation)>300)throw new InvalidArgumentException(t('finance_admin.tax_invalid'));
  $pdo->prepare('INSERT INTO market_tax_rules(country_code,basis_points,explanation,reviewed_by) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE basis_points=VALUES(basis_points),explanation=VALUES(explanation),reviewed_by=VALUES(reviewed_by),reviewed_at=UTC_TIMESTAMP()')->execute([$country,$bps,trim($explanation),$actor]);
  audit_log($pdo,$actor,'finance.tax_reviewed',null,['country'=>$country,'basis_points'=>$bps]);
 }
@@ -108,12 +108,25 @@ function finance_request_refund(PDO $pdo,int $userId,int $invoiceId,int $amount,
   $pdo->prepare('INSERT INTO market_refund_requests(invoice_id,user_id,requested_cents,reason) VALUES (?,?,?,?)')->execute([$invoiceId,$userId,$amount,trim($reason)]);$id=(int)$pdo->lastInsertId();audit_log($pdo,$userId,'finance.refund_requested',$invoiceId,['request_id'=>$id]);$pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
+function finance_reject_refund_request(PDO $pdo,int $actor,int $requestId,string $reason):void {
+ $reason=trim($reason);
+ if($requestId<1||!mb_check_encoding($reason,'UTF-8')||mb_strlen($reason)<10||mb_strlen($reason)>2000)throw new InvalidArgumentException(t('finance_admin.decision_reason_invalid'));
+ $pdo->beginTransaction();try{
+  governance_assert_actor($pdo,$actor,'finance.manage');
+  $q=$pdo->prepare('SELECT status,decision_reason FROM market_refund_requests WHERE id=? FOR UPDATE');$q->execute([$requestId]);$request=$q->fetch();
+  if($request&&$request['status']==='rejected'&&$request['decision_reason']===$reason){$pdo->commit();return;}
+  if(!$request||$request['status']!=='requested')throw new PaymentConflict(t('paypal_refunds.ineligible'));
+  $pdo->prepare("UPDATE market_refund_requests SET status='rejected',decision_reason=? WHERE id=?")->execute([$reason,$requestId]);
+  audit_log($pdo,$actor,'finance.refund_rejected',$requestId,[]);
+  $pdo->commit();
+ }catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw $error;}
+}
 function finance_record_refund(PDO $pdo,int $actor,int $invoiceId,int $amount,string $transaction,string $reason,?int $requestId=null,string $channel='paypal'):int {
  governance_assert_actor($pdo,$actor,'finance.manage');
  $transaction=trim($transaction);
  $bank=$channel==='bank';
  $validReference=$bank?strlen($transaction)<=128&&preg_match('/\A[^\p{C}]+\z/u',$transaction):preg_match('/\A[A-Z0-9]{10,64}\z/',strtoupper($transaction));
- if(!in_array($channel,['paypal','bank'],true)||$amount<1||!$validReference||mb_strlen(trim($reason))<10||mb_strlen($reason)>2000)throw new InvalidArgumentException('Tatsächlichen Erstattungsbetrag, Transaktionskennung und Begründung angeben.');
+ if(!in_array($channel,['paypal','bank'],true)||$amount<1||!$validReference||mb_strlen(trim($reason))<10||mb_strlen($reason)>2000)throw new InvalidArgumentException(t('finance_admin.refund_invalid'));
  $pdo->beginTransaction();try{
   $q=$pdo->prepare('SELECT * FROM market_invoices WHERE id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Auftrag nicht gefunden.');
   if(bitcoin_order($pdo,$invoiceId))throw new PaymentConflict(t('bitcoin.review_required'));
@@ -127,7 +140,7 @@ function finance_record_refund(PDO $pdo,int $actor,int $invoiceId,int $amount,st
    $q=$pdo->prepare("SELECT id FROM market_payment_attempts WHERE id=? AND invoice_id=? AND provider='bank' AND status='paid' AND mode='live' FOR SHARE");
    $q->execute([$order['attempt_id'],$invoiceId]);if(!$q->fetchColumn())throw new PaymentConflict(t('bank.conflict'));
   }
-  if($requestId!==null){$q=$pdo->prepare("SELECT * FROM market_refund_requests WHERE id=? AND invoice_id=? AND status='requested' FOR UPDATE");$q->execute([$requestId,$invoiceId]);if(!$q->fetch())throw new PaymentConflict('Erstattungsanfrage nicht offen.');}
+  if($requestId!==null){$q=$pdo->prepare("SELECT * FROM market_refund_requests WHERE id=? AND invoice_id=? AND status='requested' FOR UPDATE");$q->execute([$requestId,$invoiceId]);if(!$q->fetch())throw new PaymentConflict(t('paypal_refunds.ineligible'));}
   $id=finance_book_verified_refund($pdo,$invoice,$actor,$amount,$transaction,trim($reason),$requestId,true);
   $pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();if($e instanceof PDOException&&$e->getCode()==='23000')throw new PaymentConflict('Diese Erstattungskennung wurde bereits zugeordnet.');throw$e;}

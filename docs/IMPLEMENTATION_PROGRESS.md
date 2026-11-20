@@ -1,5 +1,19 @@
 # Implementierungsfortschritt
 
+## Finanzverwaltung in acht Sprachen, 2026-11-21
+
+Belege, Steuerregeln, Erstattungsformulare und Validierungen der Finanzverwaltung
+verwenden die ausgewählte Sprache. Der Steuersatz muss eine ganze Anzahl von
+Basispunkten zwischen 0 und 10000 sein. Fachlich verfasste Steuererläuterungen
+und Begründungen werden in ihrer ursprünglichen Form gespeichert und angezeigt.
+
+Der Status einer abgelehnten Erstattungsanfrage und sein Audit-Eintrag werden
+gemeinsam gespeichert. Eine identische Wiederholung nutzt die vorhandene
+Entscheidung. Lokale Prüfungen bestanden für 35 Übersetzungsschlüssel je Sprache,
+13 PHP-Dateien sowie 21 Zahlungs-, 16 Gebühren- und sieben Geo-/Sprachgruppen.
+Der isolierte HTTP-Test prüft zusätzlich MFA, CSRF, alle Sprachfassungen,
+unveränderte Steuerregeln bei ungültiger Eingabe und die einmalige Protokollierung.
+
 ## Reproduzierbares Ubuntu-Release-Archiv, 2026-11-21
 
 Der Installer verpackt den ausgewählten Git-Commit. Der vorherige allgemeine

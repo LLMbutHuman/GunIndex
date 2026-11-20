@@ -706,6 +706,45 @@ try{
     fin_assert(fin_status($pdo,$invoice)==='issued');
    }finally{curl_close($browser);}
   },
+  'finance_admin_translations_validation_and_refund_rejection_are_consistent'=>static function()use($pdo,$admin,$category):void{
+   $seller=fin_user($pdo);$staff=fin_user($pdo,true);$secret=random_bytes(20);
+   $pdo->prepare('UPDATE users SET mfa_secret=? WHERE id=?')->execute([auth_secret_encrypt($secret),$staff['id']]);
+   $invoice=fin_order($pdo,$seller,$category);fin_pay($pdo,$admin['id'],$invoice);
+   $request=finance_request_refund($pdo,$seller['id'],$invoice,1,'Synthetic request for an isolated rejection.');
+   $reason='Synthetic explicitly reviewed rejection.';
+   fin_reject(fn()=>finance_reject_refund_request($pdo,$seller['id'],$request,$reason),DomainException::class);
+   $taxBefore=$pdo->query("SELECT * FROM market_tax_rules WHERE country_code='DE'")->fetch();
+   $browser=fin_browser();$path='/admin/finance.php';
+   try{
+    fin_login($browser,$staff);[$code]=fin_request($browser,$path);fin_assert(in_array($code,[303,403],true));
+    [$code,$page]=fin_request($browser,'/auth/mfa.php');fin_assert($code===200);
+    [$code]=fin_request($browser,'/auth/mfa.php',['csrf_token'=>fin_csrf($page),'code'=>auth_totp($secret,intdiv(time(),30))]);fin_assert($code===303);
+    foreach(array_keys(i18n_locales()) as $locale){
+     [$code,$page]=fin_request($browser,$path);fin_assert($code===200);
+     [$code]=fin_request($browser,'/user/language.php',['csrf_token'=>fin_csrf($page),'locale'=>$locale,'market_country'=>'DE','return_path'=>$path]);fin_assert($code===303);
+     [$code,$page]=fin_request($browser,$path);
+     $copy=i18n_dictionary($locale);
+     fin_assert($code===200&&str_contains($page,'<html lang="'.$locale.'"')&&str_contains($page,'<h1>'.h($copy['finance_admin.heading']).'</h1>')
+      &&str_contains($page,h($copy['finance_admin.tax_save']))&&str_contains($page,h($copy['finance_admin.reject_request'])));
+     [$code,$page]=fin_request($browser,$path,['csrf_token'=>fin_csrf($page),'action'=>'tax','country_code'=>'DE','basis_points'=>'1900X',
+      'explanation'=>'Synthetic invalid tax rate regression.','review_confirmed'=>'1']);
+     fin_assert($code===422&&str_contains($page,h($copy['finance_admin.tax_invalid'])));
+    }
+    fin_assert($taxBefore===$pdo->query("SELECT * FROM market_tax_rules WHERE country_code='DE'")->fetch());
+    $fields=['action'=>'reject','request_id'=>(string)$request,'reason'=>$reason];
+    [$code]=fin_request($browser,$path,$fields);fin_assert($code===403);
+    $fields['csrf_token']=fin_csrf($page);
+    for($retry=0;$retry<2;$retry++){
+     [$code,$page]=fin_request($browser,$path,$fields);
+     fin_assert($code===200&&str_contains($page,h($copy['finance_admin.decision_saved'])));
+    }
+    [$code]=fin_request($browser,$path,array_replace($fields,['reason'=>'Synthetic different decision reason.']));fin_assert($code===422);
+    $q=$pdo->prepare('SELECT status,decision_reason FROM market_refund_requests WHERE id=?');$q->execute([$request]);
+    fin_assert($q->fetch()===['status'=>'rejected','decision_reason'=>$reason]&&fin_status($pdo,$invoice)==='paid');
+    $q=$pdo->prepare("SELECT admin_id FROM admin_logs WHERE action_type='finance.refund_rejected' AND target_id=?");$q->execute([$request]);
+    fin_assert(array_map('intval',$q->fetchAll(PDO::FETCH_COLUMN))===[$staff['id']]);
+   }finally{curl_close($browser);}
+  },
   'new_pdf_labels_are_frozen_in_the_invoice_language'=>static function()use($pdo,$admin,$category):void{
    $original=$_SESSION['locale']??null;
    try{
