@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Werbeplatzbuchung in acht Sprachen, 2026-11-21
+
+Reservierung, Kontingente, Fehlermeldungen, Zahlungslinks sowie Start- und
+Endfristen für Premiumplätze verwenden die gewählte Sprache. Die Meldung
+nach Zahlungsprüfung folgt der gespeicherten Empfängersprache. Die bisherigen
+Vertragstexte für Bestellung und sofortigen Start sind als deutsche Texte
+markiert. Die Buchung und die ausdrückliche Startfreigabe sind getrennte Schritte.
+
+Lokal bestanden 13 Syntaxprüfungen, sieben Geo-/Sprachgruppen sowie Schlüssel-
+und Platzhalterprüfung für 37 Texte in acht Sprachen. Die isolierten Tests
+prüfen die echte Buchungsseite je Sprache und eine einzelne französische
+Bestätigung nach wiederholter Zahlungsprüfung.
+
 ## Isolierte Installations- und Wiederherstellungsprobe, 2026-11-21
 
 Die Installations-CI verwendet das reale Produktionsimage, eine frische

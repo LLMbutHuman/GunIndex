@@ -42,6 +42,16 @@ $tests=[
  'paid_placement_starts_explicitly_and_never_grants_bump_credits'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$user=biz_user($pdo);$booking=biz_order($pdo,$user,$category);$transaction=biz_pay($pdo,$admin,$booking);biz_pay($pdo,$admin,$booking,$transaction);$q=$pdo->prepare('SELECT COUNT(*) FROM market_bump_credits WHERE invoice_id=?');$q->execute([$booking['invoice_id']]);biz_assert((int)$q->fetchColumn()===0);biz_reject(static fn()=>business_start_booking($pdo,$user,(int)$booking['id'],false));business_start_booking($pdo,$user,(int)$booking['id'],true);biz_assert(count(business_sponsored($pdo,'DE',$category,'category_top'))===1);biz_assert(count(business_sponsored($pdo,'AT',$category,'category_top'))===0);biz_reject(static fn()=>business_start_booking($pdo,biz_user($pdo),(int)$booking['id'],true));},
  'late_payment_is_review_not_overbooking'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$booking=biz_order($pdo,biz_user($pdo),$category,'home_top');$pdo->prepare('UPDATE market_premium_bookings SET reserved_until=UTC_TIMESTAMP()-INTERVAL 1 SECOND WHERE id=?')->execute([$booking['id']]);business_worker_once($pdo);biz_pay($pdo,$admin,$booking);$q=$pdo->prepare('SELECT status FROM market_premium_bookings WHERE id=?');$q->execute([$booking['id']]);biz_assert($q->fetchColumn()==='paid_unfulfilled');biz_assert(business_availability($pdo,'DE','home_top',0)['available']===2);},
  'active_expiry_and_refund_remove_public_entitlement'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$user=biz_user($pdo);$booking=biz_order($pdo,$user,$category);biz_pay($pdo,$admin,$booking);business_start_booking($pdo,$user,(int)$booking['id'],true);$pdo->prepare('UPDATE market_premium_bookings SET ends_at=UTC_TIMESTAMP()-INTERVAL 1 SECOND WHERE id=?')->execute([$booking['id']]);business_worker_once($pdo);biz_assert(business_sponsored($pdo,'DE',$category,'category_top')===[]);$another=biz_order($pdo,$user,$category);biz_pay($pdo,$admin,$another);business_start_booking($pdo,$user,(int)$another['id'],true);$pdo->beginTransaction();business_refund_invoice($pdo,(int)$another['invoice_id']);$pdo->commit();biz_assert(business_sponsored($pdo,'DE',$category,'category_top')===[]);},
+ 'promotion_notice_uses_the_buyers_language_once'=>static function()use($pdo,$admin):void{
+    $user=biz_user($pdo);$category=biz_category($pdo);
+    $pdo->prepare("UPDATE users SET preferred_locale='fr' WHERE id=?")->execute([$user]);
+    $booking=biz_order($pdo,$user,$category);
+    $transaction=biz_pay($pdo,$admin,$booking);biz_pay($pdo,$admin,$booking,$transaction);
+    $q=$pdo->prepare('SELECT title,body FROM market_notifications WHERE user_id=? AND event_key=?');
+    $q->execute([$user,'booking:'.$booking['id'].':awaiting_start']);
+    $copy=i18n_dictionary('fr');
+    biz_assert($q->fetchAll()===[['title'=>$copy['promotion.paid_title'],'body'=>str_replace('{days}',(string)BUSINESS_PAID_START_DAYS,$copy['promotion.paid_body'])]],'A repeated payment did not preserve one localized placement notice.');
+ },
  'long_maintenance_preserves_only_paid_placement_time_and_resumes_once'=>static function()use($pdo,$admin):void{
     $category=biz_category($pdo);
     $bookings=[];

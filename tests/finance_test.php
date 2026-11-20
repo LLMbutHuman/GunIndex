@@ -702,6 +702,11 @@ try{
       &&str_contains($page,h($copy['billing_customer.order'])));
      [$status,$page]=fin_request($browser,'/user/billing.php',['csrf_token'=>fin_csrf($page),'action'=>'order']);
      fin_assert($status===422&&str_contains($page,h($copy['billing_customer.terms_required'])));
+     [$status,$page]=fin_request($browser,'/user/promotions.php');
+     fin_assert($status===200&&str_contains($page,'<h1>'.h($copy['promotion.title']).'</h1>')
+      &&str_contains($page,h($copy['promotion.bookings']))&&str_contains($page,h($copy['promotion.empty'])));
+     [$status,$page]=fin_request($browser,'/user/promotions.php',['csrf_token'=>fin_csrf($page),'action'=>'start']);
+     fin_assert($status===422&&str_contains($page,h($copy['promotion.start_confirm'])));
     }
     fin_assert(fin_status($pdo,$invoice)==='issued');
    }finally{curl_close($browser);}
