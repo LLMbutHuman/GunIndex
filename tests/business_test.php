@@ -42,6 +42,67 @@ $tests=[
  'paid_placement_starts_explicitly_and_never_grants_bump_credits'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$user=biz_user($pdo);$booking=biz_order($pdo,$user,$category);$transaction=biz_pay($pdo,$admin,$booking);biz_pay($pdo,$admin,$booking,$transaction);$q=$pdo->prepare('SELECT COUNT(*) FROM market_bump_credits WHERE invoice_id=?');$q->execute([$booking['invoice_id']]);biz_assert((int)$q->fetchColumn()===0);biz_reject(static fn()=>business_start_booking($pdo,$user,(int)$booking['id'],false));business_start_booking($pdo,$user,(int)$booking['id'],true);biz_assert(count(business_sponsored($pdo,'DE',$category,'category_top'))===1);biz_assert(count(business_sponsored($pdo,'AT',$category,'category_top'))===0);biz_reject(static fn()=>business_start_booking($pdo,biz_user($pdo),(int)$booking['id'],true));},
  'late_payment_is_review_not_overbooking'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$booking=biz_order($pdo,biz_user($pdo),$category,'home_top');$pdo->prepare('UPDATE market_premium_bookings SET reserved_until=UTC_TIMESTAMP()-INTERVAL 1 SECOND WHERE id=?')->execute([$booking['id']]);business_worker_once($pdo);biz_pay($pdo,$admin,$booking);$q=$pdo->prepare('SELECT status FROM market_premium_bookings WHERE id=?');$q->execute([$booking['id']]);biz_assert($q->fetchColumn()==='paid_unfulfilled');biz_assert(business_availability($pdo,'DE','home_top',0)['available']===2);},
  'active_expiry_and_refund_remove_public_entitlement'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$user=biz_user($pdo);$booking=biz_order($pdo,$user,$category);biz_pay($pdo,$admin,$booking);business_start_booking($pdo,$user,(int)$booking['id'],true);$pdo->prepare('UPDATE market_premium_bookings SET ends_at=UTC_TIMESTAMP()-INTERVAL 1 SECOND WHERE id=?')->execute([$booking['id']]);business_worker_once($pdo);biz_assert(business_sponsored($pdo,'DE',$category,'category_top')===[]);$another=biz_order($pdo,$user,$category);biz_pay($pdo,$admin,$another);business_start_booking($pdo,$user,(int)$another['id'],true);$pdo->beginTransaction();business_refund_invoice($pdo,(int)$another['invoice_id']);$pdo->commit();biz_assert(business_sponsored($pdo,'DE',$category,'category_top')===[]);},
+ 'long_maintenance_preserves_only_paid_placement_time_and_resumes_once'=>static function()use($pdo,$admin):void{
+    $category=biz_category($pdo);
+    $bookings=[];
+    $invoices=[];
+    foreach(['active','awaiting','settled_during_pause','unpaid','expired','cancelled'] as $kind){
+        $booking=biz_order($pdo,biz_user($pdo),$kind==='active'?$category:biz_category($pdo));
+        $bookings[$kind]=(int)$booking['id'];
+        $invoices[$kind]=(int)$booking['invoice_id'];
+        if($kind==='settled_during_pause')$pending=$booking;
+        elseif($kind!=='unpaid')biz_pay($pdo,$admin,$booking);
+        if(in_array($kind,['active','expired','cancelled'],true))business_start_booking($pdo,(int)$booking['user_id'],(int)$booking['id'],true);
+    }
+    biz_assert(count(business_sponsored($pdo,'DE',$category,'category_top'))===1,'The paid placement was not initially public.');
+    $read=$pdo->prepare('SELECT status,starts_at,ends_at,reserved_until FROM market_premium_bookings WHERE id=?');
+    $get=static function(string $kind)use($read,$bookings):array{$read->execute([$bookings[$kind]]);return $read->fetch();};
+    $transition=static function(string $old,string $new)use($pdo,$admin):void{
+        $pdo->beginTransaction();
+        try{maintenance_transition($pdo,$admin,$old,$new);$pdo->commit();site_settings($pdo,true);}
+        catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw $error;}
+    };
+    $transition('0','1');
+    try{
+        $window=(int)$pdo->query('SELECT window_id FROM market_maintenance_state WHERE id=1')->fetchColumn();
+        $pdo->prepare('UPDATE market_maintenance_windows SET started_at=UTC_TIMESTAMP(6)-INTERVAL 9 DAY WHERE id=?')->execute([$window]);
+        $shift=$pdo->prepare('UPDATE market_premium_bookings SET starts_at=UTC_TIMESTAMP()-INTERVAL 10 DAY,ends_at=UTC_TIMESTAMP()-INTERVAL ? HOUR WHERE id=?');
+        foreach(['active'=>215,'expired'=>217,'cancelled'=>215] as $kind=>$hours)$shift->execute([$hours,$bookings[$kind]]);
+        $pdo->prepare('UPDATE market_premium_bookings SET reserved_until=UTC_TIMESTAMP()-INTERVAL 214 HOUR WHERE id IN (?,?)')->execute([$bookings['awaiting'],$bookings['unpaid']]);
+        biz_pay($pdo,$admin,$pending);
+        biz_assert($get('settled_during_pause')['status']==='awaiting_start','Verified settlement was blocked by maintenance.');
+        $pdo->prepare('UPDATE market_premium_bookings SET reserved_until=UTC_TIMESTAMP()+INTERVAL 1 DAY WHERE id=?')->execute([$bookings['settled_during_pause']]);
+        $pdo->beginTransaction();business_refund_invoice($pdo,$invoices['cancelled']);$pdo->commit();
+
+        $before=[];foreach(array_keys($bookings) as $kind)$before[$kind]=$get($kind);
+        biz_assert(business_worker_once($pdo)===['changed'=>0,'payment_reviews'=>0],'Direct expiry advanced while the marketplace was paused.');
+        foreach($before as $kind=>$row)biz_assert($get($kind)===$row,'Worker changed paused booking '.$kind);
+        $transition('1','0');
+
+        $period=$pdo->prepare('SELECT ended_at,duration_seconds FROM market_maintenance_windows WHERE id=?');$period->execute([$window]);$period=$period->fetch();
+        $seconds=(int)$period['duration_seconds'];
+        biz_assert($seconds>=9*86400&&$seconds<=9*86400+30,'Long pause duration was not recorded.');
+        $add=static fn(string $time,int $shift):string=>gmdate('Y-m-d H:i:s',strtotime($time.' UTC')+$shift);
+        $active=$get('active');
+        biz_assert($active['status']==='active'&&$active['starts_at']===$before['active']['starts_at']&&$active['ends_at']===$add($before['active']['ends_at'],$seconds),'Remaining paid advertising time was not restored.');
+        biz_assert($get('awaiting')['reserved_until']===$add($before['awaiting']['reserved_until'],$seconds),'Remaining paid start deadline was not restored.');
+        biz_assert($get('settled_during_pause')['reserved_until']===$add(substr($period['ended_at'],0,19),7*86400),'Settlement during maintenance did not receive the standard start deadline after reopening.');
+        foreach(['expired','cancelled','unpaid'] as $kind)biz_assert($get($kind)===$before[$kind],'Ineligible booking was extended: '.$kind);
+        $transition('0','0');
+        biz_assert($get('active')===$active,'Retry extended the active placement again.');
+        $audit=$pdo->prepare("SELECT details FROM admin_logs WHERE action_type='maintenance.ended' AND target_id=?");$audit->execute([$window]);$events=$audit->fetchAll(PDO::FETCH_COLUMN);
+        biz_assert(count($events)===1,'Reopening was not audited exactly once.');
+        $details=json_decode($events[0],true,32,JSON_THROW_ON_ERROR);
+        biz_assert($details['duration_seconds']===$seconds&&$details['promotions_extended']>=1&&$details['paid_start_deadlines_extended']>=2,'The restoration audit omitted paid placements.');
+        biz_assert(count(business_sponsored($pdo,'DE',$category,'category_top'))===1,'The paid placement did not become public again.');
+        business_worker_once($pdo);
+        biz_assert($get('unpaid')['status']==='expired'&&$get('expired')['status']==='expired'&&$get('active')===$active,'Expiry after reopening handled restored and elapsed bookings incorrectly.');
+    }finally{
+        if($pdo->inTransaction())$pdo->rollBack();
+        $current=(string)$pdo->query('SELECT active FROM market_maintenance_state WHERE id=1')->fetchColumn();
+        $transition($current,'0');
+    }
+ },
  'banner_moderation_country_and_metric_deduplication'=>static function()use($pdo,$admin):void{$category=biz_category($pdo);$user=biz_user($pdo);business_save_dealer($pdo,$user,['company_name'=>'Synthetic Business','address_text'=>'Teststraße 1, 10115 Testort','country_code'=>'DE','contact_email'=>'synthetic@example.invalid','website'=>'https://shop.example.org','legal_notice'=>'Synthetic company information for isolated tests only.']);$profile=business_dealer_profile($pdo,$user,false);biz_assert(business_dealer_profile($pdo,$user)===null);business_review_dealer($pdo,$admin,$user,'published','Synthetic content review',business_profile_revision($profile));$q=$pdo->prepare("INSERT INTO market_campaigns(user_id,country_code,category_id,title,target_url,storage_key,status) VALUES (?,'DE',?,'Synthetic outdoor banner','https://shop.example.org',?,'pending')");$q->execute([$user,$category,bin2hex(random_bytes(24))]);$campaign=(int)$pdo->lastInsertId();biz_assert(business_public_campaign($pdo,$campaign,'DE')===null);business_review_campaign($pdo,$admin,$campaign,'approved','Synthetic creative reviewed');$booking=biz_order($pdo,$user,$category,'banner_monthly','DE',$campaign);biz_pay($pdo,$admin,$booking);business_start_booking($pdo,$user,(int)$booking['id'],true);biz_assert(count(business_banners($pdo,'DE',$category))===1);biz_assert(business_banners($pdo,'AT',$category)===[]);business_record_metric($pdo,$campaign,'impression');business_record_metric($pdo,$campaign,'impression');business_record_metric($pdo,$campaign,'click');business_record_metric($pdo,$campaign,'click');$q=$pdo->prepare('SELECT impressions,clicks FROM market_ad_daily_stats WHERE campaign_id=?');$q->execute([$campaign]);$counts=$q->fetch();biz_assert((int)$counts['impressions']===1&&(int)$counts['clicks']===1);business_review_campaign($pdo,$admin,$campaign,'disabled','Synthetic temporary disable');biz_assert(business_banners($pdo,'DE',$category)===[]);},
  'bulk_changes_are_owner_checked_and_atomic'=>static function()use($pdo):void{$category=biz_category($pdo);$user=biz_user($pdo);$own=biz_listing($pdo,$user,$category);$other=biz_listing($pdo,biz_user($pdo),$category);biz_reject(static fn()=>business_bulk_transition($pdo,$user,[$own,$other],'pause'));$q=$pdo->prepare('SELECT status FROM market_listings WHERE id=?');$q->execute([$own]);biz_assert($q->fetchColumn()==='active');$another=biz_listing($pdo,$user,$category);biz_assert(business_bulk_transition($pdo,$user,[$own,$another],'pause')===2);biz_assert(business_bulk_transition($pdo,$user,[$own,$another],'archive')===2);biz_reject(static fn()=>business_bulk_transition($pdo,$user,[['invalid']],'pause'));},
  'concurrent_requests_for_last_home_slot_have_one_winner'=>static function()use($pdo):void{$category=biz_category($pdo);biz_order($pdo,biz_user($pdo),$category,'home_top');$actors=[];for($i=0;$i<2;$i++){$actor=biz_user($pdo);$actors[]=[$actor,biz_listing($pdo,$actor,$category)];}$children=[];$start=(int)(microtime(true)*1000)+1800;foreach($actors as [$user,$listing]){$pipes=[];$process=proc_open([PHP_BINARY,__FILE__,'--race',(string)$user,(string)$listing,bin2hex(random_bytes(32)),(string)$start],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);if(!is_resource($process))throw new RuntimeException('Race process unavailable');fclose($pipes[0]);$children[]=[$process,$pipes];}$successes=0;foreach($children as [$process,$pipes]){$body=stream_get_contents($pipes[1]);$errors=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);$code=proc_close($process);biz_assert($code===0,'Race subprocess failed');$result=json_decode($body,true,8,JSON_THROW_ON_ERROR);if($result['ok'])$successes++;else biz_assert($result['kind']==='capacity');}biz_assert($successes===1,'Exactly one concurrent order must reserve the last slot');biz_assert(business_availability($pdo,'DE','home_top',0)['occupied']===2);},

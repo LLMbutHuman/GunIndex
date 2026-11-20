@@ -67,14 +67,15 @@ function maintenance_transition(PDO $pdo,int $actor,string $old,string $new): vo
         audit_log($pdo,$actor,'maintenance.started',$window,[]);
     }else{
         $window=(int)$state['window_id'];
-        $q=$pdo->prepare('SELECT *,GREATEST(0,CEIL(TIMESTAMPDIFF(MICROSECOND,started_at,UTC_TIMESTAMP(6))/1000000)) AS elapsed FROM market_maintenance_windows WHERE id=? FOR UPDATE');$q->execute([$window]);$period=$q->fetch();
+        $q=$pdo->prepare('SELECT *,UTC_TIMESTAMP(6) AS resumed_at,GREATEST(0,CEIL(TIMESTAMPDIFF(MICROSECOND,started_at,UTC_TIMESTAMP(6))/1000000)) AS elapsed FROM market_maintenance_windows WHERE id=? FOR UPDATE');$q->execute([$window]);$period=$q->fetch();
         if(!$period||$period['ended_at']!==null)throw new MaintenanceStateConflict('Open maintenance window missing.');
         $seconds=(int)$period['elapsed'];
         $q=$pdo->prepare("UPDATE market_listings l JOIN market_maintenance_auctions a ON a.listing_id=l.id SET l.ends_at=TIMESTAMPADD(SECOND,?,a.original_ends_at),l.updated_at=UTC_TIMESTAMP() WHERE a.window_id=? AND l.type='auction' AND l.status IN ('active','paused') AND l.ends_at=a.original_ends_at");$q->execute([$seconds,$window]);$extended=$q->rowCount();
-        $pdo->prepare('UPDATE market_maintenance_windows SET ended_at=UTC_TIMESTAMP(6),duration_seconds=?,deactivated_by=? WHERE id=?')->execute([$seconds,$actor,$window]);
+        $promotions=business_resume_promotions($pdo,$period['started_at'],$period['resumed_at'],$seconds);
+        $pdo->prepare('UPDATE market_maintenance_windows SET ended_at=?,duration_seconds=?,deactivated_by=? WHERE id=?')->execute([$period['resumed_at'],$seconds,$actor,$window]);
         $pdo->exec('UPDATE market_maintenance_state SET active=0 WHERE id=1');
         $q=$pdo->prepare('SELECT COUNT(*) FROM market_maintenance_auctions WHERE window_id=?');$q->execute([$window]);$captured=(int)$q->fetchColumn();
-        audit_log($pdo,$actor,'maintenance.ended',$window,['duration_seconds'=>$seconds,'auctions_extended'=>$extended,'auctions_unchanged_or_removed'=>$captured-$extended]);
+        audit_log($pdo,$actor,'maintenance.ended',$window,['duration_seconds'=>$seconds,'auctions_extended'=>$extended,'auctions_unchanged_or_removed'=>$captured-$extended]+$promotions);
     }
     $pdo->prepare("INSERT INTO system_settings(setting_key,setting_value) VALUES ('maintenance_enabled',?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value),updated_at=UTC_TIMESTAMP()")->execute([$new]);
 }

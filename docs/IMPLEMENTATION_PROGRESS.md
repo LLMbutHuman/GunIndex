@@ -1,5 +1,20 @@
 # Implementierungsfortschritt
 
+## Werbelaufzeiten bei Wartung, 2026-11-21
+
+Die Wiedereröffnung erhält die Restlaufzeit laufender bezahlter Werbung und
+die verbleibende Startfrist bezahlter Buchungen. Während der Wartung bestätigt
+eingegangene Zahlungen erhalten ab Wiedereröffnung bis zu sieben Tage zum Start.
+Unbezahlte Reservierungen laufen nach ihrer ursprünglichen Frist ab. Abgelaufene
+oder stornierte Werbelaufzeiten werden nicht reaktiviert. Der Ablaufworker prüft
+die Wartungssperre auch bei einem direkten Aufruf, und die Wiedereröffnung
+protokolliert die Anzahl der verlängerten Fristen.
+
+Lokal bestanden drei Syntaxprüfungen und zwölf reine Wartungsprüfungen.
+Der isolierte MySQL-Test für eine simulierte neuntägige Unterbrechung prüft
+zusätzlich Eingangsbestätigung, Fristfortsetzung, erneutes Öffnen und Audit.
+Der Testnachweis dieses Laufs steht aus.
+
 ## PDF-Beschriftung mit unveränderlichem Sprachstand, 2026-11-21
 
 Neue Rechnungsaufträge speichern die Beschriftungen der Bestellsprache im
@@ -20,7 +35,9 @@ Die HTTP-Prüfung umfasst auch die fehlende ausdrückliche Bestätigung.
 Rechnungsübersicht, Dokumentarten, Storno- und Erstattungsformulare,
 Rechnungsanschrift und häufige Validierungsfehler verwenden acht Sprachen.
 Laufende HTTP-Prüfungen decken die Ansichten und ungültige Eingaben je Sprache
-ab. Die bereits gespeicherten Rechnungsnachweise behalten ihre Inhalte.
+ab. Die bereits gespeicherten Rechnungsnachweise behalten ihre Inhalte. Beide
+Jobs für PHP/MySQL und Browser/Barrierefreiheit waren erfolgreich.
+[CI 44833857986](https://github.com/LLMbutHuman/GunIndex/actions/runs/44833857986)
 
 ## Zahlungsübersicht und PayPal-Rückkehr in acht Sprachen, 2026-11-20
 

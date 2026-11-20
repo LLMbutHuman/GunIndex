@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+const BUSINESS_PAID_START_DAYS = 7;
+
 function business_country(?string $country): string
 {
     if (function_exists('geo_country')) return geo_country($country);
@@ -206,7 +208,7 @@ function business_fulfill_manual(PDO $pdo, int $invoiceId): void
     if (in_array($booking['status'],['active','awaiting_start'],true)) return;
     $valid = $booking['status'] === 'reserved' && strtotime($booking['reserved_until'].' UTC') > time()
         && !business_inventory_busy($pdo,(int)$booking['inventory_id'],(int)$booking['id']);
-    $state = $valid ? 'awaiting_start' : 'paid_unfulfilled'; $until = $valid ? gmdate('Y-m-d H:i:s',time()+7*86400) : $booking['reserved_until'];
+    $state = $valid ? 'awaiting_start' : 'paid_unfulfilled'; $until = $valid ? gmdate('Y-m-d H:i:s',time()+BUSINESS_PAID_START_DAYS*86400) : $booking['reserved_until'];
     $pdo->prepare('UPDATE market_premium_bookings SET status=?,reserved_until=? WHERE id=?')->execute([$state,$until,$booking['id']]);
     if (function_exists('notify_user')) notify_user($pdo,(int)$booking['user_id'],'booking:'.$booking['id'].':'.$state,$valid?'Platzierung bezahlt – Start wählen':'Zahlung benötigt manuelle Klärung',$valid?'Deine Platzierung ist bezahlt. Starte sie innerhalb von sieben Tagen ausdrücklich.':'Die Reservierung ist abgelaufen. Der Betreiber muss Erfüllung oder Erstattung klären.','/user/promotions.php',true);
 }
@@ -217,6 +219,24 @@ function business_end_time(string $start, string $scope): string
     if ($scope !== 'banner_monthly') return $date->modify('+7 days')->format('Y-m-d H:i:s');
     $next = $date->modify('first day of next month');
     return $next->setDate((int)$next->format('Y'),(int)$next->format('m'),min((int)$date->format('d'),(int)$next->format('t')))->format('Y-m-d H:i:s');
+}
+
+/** The administrator holds the maintenance barrier exclusively while restoring paid time. */
+function business_resume_promotions(PDO $pdo, string $pausedAt, string $resumedAt, int $seconds): array
+{
+    // These two statuses are reached only after settlement, in the same transaction as the invoice update.
+    $q = $pdo->prepare("UPDATE market_premium_bookings SET ends_at=TIMESTAMPADD(SECOND,?,ends_at)
+        WHERE status='active' AND starts_at<=? AND ends_at>?");
+    $q->execute([$seconds,$pausedAt,$pausedAt]);
+    $active = $q->rowCount();
+
+    // A receipt verified during the pause needs only the remaining part of the outage restored.
+    $q = $pdo->prepare("UPDATE market_premium_bookings
+        SET reserved_until=LEAST(TIMESTAMPADD(SECOND,?,reserved_until),TIMESTAMPADD(DAY,?,?))
+        WHERE status='awaiting_start' AND reserved_until>?");
+    $q->execute([$seconds,BUSINESS_PAID_START_DAYS,substr($resumedAt,0,19),$pausedAt]);
+
+    return ['promotions_extended'=>$active,'paid_start_deadlines_extended'=>$q->rowCount()];
 }
 
 function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $immediate): void
@@ -302,8 +322,41 @@ function business_record_metric(PDO $pdo,int $campaignId,string $kind):void
 function business_worker_once(PDO $pdo,int $limit=200):array
 {
     $limit=max(1,min(1000,$limit));$ids=$pdo->query("SELECT invoice_id FROM market_premium_bookings WHERE (status IN ('reserved','awaiting_start') AND reserved_until<=UTC_TIMESTAMP()) OR (status='active' AND ends_at<=UTC_TIMESTAMP()) ORDER BY id LIMIT ".$limit)->fetchAll(PDO::FETCH_COLUMN);$changed=0;$review=0;
-    foreach($ids as $id){$pdo->beginTransaction();try{$paidQuery=$pdo->prepare('SELECT status FROM market_invoices WHERE id=? FOR SHARE');$paidQuery->execute([$id]);$paid=$paidQuery->fetchColumn()==='paid';$booking=business_locked_booking($pdo,(int)$id);if(!$booking){$pdo->commit();continue;}$state=null;if($booking['status']==='active'&&strtotime($booking['ends_at'].' UTC')<=time())$state='expired';elseif(in_array($booking['status'],['reserved','awaiting_start'],true)&&strtotime($booking['reserved_until'].' UTC')<=time())$state=$paid?'paid_unfulfilled':'expired';if($state!==null){$pdo->prepare('UPDATE market_premium_bookings SET status=? WHERE id=?')->execute([$state,$booking['id']]);$changed++;if($state==='paid_unfulfilled')$review++;}$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}}
-    $pdo->exec('DELETE FROM market_ad_metric_dedupe WHERE created_at<UTC_TIMESTAMP()-INTERVAL 2 DAY');
+    $paidQuery=$pdo->prepare('SELECT status FROM market_invoices WHERE id=? FOR SHARE');
+    $update=$pdo->prepare('UPDATE market_premium_bookings SET status=? WHERE id=?');
+    foreach($ids as $id){
+        $pdo->beginTransaction();
+        try{
+            maintenance_assert_market_available($pdo);
+            $paidQuery->execute([$id]);
+            $paid=$paidQuery->fetchColumn()==='paid';
+            $booking=business_locked_booking($pdo,(int)$id);
+            $state=null;
+            if($booking&&$booking['status']==='active'&&strtotime($booking['ends_at'].' UTC')<=time())$state='expired';
+            if($booking&&in_array($booking['status'],['reserved','awaiting_start'],true)&&strtotime($booking['reserved_until'].' UTC')<=time())$state=$paid?'paid_unfulfilled':'expired';
+            if($state!==null)$update->execute([$state,$booking['id']]);
+            $pdo->commit();
+            if($state!==null)$changed++;
+            if($state==='paid_unfulfilled')$review++;
+        }catch(MaintenancePaused){
+            $pdo->rollBack();
+            return ['changed'=>$changed,'payment_reviews'=>$review];
+        }catch(Throwable $error){
+            if($pdo->inTransaction())$pdo->rollBack();
+            throw $error;
+        }
+    }
+    $pdo->beginTransaction();
+    try{
+        maintenance_assert_market_available($pdo);
+        $pdo->exec('DELETE FROM market_ad_metric_dedupe WHERE created_at<UTC_TIMESTAMP()-INTERVAL 2 DAY');
+        $pdo->commit();
+    }catch(MaintenancePaused){
+        $pdo->rollBack();
+    }catch(Throwable $error){
+        if($pdo->inTransaction())$pdo->rollBack();
+        throw $error;
+    }
     return ['changed'=>$changed,'payment_reviews'=>$review];
 }
 
