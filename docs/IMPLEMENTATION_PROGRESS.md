@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Belege und Korrekturen je Auktion, 2026-11-21
+
+Der Link auf einem Gebührenauftrag öffnet die Rechnungsübersicht für die
+zugehörige Auktion. Dort erscheinen Einstellforderung, Erfolgsprovision,
+ersetzte Aufträge, Belege und Erstattungsanfragen. Abfragen und Aktionen
+prüfen den Eigentümer und die konkrete Auktion. Die allgemeine Übersicht
+bleibt über einen eigenen Link erreichbar.
+
+Lokal bestanden drei PHP-Syntaxprüfungen und 16 reine Gebührenprüfungen.
+Der HTTP-/MySQL-Test verbindet Laufzeitverlängerung, Teilkorrektur,
+Zuschlag, PDF-Downloads und Zugriffsschutz. Sein Lauf steht aus.
+
 ## Werbeplatzbuchung in acht Sprachen, 2026-11-21
 
 Reservierung, Kontingente, Fehlermeldungen, Zahlungslinks sowie Start- und
@@ -25,8 +37,11 @@ Der erste isolierte Lauf hat das Produktionsimage gebaut und das verschlüsselte
 Backup verifiziert. Beim simulierten Wiederanlauf fiel die mehrzeilige Anweisung
 aus der bestehenden Erkennung für `ADD COLUMN`; MySQL meldete eine doppelte Spalte.
 Die Erkennung prüft jetzt auch mehrzeilige Anweisungen. PHP-Syntax und Erkennung
-der konkreten Migration bestanden lokal. Die erneute Gesamtprobe steht aus.
+der konkreten Migration bestanden lokal. Die erneute Probe hat das
+Produktionsimage, Einrichtung, Sicherung, Wiederherstellung, zweimaligen
+Migrationslauf und sieben Worker-Heartbeats erfolgreich geprüft.
 [Erster CI-Lauf 44838139417](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838139417)
+[Erfolgreicher CI-Lauf 44838740876](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838740876)
 
 ## Finanzverwaltung in acht Sprachen, 2026-11-21
 
@@ -41,6 +56,8 @@ Entscheidung. Lokale Prüfungen bestanden für 35 Übersetzungsschlüssel je Spr
 13 PHP-Dateien sowie 21 Zahlungs-, 16 Gebühren- und sieben Geo-/Sprachgruppen.
 Der isolierte HTTP-Test prüft zusätzlich MFA, CSRF, alle Sprachfassungen,
 unveränderte Steuerregeln bei ungültiger Eingabe und die einmalige Protokollierung.
+Beide CI-Jobs bestanden, darunter 38 Finanzprüfgruppen und Browserregression.
+[CI 44837672082](https://github.com/LLMbutHuman/GunIndex/actions/runs/44837672082)
 
 ## Reproduzierbares Ubuntu-Release-Archiv, 2026-11-21
 

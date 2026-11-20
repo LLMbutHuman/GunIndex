@@ -555,6 +555,48 @@ try {
             abt_check(abt_status($pdo,$invoice)==='issued','Invoice with an attempt was waived.');
             abt_check(abt_scalar($pdo,'SELECT waived_at FROM market_auction_fee_charges WHERE invoice_id=?',[$invoice])===null,'Attempt guard changed waiver evidence.');
         },
+        'extended_auction_links_corrected_fees_success_and_pdfs_only_for_its_seller'=>static function() use($pdo,$category,$admin): void {
+            $seller=abt_user($pdo);$bidder=abt_user($pdo);$fixture=abt_publish($pdo,$seller['id'],$category);
+            $id=$fixture['id'];$original=$fixture['invoice'];$initial=finance_snapshot($pdo,$original);
+            $extension=relisting_extension_context($pdo,$seller['id'],$id);
+            $deadline=relisting_extend($pdo,$seller['id'],$id,1,$extension['hash']);
+            abt_check($deadline===relisting_extension_deadline($extension['listing'],1)
+                &&$deadline===abt_scalar($pdo,'SELECT ends_at FROM market_listings WHERE id=?',[$id]),'The deadline did not extend by one day.');
+            abt_check(relisting_extend($pdo,$seller['id'],$id,1,$extension['hash'])===$deadline,'Retry added a second extension.');
+            abt_charge_count($pdo,$id,1);
+            abt_check(finance_snapshot($pdo,$original)===$initial,'Extending the auction changed its original charge snapshot.');
+            $corrected=auction_fee_correct($pdo,$admin['id'],$original,10,'Synthetic adjustment of the extended auction listing fee.');
+            abt_pay($pdo,$admin['id'],$corrected);
+            market_bid($pdo,$id,$bidder['id'],1500);abt_close($pdo,$id);
+            abt_charge_count($pdo,$id,2);
+            $success=abt_row($pdo,"SELECT invoice_id,sale_cents,gross_cents FROM market_auction_fee_charges WHERE listing_id=? AND kind='success'",[$id]);
+            abt_check((int)$success['gross_cents']===auction_billing_amount($fixture['quote']['payload'],'success',(int)$success['sale_cents']),
+                'The commission did not use the original tariff.');
+            $successId=(int)$success['invoice_id'];abt_pay($pdo,$admin['id'],$successId);
+            $unrelated=abt_publish($pdo,$seller['id'],$category)['invoice'];
+            $periods=[$original,$corrected,$successId];
+            $references=array_map(fn(int $invoice):string=>finance_snapshot($pdo,$invoice)['order_reference'],$periods);
+            $sellerBrowser=abt_browser();$bidderBrowser=abt_browser();
+            try {
+                abt_login($sellerBrowser,$seller);abt_login($bidderBrowser,$bidder);
+                $path='/user/invoices.php?auction='.$id;
+                [$billing,$summary]=abt_request($sellerBrowser,'/user/billing.php?order='.$corrected);
+                abt_check($billing===200&&str_contains($summary,'href="'.$path.'"'),'The corrected payment did not link back to its auction fees.');
+                [$status,$body]=abt_request($sellerBrowser,$path);
+                abt_check($status===200&&str_contains($body,h(abt_scalar($pdo,'SELECT title FROM market_listings WHERE id=?',[$id]))),'The scoped invoice view did not identify the auction.');
+                foreach($references as $reference)abt_check(str_contains($body,h($reference)),'An associated payment reference is missing.');
+                abt_check(!str_contains($body,h(finance_snapshot($pdo,$unrelated)['order_reference'])),'Unrelated invoice appeared in auction view.');
+                foreach([$corrected,$successId] as $invoice){
+                    $document=(int)abt_scalar($pdo,'SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?',[$invoice]);
+                    abt_check($document>0&&str_contains($body,'?download='.$document.'"'),'An issued PDF download is missing.');
+                    [$download,$pdf]=abt_request($sellerBrowser,'/user/invoices.php?download='.$document);
+                    abt_check($download===200&&str_starts_with($pdf,'%PDF-'),'Linked invoice PDF did not download.');
+                }
+                [$blocked]=abt_request($sellerBrowser,$path,['csrf_token'=>abt_csrf($body),'action'=>'cancel','invoice_id'=>(string)$unrelated]);
+                abt_check($blocked===422&&abt_status($pdo,$unrelated)==='issued','Scoped form mutated an unrelated payment.');
+                abt_check(abt_request($bidderBrowser,$path)[0]===404,'The winning bidder could read the seller’s fee invoices.');
+            }finally{curl_close($sellerBrowser);curl_close($bidderBrowser);}
+        },
         'partial_correction_preserves_original_snapshot_receipts_and_exact_balance'=>static function() use($pdo,$category,$admin): void {
             $seller=abt_user($pdo);$fixture=abt_publish($pdo,$seller['id'],$category);$original=$fixture['invoice'];
             $originalSnapshot=finance_snapshot($pdo,$original);

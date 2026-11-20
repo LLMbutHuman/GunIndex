@@ -52,6 +52,12 @@ Referenz und exakten Betrag. Wiederholte Bestätigung erzeugt keine zweite
 Rechnung, kein zweites `cash_in` und kein Bump-/Premiumguthaben. Rechnungs-PDFs
 entstehen im bestehenden Modell erst nach bestätigter Zahlung.
 
+In der Rechnungsübersicht führt ein Link vom Zahlungsauftrag zu allen
+Gebühren und Belegen des betroffenen Auktionsdurchlaufs. Der Verkäufer
+findet ursprüngliche und ersetzte Referenzen, Erfolgsprovision, PDF-Belege
+und Erstattungsanfragen zusammen. Die Übersicht prüft Eigentum und
+Auktionsbezug auch beim Absenden einer Aktion.
+
 Positive neue Forderungen und vollständige Erlasse erzeugen transaktionale,
 deduplizierte Hinweise in der gespeicherten Empfängersprache mit direktem Link
 zum eigenen Zahlungsauftrag. Die vorhandenen In-App-/Mailpräferenzen gelten;

@@ -78,7 +78,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 8 | Autocomplete/Relevanz/Filter | A | Öffentliche Titelvorschläge, Relevanzsortierung und kombinierte Merkmals-, Preis-, Länder- und Umkreissuche in MySQL und Chromium geprüft |
 | 9 | Entwurfs-Autosave/Vorschau | A | Privater Zwischenstand, Bildübernahme, Versionsprüfung, Formular ohne JavaScript sowie Veröffentlichungs- und Zugriffstests grün |
 | 10 | Bildreihenfolge | A | Implementiert und geprüft |
-| 11 | Wiedereinstellen/Verlängern | A | Auktions-Gratisanspruch, Kopie geschlossener Festpreis-/Verhandlungsinserate und begrenzte einmalige Laufzeitverlängerung in MySQL/HTTP geprüft |
+| 11 | Wiedereinstellen/Verlängern | A | Kostenloser Nachfolger nach Abschluss ohne Gebot, neue Auktion nach Zuschlag/Sofortkauf mit bestätigtem Bestand, Kopie geschlossener Festpreis-/Verhandlungsinserate und begrenzte einmalige Laufzeitverlängerung in MySQL/HTTP geprüft. [CI 44836432968](https://github.com/LLMbutHuman/GunIndex/actions/runs/44836432968) |
 | 12 | Verhandlungsmodus | A | Private Angebote, Gegenangebote, Annahme, Ablehnung, Rückzug, Fristen und unveränderliche Konditionen in MySQL und Chromium geprüft |
 | 13 | Festpreis-Transaktion | B | Verkäuferfreigabe, konkurrierende Käufe, Centbeträge, Versand/Abholung, Abschluss, Storno und Streitfälle geprüft. Zahlungen und Treuhand separat in 23–26 |
 | 14 | Transaktionsbewertungen | A | Bewertungen nur durch echte Parteien nach Abschluss, einmal pro Partei. MySQL- und Browserprüfung grün |
@@ -100,10 +100,15 @@ DNS-Prüfung und simulierten Testaufträgen ist in MySQL und HTTP bestätigt. Ei
 lokaler SMTP-Server prüfte STARTTLS, SMTPS und TLS-Fehler. Externe Zustellung
 steht aus. [CI 44581824454](https://github.com/LLMbutHuman/GunIndex/actions/runs/44581824454)
 
-Zusätzlich offen: vollständige E2EE-Abnahme und kompromittierte Kontoautorität;
-geführter Ubuntu-Installer; vollständiger Admin-
-Einrichtungsablauf; internationale Datenimporte; vollständige Installations-/
-Restore-/Betriebsabnahme und Legal-Team-Übergabe. Alte serverseitige
+Die isolierte Installationsprobe hat das Produktionsimage, die Fortsetzung
+einer unterbrochenen Migration, ein verschlüsseltes Datenbank- und Dateibackup,
+die Wiederherstellung sowie sieben Worker-Heartbeats geprüft.
+[CI 44838740876](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838740876)
+
+Zusätzlich offen sind die vollständige E2EE-Abnahme und der Wechsel einer
+kompromittierten Kontoautorität, der vollständige Admin-Einrichtungsablauf,
+internationale Datenimporte, die Betriebsabnahme auf dem vorgesehenen Ubuntu-
+Host einschließlich DNS und TLS sowie die Legal-Team-Übergabe. Alte serverseitige
 Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md
 getrennt beschrieben. Neue Sprachmodule sind nicht mit einer
 vollständigen Übersetzung sämtlicher Seiten gleichzusetzen.
