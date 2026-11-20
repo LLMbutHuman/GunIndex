@@ -46,7 +46,7 @@ function dealer_inventory_details(PDO $pdo, int $actor, int $owner, int $id): ar
         $query->execute([$owner,$id]);
         $row = $query->fetch();
         if (!$row) throw new MarketNotFoundException(t('dealer_stock.unavailable'));
-        $entry = $pdo->prepare('SELECT id,delta,quantity_after,reason,created_at FROM market_dealer_stock_movements WHERE owner_id=? AND item_id=? ORDER BY id DESC LIMIT 100');
+        $entry = $pdo->prepare('SELECT id,delta,quantity_after,reason,movement_kind,created_at FROM market_dealer_stock_movements WHERE owner_id=? AND item_id=? ORDER BY id DESC LIMIT 100');
         $entry->execute([$owner,$id]);
         $row['movements'] = $entry->fetchAll();
         return $row;

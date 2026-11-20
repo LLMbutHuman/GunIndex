@@ -104,7 +104,7 @@ function seo_product_data(array $listing, string $origin, ?string $locale = null
         $cents = (int)$listing['price_cents'];
         $product['offers'] = ['@type' => 'Offer', 'url' => $url, 'priceCurrency' => 'EUR',
             'price' => intdiv($cents, 100) . '.' . str_pad((string)($cents % 100), 2, '0', STR_PAD_LEFT),
-            'availability' => 'https://schema.org/InStock'];
+            'availability' => ($listing['stock_available'] ?? true) === false ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock'];
     }
     return $product;
 }

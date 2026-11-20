@@ -103,12 +103,15 @@ function trade_quote_for(PDO $pdo,int $actor,array $listing,string $delivery,?in
         $proposedSnapshot=json_decode(crypto_decrypt('trade_snapshot',$offer['snapshot_cipher']),true,32,JSON_THROW_ON_ERROR);
         if(($proposedSnapshot['attributes']??[])!==$attributes)throw new DomainException(t('trade.changed'));
     }
+    $stock=dealer_checkout_stock_row($pdo,(int)$listing['seller_id'],(int)$listing['id'],$lock);
+    if($stock!==null&&(int)$stock['quantity']===0)throw new DomainException(t('dealer_checkout.sold_out'));
     $terms=[trade_listing_hash($listing),$actor,$delivery,$price,$shipping,$offerId,
         $offer['proposer_id']??null,$offer['expires_at']??null,$locale,array_column($documents,'content_hash','id')];
     if($attributes)$terms[]=$attributes;
+    if($stock!==null)$terms[]=['stock_revision'=>$stock['revision']];
     $hash=hash('sha256',trade_json($terms));
     return ['listing'=>$listing,'hash'=>$hash,'documents'=>$documents,'locale'=>$locale,'delivery'=>$delivery,
-        'price_cents'=>$price,'shipping_cents'=>$shipping,'total_cents'=>$price+$shipping,'offer'=>$offer,'attributes'=>$attributes];
+        'price_cents'=>$price,'shipping_cents'=>$shipping,'total_cents'=>$price+$shipping,'offer'=>$offer,'attributes'=>$attributes,'dealer_stock'=>$stock];
 }
 
 function trade_quote(PDO $pdo,int $actor,int $listing,string $delivery,?int $offerId=null): array
@@ -167,6 +170,7 @@ function trade_purchase(PDO $pdo,int $actor,int $listing,array $input,?int $offe
         $q=$pdo->prepare('INSERT INTO market_trades(reference,listing_id,seller_id,buyer_id,offer_id,delivery,price_cents,shipping_cents,total_cents,snapshot_cipher,request_actor,request_key,request_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $q->execute(['GT-'.strtoupper(bin2hex(random_bytes(10))),$listing,$row['seller_id'],$buyer,$offerId,$quote['delivery'],$quote['price_cents'],$quote['shipping_cents'],$quote['total_cents'],crypto_encrypt('trade_snapshot',trade_json($snapshot)),$actor,$key,$hash]);
         $id=(int)$pdo->lastInsertId();trade_receipts($pdo,$actor,$id,null,$quote['documents']);
+        dealer_checkout_reserve($pdo,$id,(int)$row['seller_id'],$quote['dealer_stock']);
         $pdo->prepare("UPDATE market_listings SET status='sold',updated_at=UTC_TIMESTAMP() WHERE id=?")->execute([$listing]);
         $pdo->prepare("UPDATE market_trade_offers SET status=CASE WHEN id=? THEN 'accepted' ELSE 'expired' END WHERE listing_id=? AND status='open'")->execute([$offerId,$listing]);
         trade_event($pdo,$id,$actor,'purchase',null,'agreed',1,$key,$hash,'');
@@ -337,6 +341,7 @@ function trade_transition(PDO $pdo,int $actor,int $id,string $action,array $inpu
             case 'resolve_cancel':$to='cancelled';$previous=null;$requested=null;break;
         }
         if(in_array($to,['agreed','dispatched'],true)&&$seller&&$buyer)$to='completed';
+        if($to==='cancelled')dealer_checkout_cancel($pdo,$id,(int)$row['seller_id']);
         $pdo->prepare('UPDATE market_trades SET status=?,version=version+1,seller_confirmed=?,buyer_confirmed=?,previous_status=?,requested_by=?,updated_at=UTC_TIMESTAMP() WHERE id=?')->execute([$to,$seller,$buyer,$previous,$requested,$id]);
         trade_event($pdo,$id,$actor,$action,$from,$to,$version+1,$key,$hash,$details);
         audit_log($pdo,$actor,'trade.'.$action,$id,['from'=>$from,'to'=>$to]);

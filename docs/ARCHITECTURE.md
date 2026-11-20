@@ -58,8 +58,11 @@ Abgänge ändern Menge und Revisionsnummer gemeinsam mit dem unveränderlichen
 Bewegungseintrag. Der Anfrageschlüssel verhindert eine erneute Buchung bei
 Wiederholung. Widerruf und Sperrung werden bei jedem Zugriff geprüft.
 Der Zählbestand wird manuell oder über die gesondert freizugebende API
-geführt. Ein automatischer Bestandsabgleich im Checkout und
-Händler-Abonnements folgen gesondert. [Händler-API](DEALER_API.md)
+geführt. Festpreis- und Verhandlungsinserate können mit einem Artikelbestand
+verbunden werden. Vertragsabschluss und der Abgang eines Stücks werden
+gemeinsam gebucht. Vor Versand freigegebene Stornos buchen das Stück zurück.
+Nach Versand oder bei erreichtem Höchstbestand entsteht ein Prüffall für das
+Lagerteam. Händler-Abonnements folgen gesondert. [Händler-API](DEALER_API.md)
 
 ## Länder, Sprache und Oberfläche
 

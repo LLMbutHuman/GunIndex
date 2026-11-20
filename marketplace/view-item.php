@@ -24,6 +24,10 @@ $imageCount = max(1, min(5, (int)($item['image_count'] ?? 0)));
 $history = $isAuction ? market_public_bid_history($pdo, (int)$id, 20) : [];
 $pageTitle = $item['title'];
 $pageDescription = substr($item['description'], 0, 160);
+if (!$isAuction && !$hasEnded && (int)$item['trade_checkout_enabled'] === 1) {
+    $listingStock = dealer_checkout_stock_row($pdo,(int)$item['seller_id'],(int)$item['id']);
+    if ($listingStock !== null) $item['stock_available'] = (int)$listingStock['quantity'] > 0;
+}
 $seoListing = $item;
 $tradeId=null;
 if(!$isAuction&&$user){$q=$pdo->prepare('SELECT id FROM market_trades WHERE listing_id=? AND (buyer_id=? OR seller_id=?)');$q->execute([$id,$user['id'],$user['id']]);$tradeId=$q->fetchColumn();}
@@ -42,7 +46,10 @@ include __DIR__ . '/../includes/header.php';
 <div class="detail-actions"><?php if ($isOwner && !$hasEnded): ?><a class="button" href="/user/edit-listing.php?id=<?= (int)$id ?>"><?=h(t('Inserat bearbeiten'))?><?= ui_icon('arrow') ?></a><?php elseif ($canContact): ?><a class="button <?= $isAuction ? 'secondary' : '' ?>" href="<?= $user ? '/user/chat.php?listing_id=' . (int)$id . '&user_id=' . (int)$item['seller_id'] : '/auth/login.php' ?>"><?=h(t('Verkäufer kontaktieren'))?><?= ui_icon('arrow') ?></a><?php endif; ?>
 <?php if ($user && !$isOwner && !$hasEnded): ?><form method="post" action="/user/toggle-watchlist.php"><?= csrf_field() ?><input type="hidden" name="listing_id" value="<?= (int)$id ?>"><button class="button secondary" type="submit"><?= ui_icon('heart') ?><?=h(t('Merkliste ändern'))?></button></form><?php endif; ?>
 <?php if ($user && !$hasEnded): ?><form method="post" action="/user/personal.php"><?=csrf_field()?><input type="hidden" name="action" value="add"><input type="hidden" name="listing_id" value="<?=(int)$id?>"><button class="button secondary" type="submit"><?=h(t('personal.add'))?></button></form><?php endif; ?>
-<?php if(!$isAuction&&!$hasEnded&&!$isOwner&&(int)$item['trade_checkout_enabled']===1):?><a class="button" href="<?=h($user?($item['type']==='negotiated'?'/user/offers.php?listing_id=':'/user/checkout.php?listing_id=').(int)$id:'/auth/login.php')?>"><?=h(t($item['type']==='negotiated'?'trade.offers':'trade.checkout'))?></a><?php endif;?>
+<?php if(!$isAuction&&!$hasEnded&&!$isOwner&&(int)$item['trade_checkout_enabled']===1):?>
+  <?php if (($item['stock_available'] ?? true) === false): ?><p class="notice"><?=h(t('dealer_checkout.sold_out'))?></p>
+  <?php else: ?><a class="button" href="<?=h($user?($item['type']==='negotiated'?'/user/offers.php?listing_id=':'/user/checkout.php?listing_id=').(int)$id:'/auth/login.php')?>"><?=h(t($item['type']==='negotiated'?'trade.offers':'trade.checkout'))?></a><?php endif; ?>
+<?php endif;?>
 <?php if(!$isAuction&&$isOwner&&$item['type']==='negotiated'):?><a class="button secondary" href="/user/offers.php?listing_id=<?=(int)$id?>"><?=h(t('trade.offers'))?></a><?php endif;?>
 <?php if($tradeId):?><a class="button" href="/user/trade.php?id=<?=(int)$tradeId?>"><?=h(t('trade.title'))?></a><?php endif;?>
 <?php if ($isAuction && !$hasEnded && !$isOwner && (int)($item['buyout_cents'] ?? 0) > 0 && $item['current_bid_cents'] === null): ?><form method="post" action="/marketplace/buyout-request.php?id=<?= (int)$id ?>"><?= csrf_field() ?><input type="hidden" name="listing_id" value="<?= (int)$id ?>"><button class="button secondary" type="submit"><?=h(t('Sofort kaufen'))?> · <?= h(money_eur((int)$item['buyout_cents'])) ?></button></form><?php endif; ?>

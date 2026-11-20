@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Warenbestand im Checkout, 2026-11-20
+
+Migration 036 verbindet einen Händlerbestand mit ausgewählten Festpreis- oder
+Verhandlungsinseraten. Die Bestätigung bindet die Verknüpfung und bucht genau
+ein Stück im selben Datenbankabschluss wie den Kauf. Vor Versand kann ein
+Storno automatisch ausgleichen. Nach Versand oder an der Mengengrenze prüft
+das Lagerteam die Rückgabe. Öffentliche Angebotsseiten zeigen leeren Bestand.
+Der integrierte Parallel- und Stornonachweis läuft im isolierten Testsystem.
+
 ## Händler-API, 2026-11-20
 
 Migration 035 ergänzt begrenzte, widerrufbare API-Schlüssel. Der Inhaber

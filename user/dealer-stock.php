@@ -44,6 +44,12 @@ if ($stockMethod === 'POST') {
         } elseif ($stockId !== null && $stockAction === 'adjust') {
             dealer_inventory_adjust($pdo,$stockActor,$stockOwner,$stockId,trade_integer(post_string('version'),1,4294967294),
                 post_string('request_key',32),post_string('amount',8),post_string('reason',960));
+        } elseif ($stockId !== null && in_array($stockAction, ['bind_checkout','unbind_checkout'], true)) {
+            dealer_checkout_change_binding($pdo,$stockActor,$stockOwner,$stockId,trade_integer(post_string('listing_id')),
+                $stockAction === 'unbind_checkout' ? post_string('revision',32) : null);
+        } elseif ($stockId !== null && in_array($stockAction, ['restore_checkout_return','close_checkout_review'], true)) {
+            if (post_string('confirm_review',1) !== '1') throw new InvalidArgumentException(t('dealer_stock.invalid'));
+            dealer_checkout_review($pdo,$stockActor,$stockOwner,$stockId,trade_integer(post_string('trade_id')),$stockAction === 'restore_checkout_return');
         } else { throw new InvalidArgumentException(t('dealer_stock.invalid')); }
         $_SESSION['dealer_stock_saved'] = true;
         redirect($stockUrl);
@@ -69,7 +75,10 @@ if ($stockOwner !== null) {
     $stockCanWrite = $stockOwner === $stockActor || in_array('inventory.write', $stockPermissions, true);
     try {
         $stockData = dealer_inventory_list($pdo, $stockActor, $stockOwner, $stockAfter);
-        if ($stockId !== null) $stockItem = dealer_inventory_details($pdo, $stockActor, $stockOwner, $stockId);
+        if ($stockId !== null) {
+            $stockItem = dealer_inventory_details($pdo, $stockActor, $stockOwner, $stockId);
+            $stockBindings = dealer_checkout_bindings($pdo,$stockActor,$stockOwner,$stockId);
+        }
         if ($stockOwner === $stockActor || in_array('orders.read', $stockPermissions, true)) {
             $stockOrders = dealer_order_list($pdo, $stockActor, $stockOwner);
         }
@@ -131,9 +140,12 @@ include __DIR__ . '/../includes/header.php';
                 <h3><?=h(t('dealer_stock.movements'))?></h3>
                 <?php if (!$stockItem['movements']): ?><p><?=h(t('dealer_stock.no_movements'))?></p><?php endif; ?>
                 <ul><?php foreach ($stockItem['movements'] as $stockMovement): ?>
-                    <li><?=h($stockMovement['created_at'])?> UTC · <?=((int)$stockMovement['delta']>0?'+':'').(int)$stockMovement['delta']?> · <?=h($stockMovement['reason'])?> · <?=h(t('dealer_stock.count',['amount'=>$stockMovement['quantity_after']]))?></li>
+                    <li><?=h($stockMovement['created_at'])?> UTC · <?=((int)$stockMovement['delta']>0?'+':'').(int)$stockMovement['delta']?> · <?=h(match ($stockMovement['movement_kind']) {
+                        'order_sale'=>t('dealer_checkout.movement_sale'), 'order_cancel'=>t('dealer_checkout.movement_cancel'), default=>$stockMovement['reason'],
+                    })?> · <?=h(t('dealer_stock.count',['amount'=>$stockMovement['quantity_after']]))?></li>
                 <?php endforeach; ?></ul>
             </section>
+            <?php include __DIR__.'/../includes/dealer-stock-bindings.php'; ?>
         <?php endif; ?>
         <?php if ($stockOrders !== null): ?>
             <section class="panel"><h2><?=h(t('dealer_stock.orders'))?></h2>

@@ -71,6 +71,8 @@ $tests = [
     'product_metadata_is_exact_and_omits_private_fields' => static function () use ($fixed,$origin): void {
         $product=seo_product_data(array_merge($fixed,['highest_bidder_id'=>99,'max_cents'=>999999,'seller_email'=>'private@example.org']),$origin);
         seo_assert($product['offers']['price']==='10.01' && $product['offers']['priceCurrency']==='EUR','Price is not exact.');
+        $soldOut = seo_product_data($fixed + ['stock_available'=>false], $origin);
+        seo_assert($soldOut['offers']['availability'] === 'https://schema.org/OutOfStock', 'Empty dealer stock was advertised as available.');
         seo_assert(count($product['image'])===2,'Actual image count ignored.');
         $json=seo_json($product);
         foreach (['highest_bidder_id','max_cents','seller_email','private@example.org'] as $private)
