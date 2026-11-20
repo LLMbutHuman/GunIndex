@@ -168,10 +168,14 @@ try {
         'change drives stock negative', DomainException::class);
     dealer_inventory_adjust($pdo, $manager, $owner, $id, 2, bin2hex(random_bytes(16)), '-2', 'Synthetic withdrawal');
     $item = dealer_inventory_details($pdo, $viewer, $owner, $id);
-    $movements = array_map(static fn(array $row): array => [(int)$row['delta'], (int)$row['quantity_after'], (int)$row['actor_id'], $row['reason']], $item['movements']);
+    $movements = array_map(static fn(array $row): array => [(int)$row['delta'], (int)$row['quantity_after'], $row['reason']], $item['movements']);
     dti_check((int)$item['quantity'] === 5 && (int)$item['version'] === 3 && $movements === [
-        [-2, 5, $manager, 'Synthetic withdrawal'], [7, 7, $manager, 'Synthetic receipt'],
+        [-2, 5, 'Synthetic withdrawal'], [7, 7, 'Synthetic receipt'],
     ], 'Only successful distinct adjustments may change quantity, version and ledger.');
+    $audit = $pdo->prepare('SELECT actor_id FROM market_dealer_stock_movements WHERE owner_id=? AND item_id=? ORDER BY id');
+    $audit->execute([$owner,$id]);
+    dti_check(array_map('intval', $audit->fetchAll(PDO::FETCH_COLUMN)) === [$manager,$manager]
+        && !array_key_exists('actor_id', $item['movements'][0]), 'Stock audit identity must stay out of the viewer response.');
     dti_reject(fn() => dealer_inventory_rename($pdo, $manager, $owner, $id, 2, 'Stale label'),
         'stale rename revision', MarketConflictException::class);
     dealer_inventory_rename($pdo, $manager, $owner, $id, 3, 'Synthetic renovated office chair');
