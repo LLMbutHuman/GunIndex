@@ -1,10 +1,10 @@
 name: Production image from release archive
 on:
   pull_request:
-    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/archive-release.sh', 'ops/production/Dockerfile', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'sql/**', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
   push:
     branches: [feature/general-marketplace-rebuild]
-    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/archive-release.sh', 'ops/production/Dockerfile', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'sql/**', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
 permissions:
   contents: read
 jobs:
@@ -28,3 +28,5 @@ jobs:
           test "${actual%% *}" = "${expected%% *}"
           docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
             --entrypoint php "$image" -r 'require "/app/vendor/autoload.php"; exit(class_exists(\PHPMailer\PHPMailer\PHPMailer::class) && class_exists(\Dompdf\Dompdf::class) && extension_loaded("pdo_mysql") && extension_loaded("gd") && extension_loaded("mbstring") && extension_loaded("sodium") ? 0 : 1);'
+      - name: Rehearse isolated database setup, encrypted recovery and worker startup
+        run: bash tests/production_deployment_test.sh

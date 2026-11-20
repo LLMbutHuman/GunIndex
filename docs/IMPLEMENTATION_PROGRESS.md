@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Isolierte Installations- und Wiederherstellungsprobe, 2026-11-21
+
+Die Installations-CI verwendet das reale Produktionsimage, eine frische
+MySQL-Instanz und private Volumes. Sie prüft Bootstrap, verschlüsselte
+Sicherung, Wiederherstellung in eine neue Datenbank, Dateiintegrität und
+Heartbeats der sieben Worker. Der Migrationsrunner erkennt eine bereits
+angelegte, exakt passende ENUM-Spalte nach einer Unterbrechung und verbucht
+die Migration nach der Fortsetzung. Die SQL-Datei 038 bleibt unverändert.
+Lokal wurden Bash- und PHP-Syntax geprüft. Der isolierte Lauf steht aus.
+
 ## Finanzverwaltung in acht Sprachen, 2026-11-21
 
 Belege, Steuerregeln, Erstattungsformulare und Validierungen der Finanzverwaltung
@@ -29,7 +39,8 @@ Auftrags- oder Laufzeitdateien. Die isolierte Linux-Testsuite enthält zusätzli
 einen temporären Git-Export mit lokalen Änderungen und Testgeheimnissen.
 Ein separater CI-Job baut das Produktionsimage aus diesem Archiv und prüft
 die OpenPGP-Prüfsumme sowie PHP-Erweiterungen und Composer-Bibliotheken im
-Image. Dieser entfernte Nachweis steht aus.
+Image. Der Build und der anschließende Test im Container waren erfolgreich.
+[CI 44837028753](https://github.com/LLMbutHuman/GunIndex/actions/runs/44837028753)
 
 ## Neuer Auktionsdurchlauf nach Verkauf, 2026-11-21
 
@@ -42,7 +53,8 @@ verfügbar. Bestandsverknüpfungen bleiben durch Migration 038 kompatibel.
 
 Lokal bestanden 13 PHP-Syntaxprüfungen und 24 reine Wiedereinstellungsgruppen.
 Der isolierte MySQL-/HTTP-Test prüft beide Verkaufswege samt Bestätigung,
-Gebühr und unveränderter Vorgeschichte. Sein Lauf steht aus.
+Gebühr und unveränderter Vorgeschichte. Beide CI-Jobs waren erfolgreich.
+[CI 44836432968](https://github.com/LLMbutHuman/GunIndex/actions/runs/44836432968)
 
 ## Werbelaufzeiten bei Wartung, 2026-11-21
 

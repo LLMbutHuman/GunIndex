@@ -161,6 +161,12 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 
 ## Update ohne Datenverlust
 
+Die CI probt das Produktionsimage auf einem frischen GitHub-Runner mit
+synthetischen Daten. Der Ablauf prüft Datenbankstart, verschlüsselte Sicherung,
+Wiederherstellung, Migrationsfortsetzung und Worker. DNS, Zertifikatsausstellung
+und die Anbindung an den tatsächlichen Ubuntu-Host werden vor Ort geprüft.
+[GitHub-Runner-Variablen](https://docs.github.com/en/actions/reference/workflows-and-actions/variables)
+
 Das Quellrepository aktualisieren, Änderungen prüfen und einen getesteten Commit
 verwenden. Der Installer verlangt unveränderte versionierte Dateien und `--update`
 für einen vorhandenen Dienst. Er prüft das Release-Archiv vor der Unterbrechung,

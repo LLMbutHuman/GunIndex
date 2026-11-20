@@ -14,8 +14,12 @@ try {
    if(preg_match('/\AALTER TABLE `?([a-z_]+)`? ADD COLUMN `?([a-z_]+)`? (.+)\z/is',$statement,$add)){
     $column=$pdo->prepare('SELECT COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?');$column->execute([$add[1],$add[2]]);$present=$column->fetch();
     if($present){
-     if(!preg_match('/\A((?:VARCHAR|CHAR|DECIMAL)\([0-9, ]+\)|(?:DATETIME|TIMESTAMP)(?:\([0-9]+\))?|(?:TINYINT|BIGINT|INT)(?:\([0-9]+\))?|MEDIUMTEXT|TEXT)(?:\s+(UNSIGNED))?/i',$add[3],$type))throw new RuntimeException('Unsupported additive column type');
-     $normalize=static fn($value)=>strtolower(preg_replace('/\b(tinyint|int|bigint)\([0-9]+\)/i','$1',preg_replace('/\s+/',' ',trim($value))));
+     if(!preg_match('/\A((?:VARCHAR|CHAR|DECIMAL)\([0-9, ]+\)|(?:DATETIME|TIMESTAMP)(?:\([0-9]+\))?|(?:TINYINT|BIGINT|INT)(?:\([0-9]+\))?|ENUM\(\x27[a-z0-9_-]+\x27(?:\s*,\s*\x27[a-z0-9_-]+\x27)*\)|MEDIUMTEXT|TEXT)(?:\s+(UNSIGNED))?(?=\s|\z)/i',$add[3],$type))throw new RuntimeException('Unsupported additive column type');
+     $normalize=static function(string $value):string{
+      $value=preg_replace('/\s*,\s*/',',',preg_replace('/\s+/',' ',trim($value)));
+      if(strncasecmp($value,'enum(',5)===0)return 'enum('.substr($value,5);
+      return strtolower(preg_replace('/\b(tinyint|int|bigint)\([0-9]+\)/i','$1',$value));
+     };
      $expected=$type[1].(empty($type[2])?'':' UNSIGNED');
      if($normalize($expected)!==$normalize($present['COLUMN_TYPE'])||$present['IS_NULLABLE']!==(stripos($add[3],'NOT NULL')!==false?'NO':'YES'))throw new RuntimeException('Existing column differs from migration');
      if(preg_match('/DEFAULT\s+(?:\x27([^\x27]*)\x27|([0-9]+))/i',$add[3],$default)&& (string)$present['COLUMN_DEFAULT']!==(string)($default[1]!==''?$default[1]:($default[2]??'')))throw new RuntimeException('Existing column default differs');
