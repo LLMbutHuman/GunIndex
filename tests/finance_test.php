@@ -662,7 +662,7 @@ try{
     }
    },['BITCOIN_LIVE_APPROVED'=>'0']);
   },
-  'payment_return_invoices_and_billing_use_eight_selected_languages'=>static function()use($pdo):void{
+  'customer_payment_and_invoice_pages_use_eight_selected_languages'=>static function()use($pdo):void{
    $customer=fin_user($pdo);
    $statement=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,'bump_single','synthetic-locale-1',199,'issued')");
    $statement->execute([$customer['id'],'GI-LOCALE-'.strtoupper(bin2hex(random_bytes(8)))]);
@@ -697,6 +697,11 @@ try{
       &&str_contains($page,h($copy['finance_customer.save'])));
      [$status,$page]=fin_request($browser,'/user/billing-details.php',['csrf_token'=>fin_csrf($page),'country_code'=>'DE','postal_code'=>'000']);
      fin_assert($status===422&&str_contains($page,h($copy['finance_customer.postal_mismatch'])));
+     [$status,$page]=fin_request($browser,'/user/billing.php');
+     fin_assert($status===200&&str_contains($page,'<h1>'.h($copy['billing_customer.heading']).'</h1>')
+      &&str_contains($page,h($copy['billing_customer.order'])));
+     [$status,$page]=fin_request($browser,'/user/billing.php',['csrf_token'=>fin_csrf($page),'action'=>'order']);
+     fin_assert($status===422&&str_contains($page,h($copy['billing_customer.terms_required'])));
     }
     fin_assert(fin_status($pdo,$invoice)==='issued');
    }finally{curl_close($browser);}

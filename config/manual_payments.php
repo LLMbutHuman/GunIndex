@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 function manual_payment_reason(PDO $pdo):?string {
- if(site_setting($pdo,'manual_paypal_enabled','0')!=='1')return 'Manuelle PayPal-Zahlungen sind noch nicht aktiviert.';
- if(site_setting($pdo,'manual_paypal_approved','0')!=='1')return 'Die Eignung des Empfängerkontos für diese geschäftlichen Zahlungen muss geprüft werden.';
- if(site_setting($pdo,'manual_tax_reviewed','0')!=='1')return 'Steuerbehandlung und Bestellbedingungen sind noch nicht freigegeben.';
- if(!filter_var(site_setting($pdo,'manual_paypal_recipient',''),FILTER_VALIDATE_EMAIL))return 'Ein geprüftes Empfängerkonto fehlt.';
- $bps=(int)site_setting($pdo,'manual_tax_bps','0');if($bps<0||$bps>10000)return 'Die Steuerkonfiguration ist ungültig.';
+ if(site_setting($pdo,'manual_paypal_enabled','0')!=='1')return t('billing_customer.manual_off');
+ if(site_setting($pdo,'manual_paypal_approved','0')!=='1')return t('billing_customer.manual_recipient_approval');
+ if(site_setting($pdo,'manual_tax_reviewed','0')!=='1')return t('billing_customer.manual_tax_review');
+ if(!filter_var(site_setting($pdo,'manual_paypal_recipient',''),FILTER_VALIDATE_EMAIL))return t('billing_customer.manual_recipient_missing');
+ $bps=(int)site_setting($pdo,'manual_tax_bps','0');if($bps<0||$bps>10000)return t('billing_customer.manual_tax_invalid');
  return null;
 }
 function direct_payment_reason(PDO $pdo):?string {

@@ -1,5 +1,12 @@
 # Implementierungsfortschritt
 
+## Manuelle Zahlungsaufträge und Guthaben in acht Sprachen, 2026-11-21
+
+Die manuelle Auftragsseite, Guthabenauswahl, Zahlungshinweise und
+Freigabegründe verwenden die gewählte Sprache. Die kanonischen und
+bereits gespeicherten Vertragsbedingungen bleiben in ihrer Originalsprache.
+Die HTTP-Prüfung umfasst auch die fehlende ausdrückliche Bestätigung.
+
 ## Rechnungsübersicht und Rechnungsanschrift in acht Sprachen, 2026-11-21
 
 Rechnungsübersicht, Dokumentarten, Storno- und Erstattungsformulare,
