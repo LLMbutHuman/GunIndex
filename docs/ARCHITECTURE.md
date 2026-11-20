@@ -43,7 +43,22 @@ stehen in [RELISTING.md](RELISTING.md) und im Fortschrittsprotokoll.
 
 Auktionsabschluss, Mailqueue, Discovery, Werbelaufzeiten und private Dokumentenfristen besitzen unabhängige CLI-Worker. Produktionscontainer führen die Jobs unabhängig von Seitenbesuchen aus und schreiben private Heartbeats. Fehler eines Jobs sollen die übrigen Jobs nicht anhalten; CLI-Healthchecks zeigen Queue- und Workerprobleme. Details: [Monitoring](MONITORING.md).
 
-Listing-Veröffentlichungen und relevante Änderungen erzeugen Discovery-Ereignisse innerhalb ihrer Geschäfts-Transaktion. Begrenzte Batches verarbeiten diese zusätzlich zum vorhandenen Angebotsbestand. Gesuche/gespeicherte Suchen zeigen nachvollziehbare Treffer; sofortige Hinweise und einmalige tägliche Zusammenfassungen respektieren die Kanalpräferenzen. Ein lokales MTA übernimmt die tatsächliche SMTP-Zustellung. Ein erfolgreicher MTA-Aufruf beweist keinen Postfacheingang und garantiert keine externe Exactly-once-Zustellung.
+Listing-Veröffentlichungen und relevante Änderungen erzeugen Discovery-Ereignisse innerhalb ihrer Geschäfts-Transaktion. Begrenzte Batches verarbeiten diese zusätzlich zum vorhandenen Angebotsbestand. Gesuche/gespeicherte Suchen zeigen nachvollziehbare Treffer. Sofortige Hinweise und einmalige tägliche Zusammenfassungen respektieren die Kanalpräferenzen. Die Mailqueue übergibt Nachrichten an den eingerichteten lokalen Mailserver oder das authentifizierte TLS-Relay. Posteingang und externe Duplikate werden beim Anbieter geprüft. [Mail-Einrichtung](MAIL_SETUP.md)
+
+## Händlerteam und Bestand
+
+Ein veröffentlichtes Händlerprofil bildet einen eigenen Berechtigungsbereich.
+Der Inhaber lädt vorhandene Konten ein. Die Berechtigung greift erst nach
+Annahme. Die Rollen erlauben Lesen des Bestands, Bestandsänderungen oder
+zusätzlich die Ansicht der Bestellübersicht mit Referenz, Status und Betrag.
+Globale Personalrechte gewähren keinen automatischen Zugriff auf fremde Betriebe.
+
+Ein Bestandseintrag hat je Betrieb eine eindeutige Artikelnummer. Zu- und
+Abgänge ändern Menge und Revisionsnummer gemeinsam mit dem unveränderlichen
+Bewegungseintrag. Der Anfrageschlüssel verhindert eine erneute Buchung bei
+Wiederholung. Widerruf und Sperrung werden bei jedem Zugriff geprüft.
+Der Zählbestand wird manuell geführt. Ein automatischer Bestandsabgleich im
+Checkout, Händler-Abonnements und die externe Händler-API folgen gesondert.
 
 ## Länder, Sprache und Oberfläche
 

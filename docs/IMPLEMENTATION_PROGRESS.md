@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Händlerteams und Warenbestand, 2026-11-20
+
+Migrationen 033 und 034 ergänzen Einladungen, getrennte Rollen und einen
+Bestand je freigegebenem Händlerbetrieb. Die Mitglieder nehmen persönlich an.
+Der Bestandsverlauf speichert Zu- und Abgänge mit Revisionsschutz und
+Wiedererkennung identischer Anfragen. Die Bestellübersicht zeigt nur Referenz,
+Betrag, Status und Versandart. Team- und Bestandsseiten sind achtsprachig.
+
+Der isolierte Test prüft Mandantentrennung, Entzug, Sperrung, wiederholte
+Buchungen und die Begrenzung der Bestellansicht. Der Datenbanknachweis folgt.
+Als nächstes stehen externe Händler-API, automatischer Bestandsabgleich und
+Abonnements aus. [Händlerteam und Bestand](ARCHITECTURE.md#händlerteam-und-bestand)
+
 ## Sprachpfade, Canonicals und Sitemap, 2026-11-20
 
 Die acht Sprachen sind für Start- und öffentliche Angebotsseiten über feste
