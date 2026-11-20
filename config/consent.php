@@ -58,14 +58,16 @@ function consent_check(PDO $pdo,string $scope,array $input,string $locale): arra
 }
 
 /** The enclosing transaction commits the receipt together with account/order creation. */
-function consent_record(PDO $pdo,int $userId,string $scope,?int $invoiceId,array $documents): void
+function consent_record(PDO $pdo,int $userId,string $scope,?int $invoiceId,array $documents,?string $acceptanceType=null): void
 {
+    $acceptanceType ??= $scope;
     if(!$pdo->inTransaction()||$userId<1||!in_array($scope,['registration','checkout'],true)
-        ||($scope==='registration'&&$invoiceId!==null)||($scope==='checkout'&&($invoiceId===null||$invoiceId<1)))throw new LogicException('Invalid consent context.');
+        ||($scope==='registration'&&($invoiceId!==null||!in_array($acceptanceType,['registration','updated_terms'],true)))
+        ||($scope==='checkout'&&($invoiceId===null||$invoiceId<1||$acceptanceType!=='checkout')))throw new LogicException('Invalid consent context.');
     if($invoiceId!==null){$q=$pdo->prepare('SELECT user_id FROM market_invoices WHERE id=? FOR SHARE');$q->execute([$invoiceId]);if((int)$q->fetchColumn()!==$userId)throw new DomainException(t('consent.changed'));}
     $q=$pdo->prepare('INSERT INTO market_contract_receipts(user_id,scope,context_key,invoice_id,document_id,content_hash) VALUES (?,?,?,?,?,?)');
     foreach($documents as $doc){
-        legal_accept($pdo,$userId,(int)$doc['id'],$scope);
+        legal_accept($pdo,$userId,(int)$doc['id'],$acceptanceType);
         $q->execute([$userId,$scope,$invoiceId===null?'account':'invoice:'.$invoiceId,$invoiceId,$doc['id'],$doc['content_hash']]);
     }
 }

@@ -29,6 +29,7 @@ function site_setting_definitions(): array
         'privacy_contact_email'=>['type'=>'email','default'=>'','label'=>'Kontakt für Datenschutzanfragen'],
         'legal_publication_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Explizit geprüfte Rechtsdokumente veröffentlichen'],
         'legal_registration_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.registration_codes','max'=>809],
+        'legal_existing_account_required'=>['type'=>'boolean','default'=>'0','label'=>'account_consent.required_setting'],
         'legal_checkout_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.checkout_codes','max'=>809],
         'finance_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Unveränderliche Rechnungsdokumente ausstellen'],
         'auction_fees_enabled'=>['type'=>'boolean','default'=>'0','label'=>'auction_billing.enabled'],

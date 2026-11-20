@@ -12,11 +12,15 @@ function contract_request(CurlHandle $browser,string $path,?array $fields=null):
     contract_check(str_starts_with($path,'/')&&!str_starts_with($path,'//'));
     curl_setopt($browser,CURLOPT_URL,'http://127.0.0.1:8081'.$path);
     if($fields===null)curl_setopt($browser,CURLOPT_HTTPGET,true);else{curl_setopt($browser,CURLOPT_POST,true);curl_setopt($browser,CURLOPT_POSTFIELDS,http_build_query($fields));}
-    $body=curl_exec($browser);contract_check(is_string($body));return ['status'=>(int)curl_getinfo($browser,CURLINFO_RESPONSE_CODE),'body'=>$body];
+    $body=curl_exec($browser);contract_check(is_string($body));
+    return ['status'=>(int)curl_getinfo($browser,CURLINFO_RESPONSE_CODE),'body'=>$body,'redirect'=>(string)curl_getinfo($browser,CURLINFO_REDIRECT_URL)];
 }
 function contract_csrf(array $response):string{contract_check(preg_match('/name="csrf_token"\s+value="([a-f0-9]{64})"/',$response['body'],$m)===1);return $m[1];}
 function contract_input(array $documents):array{$out=['legal_confirm'=>'1','legal_language'=>'de','legal_documents'=>[]];foreach($documents as $doc)$out['legal_documents'][$doc['id']]=$doc['content_hash'];return $out;}
-$settings=['legal_publication_enabled'=>'1','legal_registration_documents'=>'','legal_checkout_documents'=>'','registration_enabled'=>'1','manual_paypal_enabled'=>'1','manual_paypal_approved'=>'1','manual_tax_reviewed'=>'1','manual_tax_bps'=>'1900','manual_paypal_recipient'=>'synthetic-merchant@example.invalid','finance_enabled'=>'0'];
+function contract_redirected(array $response,string $destination):bool{
+    return $response['status']===303&&in_array($response['redirect'],[$destination,'http://127.0.0.1:8081'.$destination],true);
+}
+$settings=['legal_publication_enabled'=>'1','legal_registration_documents'=>'','legal_checkout_documents'=>'','legal_existing_account_required'=>'0','registration_enabled'=>'1','manual_paypal_enabled'=>'1','manual_paypal_approved'=>'1','manual_tax_reviewed'=>'1','manual_tax_bps'=>'1900','manual_paypal_recipient'=>'synthetic-merchant@example.invalid','finance_enabled'=>'0'];
 $before=[];$q=$pdo->prepare('SELECT setting_value,updated_at FROM system_settings WHERE setting_key=?');foreach($settings as $key=>$_){$q->execute([$key]);$before[$key]=$q->fetch()?:null;}
 $browser=curl_init();curl_setopt_array($browser,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_COOKIEFILE=>'',CURLOPT_PROXY=>'',CURLOPT_TIMEOUT=>15,CURLOPT_CONNECTTIMEOUT=>5,CURLOPT_FOLLOWLOCATION=>false]);
 $error=null;
@@ -60,6 +64,77 @@ try{
     contract_test('each_order_has_its_own_exact_document_receipt',static function()use($pdo,$userId,$listing,$input,$second,$key,&$order):void{$order=manual_order($pdo,$userId,$listing,'bump_single',$key,null,$input);$other=manual_order($pdo,$userId,$listing,'bump_single',bin2hex(random_bytes(32)),null,$input);contract_check($order!==$other);$q=$pdo->prepare("SELECT invoice_id,document_id,content_hash FROM market_contract_receipts WHERE user_id=? AND scope='checkout' ORDER BY invoice_id");$q->execute([$userId]);$receipts=$q->fetchAll();contract_check(count($receipts)===2);foreach($receipts as $receipt)contract_check(in_array((int)$receipt['invoice_id'],[$order,$other],true)&&(int)$receipt['document_id']===$second&&$receipt['content_hash']===$input['legal_documents'][$second]);});
     contract_test('idempotent_order_retry_preserves_original_receipts',static function()use($pdo,$userId,$listing,$key,$order):void{contract_check(manual_order($pdo,$userId,$listing,'bump_single',$key)===$order);$q=$pdo->prepare('SELECT COUNT(*) FROM market_contract_receipts WHERE invoice_id=?');$q->execute([$order]);contract_check((int)$q->fetchColumn()===1);});
     contract_test('unseen_current_document_cannot_be_accepted_by_old_form',static function()use($pdo,$browser,$code,$first,$body1,$userId):void{$form=contract_request($browser,'/marketplace/legal.php?document='.$code.'&language=de');$response=contract_request($browser,'/marketplace/legal.php?document='.$code.'&language=de',['csrf_token'=>contract_csrf($form),'accept_document'=>'1','document_id'=>(string)$first,'document_hash'=>hash('sha256',$body1)]);contract_check($response['status']===422);$q=$pdo->prepare("SELECT COUNT(*) FROM market_legal_acceptances WHERE user_id=? AND acceptance_type='updated_terms'");$q->execute([$userId]);contract_check((int)$q->fetchColumn()===0);});
+    contract_test('returning_account_route_policy_preserves_existing_contract_and_privacy_actions',static function():void{
+        foreach(['user/create-listing.php','user/edit-listing.php','user/checkout.php','user/relist.php','user/extend-listing.php'] as $route){
+            foreach(['GET','HEAD','POST'] as $method)contract_check(consent_account_required_route($route,$method));
+        }
+        contract_check(consent_account_required_route('actions/place-bid.php','POST')&&!consent_account_required_route('actions/place-bid.php','GET'));
+        foreach(['user/billing.php','user/promotions.php'] as $route){
+            contract_check(consent_account_required_route($route,'POST',['action'=>'order'])
+                &&!consent_account_required_route($route,'GET',['action'=>'order'])
+                &&!consent_account_required_route($route,'POST',['action'=>'claim']));
+        }
+        foreach(['actions/payment-return.php','actions/payment-checkout.php','user/dashboard.php','user/invoices.php','user/privacy.php','auth/logout.php'] as $route){
+            contract_check(!consent_account_required_route($route,'GET')&&!consent_account_required_route($route,'POST'));
+        }
+        $checkout='/user/checkout.php?id=19';
+        contract_check(consent_account_return($checkout)===$checkout);
+        foreach(['https://example.invalid/','//example.invalid/','/user/checkout.php%0D%0A','/auth/logout.php'] as $destination){
+            contract_check(consent_account_return($destination)==='/user/dashboard.php');
+        }
+    });
+    contract_test('returning_account_review_requires_exact_current_consent_without_rewriting_predecessor',static function()use($pdo,$browser,$admin,$code,$second,$input,$userId,$order):void{
+        $receipts=static function()use($pdo,$userId):array{
+            $query=$pdo->prepare("SELECT id,document_id,content_hash,created_at FROM market_contract_receipts WHERE user_id=? AND scope='registration' AND context_key='account' ORDER BY id");
+            $query->execute([$userId]);return $query->fetchAll();
+        };
+        $predecessor=$receipts();
+        contract_check(count($predecessor)===1&&(int)$predecessor[0]['document_id']===$second);
+        $checkoutReceipt=$pdo->prepare("SELECT id,document_id,content_hash,created_at FROM market_contract_receipts WHERE user_id=? AND invoice_id=? AND scope='checkout'");
+        $checkoutReceipt->execute([$userId,$order]);
+        $originalCheckout=$checkoutReceipt->fetchAll();
+        contract_check(count($originalCheckout)===1&&(int)$originalCheckout[0]['document_id']===$second);
+        $listingPath='/user/create-listing.php';
+        $submitPath='/user/account-consent.php';
+        $reviewPath=$submitPath.'?return='.rawurlencode($listingPath);
+        contract_setting($pdo,'legal_existing_account_required','1');
+        contract_check(consent_account_pending($pdo,$userId,'de')===[]&&contract_request($browser,$listingPath)['status']===200);
+        $body3=str_repeat('Synthetic returning account update for the isolated development fixture only. ',5);
+        $third=legal_create($pdo,$admin,$code,'3.0','de','Synthetic returning-account fixture',$body3);
+        legal_approve($pdo,$admin,$third,'Synthetic fixture reviewer; no legal approval',gmdate('Y-m-d'),array_fill(0,5,'1'));
+        $pending=consent_account_pending($pdo,$userId,'de');
+        contract_check(count($pending)===1&&(int)$pending[0]['id']===$third&&$pending[0]['content_hash']===hash('sha256',$body3));
+        contract_check(contract_redirected(contract_request($browser,$listingPath),$reviewPath));
+        contract_check(contract_redirected(contract_request($browser,$listingPath,['title'=>'Synthetic early submission']),$reviewPath));
+
+        foreach(['/user/dashboard.php','/user/invoices.php','/user/privacy.php','/auth/logout.php','/actions/payment-return.php?invoice_id='.$order] as $path){
+            contract_check(contract_request($browser,$path)['status']===200);
+        }
+        $invoices=contract_request($browser,'/user/invoices.php');
+        contract_check(contract_request($browser,'/user/invoices.php',['action'=>'cancel','invoice_id'=>(string)$order,'csrf_token'=>contract_csrf($invoices)])['status']===200);
+        contract_check(payments_invoice($pdo,$order,$userId)['status']==='void');
+
+        contract_setting($pdo,'legal_publication_enabled','0');
+        try{
+            contract_reject(fn()=>consent_account_pending($pdo,$userId,'de'));
+            contract_check(contract_redirected(contract_request($browser,$listingPath),$reviewPath));
+            contract_check(contract_request($browser,$reviewPath)['status']===503);
+        }finally{contract_setting($pdo,'legal_publication_enabled','1');}
+
+        $form=contract_request($browser,$reviewPath);
+        contract_check($form['status']===200&&str_contains($form['body'],'version_id='.$third));
+        $submitted=['return'=>$listingPath]+contract_input($pending);
+        contract_check(contract_request($browser,$submitPath,$submitted)['status']===403);
+        $csrf=['csrf_token'=>contract_csrf($form),'return'=>$listingPath];
+        contract_check(contract_request($browser,$submitPath,$csrf+$input)['status']===409&&$receipts()===$predecessor);
+        contract_check(contract_redirected(contract_request($browser,$submitPath,$csrf+$submitted),$listingPath));
+        $after=$receipts();
+        contract_check(count($after)===2&&$after[0]===$predecessor[0]&&(int)$after[1]['document_id']===$third
+            &&$after[1]['content_hash']===hash('sha256',$body3)&&consent_account_pending($pdo,$userId,'de')===[]);
+        consent_account_submit($pdo,$userId,'de',$submitted);
+        $checkoutReceipt->execute([$userId,$order]);
+        contract_check($after===$receipts()&&$checkoutReceipt->fetchAll()===$originalCheckout&&contract_request($browser,$listingPath)['status']===200);
+    });
     echo 'Contract integration checks passed: '.$passed."\n";
 }catch(Throwable $e){$error=$e;}
 finally{

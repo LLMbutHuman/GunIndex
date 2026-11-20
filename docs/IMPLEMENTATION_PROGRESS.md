@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Versionierte Zustimmung für Bestandskonten, 2026-11-20
+
+Die geschützte Einstellung verbindet neue Marktplatzvorgänge bestehender
+Konten mit den aktuell freigegebenen Pflichtdokumenten. Rechnungen,
+Datenschutz, Abmeldung und laufende Vertragsabwicklung bleiben erreichbar.
+Die Bestätigungsseite verwendet die vorhandenen versionierten Hash- und
+Zustimmungsbelege. Sie speichert ausdrücklich bestätigte Fassungen als
+`updated_terms` und lässt ältere Nachweise unverändert. Standardmäßig ist
+die Pflicht für bestehende Konten deaktiviert. [Vertragsbindung](CONTRACT_BINDING.md)
+
 ## Händler-Abonnements und CSV-Export, 2026-11-20
 
 Migration 037 bindet ein vorausbezahltes Händler-Abo an den unveränderlichen
@@ -17,9 +27,10 @@ Verhandlungsinseraten. Die Bestätigung bindet die Verknüpfung und bucht genau
 ein Stück im selben Datenbankabschluss wie den Kauf. Vor Versand kann ein
 Storno automatisch ausgleichen. Nach Versand oder an der Mengengrenze prüft
 das Lagerteam die Rückgabe. Öffentliche Angebotsseiten zeigen leeren Bestand.
-Der isolierte MySQL-Teil von [CI 44792170434](https://github.com/LLMbutHuman/GunIndex/actions/runs/44792170434)
-für `1d1f79b` hat den Parallel- und Stornonachweis bestanden. Die vollständige
-Browserregression wird separat bestätigt.
+[CI 44792170434](https://github.com/LLMbutHuman/GunIndex/actions/runs/44792170434)
+für `1d1f79b` ist vollständig grün. Migration 036, paralleler Erwerb des letzten
+Stücks, wiederholte Anfragen, Storno vor und nach Versand sowie die vollständige
+Browserregression bestanden.
 
 ## Händler-API, 2026-11-20
 

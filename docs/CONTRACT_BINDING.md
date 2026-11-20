@@ -34,12 +34,23 @@ Bestellungen erzeugen getrennte Nachweise; die Wiederholung derselben bereits
 verarbeiteten Bestellanfrage verwendet den vorhandenen Auftrag und seine Belege.
 Fehler rollen Konto/Bestellung und Receipts gemeinsam zurück.
 
-Abgedeckt sind Registrierung sowie die bestehenden Bump-/Premium-/Bannerbestellungen
-über `manual_order()`. Noch nicht vorhandene Warenkauf-, Auktionsgebühren- oder
-Treuhandaufträge besitzen dadurch noch keine Vertragsbindung. Vor deren Aktivierung
-muss die jeweilige Auftragstransaktion die gleiche Prüfung und Belegerstellung
-verwenden. Bestehende Konten/Aufträge erhalten keine erfundenen rückwirkenden
-Zustimmungen. Erneute Pflichtzustimmung für Bestandskonten bleibt separat offen.
+Die Registrierung, Bump-/Premium-/Bannerbestellungen, Auktionsgebühren,
+Festpreis- und Verhandlungsverträge sowie Händler-Abos verwenden versionierte
+Dokumente und Nachweise. Neue Live-Treuhandverträge benötigen die dafür
+festgelegten Dokumente bei ihrer späteren Providerintegration.
+
+Mit **Aktuelle Pflichtdokumente für bestehende Konten verlangen**
+(`legal_existing_account_required`) greifen die aktuellen freigegebenen
+Registrierungsdokumente auch vor neuen Marktplatzvorgängen bereits registrierter
+Benutzer. Das umfasst insbesondere neue Angebote, Gebote, Sofortkäufe,
+Bestellungen und Veröffentlichungen. Vor weiteren Vorgängen führt GunIndex
+zur geschützten Bestätigungsseite. Benutzer bestätigen nur aktuelle Fassungen,
+für die ihrem Konto ein exakter Nachweis fehlt. Die neuen Nachweise erscheinen
+als `updated_terms` mit Zeitpunkt, Dokument-ID und Hash. Frühere Belege bleiben
+erhalten. Rechnungen, Datenschutzfunktionen, Abmeldung und die Abwicklung
+bereits bestehender Verträge bleiben erreichbar. Die Einstellung ist anfänglich
+deaktiviert. Zur Aktivierung sind die veröffentlichten Pflichtfassungen in
+allen unterstützten Sprachen erforderlich.
 
 Die Zahlungsauftragsansicht verlinkt die zugehörigen angenommenen Fassungen.
 Exakte Versionslinks und Downloads bleiben nach einer neuen Veröffentlichung

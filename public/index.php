@@ -33,6 +33,7 @@ $allowed=array_merge($allowed,['user/escrow.php','admin/escrow.php']);
 $allowed=array_merge($allowed,['user/dealer-team.php','user/dealer-stock.php']);
 $allowed=array_merge($allowed,['user/dealer-api-keys.php','api/dealer/v1.php']);
 $allowed=array_merge($allowed,['user/dealer-subscription.php','user/dealer-stock-export.php']);
+$allowed[]='user/account-consent.php';
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 $static+=['/assets/css/e2ee.css'=>'text/css; charset=utf-8','/assets/js/e2ee-ui.mjs'=>'application/javascript; charset=utf-8','/assets/js/e2ee-crypto.mjs'=>'application/javascript; charset=utf-8','/assets/vendor/openpgp/openpgp.min.mjs'=>'application/javascript; charset=utf-8'];
@@ -44,4 +45,5 @@ if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route)){http_response_co
 if ($route === 'api/dealer/v1.php') define('GUNINDEX_STATELESS_REQUEST', true);
 require_once $root.'/config/bootstrap.php';
 maintenance_enforce_http($pdo,$route);
+consent_account_gate_http($pdo,$route);
 require $root.'/'.$route;
