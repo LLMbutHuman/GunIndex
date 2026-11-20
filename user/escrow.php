@@ -90,7 +90,7 @@ try {
 }
 $ownContact = $selected['own_contact'] ?? null;
 if (!is_string($ownContact) || !str_ends_with(strtolower($ownContact), '@example.invalid')) $ownContact = '';
-$label = static function (string $type, string $value): string {
+$escrowLabel = static function (string $type, string $value): string {
     $key = 'escrow.' . $type . '_' . $value;
     $text = t($key);
     return $text !== $key ? $text : t('escrow.unknown');
@@ -117,7 +117,7 @@ include __DIR__.'/../includes/header.php';
       <ul>
         <?php foreach ($cases as $case): ?>
           <li><a href="<?=h($url . '&case_id=' . (int)$case['id'])?>"<?= (int)($selected['id'] ?? 0) === (int)$case['id'] ? ' aria-current="page"' : ''?>>
-            <?=h($case['reference'])?> · <?=h($label('status', $case['status']))?>
+            <?=h($case['reference'])?> · <?=h($escrowLabel('status', $case['status']))?>
           </a></li>
         <?php endforeach;?>
       </ul>
@@ -143,7 +143,7 @@ include __DIR__.'/../includes/header.php';
       <div class="trade-stack">
         <section class="panel">
           <h2><?=h($selected['reference'])?></h2>
-          <p class="trade-status" data-escrow-status="<?=h($selected['status'])?>"><?=h($label('status', $selected['status']))?></p>
+          <p class="trade-status" data-escrow-status="<?=h($selected['status'])?>"><?=h($escrowLabel('status', $selected['status']))?></p>
           <p><?=h(t($actor === (int)$selected['seller_id'] ? 'trade.role.seller' : 'trade.role.buyer'))?></p>
           <dl class="trade-terms">
             <dt><?=h(t('trade.price'))?></dt><dd><?=h(money_eur((int)$selected['price_cents']))?></dd>
@@ -163,8 +163,8 @@ include __DIR__.'/../includes/header.php';
                 $action = (in_array($event['action'], $providerActions, true) ? 'simulate_' : '') . $event['action'];
             ?>
               <li>
-                <strong><?=h($label('action', $action))?></strong>
-                <span><?=h($label('role', $event['actor_role']))?> · <?=h($label('status', $event['to_status']))?></span>
+                <strong><?=h($escrowLabel('action', $action))?></strong>
+                <span><?=h($escrowLabel('role', $event['actor_role']))?> · <?=h($escrowLabel('status', $event['to_status']))?></span>
                 <time datetime="<?=h(str_replace(' ', 'T', $event['created_at']) . 'Z')?>"><?=h($event['created_at'])?> UTC</time>
                 <?php if (isset($event['price_cents'])): ?><span><?=h(t('trade.price'))?> <?=h(money_eur((int)$event['price_cents']))?></span><?php endif;?>
                 <?php if (is_string($event['detail']) && $event['detail'] !== ''): ?><p class="trade-text"><?=h($event['detail'])?></p><?php endif;?>
@@ -179,7 +179,7 @@ include __DIR__.'/../includes/header.php';
           <?php if (!$selected['actions']): ?><p><?=h(t('trade.no_actions'))?></p><?php endif;?>
           <?php foreach ($selected['actions'] as $action): ?>
             <details>
-              <summary><?=h($label('action', $action))?></summary>
+              <summary><?=h($escrowLabel('action', $action))?></summary>
               <form method="post" action="<?=h($url . '&case_id=' . (int)$selected['id'])?>" class="form-grid">
                 <?=csrf_field()?>
                 <input type="hidden" name="action" value="<?=h($action)?>">
@@ -197,7 +197,7 @@ include __DIR__.'/../includes/header.php';
                   <label class="field"><?=h(t('escrow.test_details'))?><textarea name="details" rows="3" maxlength="1000" required></textarea></label>
                 <?php endif;?>
                 <label><input type="checkbox" name="confirm" value="1" required> <?=h(t('escrow.confirm_action'))?></label>
-                <button class="button" type="submit"><?=h($label('action', $action))?></button>
+                <button class="button" type="submit"><?=h($escrowLabel('action', $action))?></button>
               </form>
             </details>
           <?php endforeach;?>
