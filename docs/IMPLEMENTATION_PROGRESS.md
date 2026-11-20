@@ -1,5 +1,22 @@
 # Implementierungsfortschritt
 
+## Reproduzierbares Ubuntu-Release-Archiv, 2026-11-21
+
+Der Installer verpackt den ausgewählten Git-Commit. Der vorherige allgemeine
+`vendor`-Ausschluss entfernte auch das für den Browserchat benötigte OpenPGP-Modul.
+Das neue Archiv enthält das Modul und schließt private lokale Dateien durch den
+Commit-Export aus. Der Installer prüft den Inhalt vor dem Anhalten der laufenden
+Dienste. Auch das Produktionsimage verlangt das Modul im Build-Kontext.
+Zielpfade werden nach Auflösung symbolischer Links erneut geprüft.
+
+Beide Bash-Syntaxprüfungen bestanden. Ein lokaler Export des tatsächlichen Branches
+enthielt das OpenPGP-Modul mit identischem SHA-256 und weder `.git` noch lokale
+Auftrags- oder Laufzeitdateien. Die isolierte Linux-Testsuite enthält zusätzlich
+einen temporären Git-Export mit lokalen Änderungen und Testgeheimnissen.
+Ein separater CI-Job baut das Produktionsimage aus diesem Archiv und prüft
+die OpenPGP-Prüfsumme sowie PHP-Erweiterungen und Composer-Bibliotheken im
+Image. Dieser entfernte Nachweis steht aus.
+
 ## Neuer Auktionsdurchlauf nach Verkauf, 2026-11-21
 
 Der Verkäufer kann eine per Gebot oder Sofortkauf abgeschlossene Auktion
@@ -26,7 +43,9 @@ protokolliert die Anzahl der verlängerten Fristen.
 Lokal bestanden drei Syntaxprüfungen und zwölf reine Wartungsprüfungen.
 Der isolierte MySQL-Test für eine simulierte neuntägige Unterbrechung prüft
 zusätzlich Eingangsbestätigung, Fristfortsetzung, erneutes Öffnen und Audit.
-Der Testnachweis dieses Laufs steht aus.
+Beide CI-Jobs bestanden, einschließlich elf Werbe- und neun Auktions-/Worker-
+Prüfgruppen sowie Browser und Barrierefreiheit.
+[CI 44835645014](https://github.com/LLMbutHuman/GunIndex/actions/runs/44835645014)
 
 ## PDF-Beschriftung mit unveränderlichem Sprachstand, 2026-11-21
 
@@ -63,7 +82,8 @@ Die Zahlungsübersicht, Statusbezeichnungen, Preisvorschau und PayPal-Rückkehr
 verwenden acht Sprachfassungen. Auch die häufigen PayPal-Konfigurations- und
 Antwortfehler sind lokalisiert. Die isolierten HTTP-Tests wechseln durch alle
 acht Sprachen und prüfen, dass Aufruf und Abbruchhinweis den Zahlungszustand
-unberührt lassen. Weitere Rechnungs- und ältere Finanzmasken bleiben offen.
+unberührt lassen. Beide CI-Jobs bestanden. Weitere ältere Finanzmasken sind offen.
+[CI 44833175209](https://github.com/LLMbutHuman/GunIndex/actions/runs/44833175209)
 
 ## Versionierte Zustimmung für Bestandskonten, 2026-11-20
 

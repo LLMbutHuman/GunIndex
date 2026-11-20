@@ -17,8 +17,32 @@ class Installation(unittest.TestCase):
   for value in ('example.com','market.invalid','market.test','localhost','a.tld;touch/tmp/unsafe','https://gunindex.eu','gunindex.eu/other'):
    self.assertNotEqual(0,self.command('--domain',value,'--email','operator@gunindex.eu','--dry-run').returncode)
  def test_unsafe_target_paths_are_rejected(self):
-  for value in ('/','/etc','/srv/../etc','/srv/a b','relative'):
+  for value in ('/','/etc','/srv/../etc','/srv/a b','relative','/usr/','/var/lib/..'):
    self.assertNotEqual(0,self.command('--domain','markt.gunindex.eu','--email','operator@gunindex.eu','--directory',value,'--dry-run').returncode)
+  with tempfile.TemporaryDirectory() as temp:
+   link=Path(temp)/'alias';link.symlink_to('/etc',target_is_directory=True)
+   self.assertNotEqual(0,self.command('--domain','markt.gunindex.eu','--email','operator@gunindex.eu','--directory',str(link),'--dry-run').returncode)
+ def test_release_exports_exact_commit_with_browser_crypto_and_excludes_local_files(self):
+  with tempfile.TemporaryDirectory() as temp:
+   base=Path(temp);source=base/'source';source.mkdir();target=base/'release';target.mkdir()
+   subprocess.run(['git','init','-q',str(source)],check=True)
+   def git(*args):return subprocess.check_output(['git','-C',str(source),*args])
+   files={'public/index.php':b'<?php echo "versioned";\n','composer.lock':b'{}\n',
+          'assets/vendor/openpgp/openpgp.min.mjs':(ROOT/'assets/vendor/openpgp/openpgp.min.mjs').read_bytes(),
+          '.gitignore':b'/.env\n/tests/.runtime/\n'}
+   for name,body in files.items():
+    path=source/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(body)
+   git('add','--',*files)
+   git('-c','user.name=Isolated test','-c','user.email=fixture@example.invalid','-c','commit.gpgsign=false','commit','-qm','Synthetic package test')
+   commit=git('rev-parse','HEAD').decode().strip()
+   (source/'public/index.php').write_bytes(b'synthetic uncommitted change')
+   (source/'.env').write_bytes(b'synthetic ignored setting')
+   (source/'private-notes.md').write_bytes(b'synthetic untracked work')
+   command=['bash',str(ROOT/'ops/production/archive-release.sh'),str(source),commit,str(target)]
+   subprocess.run(command,check=True)
+   for name,body in files.items():self.assertEqual(body,(target/name).read_bytes())
+   for name in ('.git','.env','private-notes.md'):self.assertFalse((target/name).exists())
+   self.assertNotEqual(0,subprocess.run(command).returncode,'Refused to overwrite an existing staged release.')
  def test_source_checkout_cannot_contain_or_be_the_installation(self):
   for value in (str(ROOT),str(ROOT/'deployment'),str(ROOT.parent)):
    self.assertNotEqual(0,self.command('--domain','markt.gunindex.eu','--email','operator@gunindex.eu','--directory',value,'--dry-run').returncode)

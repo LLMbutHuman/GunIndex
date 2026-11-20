@@ -27,10 +27,13 @@ if ! [[ "$domain" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$ ]] || 
  printf '%s\n' 'A real lowercase domain is required; placeholders are not accepted.' >&2;exit 2
 fi
 [[ "$email" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$ ]] || { printf '%s\n' 'A valid operator email is required.' >&2;exit 2; }
-[[ "$directory" =~ ^/[A-Za-z0-9_/-]+$ ]] && [[ "$directory" != / && "$directory" != /etc && "$directory" != /usr && "$directory" != /var && "$directory" != /home && "$directory" != *'/../'* ]] || { printf '%s\n' 'Use a dedicated absolute installation directory without spaces or traversal.' >&2;exit 2; }
+[[ "$directory" =~ ^/[A-Za-z0-9_/-]+$ ]] && [[ "$directory" != *'/../'* && "$directory" != */.. ]] || { printf '%s\n' 'Use a dedicated absolute installation directory without spaces or traversal.' >&2;exit 2; }
 source_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 directory="$(realpath -m -- "$directory")"
 [[ "$directory" =~ ^/[A-Za-z0-9_/-]+$ ]] || { printf '%s\n' 'The resolved installation path is unsafe.' >&2;exit 2; }
+case "$directory" in
+ /bin|/boot|/dev|/etc|/home|/lib|/lib64|/media|/mnt|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp|/usr|/usr/bin|/usr/lib|/usr/lib64|/usr/sbin|/var) printf '%s\n' 'Use a dedicated installation directory.' >&2;exit 2;;
+esac
 if [[ "$directory/" == "$source_dir/"* || "$source_dir/" == "$directory/"* ]];then
  printf '%s\n' 'Keep the source checkout and managed installation in separate directories.' >&2;exit 2
 fi
@@ -56,8 +59,8 @@ export DOCKER_HOST=unix:///var/run/docker.sock
 . /etc/os-release
 [ "${ID:-}" = ubuntu ] && [ "${VERSION_ID:-}" = 22.04 ] && [ "$(dpkg --print-architecture)" = amd64 ] || { printf '%s\n' 'Supported target: Ubuntu22.04 amd64 only.' >&2;exit 2; }
 for file in public/index.php sql/schema.sql composer.lock;do [ -f "$source_dir/$file" ] || { printf '%s\n' 'Complete reviewed source including composer.lock is required.' >&2;exit 2; };done
-git -c safe.directory="$source_dir" -C "$source_dir" rev-parse --verify HEAD >/dev/null
-git -c safe.directory="$source_dir" -C "$source_dir" diff --quiet HEAD && [ -z "$(git -c safe.directory="$source_dir" -C "$source_dir" ls-files --others --exclude-standard)" ] || { printf '%s\n' 'Preserve or commit source changes first. Nothing was reset.' >&2;exit 2; }
+commit="$(git -c safe.directory="$source_dir" -C "$source_dir" rev-parse --verify HEAD)"
+git -c safe.directory="$source_dir" -C "$source_dir" diff --quiet "$commit" || { printf '%s\n' 'Preserve or commit tracked source changes first. Nothing was reset.' >&2;exit 2; }
 if [ -e "$directory/current" ] && [ "$update" -ne 1 ];then printf '%s\n' 'Existing installation requires --update.' >&2;exit 2;fi
 if [ "$update" -eq 1 ] && [ ! -f "$directory/config/compose.env" ];then printf '%s\n' 'Restore the managed installation configuration first.' >&2;exit 2;fi
 export DEBIAN_FRONTEND=noninteractive
@@ -79,6 +82,10 @@ fi
 systemctl enable --now docker
 install -d -m 0700 "$directory" "$directory/config" "$directory/keys" "$directory/backups" "$directory/releases"
 if [ ! -f "$directory/config/app.env" ] && docker volume inspect gunindex_database >/dev/null 2>&1;then printf '%s\n' 'Database exists without configuration. Restore credentials/keys; no new secrets were generated.' >&2;exit 2;fi
+release="$commit-$(date -u +%Y%m%d%H%M%S)"
+release_dir="$directory/releases/$release"
+mkdir -m 0755 -- "$release_dir"
+bash "$source_dir/ops/production/archive-release.sh" "$source_dir" "$commit" "$release_dir"
 if [ "$update" -eq 1 ];then
  if docker volume inspect gunindex_database >/dev/null 2>&1;then
   python3 "$directory/current/ops/production/backup.py" --directory "$directory" backup --maintenance --leave-stopped
@@ -86,9 +93,6 @@ if [ "$update" -eq 1 ];then
   printf '%s\n' 'Resuming a managed installation without an initialized database volume; existing credentials are preserved.'
  fi
 fi
-release="$(git -c safe.directory="$source_dir" -C "$source_dir" rev-parse HEAD)-$(date -u +%Y%m%d%H%M%S)"
-release_dir="$directory/releases/$release";install -d -m 0755 "$release_dir"
-tar -C "$source_dir" --exclude='.git' --exclude='.env' --exclude='.env.*' --exclude='assets/uploads' --exclude='datenbank' --exclude='tests/.runtime' --exclude='var' --exclude='node_modules' --exclude='vendor' -cf - . | tar -C "$release_dir" -xf -
 python3 "$release_dir/ops/production/configure.py" --directory "$directory" --domain "$domain" --email "$email" --release "$release" --source "$release_dir"
 ln -sfn "$release_dir" "$directory/current"
 "$directory/compose.sh" build php mailer

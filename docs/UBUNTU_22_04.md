@@ -62,9 +62,10 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 
    Docker kommt ausschließlich aus seinem offiziellen signierten Ubuntu-Repository;
    der GPG-Fingerprint wird geprüft. Es gibt kein `curl | bash`, keine abgeschaltete
-   TLS-Prüfung und keinen Datenbankreset. Das Skript kopiert einen eigenen sauberen
-   Release ohne alte Exporte/Uploads, `.git` oder Laufzeitgeheimnisse. Ein vorhandener
-   Checkout und ältere Releases bleiben erhalten. Bestehende Keys werden nicht ersetzt.
+   TLS-Prüfung und keinen Datenbankreset. Der Release entsteht aus dem konkreten
+   Git-Commit und enthält das versionierte OpenPGP-Modul für den Chat. Unversionierte
+   Notizen, ignorierte Laufzeitdateien und `.git` liegen außerhalb des Release-Archivs.
+   [Git-Archivformat](https://git-scm.com/docs/git-archive)
 
 6. Dienste und interne Gesundheitsprüfung kontrollieren:
 
@@ -161,8 +162,9 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 ## Update ohne Datenverlust
 
 Das Quellrepository aktualisieren, Änderungen prüfen und einen getesteten Commit
-verwenden. Der Installer verlangt einen sauberen Commit und `--update` für einen
-vorhandenen Dienst. Er erstellt ein geprüftes Backup, hält Schreiber an und führt
+verwenden. Der Installer verlangt unveränderte versionierte Dateien und `--update`
+für einen vorhandenen Dienst. Er prüft das Release-Archiv vor der Unterbrechung,
+erstellt ein geprüftes Backup, hält Schreiber an und führt
 additive Migrationen aus. Bei Fehlern werden weder produktive Daten gelöscht noch
 SQL-Änderungen automatisch zurückgerollt; Dienst geschlossen lassen und vorwärts
 reparieren. Administratorveränderte verwaltete Konfigdateien benötigen eine manuelle

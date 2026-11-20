@@ -11,6 +11,7 @@ WORKDIR /app
 COPY . /app
 RUN --mount=type=secret,id=proxy_ca,required=true \
     test -f composer.lock \
+ && test -f assets/vendor/openpgp/openpgp.min.mjs \
  && GIT_SSL_CAINFO=/run/secrets/proxy_ca COMPOSER_CAFILE=/run/secrets/proxy_ca COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --prefer-dist --no-scripts --no-plugins --optimize-autoloader \
  && find /app -type d -exec chmod 0755 {} + \
  && find /app -type f -exec chmod 0644 {} +

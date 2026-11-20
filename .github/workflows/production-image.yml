@@ -1,0 +1,30 @@
+name: Production image from release archive
+on:
+  pull_request:
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/archive-release.sh', 'ops/production/Dockerfile', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+  push:
+    branches: [feature/general-marketplace-rebuild]
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/archive-release.sh', 'ops/production/Dockerfile', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+permissions:
+  contents: read
+jobs:
+  production-image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build and verify the archived production image
+        run: |
+          set -euo pipefail
+          release="$RUNNER_TEMP/gunindex-release"
+          mkdir -- "$release"
+          bash ops/production/archive-release.sh "$PWD" "$GITHUB_SHA" "$release"
+          image="gunindex-production-ci:$GITHUB_SHA"
+          docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \
+            --file "$release/ops/production/Dockerfile" --tag "$image" "$release"
+          expected="$(sha256sum < "$release/assets/vendor/openpgp/openpgp.min.mjs")"
+          actual="$(docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
+            --entrypoint sha256sum "$image" /app/assets/vendor/openpgp/openpgp.min.mjs)"
+          test "${actual%% *}" = "${expected%% *}"
+          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
+            --entrypoint php "$image" -r 'require "/app/vendor/autoload.php"; exit(class_exists(\PHPMailer\PHPMailer\PHPMailer::class) && class_exists(\Dompdf\Dompdf::class) && extension_loaded("pdo_mysql") && extension_loaded("gd") && extension_loaded("mbstring") && extension_loaded("sodium") ? 0 : 1);'
