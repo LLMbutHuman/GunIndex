@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Zahlungsübersicht und PayPal-Rückkehr in acht Sprachen, 2026-11-20
+
+Die Zahlungsübersicht, Statusbezeichnungen, Preisvorschau und PayPal-Rückkehr
+verwenden acht Sprachfassungen. Auch die häufigen PayPal-Konfigurations- und
+Antwortfehler sind lokalisiert. Die isolierten HTTP-Tests wechseln durch alle
+acht Sprachen und prüfen, dass Aufruf und Abbruchhinweis den Zahlungszustand
+unberührt lassen. Weitere Rechnungs- und ältere Finanzmasken bleiben offen.
+
 ## Versionierte Zustimmung für Bestandskonten, 2026-11-20
 
 Die geschützte Einstellung verbindet neue Marktplatzvorgänge bestehender
@@ -8,7 +16,11 @@ Datenschutz, Abmeldung und laufende Vertragsabwicklung bleiben erreichbar.
 Die Bestätigungsseite verwendet die vorhandenen versionierten Hash- und
 Zustimmungsbelege. Sie speichert ausdrücklich bestätigte Fassungen als
 `updated_terms` und lässt ältere Nachweise unverändert. Standardmäßig ist
-die Pflicht für bestehende Konten deaktiviert. [Vertragsbindung](CONTRACT_BINDING.md)
+die Pflicht für bestehende Konten deaktiviert. Die isolierte HTTP-Prüfung
+bestätigte die aktuelle Version, CSRF, Wiederholung ohne Doppelnachweis und
+weiter zugängliche Rechnungs-, Datenschutz- und bestehende Vertragsfunktionen.
+[CI 44794702907](https://github.com/LLMbutHuman/GunIndex/actions/runs/44794702907)
+für `1da9548` ist vollständig grün. [Vertragsbindung](CONTRACT_BINDING.md)
 
 ## Händler-Abonnements und CSV-Export, 2026-11-20
 
@@ -18,6 +30,10 @@ Bestandsexport und kann ausdrücklich verlängert werden. Nur der verifizierte
 Rechnungsabschluss beginnt oder erweitert die Laufzeit. Vollständige
 Erstattung oder ein Bitcoin-Klärfall entziehen die betroffene Laufzeit.
 Die Konfiguration beginnt ohne Verkaufspreis und mit geschlossener Freigabe.
+[CI 44793558506](https://github.com/LLMbutHuman/GunIndex/actions/runs/44793558506)
+für `17951b2` ist vollständig grün. Migration 037 und 35 Finanzgruppen
+einschließlich synthetisch geprüftem Bankeingang, Laufzeitverlängerung,
+Erstattungen und der tatsächlichen CSV-Ausgabe bestanden.
 [Händler-Abonnement](DEALER_SUBSCRIPTION.md)
 
 ## Warenbestand im Checkout, 2026-11-20

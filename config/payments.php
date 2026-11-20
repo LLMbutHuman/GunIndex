@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/i18n.php';
 
 final class PaymentUnavailable extends RuntimeException {}
 final class PaymentConflict extends RuntimeException {}
@@ -27,11 +28,11 @@ function payments_origin(array $config): string
     $url = rtrim((string)($config['app_url'] ?? ''), '/');
     $parts = parse_url($url);
     if ($parts === false || filter_var($url, FILTER_VALIDATE_URL) === false || preg_match('/[\x00-\x20\\\\]/', $url) || !isset($parts['host'], $parts['scheme']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment']) || !empty($parts['path'])) {
-        throw new PaymentUnavailable('Eine gültige eigene Callbackadresse ist erforderlich.');
+        throw new PaymentUnavailable(t('payment_customer.origin_invalid'));
     }
     $local = ($config['mode'] ?? '') === 'sandbox' && in_array(strtolower($parts['host']), ['localhost', '127.0.0.1', '[::1]'], true);
     if ($parts['scheme'] !== 'https' && !($local && $parts['scheme'] === 'http')) {
-        throw new PaymentUnavailable('Die Callbackadresse muss HTTPS verwenden.');
+        throw new PaymentUnavailable(t('payment_customer.origin_https'));
     }
     return $url;
 }
@@ -39,13 +40,13 @@ function payments_origin(array $config): string
 function payments_paypal_reason(?array $config = null): ?string
 {
     $config ??= payments_config();
-    if (!$config['enabled']) return 'Automatische PayPal-Zahlungen sind noch nicht aktiviert.';
-    if ($config['account_type'] !== 'business') return 'Für automatisierten PayPal Checkout ist ein geeignetes Händlerkonto erforderlich. Ein Privatkonto ist hier nicht freigeschaltet.';
-    if ($config['scope'] !== 'general_only' || !$config['billing_approved']) return 'Die Abrechnung dieses Geschäftszwecks ist noch nicht freigegeben.';
-    if (!in_array($config['mode'], ['sandbox', 'live'], true)) return 'Die Zahlungsumgebung ist ungültig.';
-    if ($config['mode'] === 'live' && !$config['live_approved']) return 'Produktive Zahlungen sind nicht freigegeben.';
+    if (!$config['enabled']) return t('payment_customer.paypal_off');
+    if ($config['account_type'] !== 'business') return t('payment_customer.paypal_account');
+    if ($config['scope'] !== 'general_only' || !$config['billing_approved']) return t('payment_customer.paypal_scope');
+    if (!in_array($config['mode'], ['sandbox', 'live'], true)) return t('payment_customer.paypal_mode');
+    if ($config['mode'] === 'live' && !$config['live_approved']) return t('payment_customer.paypal_approval');
     foreach (['client_id', 'client_secret', 'merchant_id', 'webhook_id', 'app_url'] as $key) {
-        if (!is_string($config[$key] ?? null) || $config[$key] === '') return 'Die sichere PayPal-Konfiguration ist noch unvollständig.';
+        if (!is_string($config[$key] ?? null) || $config[$key] === '') return t('payment_customer.paypal_config');
     }
     try { payments_origin($config); } catch (PaymentUnavailable $error) { return $error->getMessage(); }
     return null;
@@ -57,7 +58,7 @@ function payments_methods(?array $config = null,?PDO $pdo=null): array
     $bankReason=$pdo===null?'Banküberweisung ist zurzeit nicht verfügbar.':bank_gate($pdo);
     $bitcoinReason=$pdo===null?'Bitcoin ist zurzeit nicht verfügbar.':bitcoin_gate($pdo,null,true);
     return [
-        'paypal' => ['label' => 'PayPal', 'available' => $reason === null, 'reason' => $reason ?? 'Offizieller PayPal Checkout'],
+        'paypal' => ['label' => 'PayPal', 'available' => $reason === null, 'reason' => $reason ?? t('payment_customer.paypal_official')],
         'bitcoin' => ['label' => 'Bitcoin', 'available' => $bitcoinReason===null, 'reason' => $bitcoinReason??t('bitcoin.start_help')],
         'bank' => ['label' => $pdo===null?'Banküberweisung':t('bank.bank_transfer'), 'available' => $bankReason===null, 'reason' => $bankReason??t('bank.start_help')],
     ];
@@ -113,20 +114,20 @@ final class MarketPayPal
             $raw = curl_exec($handle);
             $status = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
             curl_close($handle);
-            if (!is_string($raw)) throw new PaymentUnavailable('Der Zahlungsanbieter ist vorübergehend nicht erreichbar.');
+            if (!is_string($raw)) throw new PaymentUnavailable(t('payment_customer.provider_timeout'));
             $response = ['status' => $status, 'body' => $raw];
         }
-        if (!is_array($response) || !is_int($response['status'] ?? null) || $response['status'] < 200 || $response['status'] >= 300) throw new PaymentUnavailable('Die Zahlungsanforderung konnte nicht bestätigt werden.');
+        if (!is_array($response) || !is_int($response['status'] ?? null) || $response['status'] < 200 || $response['status'] >= 300) throw new PaymentUnavailable(t('payment_customer.provider_rejected'));
         try { $decoded = is_array($response['body'] ?? null) ? $response['body'] : json_decode((string)($response['body'] ?? ''), true, 64, JSON_THROW_ON_ERROR); }
-        catch (JsonException) { throw new PaymentUnavailable('Ungültige Antwort des Zahlungsanbieters.'); }
-        if (!is_array($decoded)) throw new PaymentUnavailable('Ungültige Antwort des Zahlungsanbieters.');
+        catch (JsonException) { throw new PaymentUnavailable(t('payment_customer.provider_response')); }
+        if (!is_array($decoded)) throw new PaymentUnavailable(t('payment_customer.provider_response'));
         return $decoded;
     }
     private function api(string $method, string $path, ?array $body = null, ?string $requestId = null, bool $representation = false): array
     {
         if ($this->token === null) {
             $auth = $this->request('POST', '/v1/oauth2/token', ['Authorization: Basic ' . base64_encode($this->config['client_id'] . ':' . $this->config['client_secret']), 'Content-Type: application/x-www-form-urlencoded'], 'grant_type=client_credentials');
-            if (!is_string($auth['access_token'] ?? null) || $auth['access_token'] === '' || strlen($auth['access_token']) > 8192 || preg_match('/[\r\n]/', $auth['access_token'])) throw new PaymentUnavailable('Die Provideranmeldung ist fehlgeschlagen.');
+            if (!is_string($auth['access_token'] ?? null) || $auth['access_token'] === '' || strlen($auth['access_token']) > 8192 || preg_match('/[\r\n]/', $auth['access_token'])) throw new PaymentUnavailable(t('payment_customer.provider_auth'));
             $this->token = $auth['access_token'];
         }
         $headers = ['Authorization: Bearer ' . $this->token, 'Content-Type: application/json', 'Accept: application/json'];
@@ -172,13 +173,13 @@ final class MarketPayPal
     {
         if (($order['id'] ?? null) !== $orderId || ($order['intent'] ?? null) !== 'CAPTURE' || ($order['status'] ?? null) !== ($completed ? 'COMPLETED' : 'APPROVED') || count($order['purchase_units'] ?? []) !== 1) throw new PaymentConflict('Der Providerauftrag passt nicht zur Rechnung.');
         $unit = $order['purchase_units'][0];
-        if (($unit['reference_id'] ?? null) !== 'invoice:' . $invoice['id'] || ($unit['custom_id'] ?? null) !== (string)$invoice['id'] || ($unit['invoice_id'] ?? null) !== $invoice['invoice_number'] || ($unit['payee']['merchant_id'] ?? null) !== $this->config['merchant_id'] || payments_api_cents($unit['amount'] ?? null) !== (int)$invoice['gross_cents']) throw new PaymentConflict('Empfänger, Betrag oder Rechnungsreferenz ist abweichend.');
+        if (($unit['reference_id'] ?? null) !== 'invoice:' . $invoice['id'] || ($unit['custom_id'] ?? null) !== (string)$invoice['id'] || ($unit['invoice_id'] ?? null) !== $invoice['invoice_number'] || ($unit['payee']['merchant_id'] ?? null) !== $this->config['merchant_id'] || payments_api_cents($unit['amount'] ?? null) !== (int)$invoice['gross_cents']) throw new PaymentConflict(t('payment_customer.mismatch'));
         if (!$completed) return null;
         $captures = $unit['payments']['captures'] ?? [];
-        if (count($captures) !== 1) throw new PaymentConflict('Unvollständige oder mehrteilige Zahlung.');
+        if (count($captures) !== 1) throw new PaymentConflict(t('payment_customer.incomplete'));
         $capture = $captures[0];
         $states = $forRefund ? ['COMPLETED','PARTIALLY_REFUNDED','REFUNDED'] : ['COMPLETED'];
-        if (!in_array($capture['status'] ?? null,$states,true) || payments_api_cents($capture['amount'] ?? null) !== (int)$invoice['gross_cents'] || ($capture['final_capture'] ?? true) !== true) throw new PaymentConflict('Die vollständige Zahlung ist nicht bestätigt.');
+        if (!in_array($capture['status'] ?? null,$states,true) || payments_api_cents($capture['amount'] ?? null) !== (int)$invoice['gross_cents'] || ($capture['final_capture'] ?? true) !== true) throw new PaymentConflict(t('payment_customer.confirm'));
         return $this->orderId((string)($capture['id'] ?? ''));
     }
     public function verifyWebhook(array $headers, array $event): bool
@@ -338,6 +339,15 @@ function payments_assert_automatic(PDO $pdo,int $invoiceId):void {
  $q=$pdo->prepare('SELECT 1 FROM market_manual_orders WHERE invoice_id=?');$q->execute([$invoiceId]);if($q->fetchColumn())throw new PaymentConflict('Dieser Zahlungsauftrag benötigt die manuelle Prüfung.');
 }
 function payments_status_label(string $status,?string $mode=null):string {
- if($status==='paid'&&$mode==='sandbox')return 'Sandbox bestätigt · keine Echtzahlung';
- return ['draft'=>'Entwurf','issued'=>'Ausgestellt','pending'=>'Prüfung ausstehend','paid'=>'Bezahlt','manual_rejected'=>'Noch nicht bestätigt','partially_refunded'=>'Teilweise erstattet','refunded'=>'Erstattet','void'=>'Storniert'][$status]??'In Bearbeitung';
+ if($status==='paid'&&$mode==='sandbox')return t('payment_customer.state_sandbox');
+ if(!in_array($status,['draft','issued','pending','paid','manual_rejected','partially_refunded','refunded','void'],true))$status='processing';
+ return t('payment_customer.state_'.$status);
+}
+
+function payments_service_label(string $service): string
+{
+    if ($service === 'dealer_subscription') return t('dealer_subscription.title');
+    $key = 'payment_customer.service_' . $service;
+    $title = t($key);
+    return $title === $key ? $service : $title;
 }

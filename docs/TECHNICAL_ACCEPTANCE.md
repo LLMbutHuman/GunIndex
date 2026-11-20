@@ -71,7 +71,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 1 | Auktions-Einstellgebühr | A | Neuer bestätigter Durchlauf atomar berechnet; Aktivierungsfreigaben und tatsächliche Zahlungen extern |
 | 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
 | 3 | Gebühren, Korrekturen, Rechnungen | C | Teil- und Vollerlass unbezahlter Gebühren, Klärung alter Referenzen, Rechnungs-PDF, verifizierte Erstattungen und Gebührenbindung bei erfolgloser Wiederholung geprüft. Weitere Durchlaufarten und Bestandsbehandlung offen |
-| 4 | Rechtsdokumentbindung | C | Bestehende Registrierungs-/Leistungsabläufe geprüft; neue Transaktionsarten und Pflichtzustimmung für Bestandskonten offen |
+| 4 | Rechtsdokumentbindung | B | Registrierung, Checkout und ausdrückliche Pflichtzustimmung für Bestandskonten versioniert und in MySQL/HTTP geprüft. Fachliche Freigabe der tatsächlichen Dokumente und Sprachfassungen steht aus. [CI 44794702907](https://github.com/LLMbutHuman/GunIndex/actions/runs/44794702907) |
 | 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
 | 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |
 | 7 | Produktklassifizierung | A | Validierte Werte in Inserat, Produktseite, Wiedereinstellung und Kaufnachweis. Bestehende Inserate beginnen ohne erfundene Werte |
@@ -87,7 +87,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 17 | Benutzer-2FA/Passkeys | A | Optionale TOTP-Anmeldung, einmalige Recovery-Codes und WebAuthn mit echtem Chromium-Authenticator-Verfahren grün. Zielsystem und physische Authenticatoren zur Betriebsabnahme |
 | 18 | Profilbilder/Händlerlogos | A | Größenbegrenzter WebP-Upload, Profilanzeige, revisionsgebundene Logo-Freigabe, Datenschutzexport und Entfernung in MySQL und Chromium geprüft |
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |
-| 20 | Händlerfunktionen | C | Teamrollen, Warenbestand, Bestellübersicht und API in MySQL, HTTP und Browserregression geprüft. Bestandsbuchung bei konkurrierenden Käufen in MySQL geprüft. Abo-Prüfung und Live-Abrechnung stehen aus. [CI 44790906063](https://github.com/LLMbutHuman/GunIndex/actions/runs/44790906063) |
+| 20 | Händlerfunktionen | B | Teamrollen, Warenbestand, Checkout-Buchung, API und vorausbezahlte Abos mit CSV-Export integriert geprüft. Live-Abrechnung, Preis und Bedingungen für das Abonnement sind freizugeben. [CI 44793558506](https://github.com/LLMbutHuman/GunIndex/actions/runs/44793558506) |
 | 21 | Vollständiges SEO | B | Acht Sprachpfade, Canonicals, hreflang, strukturierte Daten und Sitemap-Freigabe lokal, in MySQL und HTTP geprüft. Prüfung am öffentlichen HTTPS-Ziel ausstehend. [CI 44788077123](https://github.com/LLMbutHuman/GunIndex/actions/runs/44788077123) |
 | 22 | Wartungsmodus | C | Sperre/Fristfortsetzung und Healthdiagnose integriert und geprüft; Behandlung längerer Ausfälle und Werbezeiten offen |
 | 23 | Automatische Rückerstattungen | B | Freigabe, persistente Aufträge, Worker, verifizierter Statusabgleich und Korrekturbelege in MySQL/HTTP geprüft. Echte Sandbox- und Live-Anbieterabnahme offen. [CI 44540263687](https://github.com/LLMbutHuman/GunIndex/actions/runs/44540263687) |

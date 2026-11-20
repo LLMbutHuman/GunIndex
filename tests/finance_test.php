@@ -662,6 +662,34 @@ try{
     }
    },['BITCOIN_LIVE_APPROVED'=>'0']);
   },
+  'payment_and_paypal_return_use_eight_selected_languages'=>static function()use($pdo):void{
+   $customer=fin_user($pdo);
+   $statement=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,'bump_single','synthetic-locale-1',199,'issued')");
+   $statement->execute([$customer['id'],'GI-LOCALE-'.strtoupper(bin2hex(random_bytes(8)))]);
+   $invoice=(int)$pdo->lastInsertId();
+   $path='/user/payments.php?invoice_id='.$invoice;
+   $browser=fin_browser();
+   try{
+    fin_login($browser,$customer);
+    foreach(i18n_locales() as $locale=>$label){
+     [$status,$page]=fin_request($browser,$path);
+     fin_assert($status===200);
+     [$changed]=fin_request($browser,'/user/language.php',['csrf_token'=>fin_csrf($page),'locale'=>$locale,'market_country'=>'DE','return_path'=>$path]);
+     fin_assert($changed===303);
+     $copy=i18n_dictionary($locale);
+     [$status,$page]=fin_request($browser,$path);
+     fin_assert($status===200&&str_contains($page,'<html lang="'.$locale.'"')
+      &&str_contains($page,'<h1>'.h($copy['payment_customer.title']).'</h1>')
+      &&str_contains($page,h($copy['payment_customer.state_issued']))
+      &&str_contains($page,h($copy['payment_customer.service_bump_single'])));
+     [$status,$page]=fin_request($browser,'/actions/payment-return.php?invoice_id='.$invoice.'&cancel=1');
+     fin_assert($status===200&&str_contains($page,'<html lang="'.$locale.'"')
+      &&str_contains($page,'<h1>'.h($copy['payment_customer.return_heading']).'</h1>')
+      &&str_contains($page,h($copy['payment_customer.return_cancel'])));
+    }
+    fin_assert(fin_status($pdo,$invoice)==='issued');
+   }finally{curl_close($browser);}
+  },
  ];
  foreach($tests as $name=>$run){$run();++$passed;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}fwrite(STDOUT,'Finance checks passed: '.$passed.PHP_EOL);
 }catch(Throwable $e){fwrite(STDERR,'FAIL '.($name??'initialization').' ('.get_class($e).' at '.basename($e->getFile()).':'.$e->getLine().')'.PHP_EOL);$failed=true;}
