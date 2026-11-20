@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Zde lze stornovat pouze nezaplacené objednávky.',
     'finance_customer.pdf_unavailable' => 'Místní knihovnu PDF je ještě třeba nainstalovat.',
     'finance_customer.amount_invalid' => 'Zadejte platnou částku.',
+    'finance_customer.pdf_cancellation' => 'Storno faktury',
+    'finance_customer.pdf_quantity' => 'Množství',
+    'finance_customer.pdf_ordered' => 'Datum objednávky',
+    'finance_customer.pdf_vat_id' => 'DIČ pro DPH',
+    'finance_customer.pdf_tax_number' => 'Daňové číslo',
+    'finance_customer.pdf_related' => 'Původní doklad',
+    'finance_customer.pdf_test' => 'TESTOVACÍ DOKLAD · VÝVOJ',
+    'finance_customer.pdf_standard_service' => 'Platba předem za kredity nebo rezervovanou službu. Zahájení služby zaznamenává historie aktivací.',
+    'finance_customer.pdf_auction' => 'Aukce',
 ];

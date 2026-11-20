@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Alleen onbetaalde bestellingen kunnen hier worden geannuleerd.',
     'finance_customer.pdf_unavailable' => 'De lokale pdf-bibliotheek moet nog worden geïnstalleerd.',
     'finance_customer.amount_invalid' => 'Voer een geldig bedrag in.',
+    'finance_customer.pdf_cancellation' => 'Annuleringsfactuur',
+    'finance_customer.pdf_quantity' => 'Aantal',
+    'finance_customer.pdf_ordered' => 'Besteldatum',
+    'finance_customer.pdf_vat_id' => 'Btw-nummer',
+    'finance_customer.pdf_tax_number' => 'Belastingnummer',
+    'finance_customer.pdf_related' => 'Oorspronkelijk document',
+    'finance_customer.pdf_test' => 'TESTDOCUMENT · ONTWIKKELING',
+    'finance_customer.pdf_standard_service' => 'Vooruitbetaling voor tegoed of een gereserveerde dienst. In de activeringsgeschiedenis staat wanneer de dienst begint.',
+    'finance_customer.pdf_auction' => 'Veiling',
 ];

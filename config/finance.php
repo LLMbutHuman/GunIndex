@@ -44,6 +44,10 @@ function finance_prepare_order(PDO $pdo,int $invoiceId,int $userId):void {
  $q=$pdo->prepare('SELECT * FROM market_invoices WHERE id=? AND user_id=?');$q->execute([$invoiceId,$userId]);$invoice=$q->fetch();if(!$invoice)throw new PaymentConflict('Auftrag nicht gefunden.');
  $tax=fees_tax_split((int)$invoice['gross_cents'],(int)$rule['basis_points'],true);
  $payload=['version'=>'finance-1.0','operator'=>$operator,'buyer'=>$buyer,'service_code'=>$invoice['service_code'],'label'=>fees_quote($invoice['service_code'],null,$pdo)['label'],'fee_version'=>$invoice['fee_version'],'currency'=>'EUR','gross_cents'=>(int)$invoice['gross_cents'],'net_cents'=>$tax['net_cents'],'tax_cents'=>$tax['tax_cents'],'tax_bps'=>(int)$rule['basis_points'],'tax_explanation'=>$rule['explanation'],'order_reference'=>$invoice['invoice_number'],'ordered_at'=>$invoice['created_at'],'locale'=>i18n_locale(),'test_mode'=>str_ends_with((string)getenv('DB_DATABASE'),'_test')];
+ $localized=payments_service_label($invoice['service_code']);
+ if($localized!==$invoice['service_code'])$payload['label']=$localized;
+ $payload['render_labels']=finance_pdf_labels($payload['locale']);
+ if($invoice['service_code']==='dealer_subscription')$payload['service_description']=t('dealer_subscription.access',['days'=>dealer_subscription_terms()['term_days']]);
  $json=json_encode($payload,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
  $pdo->prepare('INSERT INTO market_invoice_snapshots(invoice_id,user_id,payload_ciphertext,payload_hash) VALUES (?,?,?,?)')->execute([$invoiceId,$userId,crypto_encrypt('finance',$json),hash('sha256',$json)]);
  $pdo->prepare('UPDATE market_manual_orders SET net_cents=?,tax_cents=?,tax_bps=? WHERE invoice_id=?')->execute([$tax['net_cents'],$tax['tax_cents'],$rule['basis_points'],$invoiceId]);
@@ -165,22 +169,46 @@ function finance_document(PDO $pdo,int $documentId,int $userId,bool $staff=false
  if(!$row||((int)$row['user_id']!==$userId&&!($staff&&rbac_has_permission($pdo,$userId,'finance.manage'))))throw new PaymentConflict('Rechnungsdokument nicht gefunden.');
  $json=crypto_decrypt('finance',$row['payload_ciphertext']);if(!hash_equals($row['content_hash'],hash('sha256',$json)))throw new RuntimeException('Invoice integrity failed.');$row['payload']=json_decode($json,true,32,JSON_THROW_ON_ERROR);return$row;
 }
-function finance_pdf(array $document):string {
- $autoload=dirname(__DIR__).'/vendor/autoload.php';if(!is_file($autoload))throw new PaymentUnavailable(t('finance_customer.pdf_unavailable'));require_once$autoload;
+function finance_pdf_labels(string $locale):array {
+ $keys=[
+  'invoice'=>'finance_customer.invoice','credit_note'=>'finance_customer.credit_note','cancellation'=>'finance_customer.pdf_cancellation',
+  'service'=>'payment_customer.service','quantity'=>'finance_customer.pdf_quantity','net'=>'billing_customer.net',
+  'vat'=>'billing_customer.vat','total'=>'billing_customer.total','reference'=>'payment_customer.reference',
+  'ordered'=>'finance_customer.pdf_ordered','vat_id'=>'finance_customer.pdf_vat_id','tax_number'=>'finance_customer.pdf_tax_number',
+  'related'=>'finance_customer.pdf_related','previous'=>'auction_correction.previous','test'=>'finance_customer.pdf_test',
+  'description'=>'finance_customer.pdf_standard_service','auction'=>'finance_customer.pdf_auction',
+ ];
+ $copy=i18n_dictionary($locale);$labels=[];foreach($keys as $key=>$translation)$labels[$key]=$copy[$translation];return $labels;
+}
+
+function finance_pdf_markup(array $document):string {
  $p=$document['payload'];$type=$document['document_type'];$lang=$p['locale']??'de';
  $titles=['de'=>['invoice'=>'Rechnung','credit_note'=>'Gutschrift','cancellation'=>'Stornorechnung'],'en'=>['invoice'=>'Invoice','credit_note'=>'Credit note','cancellation'=>'Cancellation invoice'],'fr'=>['invoice'=>'Facture','credit_note'=>'Avoir','cancellation'=>'Facture annulée'],'nl'=>['invoice'=>'Factuur','credit_note'=>'Creditnota','cancellation'=>'Annulering'],'pl'=>['invoice'=>'Faktura','credit_note'=>'Nota kredytowa','cancellation'=>'Anulowanie'],'cs'=>['invoice'=>'Faktura','credit_note'=>'Dobropis','cancellation'=>'Storno'],'da'=>['invoice'=>'Faktura','credit_note'=>'Kreditnota','cancellation'=>'Annullering'],'it'=>['invoice'=>'Fattura','credit_note'=>'Nota di credito','cancellation'=>'Storno']];
- $title=$titles[$lang][$type]??$titles['de'][$type];$operator=$p['operator'];$buyer=$p['buyer'];$sign=$type==='invoice'?'':'− ';
- $html='<!doctype html><html><meta charset="utf-8"><style>body{font:11px DejaVu Sans,sans-serif;color:#13282a;margin:28px}h1{font-size:26px}table{border-collapse:collapse;width:100%;margin:30px 0}td,th{border-bottom:1px solid #ccd7d5;padding:12px;text-align:left}.test{color:#a00}.small{font-size:9px}</style><body>';
- if($p['test_mode']??false)$html.='<p class="test">TESTDOKUMENT · DEVELOPMENT</p>';
+ $legacy=($titles[$lang]??$titles['de'])+[
+  'service'=>'Leistung / Service','quantity'=>'Anzahl','net'=>'Netto','vat'=>'Umsatzsteuer / VAT','total'=>'Gesamt / Total',
+  'reference'=>'Auftrag / Reference','ordered'=>'Bestelldatum','vat_id'=>'USt-ID','tax_number'=>'Steuernummer',
+  'related'=>'Bezug zum ursprünglichen Dokument / Related document','previous'=>i18n_dictionary($lang)['auction_correction.previous'],
+  'test'=>'TESTDOKUMENT · DEVELOPMENT','description'=>'Vorauszahlung für Guthaben oder reservierte Plattformleistung. Der tatsächliche Leistungsbeginn wird gesondert in der Aktivierungshistorie dokumentiert.','auction'=>'Auction',
+ ];
+ $labels=$p['render_labels']??$legacy;
+ if(!is_array($labels)||array_diff_key($legacy,$labels))throw new RuntimeException('Invoice render labels are incomplete.');
+ $title=$labels[$type];$operator=$p['operator'];$buyer=$p['buyer'];$sign=$type==='invoice'?'':'− ';
+ $html='<!doctype html><html'.(isset($p['render_labels'])?' lang="'.h($lang).'"':'').'><meta charset="utf-8"><style>body{font:11px DejaVu Sans,sans-serif;color:#13282a;margin:28px}h1{font-size:26px}table{border-collapse:collapse;width:100%;margin:30px 0}td,th{border-bottom:1px solid #ccd7d5;padding:12px;text-align:left}.test{color:#a00}.small{font-size:9px}</style><body>';
+ if($p['test_mode']??false)$html.='<p class="test">'.h($labels['test']).'</p>';
  $html.='<h1>'.h($title).' '.h($document['document_number']).'</h1><p>'.h($p['issued_at']).' UTC · EUR</p><p><strong>'.h($operator['legal_name']).'</strong><br>'.h($operator['address_line1']).'<br>'.h($operator['address_line2']).'<br>'.h($operator['postcode'].' '.$operator['city'].' · '.$operator['country']).'<br>'.h($operator['email']).'</p><p><strong>'.h($buyer['legal_name']).'</strong><br>'.h($buyer['address_line1']).'<br>'.h($buyer['address_line2']).'<br>'.h($buyer['postal_code'].' '.$buyer['city'].' · '.$buyer['country_code']).'</p>';
- $html.='<table><thead><tr><th>Leistung / Service</th><th>Anzahl</th><th>EUR</th></tr></thead><tbody><tr><td>'.h($p['label']).'<br><span class="small">'.h($p['fee_version']).'</span></td><td>1</td><td>'.h($sign.money_eur((int)$p['gross_cents'])).'</td></tr></tbody></table><p>Netto: '.h($sign.money_eur((int)$p['net_cents'])).'<br>Umsatzsteuer / VAT ('.h(intdiv((int)$p['tax_bps'],100).','.str_pad((string)((int)$p['tax_bps']%100),2,'0',STR_PAD_LEFT)).' %): '.h($sign.money_eur((int)$p['tax_cents'])).'<br><strong>Gesamt / Total: '.h($sign.money_eur((int)$p['gross_cents'])).'</strong></p>';
- $html.='<p>'.h($p['tax_explanation']).'</p><p class="small">Auftrag / Reference: '.h($p['order_reference']).'<br>Bestelldatum: '.h(substr($p['ordered_at'],0,10)).'<br>'.h($operator['vat_id']!==''?'USt-ID: '.$operator['vat_id']:'Steuernummer: '.$operator['tax_number']).'<br>'.h($operator['registration']).'</p>';
- if(isset($p['previous_order_reference']))$html.='<p>'.h(i18n_dictionary($lang)['auction_correction.previous']).' · '.h($p['previous_order_reference']).'</p>';
- if(isset($p['related_document_id']))$html.='<p>Bezug zum ursprünglichen Dokument / Related document: #'.(int)$p['related_document_id'].'</p>';
+ $html.='<table><thead><tr><th>'.h($labels['service']).'</th><th>'.h($labels['quantity']).'</th><th>EUR</th></tr></thead><tbody><tr><td>'.h($p['label']).'<br><span class="small">'.h($p['fee_version']).'</span></td><td>1</td><td>'.h($sign.money_eur((int)$p['gross_cents'])).'</td></tr></tbody></table><p>'.h($labels['net']).': '.h($sign.money_eur((int)$p['net_cents'])).'<br>'.h($labels['vat']).' ('.h(intdiv((int)$p['tax_bps'],100).','.str_pad((string)((int)$p['tax_bps']%100),2,'0',STR_PAD_LEFT)).' %): '.h($sign.money_eur((int)$p['tax_cents'])).'<br><strong>'.h($labels['total']).': '.h($sign.money_eur((int)$p['gross_cents'])).'</strong></p>';
+ $html.='<p>'.h($p['tax_explanation']).'</p><p class="small">'.h($labels['reference']).': '.h($p['order_reference']).'<br>'.h($labels['ordered']).': '.h(substr($p['ordered_at'],0,10)).'<br>'.h($operator['vat_id']!==''?$labels['vat_id'].': '.$operator['vat_id']:$labels['tax_number'].': '.$operator['tax_number']).'<br>'.h($operator['registration']).'</p>';
+ if(isset($p['previous_order_reference']))$html.='<p>'.h($labels['previous']).' · '.h($p['previous_order_reference']).'</p>';
+ if(isset($p['related_document_id']))$html.='<p>'.h($labels['related']).': #'.(int)$p['related_document_id'].'</p>';
  if(isset($p['correction_reason']))$html.='<p>'.h($p['correction_reason']).'</p>';
- $html.='<p class="small">'.h($p['service_description']??'Vorauszahlung für Guthaben oder reservierte Plattformleistung. Der tatsächliche Leistungsbeginn wird gesondert in der Aktivierungshistorie dokumentiert.').'</p>';
- if(isset($p['auction_listing_id']))$html.='<p class="small">Auction #'.(int)$p['auction_listing_id'].($p['sale_cents']!==null?' · '.h(money_eur((int)$p['sale_cents'])):'').'</p>';
- $html.='</body></html>';
+ $html.='<p class="small">'.h($p['service_description']??$labels['description']).'</p>';
+ if(isset($p['auction_listing_id']))$html.='<p class="small">'.h($labels['auction']).' #'.(int)$p['auction_listing_id'].($p['sale_cents']!==null?' · '.h(money_eur((int)$p['sale_cents'])):'').'</p>';
+ return $html.'</body></html>';
+}
+
+function finance_pdf(array $document):string {
+ $autoload=dirname(__DIR__).'/vendor/autoload.php';if(!is_file($autoload))throw new PaymentUnavailable(t('finance_customer.pdf_unavailable'));require_once$autoload;
+ $html=finance_pdf_markup($document);
  $private=rtrim(getenv('GENERAL_PRIVATE_DIR')?:'/var/lib/gunindex/private','/').'/pdf-fonts';if(!is_dir($private)&&!mkdir($private,0700,true))throw new RuntimeException('Private font cache unavailable.');
  $pdf=new \Dompdf\Dompdf(['isRemoteEnabled'=>false,'isPhpEnabled'=>false,'isJavascriptEnabled'=>false,'defaultFont'=>'DejaVu Sans','fontCache'=>$private,'tempDir'=>$private,'chroot'=>dirname(__DIR__).'/vendor/dompdf']);$pdf->loadHtml($html,'UTF-8');$pdf->setPaper('A4');$pdf->render();return$pdf->output();
 }

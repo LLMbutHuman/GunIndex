@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Seules les commandes impayées peuvent être annulées ici.',
     'finance_customer.pdf_unavailable' => 'La bibliothèque PDF locale reste à installer.',
     'finance_customer.amount_invalid' => 'Saisissez un montant valide.',
+    'finance_customer.pdf_cancellation' => 'Facture d’annulation',
+    'finance_customer.pdf_quantity' => 'Quantité',
+    'finance_customer.pdf_ordered' => 'Date de commande',
+    'finance_customer.pdf_vat_id' => 'N° de TVA',
+    'finance_customer.pdf_tax_number' => 'Numéro fiscal',
+    'finance_customer.pdf_related' => 'Document d’origine',
+    'finance_customer.pdf_test' => 'DOCUMENT DE TEST · DÉVELOPPEMENT',
+    'finance_customer.pdf_standard_service' => 'Paiement anticipé pour des crédits ou une prestation réservée. L’historique d’activation indique le début de la prestation.',
+    'finance_customer.pdf_auction' => 'Enchère',
 ];

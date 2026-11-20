@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## PDF-Beschriftung mit unveränderlichem Sprachstand, 2026-11-21
+
+Neue Rechnungsaufträge speichern die Beschriftungen der Bestellsprache im
+geprüften Snapshot. Die PDFs verwenden auch nach einem späteren Sprachwechsel
+die gespeicherten Texte. Das gilt für neue Standard- und Auktionsaufträge.
+Ältere Snapshots behalten ihr Layout. Beträge und vom Betreiber verfasste
+Steuer- und Rechtstexte werden aus dem ursprünglichen Nachweis übernommen.
+
 ## Manuelle Zahlungsaufträge und Guthaben in acht Sprachen, 2026-11-21
 
 Die manuelle Auftragsseite, Guthabenauswahl, Zahlungshinweise und

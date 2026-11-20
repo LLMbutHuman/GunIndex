@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Kun ubetalte ordrer kan annulleres her.',
     'finance_customer.pdf_unavailable' => 'Det lokale PDF-bibliotek mangler at blive installeret.',
     'finance_customer.amount_invalid' => 'Indtast et gyldigt beløb.',
+    'finance_customer.pdf_cancellation' => 'Annulleringsfaktura',
+    'finance_customer.pdf_quantity' => 'Antal',
+    'finance_customer.pdf_ordered' => 'Ordredato',
+    'finance_customer.pdf_vat_id' => 'Momsnummer',
+    'finance_customer.pdf_tax_number' => 'Skattenummer',
+    'finance_customer.pdf_related' => 'Oprindeligt dokument',
+    'finance_customer.pdf_test' => 'TESTDOKUMENT · UDVIKLING',
+    'finance_customer.pdf_standard_service' => 'Forudbetaling for saldo eller en reserveret platformydelse. Aktiveringshistorikken angiver, hvornår ydelsen starter.',
+    'finance_customer.pdf_auction' => 'Auktion',
 ];

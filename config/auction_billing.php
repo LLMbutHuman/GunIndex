@@ -126,6 +126,7 @@ function auction_billing_charge(PDO $pdo,int $listingId,string $kind,?int $sale)
             'fee_version'=>$contract['fee_version'],'currency'=>'EUR','gross_cents'=>$gross,'net_cents'=>$tax['net_cents'],'tax_cents'=>$tax['tax_cents'],
             'tax_bps'=>$contract['tax_bps'],'tax_explanation'=>$contract['tax_explanation'],'order_reference'=>$reference,'ordered_at'=>$invoice['created_at'],
             'locale'=>$contract['locale'],'test_mode'=>str_ends_with((string)getenv('DB_DATABASE'),'_test'),'auction_listing_id'=>$listingId,'sale_cents'=>$sale,'service_description'=>$contract['terms']];
+        $snapshot['render_labels']=finance_pdf_labels($snapshot['locale']);
         $json=auction_billing_json($snapshot);
         $pdo->prepare('INSERT INTO market_invoice_snapshots(invoice_id,user_id,payload_ciphertext,payload_hash) VALUES (?,?,?,?)')->execute([$invoiceId,$seller,crypto_encrypt('finance',$json),hash('sha256',$json)]);
         $pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,request_key) VALUES (?,?,?,?,?,1,?,?,?,?,?,?)')

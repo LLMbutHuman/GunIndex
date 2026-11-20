@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Nur unbezahlte Aufträge können hier storniert werden.',
     'finance_customer.pdf_unavailable' => 'Die lokale PDF-Bibliothek ist noch nicht installiert.',
     'finance_customer.amount_invalid' => 'Bitte einen gültigen Geldbetrag eingeben.',
+    'finance_customer.pdf_cancellation' => 'Stornorechnung',
+    'finance_customer.pdf_quantity' => 'Anzahl',
+    'finance_customer.pdf_ordered' => 'Bestelldatum',
+    'finance_customer.pdf_vat_id' => 'USt-ID',
+    'finance_customer.pdf_tax_number' => 'Steuernummer',
+    'finance_customer.pdf_related' => 'Bezug zum ursprünglichen Dokument',
+    'finance_customer.pdf_test' => 'TESTDOKUMENT · ENTWICKLUNG',
+    'finance_customer.pdf_standard_service' => 'Vorauszahlung für Guthaben oder reservierte Plattformleistung. Der tatsächliche Leistungsbeginn wird gesondert in der Aktivierungshistorie dokumentiert.',
+    'finance_customer.pdf_auction' => 'Auktion',
 ];

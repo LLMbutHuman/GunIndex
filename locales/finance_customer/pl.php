@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Tutaj można anulować tylko nieopłacone zamówienia.',
     'finance_customer.pdf_unavailable' => 'Lokalna biblioteka PDF wymaga instalacji.',
     'finance_customer.amount_invalid' => 'Wpisz prawidłową kwotę.',
+    'finance_customer.pdf_cancellation' => 'Faktura anulująca',
+    'finance_customer.pdf_quantity' => 'Ilość',
+    'finance_customer.pdf_ordered' => 'Data zamówienia',
+    'finance_customer.pdf_vat_id' => 'Numer VAT',
+    'finance_customer.pdf_tax_number' => 'Numer podatkowy',
+    'finance_customer.pdf_related' => 'Dokument pierwotny',
+    'finance_customer.pdf_test' => 'DOKUMENT TESTOWY · ROZWÓJ',
+    'finance_customer.pdf_standard_service' => 'Przedpłata za środki lub zarezerwowaną usługę platformy. Historia aktywacji wskazuje początek świadczenia usługi.',
+    'finance_customer.pdf_auction' => 'Aukcja',
 ];

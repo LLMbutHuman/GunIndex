@@ -706,6 +706,28 @@ try{
     fin_assert(fin_status($pdo,$invoice)==='issued');
    }finally{curl_close($browser);}
   },
+  'new_pdf_labels_are_frozen_in_the_invoice_language'=>static function()use($pdo,$admin,$category):void{
+   $original=$_SESSION['locale']??null;
+   try{
+    foreach(i18n_locales() as $locale=>$label){
+     $_SESSION['locale']=$locale;
+     $customer=fin_user($pdo);
+     $id=fin_order($pdo,$customer,$category);
+     $snapshot=finance_snapshot($pdo,$id);
+     fin_assert($snapshot['locale']===$locale&&$snapshot['render_labels']===finance_pdf_labels($locale));
+     fin_pay($pdo,$admin['id'],$id);
+     $document=finance_document($pdo,fin_document_id($pdo,$id),$customer['id']);
+     $markup=finance_pdf_markup($document);
+     fin_assert(str_contains($markup,'<html lang="'.$locale.'">')
+      &&str_contains($markup,'<th>'.h($snapshot['render_labels']['quantity']).'</th>')
+      &&str_contains($markup,h($snapshot['tax_explanation'])));
+     $_SESSION['locale']=$locale==='de'?'en':'de';
+     fin_assert(finance_pdf_markup($document)===$markup&&str_starts_with(finance_pdf($document),'%PDF-'));
+     unset($document['payload']['render_labels']);
+     fin_assert(str_contains(finance_pdf_markup($document),'<th>Leistung / Service</th>'));
+    }
+   }finally{if($original===null)unset($_SESSION['locale']);else$_SESSION['locale']=$original;}
+  },
  ];
  foreach($tests as $name=>$run){$run();++$passed;fwrite(STDOUT,'PASS '.$name.PHP_EOL);}fwrite(STDOUT,'Finance checks passed: '.$passed.PHP_EOL);
 }catch(Throwable $e){fwrite(STDERR,'FAIL '.($name??'initialization').' ('.get_class($e).' at '.basename($e->getFile()).':'.$e->getLine().')'.PHP_EOL);$failed=true;}

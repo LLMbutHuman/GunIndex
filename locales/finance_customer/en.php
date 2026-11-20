@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Only unpaid orders can be cancelled here.',
     'finance_customer.pdf_unavailable' => 'The local PDF library has yet to be installed.',
     'finance_customer.amount_invalid' => 'Enter a valid amount.',
+    'finance_customer.pdf_cancellation' => 'Cancellation invoice',
+    'finance_customer.pdf_quantity' => 'Quantity',
+    'finance_customer.pdf_ordered' => 'Order date',
+    'finance_customer.pdf_vat_id' => 'VAT ID',
+    'finance_customer.pdf_tax_number' => 'Tax number',
+    'finance_customer.pdf_related' => 'Original document',
+    'finance_customer.pdf_test' => 'TEST DOCUMENT · DEVELOPMENT',
+    'finance_customer.pdf_standard_service' => 'Advance payment for credits or a reserved platform service. The activation history records when the service starts.',
+    'finance_customer.pdf_auction' => 'Auction',
 ];

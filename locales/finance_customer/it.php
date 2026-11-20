@@ -51,4 +51,13 @@ return [
     'finance_customer.cancel_ineligible' => 'Qui puoi annullare solo gli ordini non pagati.',
     'finance_customer.pdf_unavailable' => 'La libreria PDF locale deve ancora essere installata.',
     'finance_customer.amount_invalid' => 'Inserisci un importo valido.',
+    'finance_customer.pdf_cancellation' => 'Fattura di annullamento',
+    'finance_customer.pdf_quantity' => 'Quantità',
+    'finance_customer.pdf_ordered' => 'Data dell’ordine',
+    'finance_customer.pdf_vat_id' => 'Partita IVA',
+    'finance_customer.pdf_tax_number' => 'Codice fiscale',
+    'finance_customer.pdf_related' => 'Documento originale',
+    'finance_customer.pdf_test' => 'DOCUMENTO DI TEST · SVILUPPO',
+    'finance_customer.pdf_standard_service' => 'Pagamento anticipato per crediti o un servizio prenotato. La cronologia di attivazione riporta l’inizio del servizio.',
+    'finance_customer.pdf_auction' => 'Asta',
 ];
