@@ -237,6 +237,7 @@ function payments_begin(PDO $pdo, int $invoiceId, int $userId, string $provider)
     try {
         maintenance_assert_market_available($pdo);
         $invoice = payments_invoice($pdo, $invoiceId, $userId, true); payments_assert_invoice($invoice); payments_assert_automatic($pdo, (int)$invoice['id']);
+        if($invoice['service_code']==='dealer_subscription'&&$config['mode']!=='live')throw new PaymentUnavailable(t('dealer_subscription.unavailable'));
         if(function_exists('finance_assert_payable'))finance_assert_payable($pdo,$invoice,$config['mode']);
         $query = $pdo->prepare('SELECT * FROM market_payment_attempts WHERE invoice_id=? ORDER BY id DESC LIMIT 1 FOR UPDATE'); $query->execute([$invoiceId]); $attempt = $query->fetch();
         if ($attempt && ($attempt['provider'] !== 'paypal' || !in_array($attempt['status'], ['created', 'pending'], true))) throw new PaymentConflict('Der letzte Zahlungsversuch muss zuerst geprüft werden.');

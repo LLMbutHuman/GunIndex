@@ -62,7 +62,8 @@ geführt. Festpreis- und Verhandlungsinserate können mit einem Artikelbestand
 verbunden werden. Vertragsabschluss und der Abgang eines Stücks werden
 gemeinsam gebucht. Vor Versand freigegebene Stornos buchen das Stück zurück.
 Nach Versand oder bei erreichtem Höchstbestand entsteht ein Prüffall für das
-Lagerteam. Händler-Abonnements folgen gesondert. [Händler-API](DEALER_API.md)
+Lagerteam. Ein vorausbezahltes Händler-Abonnement schaltet den CSV-Export für
+berechtigte Bestandsmitglieder frei. [Händler-API](DEALER_API.md), [Händler-Abonnement](DEALER_SUBSCRIPTION.md)
 
 ## Länder, Sprache und Oberfläche
 

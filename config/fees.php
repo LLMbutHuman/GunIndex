@@ -19,6 +19,7 @@ function fees_progressive(int $saleCents, array $rates, int $capCents, int $mini
 
 function fees_quote(string $service, ?int $saleCents = null, ?PDO $pdo = null): array
 {
+    if ($service === 'dealer_subscription') return dealer_subscription_terms();
     $fixed = [
         'private_fixed' => ['Privates Festpreisinserat', null, 0],
         'wanted' => ['Gesuch', null, 0],

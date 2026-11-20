@@ -1,4 +1,4 @@
-# Technischer Abnahmestand – 2026-11-14
+# Technischer Abnahmestand – 2026-11-20
 
 Gesamtplattform **nicht fertig und nicht produktiv abgenommen**.
 Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
@@ -87,7 +87,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 17 | Benutzer-2FA/Passkeys | A | Optionale TOTP-Anmeldung, einmalige Recovery-Codes und WebAuthn mit echtem Chromium-Authenticator-Verfahren grün. Zielsystem und physische Authenticatoren zur Betriebsabnahme |
 | 18 | Profilbilder/Händlerlogos | A | Größenbegrenzter WebP-Upload, Profilanzeige, revisionsgebundene Logo-Freigabe, Datenschutzexport und Entfernung in MySQL und Chromium geprüft |
 | 19 | Verlauf/Produktvergleich | A | Innerhalb dokumentierter Sitzungsgrenzen geprüft |
-| 20 | Händlerfunktionen | C | Teamrollen, Warenbestand und eingeschränkte Bestellübersicht implementiert. Händler-Abos, Bestandsabgleich und externe API offen |
+| 20 | Händlerfunktionen | C | Teamrollen, Warenbestand, Bestellübersicht und API in MySQL, HTTP und Browserregression geprüft. Bestandsbuchung bei konkurrierenden Käufen in MySQL geprüft. Abo-Prüfung und Live-Abrechnung stehen aus. [CI 44790906063](https://github.com/LLMbutHuman/GunIndex/actions/runs/44790906063) |
 | 21 | Vollständiges SEO | B | Acht Sprachpfade, Canonicals, hreflang, strukturierte Daten und Sitemap-Freigabe lokal, in MySQL und HTTP geprüft. Prüfung am öffentlichen HTTPS-Ziel ausstehend. [CI 44788077123](https://github.com/LLMbutHuman/GunIndex/actions/runs/44788077123) |
 | 22 | Wartungsmodus | C | Sperre/Fristfortsetzung und Healthdiagnose integriert und geprüft; Behandlung längerer Ausfälle und Werbezeiten offen |
 | 23 | Automatische Rückerstattungen | B | Freigabe, persistente Aufträge, Worker, verifizierter Statusabgleich und Korrekturbelege in MySQL/HTTP geprüft. Echte Sandbox- und Live-Anbieterabnahme offen. [CI 44540263687](https://github.com/LLMbutHuman/GunIndex/actions/runs/44540263687) |

@@ -71,6 +71,7 @@ function bitcoin_start(PDO $pdo,int $invoiceId,int $userId): void
         maintenance_assert_market_available($pdo);
         $invoice=payments_invoice($pdo,$invoiceId,$userId,true);
         payments_assert_invoice($invoice);
+        if ($invoice['service_code']==='dealer_subscription'&&$config['chain']!=='main') throw new PaymentUnavailable(t('dealer_subscription.unavailable'));
         finance_assert_invoice_snapshot($invoice,finance_snapshot($pdo,$invoiceId));
         if (bitcoin_order($pdo,$invoiceId)) {$pdo->commit();return;}
         $q=$pdo->prepare('SELECT id FROM market_payment_attempts WHERE invoice_id=? LIMIT 1 FOR SHARE');
@@ -132,6 +133,7 @@ function bitcoin_apply_receipts(PDO $pdo,array $order,array $receipts,string $le
                 if ($current['chain']==='main') {
                     $pdo->prepare('UPDATE market_bump_credits SET remaining=0 WHERE invoice_id=?')->execute([$invoice['id']]);
                     business_refund_invoice($pdo,(int)$invoice['id']);
+                    dealer_subscription_revoke($pdo,$invoice);
                 }
             }
             $next=900;

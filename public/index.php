@@ -32,6 +32,7 @@ $allowed[]='admin/bitcoin.php';
 $allowed=array_merge($allowed,['user/escrow.php','admin/escrow.php']);
 $allowed=array_merge($allowed,['user/dealer-team.php','user/dealer-stock.php']);
 $allowed=array_merge($allowed,['user/dealer-api-keys.php','api/dealer/v1.php']);
+$allowed=array_merge($allowed,['user/dealer-subscription.php','user/dealer-stock-export.php']);
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 $static+=['/assets/css/e2ee.css'=>'text/css; charset=utf-8','/assets/js/e2ee-ui.mjs'=>'application/javascript; charset=utf-8','/assets/js/e2ee-crypto.mjs'=>'application/javascript; charset=utf-8','/assets/vendor/openpgp/openpgp.min.mjs'=>'application/javascript; charset=utf-8'];

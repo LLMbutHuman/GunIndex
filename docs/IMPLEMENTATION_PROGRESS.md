@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Händler-Abonnements und CSV-Export, 2026-11-20
+
+Migration 037 bindet ein vorausbezahltes Händler-Abo an den unveränderlichen
+Rechnungsauftrag und die bestätigte Rechtsdokumentversion. Es umfasst 30 Tage
+Bestandsexport und kann ausdrücklich verlängert werden. Nur der verifizierte
+Rechnungsabschluss beginnt oder erweitert die Laufzeit. Vollständige
+Erstattung oder ein Bitcoin-Klärfall entziehen die betroffene Laufzeit.
+Die Konfiguration beginnt ohne Verkaufspreis und mit geschlossener Freigabe.
+[Händler-Abonnement](DEALER_SUBSCRIPTION.md)
+
 ## Warenbestand im Checkout, 2026-11-20
 
 Migration 036 verbindet einen Händlerbestand mit ausgewählten Festpreis- oder
@@ -7,7 +17,9 @@ Verhandlungsinseraten. Die Bestätigung bindet die Verknüpfung und bucht genau
 ein Stück im selben Datenbankabschluss wie den Kauf. Vor Versand kann ein
 Storno automatisch ausgleichen. Nach Versand oder an der Mengengrenze prüft
 das Lagerteam die Rückgabe. Öffentliche Angebotsseiten zeigen leeren Bestand.
-Der integrierte Parallel- und Stornonachweis läuft im isolierten Testsystem.
+Der isolierte MySQL-Teil von [CI 44792170434](https://github.com/LLMbutHuman/GunIndex/actions/runs/44792170434)
+für `1d1f79b` hat den Parallel- und Stornonachweis bestanden. Die vollständige
+Browserregression wird separat bestätigt.
 
 ## Händler-API, 2026-11-20
 
@@ -16,6 +28,9 @@ erzeugt den Schlüssel nach Passwortprüfung und sieht das Geheimnis einmal.
 Der private JSON-Endpunkt liefert Bestand und Bestellübersicht und verbucht
 autorisierte, wiederholbar abgesicherte Bestandsbewegungen. Mandant und Scope
 stammen aus dem Schlüssel. Der Endpunkt ist standardmäßig deaktiviert.
+Die vollständige [CI 44790906063](https://github.com/LLMbutHuman/GunIndex/actions/runs/44790906063)
+für `cd96a1b` ist grün. Migration 035, Schlüsselprüfung, Mandantentrennung,
+Scope-Entzug, Widerruf, Ablauf und wiederholte HTTP-Buchungen sind bestätigt.
 [Händler-API](DEALER_API.md)
 
 ## Händlerteams und Warenbestand, 2026-11-20
@@ -26,12 +41,12 @@ Der Bestandsverlauf speichert Zu- und Abgänge mit Revisionsschutz und
 Wiedererkennung identischer Anfragen. Die Bestellübersicht zeigt nur Referenz,
 Betrag, Status und Versandart. Team- und Bestandsseiten sind achtsprachig.
 
-Migrationen und Einladungstests wurden in CI bestätigt. Der erste Bestandslauf
-erwartete die Mitarbeiterkennung fälschlich in der Leseansicht. Der Test prüft
-sie jetzt im internen Bewegungsprotokoll und prüft zusätzlich ihre Abwesenheit
-im Leseergebnis. Vollständige Regression folgt mit der Händler-API.
-Als nächstes stehen externe Händler-API, automatischer Bestandsabgleich und
-Abonnements aus. [Händlerteam und Bestand](ARCHITECTURE.md#händlerteam-und-bestand)
+Der erste Bestandslauf erwartete die Mitarbeiterkennung fälschlich in der
+Leseansicht. `2ee9798` prüft sie im internen Bewegungsprotokoll und ihre
+Abwesenheit im Leseergebnis. Fünf MySQL-/HTTP-Gruppen einschließlich CSRF,
+Rollen, Prüfpfad und Mandantentrennung sind mit der Händler-API in
+[CI 44790906063](https://github.com/LLMbutHuman/GunIndex/actions/runs/44790906063)
+vollständig grün. [Händlerteam und Bestand](ARCHITECTURE.md#händlerteam-und-bestand)
 
 ## Sprachpfade, Canonicals und Sitemap, 2026-11-20
 

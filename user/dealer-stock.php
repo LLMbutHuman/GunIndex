@@ -69,6 +69,7 @@ if ($stockMethod === 'POST') {
 
 $stockData = $stockItem = $stockOrders = null;
 $stockCanWrite = false;
+$stockCanExport = false;
 if ($stockOwner !== null) {
     $stockRoles = dealer_team_roles();
     $stockPermissions = $stockRoles[$stockChoices[$stockOwner]['role']] ?? [];
@@ -82,6 +83,7 @@ if ($stockOwner !== null) {
         if ($stockOwner === $stockActor || in_array('orders.read', $stockPermissions, true)) {
             $stockOrders = dealer_order_list($pdo, $stockActor, $stockOwner);
         }
+        $stockCanExport = dealer_subscription_active($pdo,$stockOwner);
     } catch (DomainException|MarketNotFoundException|MarketAccessException) {
         abort_request(404, t('dealer_stock.unavailable'));
     }
@@ -91,7 +93,7 @@ $pageTitle = t('dealer_stock.title');
 include __DIR__ . '/../includes/header.php';
 ?>
 <main class="container narrow" id="main-content">
-    <div class="page-heading"><h1><?=h($pageTitle)?></h1><div class="button-row"><a href="/user/dealer-team.php"><?=h(t('dealer_team.title'))?></a><?php if ($stockTeams['owned']): ?><a href="/user/dealer-api-keys.php"><?=h(t('dealer_api.title'))?></a><?php endif; ?></div></div>
+    <div class="page-heading"><h1><?=h($pageTitle)?></h1><div class="button-row"><a href="/user/dealer-team.php"><?=h(t('dealer_team.title'))?></a><?php if ($stockTeams['owned']): ?><a href="/user/dealer-api-keys.php"><?=h(t('dealer_api.title'))?></a><a href="/user/dealer-subscription.php"><?=h(t('dealer_subscription.title'))?></a><?php endif; ?></div></div>
     <?php if ($stockNote): ?><p class="notice success" role="status"><?=h(t('dealer_stock.saved'))?></p><?php endif; ?>
     <?php if ($stockError !== ''): ?><p class="notice error" role="alert"><?=h($stockError)?></p><?php endif; ?>
     <?php if ($stockData === null): ?>
@@ -106,6 +108,7 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
         <section class="panel">
             <h2><?=h($stockChoices[$stockOwner]['name'])?></h2>
+            <?php if ($stockCanExport): ?><p><a class="button secondary" href="/user/dealer-stock-export.php?owner_id=<?=$stockOwner?>"><?=h(t('dealer_subscription.export_csv'))?></a></p><?php endif; ?>
             <?php if (!$stockData['items']): ?><p><?=h(t('dealer_stock.no_items'))?></p><?php endif; ?>
             <ul><?php foreach ($stockData['items'] as $stockEntry): ?>
                 <li><a href="<?=h($stockListUrl . '&item_id=' . $stockEntry['id'])?>"><?=h($stockEntry['label'])?></a> · <?=h($stockEntry['sku'])?> · <?=h(t('dealer_stock.count', ['amount'=>$stockEntry['quantity']]))?></li>

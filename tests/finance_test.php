@@ -427,6 +427,134 @@ try{
     fin_assert(fin_status($pdo,$id)==='void'&&fin_document_id($pdo,$id)===0);
    });
   },
+  'dealer_subscription_requires_live_configuration_and_verified_payment_then_renews_and_refunds_exact_term'=>static function()use($pdo,$admin):void{
+   $env=['DEALER_SUBSCRIPTION_ENABLED'=>'1','DEALER_SUBSCRIPTION_APPROVED'=>'1','DEALER_SUBSCRIPTION_CENTS'=>'1190',
+    'BANK_TRANSFER_ENABLED'=>'0','PAYPAL_ENABLED'=>'0','BITCOIN_ENABLED'=>'0'];
+   $savedEnv=[];
+   foreach($env as $key=>$value){$savedEnv[$key]=getenv($key);putenv($key.'='.$value);}
+   $savedSettings=[];
+   $previousSession=$_SESSION??null;
+   try{
+    $_SESSION['locale']='de';
+    $query=$pdo->prepare('SELECT setting_value,updated_at FROM system_settings WHERE setting_key=?');
+    foreach(['legal_publication_enabled','legal_checkout_documents'] as $key){$query->execute([$key]);$savedSettings[$key]=$query->fetch();}
+    fin_setting($pdo,'legal_publication_enabled','1');
+    fin_setting($pdo,'legal_checkout_documents','');
+    $seller=fin_user($pdo);$owner=$seller['id'];$other=fin_user($pdo)['id'];
+    fin_profile($pdo,$owner,name:'Synthetic original subscription buyer');
+    $pdo->prepare("INSERT INTO market_dealer_profiles(user_id,company_name,address_text,country_code,contact_email,legal_notice,status)
+        VALUES (?,'Synthetic subscription dealer','Synthetic dealer address','DE',?,'Synthetic dealer subscription fixture only.','published')")
+        ->execute([$owner,$seller['email']]);
+    $item=dealer_inventory_create($pdo,$owner,$owner,'SUBSCRIPTION-01','=Synthetic office chair');
+    dealer_inventory_adjust($pdo,$owner,$owner,$item,1,bin2hex(random_bytes(16)),'3','Synthetic subscription export fixture');
+    $terms=dealer_subscription_terms();$version=$terms['version'];$cents=$terms['gross_cents'];
+    fin_assert($terms['term_days']===30&&$cents===1190&&$terms['currency']==='EUR');
+    fin_bank_mode(static function()use($pdo,$owner,$version):void{
+     fin_reject(fn()=>dealer_subscription_order($pdo,$owner,bin2hex(random_bytes(16)),$version,['confirm_subscription'=>'1']),PaymentUnavailable::class);
+    });
+
+    $code='subscription-test-'.bin2hex(random_bytes(8));
+    $body=str_repeat('Synthetic subscription agreement for accounting integration tests only. ',5);
+    $document=legal_create($pdo,$admin['id'],$code,'1.0','de','Synthetic subscription agreement',$body);
+    legal_approve($pdo,$admin['id'],$document,'Synthetic fixture reviewer; no legal approval',gmdate('Y-m-d'),array_fill(0,5,'1'));
+    fin_setting($pdo,'legal_checkout_documents',$code);
+    $hash=hash('sha256',$body);
+    $input=['confirm_subscription'=>'1','legal_confirm'=>'1','legal_language'=>'de','legal_documents'=>[$document=>$hash]];
+    $assertUnavailable=static function()use($pdo,$owner,$version,$input):void{
+     fin_assert(!dealer_subscription_available($pdo));
+     fin_reject(fn()=>dealer_subscription_order($pdo,$owner,bin2hex(random_bytes(16)),$version,$input),PaymentUnavailable::class);
+    };
+    fin_provider_mode('sandbox',$assertUnavailable);
+    fin_bitcoin_mode('regtest',$assertUnavailable,['BITCOIN_LIVE_APPROVED'=>'0']);
+    fin_assert(dealer_subscription_history($pdo,$owner)===[]);
+
+    fin_bank_mode(static function()use($pdo,$admin,$owner,$other,$item,$version,$cents,$input,$document,$hash):void{
+     putenv('DEALER_SUBSCRIPTION_APPROVED=0');
+     fin_assert(!dealer_subscription_available($pdo));
+     fin_reject(fn()=>dealer_subscription_order($pdo,$owner,bin2hex(random_bytes(16)),$version,$input),PaymentUnavailable::class);
+     putenv('DEALER_SUBSCRIPTION_APPROVED=1');
+     fin_assert(dealer_subscription_available($pdo));
+     fin_reject(fn()=>dealer_subscription_order($pdo,$other,bin2hex(random_bytes(16)),$version,$input),DomainException::class);
+     $request=bin2hex(random_bytes(16));
+     fin_reject(fn()=>dealer_subscription_order($pdo,$owner,$request,$version,array_replace($input,['legal_documents'=>[]])),InvalidArgumentException::class);
+     $id=dealer_subscription_order($pdo,$owner,$request,$version,$input);
+     fin_assert(dealer_subscription_order($pdo,$owner,$request,$version,$input)===$id);
+     fin_reject(fn()=>dealer_subscription_order($pdo,$owner,$request,'superseded-version',$input),PaymentConflict::class);
+     fin_reject(fn()=>dealer_subscription_order($pdo,$owner,bin2hex(random_bytes(16)),$version,$input),PaymentConflict::class);
+     $invoice=payments_invoice($pdo,$id,$owner);
+     $snapshot=finance_snapshot($pdo,$id);
+     fin_assert($invoice['service_code']==='dealer_subscription'&&$invoice['status']==='issued'&&$snapshot['fee_version']===$version
+      &&$snapshot['buyer']['legal_name']==='Synthetic original subscription buyer'&&(int)$snapshot['buyer']['user_id']===$owner
+      &&$snapshot['gross_cents']===$cents&&$snapshot['currency']==='EUR'&&$snapshot['net_cents']===1000&&$snapshot['tax_cents']===190);
+     $query=$pdo->prepare("SELECT user_id,document_id,content_hash,context_key FROM market_contract_receipts WHERE invoice_id=? AND scope='checkout'");
+     $query->execute([$id]);$receipts=$query->fetchAll();
+     fin_assert(count($receipts)===1&&(int)$receipts[0]['user_id']===$owner&&(int)$receipts[0]['document_id']===$document
+      &&$receipts[0]['content_hash']===$hash&&$receipts[0]['context_key']==='invoice:'.$id);
+     $unpaid=dealer_subscription_history($pdo,$owner);
+     fin_assert(count($unpaid)===1&&$unpaid[0]['starts_at']===null&&$unpaid[0]['ends_at']===null&&!dealer_subscription_active($pdo,$owner));
+     fin_reject(fn()=>dealer_subscription_export($pdo,$owner,$owner),MarketAccessException::class);
+     fin_reject(fn()=>finance_issue_invoice($pdo,$id,$admin['id']),PaymentConflict::class);
+     fin_profile($pdo,$owner,name:'Synthetic updated subscription buyer');
+
+     $pay=static function(int $invoice)use($pdo,$admin,$owner,$cents):void{
+      bank_start($pdo,$invoice,$owner);
+      $order=bank_order($pdo,$invoice);
+      $source='SYNTHETIC-SUBSCRIPTION-'.bin2hex(random_bytes(8));
+      fin_assert((int)$order['amount_cents']===$cents&&bank_import($pdo,$admin['id'],fin_bank_xml(fin_bank_entry($source,$order['reference'],$cents)))
+       ===['imported'=>1,'duplicates'=>0,'skipped'=>0]);
+      $entry=fin_bank_entry_id($pdo,$source);
+      fin_assert(fin_status($pdo,$invoice)==='pending'&&fin_document_id($pdo,$invoice)===0);
+      fin_assert(bank_approve($pdo,$admin['id'],$entry)===$invoice);
+      $documentId=fin_document_id($pdo,$invoice);
+      fin_assert($documentId>0&&bank_approve($pdo,$admin['id'],$entry)===$invoice&&fin_document_id($pdo,$invoice)===$documentId);
+     };
+     $pay($id);
+     $first=dealer_subscription_history($pdo,$owner)[0];
+     fin_assert($first['status']==='paid'&&(int)$first['term_days']===30&&$first['revoked_at']===null
+      &&strtotime($first['ends_at'].' UTC')-strtotime($first['starts_at'].' UTC')===30*86400
+      &&finance_snapshot($pdo,$id)===$snapshot&&dealer_subscription_active($pdo,$owner));
+     $export=dealer_subscription_export($pdo,$owner,$owner);
+     fin_assert(count($export['rows'])===1&&(int)$export['rows'][0]['id']===$item&&$export['rows'][0]['sku']==='SUBSCRIPTION-01'
+      &&(int)$export['rows'][0]['quantity']===3&&$export['next']===null);
+     $csv=dealer_subscription_csv($export['rows']);
+     fin_assert(str_starts_with($csv,"\xEF\xBB\xBF"));
+     $lines=explode("\n",rtrim(substr($csv,3),"\r\n"));
+     fin_assert(count($lines)===2&&str_getcsv($lines[0],',','"','')===['id','sku','label','quantity','updated_at']
+      &&str_getcsv($lines[1],',','"','')===[(string)$item,'SUBSCRIPTION-01',"'=Synthetic office chair",'3',$export['rows'][0]['updated_at']]);
+     fin_reject(fn()=>dealer_subscription_export($pdo,$other,$owner),MarketAccessException::class);
+
+     $renewal=dealer_subscription_order($pdo,$owner,bin2hex(random_bytes(16)),$version,$input);
+     fin_assert($renewal!==$id&&dealer_subscription_history($pdo,$owner)[0]['starts_at']===null);
+     $pay($renewal);
+     $second=dealer_subscription_history($pdo,$owner)[0];
+     fin_assert((int)$second['invoice_id']===$renewal&&$second['starts_at']===$first['ends_at']
+      &&strtotime($second['ends_at'].' UTC')-strtotime($second['starts_at'].' UTC')===30*86400);
+     $refund=static function(int $invoice,int $amount)use($pdo,$admin):int{
+      $reference='Synthetic bank subscription debit '.bin2hex(random_bytes(8));
+      $reason='Synthetic completed subscription refund for isolated tests.';
+      $booked=finance_record_refund($pdo,$admin['id'],$invoice,$amount,$reference,$reason,null,'bank');
+      fin_assert(finance_record_refund($pdo,$admin['id'],$invoice,$amount,$reference,$reason,null,'bank')===$booked);
+      return $booked;
+     };
+     $refund($renewal,$cents);
+     [$renewed,$original]=dealer_subscription_history($pdo,$owner);
+     fin_assert($renewed['status']==='refunded'&&$renewed['revoked_at']!==null&&$original===$first&&dealer_subscription_active($pdo,$owner));
+     $refund($id,190);
+     fin_assert(fin_status($pdo,$id)==='partially_refunded'&&dealer_subscription_active($pdo,$owner));
+     $refund($id,1000);
+     fin_assert(fin_status($pdo,$id)==='refunded'&&!dealer_subscription_active($pdo,$owner));
+     fin_reject(fn()=>dealer_subscription_export($pdo,$owner,$owner),MarketAccessException::class);
+    });
+   }finally{
+    foreach($savedSettings as $key=>$row){
+     if(!$row)$pdo->prepare('DELETE FROM system_settings WHERE setting_key=?')->execute([$key]);
+     else $pdo->prepare('UPDATE system_settings SET setting_value=?,updated_at=? WHERE setting_key=?')->execute([$row['setting_value'],$row['updated_at'],$key]);
+    }
+    site_settings($pdo,true);
+    foreach($savedEnv as $key=>$value)putenv($value===false?$key:$key.'='.$value);
+    if($previousSession===null)unset($_SESSION);else $_SESSION=$previousSession;
+   }
+  },
   'bank_http_checkout_upload_review_and_approval_require_owner_mfa_csrf_and_actual_confirmation'=>static function()use($pdo,$category):void{
    fin_bank_mode(static function()use($pdo,$category):void{
     $seller=fin_user($pdo);$staff=fin_user($pdo,true);$secret=random_bytes(20);

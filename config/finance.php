@@ -83,7 +83,7 @@ function finance_issue_invoice(PDO $pdo,int $invoiceId,?int $actor=null):int {
   $q=$pdo->prepare('SELECT * FROM market_invoices WHERE id=? FOR UPDATE');$q->execute([$invoiceId]);$invoice=$q->fetch();if(!$invoice||$invoice['status']!=='paid')throw new PaymentConflict('Nur bestätigte Zahlungen können hier abgerechnet werden.');
   $q=$pdo->prepare('SELECT id FROM market_invoice_documents WHERE origin_invoice_id=?');$q->execute([$invoiceId]);if($id=$q->fetchColumn()){if($own)$pdo->commit();return(int)$id;}
   $q=$pdo->prepare('SELECT mode FROM market_payment_attempts WHERE invoice_id=? ORDER BY id DESC LIMIT 1');$q->execute([$invoiceId]);if($q->fetchColumn()==='sandbox'){if($own)$pdo->commit();return 0;}
-  $payload=finance_snapshot($pdo,$invoiceId);finance_assert_invoice_snapshot($invoice,$payload);$id=finance_write_document($pdo,$invoice,$payload,'invoice',(int)$invoice['gross_cents'],$actor);
+  $payload=finance_snapshot($pdo,$invoiceId);finance_assert_invoice_snapshot($invoice,$payload);dealer_subscription_settle($pdo,$invoice);$id=finance_write_document($pdo,$invoice,$payload,'invoice',(int)$invoice['gross_cents'],$actor);
   $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'cash_in',?,?)")->execute([$invoiceId,$actor,$invoice['gross_cents'],'paid:'.$invoiceId]);
   if($actor)audit_log($pdo,$actor,'finance.invoice_issued',$invoiceId,['document_id'=>$id]);
   if(function_exists('notify_user'))notify_user($pdo,(int)$invoice['user_id'],'invoice:'.$id,i18n_user_text($pdo,(int)$invoice['user_id'],'notification.invoice_issued.title'),i18n_user_text($pdo,(int)$invoice['user_id'],'notification.invoice_issued.body',['reference'=>$invoice['invoice_number']]),'/user/invoices.php',true);
@@ -141,9 +141,11 @@ function finance_book_verified_refund(PDO $pdo,array $invoice,int $actor,int $am
   if($original){$payload=finance_snapshot($pdo,$invoiceId);$afterTax=fees_tax_split($total,(int)$payload['tax_bps'],true);$beforeTax=fees_tax_split($before,(int)$payload['tax_bps'],true);$payload['gross_cents']=$amount;$payload['net_cents']=$afterTax['net_cents']-$beforeTax['net_cents'];$payload['tax_cents']=$amount-$payload['net_cents'];$payload['correction_reason']=trim($reason);$document=finance_write_document($pdo,$invoice,$payload,'credit_note',$amount,$actor,(int)$original);$pdo->prepare('UPDATE market_refunds SET credit_document_id=? WHERE id=?')->execute([$document,$id]);}
   $pdo->prepare("UPDATE market_invoices SET status=? WHERE id=?")->execute([$total===(int)$invoice['gross_cents']?'refunded':'partially_refunded',$invoiceId]);
   $pdo->prepare('UPDATE market_bump_credits SET remaining=0 WHERE invoice_id=?')->execute([$invoiceId]);if(function_exists('business_refund_invoice'))business_refund_invoice($pdo,$invoiceId);
+  $suspendRemaining=$invoice['service_code']!=='dealer_subscription'||$total===(int)$invoice['gross_cents'];
+  if($suspendRemaining)dealer_subscription_revoke($pdo,$invoice);
   $pdo->prepare("INSERT INTO market_finance_events(invoice_id,actor_id,kind,amount_cents,reference) VALUES (?,?,'cash_refund',?,?)")->execute([$invoiceId,$actor,-$amount,'refund:'.$transaction]);
   if($requestId!==null)$pdo->prepare("UPDATE market_refund_requests SET status='recorded',decision_reason=? WHERE id=?")->execute([trim($reason),$requestId]);
-  audit_log($pdo,$actor,'finance.refund_recorded',$invoiceId,['refund_id'=>$id,'document_id'=>$document,'verified_manually'=>$manual,'remaining_entitlements_suspended'=>true]);
+  audit_log($pdo,$actor,'finance.refund_recorded',$invoiceId,['refund_id'=>$id,'document_id'=>$document,'verified_manually'=>$manual,'remaining_entitlements_suspended'=>$suspendRemaining]);
   if(function_exists('notify_user'))notify_user($pdo,(int)$invoice['user_id'],'refund:'.$id,i18n_user_text($pdo,(int)$invoice['user_id'],'notification.refund_recorded.title'),i18n_user_text($pdo,(int)$invoice['user_id'],'notification.refund_recorded.body',['reference'=>$invoice['invoice_number']]),'/user/invoices.php',true);
   return$id;
 }
