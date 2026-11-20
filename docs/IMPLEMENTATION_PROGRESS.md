@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Sprachpfade, Canonicals und Sitemap, 2026-11-20
+
+Die acht Sprachen sind für Start- und öffentliche Angebotsseiten über feste
+Pfade erreichbar. Sprachwechsel und Angebotsweiterleitungen erhalten die
+gewählte Sprache. Canonicals, Product-URL und HTML-/XML-Alternativen verwenden
+denselben Pfad. Indexierung bleibt freigabepflichtig. Texte aus Inseraten
+bleiben in der vom Verkäufer verfassten Sprache. [SEO](SEO.md)
+
+13 lokale SEO-Fälle bestanden. Die HTTP- und Browserregression wird in CI
+geprüft. Vor öffentlicher Indexierung steht die Abnahme am HTTPS-Ziel aus.
+
 ## Treuhandablauf im Testsystem, 2026-11-19
 
 Migration 032 verbindet Chatangebote, veränderliche Gegenangebote und feste
@@ -9,9 +20,11 @@ Freigabe, Storno, Erstattung, Rückbuchung und Fristen sind rollen- und
 versionsgebunden. Der Anbieterablauf verwendet ausschließlich den internen
 Simulator im isolierten Entwicklungsschema. [Treuhandablauf](ESCROW.md)
 
-Lokale Zustands- und Syntaxprüfungen sind bestanden. Die MySQL-, HTTP-,
-Parallel- und Browserprüfungen werden im isolierten Testlauf überprüft.
-Ein zugelassener Provider und die Treuhandbedingungen fehlen für Live-Betrieb.
+Lokale Zustands- und Syntaxprüfungen sind bestanden. Migration 032 wurde im
+isolierten MySQL-Lauf angewendet. Der HTTP-Test fand in der Detailansicht eine
+Namenskollision mit dem gemeinsamen Layout. Die Korrektur wird im nächsten
+integrierten Lauf geprüft, der auch konkurrierende Annahmen abdeckt.
+Für Live-Betrieb fehlen der zugelassene Provider und die Treuhandbedingungen.
 
 ## Mail-Einrichtung und SMTP-Relay, 2026-11-19
 

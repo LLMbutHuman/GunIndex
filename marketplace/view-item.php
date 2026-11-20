@@ -10,8 +10,10 @@ try{if($originPostal!=='')$origin=geo_postcode($pdo,geo_country($originCountry),
 $item = market_find($pdo, (int)$id, true,$origin);
 if ($item === null) abort_request(404, 'Dieses Angebot ist nicht verfügbar.');
 $isAuction = $item['type'] === 'auction';
-if ($isAuction && empty($forceAuction)) redirect('/marketplace/view-auction.php?id=' . (int)$id);
-if (!$isAuction && !empty($forceAuction)) redirect('/marketplace/view-item.php?id=' . (int)$id);
+if ($isAuction !== !empty($forceAuction)) {
+    $target = seo_listing_path($item);
+    redirect(defined('GUNINDEX_PUBLIC_LOCALE') ? seo_localized_path($target, GUNINDEX_PUBLIC_LOCALE) : $target);
+}
 $user = current_user($pdo);
 if ($user && ($_SERVER['REQUEST_METHOD']??'')==='GET') personal_record_view($_SESSION,(int)$user['id'],$item);
 $isOwner = $user && (int)$user['id'] === (int)$item['seller_id'];

@@ -30,11 +30,34 @@ $tests = [
     },
     'only_home_and_validated_current_listing_pages_are_indexable' => static function () use ($fixed,$enabled,$origin): void {
         $page=seo_page($enabled,'/marketplace/view-item.php',$fixed,$origin);
-        seo_assert($page['index'] && $page['canonical']===$origin.'/marketplace/view-item.php?id=42','Listing canonical incorrect.');
-        seo_assert(seo_page($enabled,'/marketplace/index.php',null,$origin)['canonical']===$origin.'/','Homepage alias not canonicalized.');
+        seo_assert($page['index'] && $page['canonical']===$origin.'/de/marketplace/view-item.php?id=42','Listing canonical incorrect.');
+        seo_assert(seo_page($enabled,'/marketplace/index.php',null,$origin)['canonical']===$origin.'/de/','Homepage alias not canonicalized.');
         foreach (['/auth/login.php','/user/invoices.php','/admin/index.php','/marketplace/search.php','/marketplace/view-auction.php'] as $path)
             seo_assert(!seo_page($enabled,$path,$fixed,$origin)['index'], 'Private or mismatched route indexable.');
         seo_assert(!seo_page($enabled,'/marketplace/view-item.php',null,$origin)['index'],'Unvalidated listing route indexable.');
+    },
+    'all_locales_get_a_self_canonical_and_reciprocal_alternates' => static function () use ($fixed,$enabled,$origin): void {
+        $alternates = seo_alternates($origin, seo_listing_path($fixed));
+        seo_assert(count($alternates)===9 && $alternates['x-default']===$alternates['de'],'Invalid default locale variant.');
+        foreach (i18n_locales() as $locale=>$label) {
+            $route = '/'.$locale.'/marketplace/view-item.php';
+            $page = seo_page($enabled, $route, $fixed, $origin, 'en');
+            seo_assert($page['index'] && $page['canonical']===$origin.$route.'?id=42','Locale path did not control canonical.');
+            seo_assert($page['alternates']===$alternates && $page['structured']['url']===$page['canonical'],'Metadata versions do not match.');
+            seo_assert($page['structured']['description']===$fixed['description'],'Seller content was changed.');
+        }
+        $disabled = seo_page([], '/en/', null, $origin, 'en');
+        seo_assert(!$disabled['index'] && $disabled['alternates']===[] && $disabled['canonical']===null,'Gate leaks language metadata.');
+    },
+    'locale_routes_and_return_paths_remain_public_and_bounded' => static function (): void {
+        seo_assert(seo_public_route('/it/')===['locale'=>'it','path'=>'/'],'Localized home not resolved.');
+        foreach (['/xx/','/en/admin/index.php','/fr//','/pl/marketplace/search.php','/de/marketplace/view-item.php/','/EN/','/en/../admin/index.php'] as $path) {
+            seo_assert(seo_public_route($path)===null,'An unsupported path accepted a prefix.');
+        }
+        seo_assert(seo_switch_path('/fr/marketplace/view-item.php?id=42&origin_zip=10115#a','it')==='/it/marketplace/view-item.php?id=42&origin_zip=10115#a','Choice lost return context.');
+        seo_assert(seo_switch_path('/auth/login.php','it')==='/auth/login.php','A private path was rewritten.');
+        seo_invalid(static fn()=>seo_localized_path('/admin/index.php','en'));
+        seo_invalid(static fn()=>seo_localized_path('/','xx'));
     },
     'ended_hidden_and_restricted_listings_are_excluded' => static function () use ($fixed,$auction): void {
         foreach (['draft','paused','sold','ended','cancelled'] as $status)
@@ -74,11 +97,26 @@ $tests = [
     },
     'sitemap_emits_only_public_canonical_urls_and_real_timestamps' => static function () use ($fixed,$auction,$origin): void {
         $xml=seo_sitemap_document($origin,1,['items'=>[$fixed,$auction,array_merge($fixed,['id'=>44,'status'=>'draft'])]]);
-        seo_assert(str_contains($xml,'<loc>'.$origin.'/</loc>'),'Homepage missing.');
+        seo_assert(str_contains($xml,'<loc>'.$origin.'/de/</loc>'),'Homepage missing.');
         seo_assert(str_contains($xml,'view-item.php?id=42') && str_contains($xml,'view-auction.php?id=43'),'Current public listing missing.');
         seo_assert(!str_contains($xml,'id=44'),'Draft exposed in sitemap.');
         seo_assert(str_contains($xml,'2026-10-30T12:13:14Z'),'Real modification time absent.');
         seo_assert(!str_contains($xml,'price_cents') && !str_contains($xml,'description'),'Internal fields in XML.');
+        $document = new DOMDocument();
+        seo_assert($document->loadXML($xml, LIBXML_NONET),'Sitemap XML is invalid.');
+        $xpath = new DOMXPath($document);
+        $xpath->registerNamespace('s','http://www.sitemaps.org/schemas/sitemap/0.9');
+        $xpath->registerNamespace('x','http://www.w3.org/1999/xhtml');
+        $entries = $xpath->query('/s:urlset/s:url');
+        seo_assert($entries->length===24,'Eight versions per public entity must be emitted.');
+        foreach ($entries as $entry) {
+            $location = $xpath->evaluate('string(s:loc)', $entry);
+            $links = $xpath->query('x:link[@rel="alternate"]', $entry);
+            seo_assert($links->length===9,'Sitemap entry has missing language alternatives.');
+            $hrefs = [];
+            foreach ($links as $link) $hrefs[$link->getAttribute('hreflang')] = $link->getAttribute('href');
+            seo_assert(count($hrefs)===9 && in_array($location,$hrefs,true) && $hrefs['x-default']===$hrefs['de'],'Nonreciprocal XML languages.');
+        }
     },
     'sitemap_index_and_rows_have_hard_limits' => static function () use ($origin): void {
         $xml=seo_sitemap_document($origin,null,['pages'=>2]);

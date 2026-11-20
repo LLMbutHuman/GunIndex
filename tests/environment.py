@@ -94,6 +94,7 @@ def test():
   docker('exec',APP,'php','tests/mail_smtp_test.php','--wire')
   for suite in ('mail_dns_test.php','mail_setup_integration_test.php'):
    docker('exec',APP,'php','tests/'+suite)
+  docker('exec',APP,'php','tests/seo_locale_http_test.php')
   for suite in ('escrow_workflow_test.php','escrow_integration_test.php','escrow_parallel_test.php'):
    docker('exec',APP,'php','tests/'+suite)
   for suite in ('relisting_test.php','relisting_integration_test.php'):

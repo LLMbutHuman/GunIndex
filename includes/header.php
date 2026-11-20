@@ -14,11 +14,13 @@ $unreadNotices=$viewer?notification_unread_count($pdo,(int)$viewer['id']):0;
 $marketCountry=geo_country();$marketCountryLabels=geo_countries();
 $pageTitle = isset($pageTitle) && is_string($pageTitle) ? $pageTitle : t('Entdecken');
 $pageDescription = isset($pageDescription) && is_string($pageDescription) ? $pageDescription : $tagline;
-$seoPage = ['index'=>false, 'canonical'=>null, 'structured'=>null];
+$seoPage = ['index'=>false, 'canonical'=>null, 'structured'=>null, 'alternates'=>[]];
 if (function_exists('seo_page') && in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET','HEAD'], true)
     && (http_response_code() === false || http_response_code() === 200)) {
-    $seoPage = seo_page(site_settings($pdo), (string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), $seoListing ?? null);
+    $requestPath = rawurldecode((string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'));
+    $seoPage = seo_page(site_settings($pdo), $requestPath, $seoListing ?? null, null, i18n_locale());
 }
+header('Content-Language: ' . i18n_locale());
 header('X-Robots-Tag: ' . ($seoPage['index'] ? 'index, follow' : 'noindex, nofollow'));
 if (!function_exists('ui_icon')) {
     function ui_icon(string $name, string $class = ''): string {
@@ -44,6 +46,7 @@ if (!function_exists('ui_icon')) {
     function ui_listing_card(array $item): void {
         $auction = ($item['type'] ?? '') === 'auction';
         $url = '/marketplace/' . ($auction ? 'view-auction' : 'view-item') . '.php?id=' . (int)$item['id'];
+        if (defined('GUNINDEX_PUBLIC_LOCALE')) $url = seo_localized_path($url, GUNINDEX_PUBLIC_LOCALE);
         if(isset($item['origin_zip'],$item['origin_country']))$url.='&origin_zip='.rawurlencode($item['origin_zip']).'&origin_country='.rawurlencode($item['origin_country']);
         $price = $auction && isset($item['current_bid_cents']) ? (int)$item['current_bid_cents'] : (int)$item['price_cents'];
         ?>
@@ -78,6 +81,7 @@ if (!function_exists('ui_icon')) {
     <meta name="description" content="<?= h($pageDescription) ?>">
     <meta name="robots" content="<?= $seoPage['index'] ? 'index, follow' : 'noindex, nofollow' ?>">
     <?php if ($seoPage['canonical'] !== null): ?><link rel="canonical" href="<?= h($seoPage['canonical']) ?>"><meta property="og:url" content="<?= h($seoPage['canonical']) ?>"><?php endif; ?>
+    <?php foreach ($seoPage['alternates'] as $language=>$alternate): ?><link rel="alternate" hreflang="<?=h($language)?>" href="<?=h($alternate)?>"><?php endforeach; ?>
     <?php if ($seoPage['structured'] !== null): ?><script type="application/ld+json"><?= seo_json($seoPage['structured']) ?></script><?php endif; ?>
     <meta property="og:title" content="<?= h($pageTitle . ' · ' . $brandName) ?>">
     <meta property="og:description" content="<?= h($pageDescription) ?>">
@@ -91,7 +95,7 @@ if (!function_exists('ui_icon')) {
 <div class="ambient-field" aria-hidden="true"></div>
 <header class="site-header">
     <div class="nav-shell">
-        <a class="brand" href="/marketplace/index.php" aria-label="<?= h($brandName) ?> – Startseite"><span class="brand-mark" aria-hidden="true"><span></span></span><span><?= h($brandName) ?></span></a>
+        <a class="brand" href="<?=h(defined('GUNINDEX_PUBLIC_LOCALE') ? seo_localized_path('/', GUNINDEX_PUBLIC_LOCALE) : '/marketplace/index.php')?>" aria-label="<?= h($brandName) ?> – <?=h(t('Entdecken'))?>"><span class="brand-mark" aria-hidden="true"><span></span></span><span><?= h($brandName) ?></span></a>
         <nav class="desktop-nav" aria-label="<?=h(t('Hauptnavigation'))?>"><?php if($viewer): ?><a href="/user/notifications.php"><?= h(t('Benachrichtigungen')) ?><?= $unreadNotices ? ' ('.min(99,$unreadNotices).')' : '' ?></a><?php endif; ?><a href="/marketplace/search.php"> <?=h(t('Entdecken'))?> </a><a href="/marketplace/search.php?type=auction"> <?=h(t('Auktionen'))?> </a><a href="/marketplace/policy.php"> <?=h(t('So funktioniert’s'))?> </a></nav>
         <div class="nav-actions">
             <button class="icon-button theme-toggle" type="button" aria-label="<?=h(t('Farbschema wechseln'))?>" title="<?=h(t('Farbschema wechseln'))?>" hidden><?= ui_icon('sun') ?></button>

@@ -9,4 +9,4 @@ if(!str_starts_with($return,'/')||str_starts_with($return,'//')||str_starts_with
 $user=current_user($pdo);
 $_SESSION['locale']=$locale;$_SESSION['market_country']=$country;
 if($user)$pdo->prepare('UPDATE users SET preferred_locale=? WHERE id=?')->execute([$locale,$user['id']]);
-redirect($return);
+redirect(seo_switch_path($return, $locale));

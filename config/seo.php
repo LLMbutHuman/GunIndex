@@ -1,5 +1,40 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/i18n.php';
+
+/** Locale prefixes apply exclusively to these public document routes. */
+function seo_public_route(string $path): ?array
+{
+    if (!preg_match('~\A/([a-z]{2})(/|/marketplace/view-(?:item|auction)\.php)\z~', $path, $matches)
+        || !isset(i18n_locales()[$matches[1]])) return null;
+    return ['locale'=>$matches[1], 'path'=>$matches[2]];
+}
+
+function seo_localized_path(string $path, string $locale): string
+{
+    if (!isset(i18n_locales()[$locale]) || ($path !== '/' && !preg_match('~\A/marketplace/view-(?:item|auction)\.php\?id=[1-9][0-9]{0,18}\z~', $path))) {
+        throw new InvalidArgumentException('Invalid public localized path.');
+    }
+    return '/' . $locale . $path;
+}
+
+function seo_switch_path(string $return, string $locale): string
+{
+    $parts = parse_url($return);
+    $route = is_array($parts) && isset($parts['path']) ? seo_public_route(rawurldecode($parts['path'])) : null;
+    if ($route === null) return $return;
+    $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+    $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+    return '/' . $locale . $route['path'] . $query . $fragment;
+}
+
+function seo_alternates(string $origin, string $path): array
+{
+    $links = [];
+    foreach (array_keys(i18n_locales()) as $locale) $links[$locale] = $origin . seo_localized_path($path, $locale);
+    $links['x-default'] = $links['de'];
+    return $links;
+}
 
 /** Only a configured HTTPS origin is trusted; never derive URLs from Host headers. */
 function seo_origin(?string $configured = null): ?string
@@ -49,10 +84,11 @@ function seo_listing_current(array $listing, ?int $now = null): bool
     return true;
 }
 
-function seo_product_data(array $listing, string $origin): ?array
+function seo_product_data(array $listing, string $origin, ?string $locale = null): ?array
 {
     if (seo_origin($origin) !== $origin || !seo_listing_current($listing)) return null;
-    $url = $origin . seo_listing_path($listing);
+    $path = seo_listing_path($listing);
+    $url = $origin . ($locale === null ? $path : seo_localized_path($path, $locale));
     $product = ['@context' => 'https://schema.org', '@type' => 'Product', 'url' => $url,
         'name' => (string)$listing['title'], 'description' => (string)$listing['description']];
     $condition = ['new' => 'NewCondition', 'like_new' => 'UsedCondition', 'used' => 'UsedCondition'][$listing['condition_label'] ?? ''] ?? null;
@@ -78,18 +114,26 @@ function seo_json(array $data): string
     return json_encode($data, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
-function seo_page(array $settings, string $requestPath, ?array $listing = null, ?string $configured = null): array
+function seo_page(array $settings, string $requestPath, ?array $listing = null, ?string $configured = null, string $locale = 'de'): array
 {
     $origin = seo_origin($configured);
-    $result = ['index' => false, 'canonical' => null, 'structured' => null];
+    $result = ['index' => false, 'canonical' => null, 'structured' => null, 'alternates' => []];
     if (!seo_gate($settings, $origin)) return $result;
+    $route = seo_public_route($requestPath);
+    if ($route !== null) {
+        $locale = $route['locale'];
+        $requestPath = $route['path'];
+    }
+    if (!isset(i18n_locales()[$locale])) return $result;
     if (in_array($requestPath, ['/', '/index.php', '/marketplace/index.php'], true)) {
-        return ['index' => true, 'canonical' => $origin . '/', 'structured' => null];
+        $alternates = seo_alternates($origin, '/');
+        return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>null, 'alternates'=>$alternates];
     }
     if ($listing !== null && seo_listing_current($listing)) {
         $path = seo_listing_path($listing);
         if ($requestPath === parse_url($path, PHP_URL_PATH)) {
-            return ['index' => true, 'canonical' => $origin . $path, 'structured' => seo_product_data($listing, $origin)];
+            $alternates = seo_alternates($origin, $path);
+            return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>seo_product_data($listing, $origin, $locale), 'alternates'=>$alternates];
         }
     }
     return $result;
@@ -140,6 +184,21 @@ function seo_xml(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_XML1 | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function seo_sitemap_entries(string $origin, string $path, ?string $updatedAt = null): string
+{
+    $alternates = seo_alternates($origin, $path);
+    $links = '';
+    foreach ($alternates as $locale=>$url) {
+        $links .= '<xhtml:link rel="alternate" hreflang="' . $locale . '" href="' . seo_xml($url) . '" />';
+    }
+    unset($alternates['x-default']);
+    $entries = '';
+    foreach ($alternates as $url) {
+        $entries .= '<url><loc>' . seo_xml($url) . '</loc>' . ($updatedAt === null ? '' : '<lastmod>' . seo_xml($updatedAt) . '</lastmod>') . $links . '</url>';
+    }
+    return $entries;
+}
+
 function seo_sitemap_document(string $origin, ?int $page, array $data): string
 {
     if (seo_origin($origin) !== $origin) throw new InvalidArgumentException('Invalid sitemap origin.');
@@ -152,15 +211,14 @@ function seo_sitemap_document(string $origin, ?int $page, array $data): string
         return $xml . '</sitemapindex>';
     }
     if ($page < 1 || $page > 50000 || !is_array($data['items'] ?? null) || count($data['items']) > 1000) throw new InvalidArgumentException('Invalid sitemap rows.');
-    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    if ($page === 1) $xml .= '<url><loc>' . seo_xml($origin . '/') . '</loc></url>';
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">';
+    if ($page === 1) $xml .= seo_sitemap_entries($origin, '/');
     foreach ($data['items'] as $listing) {
         if (!seo_listing_current($listing)) continue;
-        $xml .= '<url><loc>' . seo_xml($origin . seo_listing_path($listing)) . '</loc>';
         $updated = $listing['updated_at'] ?? '';
-        if (is_string($updated) && preg_match('/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/', $updated) && strtotime($updated . ' UTC') !== false)
-            $xml .= '<lastmod>' . str_replace(' ', 'T', $updated) . 'Z</lastmod>';
-        $xml .= '</url>';
+        $lastmod = is_string($updated) && preg_match('/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/', $updated) && strtotime($updated . ' UTC') !== false
+            ? str_replace(' ', 'T', $updated) . 'Z' : null;
+        $xml .= seo_sitemap_entries($origin, seo_listing_path($listing), $lastmod);
     }
     return $xml . '</urlset>';
 }

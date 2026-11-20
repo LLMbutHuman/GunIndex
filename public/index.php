@@ -2,6 +2,20 @@
 declare(strict_types=1);
 $root=dirname(__DIR__);$path=rawurldecode(parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH)?:'/');
 if(str_contains($path,"\0")||str_contains($path,'\\')||preg_match('~(?:^|/)\.\.?(/|$)~',$path)){http_response_code(404);exit('Nicht gefunden.');}
+if (preg_match('~\A/[a-z]{2}/~', $path)) {
+    require_once $root . '/config/seo.php';
+    $publicRoute = seo_public_route($path);
+    if ($publicRoute !== null) {
+        if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET','HEAD'], true)) {
+            http_response_code(405);
+            header('Allow: GET, HEAD');
+            header('X-Robots-Tag: noindex, nofollow');
+            exit;
+        }
+        define('GUNINDEX_PUBLIC_LOCALE', $publicRoute['locale']);
+        $path = $publicRoute['path'];
+    }
+}
 $allowed=['marketplace/index.php','marketplace/search.php','marketplace/view-item.php','marketplace/view-auction.php','marketplace/image.php','marketplace/profile.php','marketplace/policy.php','marketplace/buyout-request.php','auth/login.php','auth/register.php','auth/logout.php','auth/mfa.php','user/watchlist.php','user/toggle-watchlist.php','user/messages.php','user/chat.php','user/rate-user.php','admin/ratings.php','admin/listings.php','user/dashboard.php','user/profile.php','user/create-listing.php','user/edit-listing.php','user/delete-listing.php','user/payments.php','user/billing.php','admin/payments.php','actions/place-bid.php','actions/manage-auction.php','actions/payment-checkout.php','actions/payment-return.php','actions/payment-webhook.php','admin/index.php','admin/settings.php','admin/categories.php','admin/users.php','admin/logs.php'];
 $allowed=array_merge($allowed,['auth/forgot-password.php', 'auth/reset-password.php', 'auth/verify-email.php', 'user/notifications.php', 'user/notification-settings.php', 'user/language.php', 'user/wanted.php', 'user/saved-searches.php', 'user/promotions.php', 'user/dealer.php', 'user/privacy.php', 'user/verification.php', 'user/reports.php', 'user/invoices.php', 'user/billing-details.php', 'user/chat-updates.php', 'admin/geography.php', 'admin/campaigns.php', 'admin/roles.php', 'admin/legal.php', 'admin/verifications.php', 'admin/privacy.php', 'admin/moderation.php', 'admin/finance.php', 'marketplace/wanted.php', 'marketplace/legal.php', 'marketplace/report.php', 'marketplace/verification-document.php', 'marketplace/banner.php', 'marketplace/banner-click.php']);
 $allowed=array_merge($allowed,['admin/setup.php','admin/mail-setup.php','user/listing-image.php','user/personal.php','user/relist.php','marketplace/sitemap.php','marketplace/robots.php']);

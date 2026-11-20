@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 function i18n_locales():array {return ['de'=>'Deutsch','en'=>'English','fr'=>'Français','nl'=>'Nederlands','pl'=>'Polski','cs'=>'Čeština','da'=>'Dansk','it'=>'Italiano'];}
-function i18n_locale():string {$locale=$_SESSION['locale']??'de';return is_string($locale)&&isset(i18n_locales()[$locale])?$locale:'de';}
+function i18n_locale():string {$locale=defined('GUNINDEX_PUBLIC_LOCALE')?GUNINDEX_PUBLIC_LOCALE:($_SESSION['locale']??'de');return is_string($locale)&&isset(i18n_locales()[$locale])?$locale:'de';}
 function i18n_dictionary(?string $locale=null):array {
     static $cache=[];$locale=$locale??i18n_locale();if(!isset(i18n_locales()[$locale]))$locale='de';
     if(!isset($cache[$locale])){

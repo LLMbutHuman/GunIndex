@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
-$pageTitle = 'Besonderes entdecken';
+$pageTitle = t('Entdecken');
 $categories = catalog_categories($pdo);
 $newest = market_search($pdo, ['sort' => 'newest'], 1, 8);
 $auctions = market_search($pdo, ['type' => 'auction', 'sort' => 'ending'], 1, 4);
