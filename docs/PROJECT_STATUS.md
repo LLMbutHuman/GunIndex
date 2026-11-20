@@ -1,5 +1,23 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
+## Nachgewiesener Stand vom 21. November 2026
+
+Von den 26 nummerierten Anforderungen sind **17 technisch implementiert
+und geprüft, 7 technisch umgesetzt mit externer Abnahme und 2 technisch offen
+oder teilweise umgesetzt**. Die offenen Nummern sind 5, vollständige
+Übersetzungen, und 26, die reale Treuhandanbindung. Die Zählung gilt für die
+nummerierte Liste. Weitere Anforderungen umfassen die unabhängige E2EE-Abnahme,
+den Wechsel einer kompromittierten E2EE-Kontoautorität, den Admin-Assistenten,
+zusätzliche Länderquellen und Betriebsabnahme auf dem vorgesehenen Server.
+[Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
+
+Neu nachgewiesen sind Gebühren und Belege je Auktion, Wiedereröffnung nach
+simulierter neuntägiger Wartung, der deutsche PLZ-Import sowie ein isolierter
+Installations- und Restore-Lauf auf dem Produktionsimage. Die älteren
+Prozent- und Stundenschätzungen unten stammen aus der Bestandsaufnahme vom
+4. November. Der aktuelle Wiederaufnahmepunkt steht im Fortschrittsprotokoll.
+[Implementierungsfortschritt](IMPLEMENTATION_PROGRESS.md)
+
 **Fortschreibung 14. November – Chat:** Echte clientseitige OpenPGP-Verschlüsselung,
 getrennte Geräteschlüssel, Fingerabdruckprüfung, Mehrgerätebetrieb, Widerruf,
 Gerätewiederherstellung und verschlüsselte Dateianhänge sind inzwischen implementiert.

@@ -70,7 +70,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | --- | --- | --- | --- |
 | 1 | Auktions-Einstellgebühr | A | Neuer bestätigter Durchlauf atomar berechnet; Aktivierungsfreigaben und tatsächliche Zahlungen extern |
 | 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
-| 3 | Gebühren, Korrekturen, Rechnungen | C | Teil- und Vollerlass unbezahlter Gebühren, Klärung alter Referenzen, Rechnungs-PDF, verifizierte Erstattungen und Gebührenbindung bei erfolgloser Wiederholung geprüft. Weitere Durchlaufarten und Bestandsbehandlung offen |
+| 3 | Gebühren, Korrekturen, Rechnungen | A | Centgenauer Durchlauf mit Verlängerung, Zuschlag, Teilkorrektur, verifizierter Zahlung und PDF im isolierten MySQL/HTTP geprüft. Die Belegübersicht bindet ursprüngliche und korrigierte Aufträge an die Auktion. Bestandsauktionen erhalten keine rückwirkenden Gebühren. Automatische Providerzahlungen werden separat abgenommen. [CI 44839394997](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839394997) |
 | 4 | Rechtsdokumentbindung | B | Registrierung, Checkout und ausdrückliche Pflichtzustimmung für Bestandskonten versioniert und in MySQL/HTTP geprüft. Fachliche Freigabe der tatsächlichen Dokumente und Sprachfassungen steht aus. [CI 44794702907](https://github.com/LLMbutHuman/GunIndex/actions/runs/44794702907) |
 | 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
 | 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |
@@ -105,9 +105,13 @@ einer unterbrochenen Migration, ein verschlüsseltes Datenbank- und Dateibackup,
 die Wiederherstellung sowie sieben Worker-Heartbeats geprüft.
 [CI 44838740876](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838740876)
 
+Die bereitgestellte deutsche CSV wurde bei der Installationsprobe mit 8.289
+PLZ importiert. Länderauswahl und Umkreissuche sind mit tatsächlichen Koordinaten
+geprüft. [CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
+
 Zusätzlich offen sind die vollständige E2EE-Abnahme und der Wechsel einer
 kompromittierten Kontoautorität, der vollständige Admin-Einrichtungsablauf,
-internationale Datenimporte, die Betriebsabnahme auf dem vorgesehenen Ubuntu-
+weitere Länderimporte mit geprüften Quellen, die Betriebsabnahme auf dem vorgesehenen Ubuntu-
 Host einschließlich DNS und TLS sowie die Legal-Team-Übergabe. Alte serverseitige
 Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md
 getrennt beschrieben. Neue Sprachmodule sind nicht mit einer

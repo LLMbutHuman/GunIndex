@@ -1,4 +1,4 @@
-# Arbeitsstand für die fachliche Prüfung – 2026-11-03
+# Arbeitsstand für die fachliche Prüfung – 2026-11-21
 
 Dies ist eine Übergabe des tatsächlich implementierten Entwicklungsstands,
 **keine abschließende Rechtsfreigabe**. Die Plattform ist noch nicht fertig.
@@ -27,6 +27,13 @@ verlangt erneutes Laden. Konto/Bestellung und Belege entstehen in einer gemeinsa
 Datenbanktransaktion. Je Bestellung wird ein eigener Beleg geführt. Details und
 Grenzen: [CONTRACT_BINDING.md](CONTRACT_BINDING.md).
 
+Eine gesonderte, standardmäßig deaktivierte Einstellung verlangt bei
+Bestandskonten die aktuelle Pflichtfassung vor neuen Marktplatzvorgängen.
+Die ausdrückliche Zustimmung erhält einen eigenen Nachweis. Alte Nachweise
+bleiben verfügbar. Rechnungen, Datenschutz und laufende Abwicklung sind auch
+während einer ausstehenden Zustimmung zugänglich.
+[CI 44794702907](https://github.com/LLMbutHuman/GunIndex/actions/runs/44794702907)
+
 Zu entscheiden: welche Dokumente je Vorgang erforderlich sind, geeignete Form der
 Zustimmung/Kenntnisnahme, erforderliche erneute Zustimmung bestehender Konten,
 Sprach- und Länderabdeckung sowie Aufbewahrung. Leere Konfigurationslisten bedeuten
@@ -54,12 +61,37 @@ externen Rückzahlung geklärt. Der automatische Provider-Einzug dieser Forderun
 bleibt offen.
 Details: [AUCTION_BILLING.md](AUCTION_BILLING.md).
 
+Der einmalige Nachlass für eine erfolglose Auktion wird erst bei Veröffentlichung
+eines zulässigen neuen Durchlaufs angewendet. Nach Verkauf durch Zuschlag oder
+Sofortkauf erfordert ein neuer Entwurf die ausdrückliche Bestätigung, dass ein
+weiterer Artikel verfügbar ist. Der neue Durchlauf verwendet den zum Zeitpunkt
+der Veröffentlichung angebotenen Tarif. Eine begrenzte Laufzeitverlängerung
+bleibt innerhalb des ursprünglichen Durchlaufs. [Wiedereinstellung](RELISTING.md)
+
+Die Belegübersicht prüft die Kontozuordnung und den Auktionsbezug für Forderungen,
+Korrekturen, Rechnungen und Erstattungsanfragen. Im isolierten Test blieben
+Rechnungssnapshots bei Laufzeitverlängerung und Korrektur nachvollziehbar.
+[CI 44839394997](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839394997)
+
 Bestehende Leistungsaufträge speichern Referenz, Betrag, Tarif-/Bedingungsfassung
 und bei aktivierter Rechnungsfunktion verschlüsselte Rechnungsdaten samt geprüfter
 Steuerkonfiguration. Teil-/Vollerstattungen und Korrekturdokumente haben separate
 Nachweise; ein Erstattungsantrag löst selbst keinen Geldtransfer aus. Bestehende
 Aufträge ohne Rechnungssnapshot brauchen eine eigene Bestandsbehandlung.
 Details: [FINANCE.md](FINANCE.md), [MANUAL_PAYMENTS.md](MANUAL_PAYMENTS.md).
+
+Neue Rechnungen speichern die Beschriftungen der Bestellsprache zusammen mit
+den übrigen Rechnungsdaten. Bei einer Korrektur oder späteren PDF-Erzeugung
+bleibt der gespeicherte Sprachstand maßgeblich. Der fachlich verfasste Wortlaut
+zu Steuerregeln und Bedingungen stammt aus dem jeweiligen Nachweis.
+[CI 44834934106](https://github.com/LLMbutHuman/GunIndex/actions/runs/44834934106)
+
+Händler können ein vorausbezahltes Abonnement für Plattformleistungen beziehen.
+Eine weitere Laufzeit benötigt eine ausdrückliche Bestellung und verifizierte
+Zahlung. Zur Freigabe stehen konkreter Preis, Leistungsumfang, Vertragsfassung,
+Zahlungsweg sowie Verbraucher- und Erstattungsregeln an. Teamrollen, Bestands-API
+und Zugriff auf Verkaufsdaten sind nach Rolle und Händlerkonto begrenzt.
+[CI 44793558506](https://github.com/LLMbutHuman/GunIndex/actions/runs/44793558506)
 
 Zu prüfen: Leistungsbeschreibung, Fälligkeit, Steuerbehandlung je Rechnungsland,
 Pflichtangaben, Verbraucherrechte, vorzeitiger Leistungsbeginn, Storno/Erstattung
@@ -87,7 +119,9 @@ Live-Freigabe und die Abnahme mit tatsächlichem PayPal-Konto stehen aus.
 Details: [FINANCE.md](FINANCE.md).
 
 Für Banküberweisungen gibt es eine eindeutige Auftragsreferenz und die
-geschützte Abstimmung gebuchter Kontoauszüge. Finanzpersonal prüft den
+geschützte Abstimmung gebuchter Kontoauszüge im Format camt.053.001.08.
+Die Anwendung speichert normalisierte Buchungsnachweise und den Hash des
+Imports. Finanzpersonal prüft den
 Eingang direkt im Empfängerkonto vor der Freigabe. Die Bankverbindung
 und ihr Exportformat müssen vor dem Live-Betrieb abgenommen werden.
 Details: [BANK_TRANSFERS.md](BANK_TRANSFERS.md).
@@ -100,9 +134,10 @@ fachlich und technisch abzunehmen. Details: [BITCOIN.md](BITCOIN.md).
 
 Die Treuhand-Simulation umfasst Preisangebot, Gegenangebot, Eingangsereignis,
 Versand, Empfang, Streitfall, Freigabe, Erstattung und Rückbuchung im isolierten
-Testsystem. Für Kundengelder fehlen Anbieteranbindung, Rechtsbedingungen und
-Betriebsabnahme. Ein persönliches PayPal-Konto erfüllt die technische
-Anbietervoraussetzung für Verwahrung und Weiterleitung nicht.
+Testsystem. Der Live-Betrieb benötigt einen geeigneten Anbieter mit verifiziertem
+Eingang und freigegebener Auszahlung, ein abgestimmtes Vertrags- und
+Streitfallverfahren sowie Betriebsabnahme. Die Simulation verwendet weder eine
+reale Verwahrung noch eine Anbindung an persönliche Zahlungskonten.
 [Treuhandablauf](ESCROW.md), [Zahlungen](PAYMENTS.md)
 
 ## Datenschutz, Identitätsprüfung und Kommunikation
@@ -142,17 +177,31 @@ Ländertransfers, Rollen/Zugriffe, Aufbewahrung, Löschung und Auskunftsverfahre
 
 ## Länder und externe Daten
 
-Der bereitgestellte deutsche Datensatz `ZIP/PLZ.csv` wurde auf Integrität und
-Inhalt geprüft; die Rechtebestätigung stammt vom Nutzer. Sie ist keine Freigabe
-fremder Quellen. Herkunft, Lizenzgrenzen und mögliche Nachbarlandquellen stehen
-in [POSTCODE_SOURCES.md](POSTCODE_SOURCES.md). Keine externen Koordinatenimporte
-oder erfundenen Koordinaten wurden als abgeschlossen ausgegeben.
+Der bereitgestellte deutsche Datensatz `ZIP/PLZ.csv` enthält 8.289 eindeutige
+PLZ-Ortspunkte. Die isolierte Installationsprobe bestätigte den Import mit
+geprüfter SHA-256-Summe, Länderfilter, PLZ- und Umkreissuche. Die Rechtebestätigung
+des Nutzers bezieht sich auf genau diese Datei. Für weitere Quellen bleiben
+Herkunft, Datenstand, Lizenz und erforderliche Quellenangaben zu prüfen.
+[Quellennachweis](POSTCODE_SOURCES.md) · [CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
 
 ## Betriebliche Voraussetzungen
 
 Reale Betreiber-/Domain-/HTTPS-/Mailkonfiguration, gültige Providerverträge,
 private Serverablage, getrennte Schlüssel-/Backupsicherung und Wiederherstellung,
-Worker-/Schedulerbetrieb, Monitoring und ein funktionierender Wartungsmodus
-müssen anhand der späteren Installation abgenommen werden. Die geschützte Setup-
-Übersicht zeigt technische Diagnosen; sie ersetzt weder vollständigen Installer
-noch fachliche Freigaben. Releasekriterien: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md).
+Worker-/Schedulerbetrieb und Monitoring müssen anhand der vorgesehenen Installation
+abgenommen werden. Die isolierte technische Probe bestätigt das Produktionsimage,
+die Migrationsfortsetzung, verschlüsselte Sicherung und Wiederherstellung sowie
+sieben Worker-Heartbeats. Der geschützte Admin-Assistent zeigt den Konfigurations-
+und Prüfstatus. [CI 44838740876](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838740876)
+
+Während einer Wartung bleiben Auktionen und bezahlte Werbezeiten geschützt. Die
+unbezahlte Reservierungsfrist läuft weiter. Verifizierte Eingänge bleiben
+abstimmbar. Die Testaufzeichnungen dokumentieren die Fristverlängerung und
+Wiedereröffnung für einen simulierten neuntägigen Ausfall.
+[CI 44835645014](https://github.com/LLMbutHuman/GunIndex/actions/runs/44835645014)
+
+Für die Freigabe benötigt das Team die endgültigen Betreiberangaben, Zielmärkte,
+Steuerregeln, Dokumentfassungen und Providervereinbarungen. Auf dem Zielsystem
+stehen Nachweise für HTTPS, Posteingang, Backups am getrennten Standort,
+Wiederanlauf und die vorgesehenen Sicherheitsprüfungen aus.
+[Releasekriterien](RELEASE_CHECKLIST.md)

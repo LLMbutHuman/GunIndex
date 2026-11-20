@@ -1,5 +1,20 @@
 # Implementierungsfortschritt
 
+## Wiederaufnahmepunkt, 2026-11-21
+
+Die technisch geprüften nummerierten Anforderungen stehen in der aktuellen
+Abnahmematrix. Offene Nummern sind die vollständige Sprachabdeckung und die
+reale Treuhandanbindung. Die letzten isolierten Nachweise betreffen Gebühren,
+Restlaufzeiten, Produktionstest und Deutschland-PLZ. Der Code für die neue
+Admin- und Workerdiagnose liegt in `e48d0e3`.
+
+Als Nächstes die laufenden Prüfungen für `e48d0e3` verifizieren. Danach den
+sicheren Ersatz einer kompromittierten E2EE-Kontoautorität mit erneuter
+Peer-Verifikation und historischer Prüfung umsetzen. Weitere Altseiten und
+Admin-Texte können parallel lokalisiert werden. Reale Treuhand, zusätzliche
+Länderquellen und Zielsystemabnahme haben externe Voraussetzungen.
+[Abnahmematrix](TECHNICAL_ACCEPTANCE.md) · [Legal-Team](LEGAL_HANDOFF.md)
+
 ## Zahlungs- und Workerdiagnose im Admin-Setup, 2026-11-21
 
 Der geschützte Einrichtungsassistent zeigt den Konfigurationsstatus von PayPal
@@ -24,7 +39,9 @@ Prüfsumme wurde vor einem Datenbankzugriff abgewiesen.
 Die isolierte Installationsprobe importiert die vollständige Benutzerdatei mit
 ihrer dokumentierten Rechtebestätigung für diesen Test. Sie prüft führende Nullen,
 Landesgrenzen, exakte PLZ und Umkreissuche mit den tatsächlichen Koordinaten der
-Datei. Die Ausführung steht aus. Weitere Länderquellen benötigen eigene Nachweise.
+Datei. Der isolierte MySQL-Import und alle Suchprüfungen bestanden.
+Weitere Länderquellen benötigen eigene Nachweise.
+[CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
 
 ## Belege und Korrekturen je Auktion, 2026-11-21
 
@@ -36,7 +53,9 @@ bleibt über einen eigenen Link erreichbar.
 
 Lokal bestanden drei PHP-Syntaxprüfungen und 16 reine Gebührenprüfungen.
 Der HTTP-/MySQL-Test verbindet Laufzeitverlängerung, Teilkorrektur,
-Zuschlag, PDF-Downloads und Zugriffsschutz. Sein Lauf steht aus.
+Zuschlag, PDF-Downloads und Zugriffsschutz. Beide CI-Jobs bestanden,
+einschließlich 32 Gebühren-Integrationsgruppen und Chromium.
+[CI 44839394997](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839394997)
 
 ## Werbeplatzbuchung in acht Sprachen, 2026-11-21
 

@@ -1,5 +1,12 @@
 # Postleitzahlen: Bestand, Quellen und Importnachweise
 
+Am 21. November 2026 wurden die 8.289 Punkte aus `ZIP/PLZ.csv` in einer
+frischen isolierten MySQL-Instanz importiert. Der Lauf prüfte die Ablehnung
+einer falschen SHA-256-Summe, `04838` mit führender Null, exakte PLZ-Suche,
+Länderauswahl und den tatsächlichen Suchradius Berlin/München. Die Ergebnisse
+beziehen sich auf die bereitgestellte Datei und dieses Testsystem.
+[CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
+
 Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 --file=ZIP/PLZ.csv --format=legacy-de --dry-run` tatsächlich ausgeführt. Ergebnis:
 8.289 validierte Einträge, null Dubletten, identischer SHA-256 wie unten.
