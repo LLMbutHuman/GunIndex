@@ -11,7 +11,12 @@ konfigurierten Domain ohne erneuten Image-Bau oder Migration in Betrieb.
 
 Gezielt lokal geprüft wurden Bash-Syntax, PHP-Syntax sowie der TLS-Dry-Run.
 Die neue isolierte CI-Probe auf Ubuntu 22.04 läuft über den ausführbaren
-Installer. Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
+Installer. Im ersten Lauf blockierte Docker Compose den Lesenachweis für das
+CA-Bündel außerhalb des Build-Kontexts. Der Installer baut die gepinnten
+Images jetzt mit einem gezielt eingebundenen CA-Bündel vor der Update-Pause.
+[Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/44955709343)
+
+Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
 Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.
 [Installationsanleitung](UBUNTU_22_04.md)
 

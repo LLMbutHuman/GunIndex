@@ -33,7 +33,7 @@ def configure(directory,domain,email,release,source):
  if not (config/'nginx.conf').exists():managed('nginx.conf',(source/'ops/production/nginx-bootstrap.conf').read_text())
  # TLS nginx configuration is deliberately not overwritten during an update.
  (config/'managed.json').write_text(json.dumps(manifest,indent=2));(config/'managed.json').chmod(0o600)
- compose_env=f'INSTALL_DIR={base}\nENV_DIR={config}\nKEY_DIR={keys}\nAPP_SOURCE={source}\nRELEASE_ID={release}\nDOMAIN={domain}\nBUILD_CA_FILE=/etc/ssl/certs/ca-certificates.crt\n'
+ compose_env=f'INSTALL_DIR={base}\nENV_DIR={config}\nKEY_DIR={keys}\nRELEASE_ID={release}\nDOMAIN={domain}\n'
  (config/'compose.env').write_text(compose_env);(config/'compose.env').chmod(0o600)
  for name,mode in (('acme',0o755),('tls',0o710)):
   path=base/name;path.mkdir(mode=mode,exist_ok=True);path.chmod(mode)

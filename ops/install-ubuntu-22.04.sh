@@ -164,6 +164,10 @@ release="$commit-$(date -u +%Y%m%d%H%M%S)"
 release_dir="$directory/releases/$release"
 mkdir -m 0755 -- "$release_dir"
 bash "$source_dir/ops/production/archive-release.sh" "$source_dir" "$commit" "$release_dir"
+docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \
+ --file "$release_dir/ops/production/Dockerfile" --tag "gunindex-production:$release" "$release_dir"
+docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \
+ --file "$release_dir/ops/production/Dockerfile.mailer" --tag "gunindex-mailer:$release" "$release_dir"
 if [ "$update" -eq 1 ];then
  if docker volume inspect gunindex_database >/dev/null 2>&1;then
   python3 "$directory/current/ops/production/backup.py" --directory "$directory" backup --maintenance --leave-stopped
@@ -173,7 +177,6 @@ if [ "$update" -eq 1 ];then
 fi
 python3 "$release_dir/ops/production/configure.py" --directory "$directory" --domain "$domain" --email "$email" --release "$release" --source "$release_dir"
 ln -sfn "$release_dir" "$directory/current"
-"$directory/compose.sh" build php mailer
 "$directory/compose.sh" up -d db
 mysql_database() {
  "$directory/compose.sh" exec -T db sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -h127.0.0.1 -u"$MYSQL_USER" --default-character-set=utf8mb4 -N "$MYSQL_DATABASE" "$@"' sh "$@"

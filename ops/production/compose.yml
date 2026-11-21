@@ -1,10 +1,6 @@
 name: gunindex
 x-app: &app
   image: gunindex-production:${RELEASE_ID:?RELEASE_ID missing}
-  build:
-    context: ${APP_SOURCE:?APP_SOURCE missing}
-    dockerfile: ops/production/Dockerfile
-    secrets: [proxy_ca]
   env_file: ["${ENV_DIR:?ENV_DIR missing}/app.env"]
   user: "33:33"
   read_only: true
@@ -66,10 +62,7 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
   mailer:
-    build:
-      context: ${APP_SOURCE}
-      dockerfile: ops/production/Dockerfile.mailer
-      secrets: [proxy_ca]
+    image: gunindex-mailer:${RELEASE_ID:?RELEASE_ID missing}
     environment:
       MAIL_HOSTNAME: mail.${DOMAIN:?DOMAIN missing}
       MAIL_DOMAIN: ${DOMAIN}
@@ -116,6 +109,3 @@ networks:
       config: [{subnet: "${BACKEND_SUBNET:-172.30.81.0/24}"}]
   frontend: {}
   mail_egress: {}
-secrets:
-  proxy_ca:
-    file: ${BUILD_CA_FILE:-/etc/ssl/certs/ca-certificates.crt}
