@@ -28,4 +28,15 @@ function ops_health(PDO $pdo,bool $coreOnly=false):array {
  foreach($workers as &$workerState)$workerState['mode']=($maintenance['active']??false)?'paused':'running';unset($workerState);
  $healthy=!in_array(false,$checks,true);return['status'=>!$healthy?'unavailable':($warnings?'degraded':'ok'),'checked_at'=>gmdate('c'),'checks'=>$checks,'warnings'=>$warnings,'queues'=>$queues,'workers'=>$workers,'maintenance'=>$maintenance];
 }
-if(!defined('GUNINDEX_HEALTH_LIBRARY')){$result=ops_health($pdo,in_array('--core-only',$argv,true));fwrite(STDOUT,json_encode($result,JSON_THROW_ON_ERROR|JSON_UNESCAPED_SLASHES).PHP_EOL);exit($result['status']==='ok'?0:($result['status']==='degraded'?2:1));}
+if (!defined('GUNINDEX_HEALTH_LIBRARY')) {
+ $installation = in_array('--installation', $argv, true);
+ $result = ops_health($pdo, !$installation && in_array('--core-only', $argv, true));
+ fwrite(STDOUT, json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES).PHP_EOL);
+ if ($installation) {
+  $ready = $result['status'] !== 'unavailable'
+   && $result['workers'] !== []
+   && array_diff($result['warnings'], ['mail_not_configured']) === [];
+  exit($ready ? 0 : 1);
+ }
+ exit($result['status'] === 'ok' ? 0 : ($result['status'] === 'degraded' ? 2 : 1));
+}

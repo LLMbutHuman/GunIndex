@@ -10,6 +10,23 @@ lokale Tests sind von echten DNS-/TLS-/Mail-/Betriebsfreigaben zu unterscheiden.
 Die Beispiele verwenden Variablen: Ersetze die drei Werte durch deine echten
 Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 
+## Schnellstart
+
+Mit einem vorbereiteten Ubuntu-Server, dem geprüften Checkout und einer
+erreichbaren Domain genügen ein Installationsbefehl und der geschützte
+Einrichtungsassistent. Starte den Installer direkt aus dem Checkout und folge
+den Eingabeaufforderungen für den ersten Administrator und seine Authenticator-App.
+
+```sh
+sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --setup-admin
+```
+
+Danach zeigt der Installer den Link zu `/admin/setup.php`. Dort stehen die
+verbleibenden Betreiberangaben, Mail- und Rechtsprüfungen sowie die Zustände der
+Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ein.
+
+## Vorbereitung und Prüfung
+
 1. Betriebssystem und Updates prüfen:
 
    ```sh
@@ -49,15 +66,23 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 
    ```sh
    less ops/install-ubuntu-22.04.sh
-   bash ops/install-ubuntu-22.04.sh --help
-   bash ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --dry-run
+   ./ops/install-ubuntu-22.04.sh --help
+   ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --dry-run
    ```
 
 5. Nach Prüfung installieren. Domain-DNS und Port 80 müssen für ACME erreichbar
    sein; andernfalls mit `--prepare-only` nur vorbereiten:
 
    ```sh
-   sudo bash ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY"
+   sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --setup-admin
+   ```
+
+   Wer mit `--prepare-only` begonnen hat, schließt HTTPS später mit denselben
+   Domain- und Verzeichniswerten ab. Dabei sind weder Image-Neubau noch
+   Datenbankmigration erforderlich.
+
+   ```sh
+   sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --finish-tls
    ```
 
    Docker kommt ausschließlich aus seinem offiziellen signierten Ubuntu-Repository;
@@ -67,7 +92,7 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
    Notizen, ignorierte Laufzeitdateien und `.git` liegen außerhalb des Release-Archivs.
    [Git-Archivformat](https://git-scm.com/docs/git-archive)
 
-6. Dienste und interne Gesundheitsprüfung kontrollieren:
+6. Bei Bedarf die vom Installer geprüften Dienste erneut kontrollieren:
 
    ```sh
    sudo /srv/gunindex/compose.sh ps
@@ -78,8 +103,8 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
    `0=ok`, `2=degraded` und `1=unavailable`. Noch nicht eingerichtete E-Mail oder
    fehlende Worker-Heartbeats dürfen nicht als vollständige Betriebsbereitschaft gelten.
 
-7. Einen neuen echten Administrator mit sicherem Passwort und geprüftem
-   Authenticator-Code anlegen. Keine Standardzugänge verwenden:
+7. Falls die Installation ohne `--setup-admin` lief, den ersten Administrator
+   mit Passwort und bestätigtem Authenticator-Code anlegen:
 
    ```sh
    sudo /srv/gunindex/compose.sh exec php php ops/create-admin.php
@@ -89,7 +114,7 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
    Verschlüsselungsschlüssel müssen getrennt gesichert werden; ein Verlust verhindert
    die Entschlüsselung bestehender Daten. Das TOTP-Einrichtungssecret nicht protokollieren.
 
-8. Im Admin-Dashboard Marke, Kategorien, Länder, Preise, Betreiberangaben und
+8. Unter `https://<deine-domain>/admin/setup.php` Marke, Kategorien, Länder, Preise, Betreiberangaben und
    rechtliche Dokumente prüfen. Zahlungsfreigaben bleiben standardmäßig aus.
    Die Installation setzt keine rechtlichen oder vertraglichen Freigaben.
 
@@ -141,17 +166,17 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
     und Grenzen: `MONITORING.md`. Es werden nur verschlüsselte Archive übertragen,
     nicht der Archivschlüssel. Keine automatische Hostschlüsselannahme.
 
-    Nach einer erfolgreichen manuellen Backup-/Restoreprobe die vorbereiteten Timer
-    installieren. Nicht parallel zusätzliche Cronjobs für dieselben Aufgaben anlegen:
+    Das lokale Monitoring startet mit dem Installer. Nach erfolgreicher
+    Backup-/Restoreprobe den täglichen Backup-Timer einschalten:
 
     ```sh
-    sudo install -m 0644 /srv/gunindex/config/systemd/gunindex-*.service /etc/systemd/system/
-    sudo install -m 0644 /srv/gunindex/config/systemd/gunindex-*.timer /etc/systemd/system/
-    sudo systemctl daemon-reload
-    sudo systemctl enable --now gunindex-monitor.timer gunindex-backup.timer
+    sudo bash /srv/gunindex/current/ops/production/install-timers.sh /srv/gunindex --with-backup
     sudo systemctl list-timers gunindex-monitor.timer gunindex-backup.timer
     ```
 
+    Alternativ richtet `--backup-timer` den täglichen Zeitplan während der
+    Installation ein. Das Backup pausiert schreibende Dienste kurz. Bei
+    abweichenden systemd-Dateien meldet der Installer den Pfad zur manuellen Prüfung.
     Ein fehlgeschlagener oder eingeschränkter Monitorcheck ist im Journal sichtbar.
     Alarmempfänger und Offsite-Ziel werden dadurch noch nicht automatisch eingerichtet.
 
@@ -180,7 +205,7 @@ Zusammenführung und werden nicht still überschrieben.
 git fetch origin
 git log --oneline HEAD..origin/feature/general-marketplace-rebuild
 git pull --ff-only
-sudo bash ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --update
+sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --update
 ```
 
 Images sind fest gepinnt. Sicherheitsupdates benötigen eine bewusst geprüfte

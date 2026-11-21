@@ -12,15 +12,9 @@ Erfolgs-/Fehler-Heartbeats liegen privat unter `/var/lib/gunindex/heartbeats`.
 Der Auktionsdienst muss unabhängig von Websitebesuchen laufen. Prozessstatus allein
 ist kein Funktionsnachweis; regelmäßig eine synthetische Testauktion bis zum Ende prüfen.
 
-Ein Beispiel für einen minütlichen lokalen Check über root-crontab:
-
-```cron
-* * * * * /srv/gunindex/compose.sh exec -T php php ops/monitor.php >> /var/log/gunindex-monitor.log 2>&1
-```
-
-Alternativ die unter `config/systemd/` erzeugten Timer mit den Befehlen aus
-`UBUNTU_22_04.md` installieren: Monitor minütlich, Backup täglich um 03:15 Uhr
-Europe/Berlin mit kleiner Zufallsverzögerung. Nur eine der beiden Varianten verwenden.
+Der Ubuntu-Installer aktiviert den minütlichen lokalen Check als systemd-Timer.
+Der optionale Backup-Timer läuft täglich um 03:15 Uhr Europe/Berlin mit kleiner
+Zufallsverzögerung. Die Einrichtung steht in [Ubuntu 22.04](UBUNTU_22_04.md).
 Timer und letzte Ergebnisse kontrollieren:
 
 ```sh
@@ -28,10 +22,9 @@ sudo systemctl list-timers gunindex-monitor.timer gunindex-backup.timer
 sudo journalctl -u gunindex-monitor.service -u gunindex-backup.service --since today --no-pager
 ```
 
-Logdatei mit 0600 anlegen, Rotation und Aufbewahrungsfrist festlegen. Ein Cronjob
-allein versendet noch keinen Alarm. Lokale Überwachung kann Exitcodes mit systemd/
-einem eigenen Monitoringdienst auswerten; externe Alarmziele nur ausdrücklich
-konfigurieren. nginx protokolliert bewusst keine Querystrings mit Reset-/Verifikationstoken.
+Aufbewahrungsfrist im Journal und gegebenenfalls ein externes Alarmziel festlegen.
+Lokale Überwachung kann Exitcodes mit systemd oder einem Monitoringdienst
+auswerten. nginx protokolliert keine Querystrings mit Reset-/Verifikationstoken.
 Postfixlogs enthalten gegebenenfalls notwendige Zustelladressen; Zugriff und Retention
 beschränken. Es werden keine Nachrichtentexte oder Passwörter geloggt.
 

@@ -1,10 +1,10 @@
 name: Production image from release archive
 on:
   pull_request:
-    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/import-postcodes.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'tests/production_postcodes_test.php', 'sql/**', 'ZIP/PLZ.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/import-postcodes.php', 'ops/backup.php', 'ops/health.php', 'tests/production_*', 'sql/**', 'ZIP/PLZ.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
   push:
     branches: [feature/general-marketplace-rebuild]
-    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/import-postcodes.php', 'ops/backup.php', 'ops/health.php', 'tests/production_deployment_test.sh', 'tests/production_postcodes_test.php', 'sql/**', 'ZIP/PLZ.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/import-postcodes.php', 'ops/backup.php', 'ops/health.php', 'tests/production_*', 'sql/**', 'ZIP/PLZ.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**']
 permissions:
   contents: read
 jobs:
@@ -30,3 +30,10 @@ jobs:
             --entrypoint php "$image" -r 'require "/app/vendor/autoload.php"; exit(class_exists(\PHPMailer\PHPMailer\PHPMailer::class) && class_exists(\Dompdf\Dompdf::class) && extension_loaded("pdo_mysql") && extension_loaded("gd") && extension_loaded("mbstring") && extension_loaded("sodium") ? 0 : 1);'
       - name: Rehearse isolated database setup, encrypted recovery and worker startup
         run: bash tests/production_deployment_test.sh
+  ubuntu-installer:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Run the executable production installer on an isolated Ubuntu host
+        run: bash tests/production_installer_test.sh

@@ -13,6 +13,12 @@ class Installation(unittest.TestCase):
   with tempfile.TemporaryDirectory() as temp:
    target=Path(temp)/'deployment';result=self.command('--domain','markt.gunindex.eu','--email','operator@gunindex.eu','--directory',str(target),'--dry-run')
    self.assertEqual(0,result.returncode);self.assertFalse(target.exists());self.assertIn(b'DRY RUN',result.stdout)
+ def test_finish_tls_plan_and_conflicting_options(self):
+  args=('--domain','markt.gunindex.eu','--email','operator@gunindex.eu','--finish-tls','--dry-run')
+  result=self.command(*args)
+  self.assertEqual(0,result.returncode);self.assertIn(b'No image rebuild or database migration',result.stdout)
+  for option in ('--prepare-only','--update'):
+   self.assertEqual(2,self.command(*args,option).returncode)
  def test_placeholder_and_injected_domains_are_rejected(self):
   for value in ('example.com','market.invalid','market.test','localhost','a.tld;touch/tmp/unsafe','https://gunindex.eu','gunindex.eu/other'):
    self.assertNotEqual(0,self.command('--domain',value,'--email','operator@gunindex.eu','--dry-run').returncode)

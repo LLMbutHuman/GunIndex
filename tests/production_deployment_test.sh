@@ -49,6 +49,10 @@ manifests=("$deployment"/backups/*.json)
 "$compose" run --rm -T --no-deps maintenance php ops/migrate.php --backup-confirmed
 [[ "$(mysql_fixture -e "SELECT COUNT(*) FROM schema_migrations WHERE version='038_auction_relisting_outcomes.sql'")" == 1 ]]
 "$compose" run --rm -T --no-deps maintenance php ops/health.php --core-only
+if "$compose" run --rm -T --no-deps maintenance php ops/health.php --installation; then
+  printf '%s\n' 'The installation check succeeded with missing worker heartbeats.' >&2
+  exit 1
+fi
 
 postal_digest=3f8a041a81caceb948ba30b285ba80281d464cd22fc4a049eba4bebdd8aab59b
 import_postcodes=("$compose" run --rm -T --no-deps -v "$release/ZIP/PLZ.csv:/run/gunindex-postcodes.csv:ro"
@@ -76,6 +80,7 @@ for ((attempt=0;attempt<45;attempt++)); do
 done
 [[ "$ready" == 1 ]]
 "$compose" exec -T php php ops/health.php --core-only
+bash "$release/ops/production/check-readiness.sh" "$compose"
 health_status=0
 "$compose" exec -T php php ops/health.php > "$deployment/health.json" || health_status=$?
 [[ "$health_status" == 2 ]]

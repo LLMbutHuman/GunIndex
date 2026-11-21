@@ -1,5 +1,20 @@
 # Implementierungsfortschritt
 
+## Ausführbarer Ubuntu-Installer
+
+`ops/install-ubuntu-22.04.sh` prüft Datenbank, privaten Speicher und sieben
+Worker-Heartbeats vor dem Abschluss. Er aktiviert den lokalen Monitor-Timer,
+plant verschlüsselte Backups optional ein und kann den ersten Administrator
+interaktiv mit bestätigtem TOTP anlegen. `--prepare-only` hält die Website
+geschlossen. `--finish-tls` nimmt die vorbereitete Installation mit ihrer
+konfigurierten Domain ohne erneuten Image-Bau oder Migration in Betrieb.
+
+Gezielt lokal geprüft wurden Bash-Syntax, PHP-Syntax sowie der TLS-Dry-Run.
+Die neue isolierte CI-Probe auf Ubuntu 22.04 läuft über den ausführbaren
+Installer. Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
+Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.
+[Installationsanleitung](UBUNTU_22_04.md)
+
 ## Administratives Änderungsprotokoll in acht Sprachen, 2026-11-21
 
 Das geschützte Protokoll zeigt jetzt auch automatische Ereignisse ohne
