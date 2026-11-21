@@ -92,7 +92,7 @@ if(root){
   return chain;
  }
  function controls(){
-  const unlocked=!!state&&!busy&&!pending,deviceOk=unlocked&&selfBundle?.manifest.devices.some(d=>d.id===state.device_id&&!d.revoked);
+  const unlocked=!!state&&!busy&&!pending,deviceOk=unlocked&&selfBundle?.trusted&&selfBundle.manifest.devices.some(d=>d.id===state.device_id&&!d.revoked);
   for(const id of ['device-name','passphrase','recovery-input','revoke'])el(id).disabled=busy||!!pending;
   el('create').hidden=!!account;el('create').disabled=busy||!!pending||!!account;
   el('unlock').hidden=!local;el('unlock').disabled=busy||!!pending||!local;
@@ -109,7 +109,7 @@ if(root){
   if(el('discard-send'))el('discard-send').disabled=busy||!outbox;
   for(const id of ['fingerprint-input','verify'])if(el(id))el(id).disabled=busy||!peerBundle;
   if(el('load'))el('load').disabled=busy||!state||!selfBundle?.trusted||!pins[peer];
-  if(el('mark-read'))el('mark-read').disabled=busy||!state||cursor===0;
+  if(el('mark-read'))el('mark-read').disabled=busy||!state||!peerBundle?.trusted||cursor===0;
  }
  async function task(fn){if(busy)return;busy=true;controls();status('busy');try{await fn();}catch(error){if(error.name!=='AbortError')status(errorKey(error),true);}finally{busy=false;controls();}}
  async function refresh(){
@@ -167,7 +167,7 @@ if(root){
   }
  }
  async function send(){
-  await refresh();if(!canSend||!state||!peerBundle?.trusted)throw Error('identity_untrusted');
+  await refresh();if(!canSend||!state||!selfBundle?.trusted||!peerBundle?.trusted)throw Error('identity_untrusted');
   // Keep the exact encrypted request across a lost response/reload. A retry can
   // never generate a second message or persist plaintext in browser storage.
   if(outbox){await api('send',outbox);await persist({[outboxKey]:null});outbox=null;el('body').value='';el('files').value='';await load();status('sent');return;}
@@ -197,7 +197,7 @@ if(root){
    const result=await prepareIdentityReset(account,user,el('device-name').value.trim(),el('passphrase').value);
    if(generation===epoch){el('reset-confirm').checked=false;await stage(result);}
   });
-  bind('commit',async()=>{if(!pending||!el('code-saved').checked)throw Error('invalid_input');const candidate=pending;
+  bind('commit',async()=>{if(!pending||!el('code-saved').checked)throw Error('invalid_input');const candidate=pending,generation=epoch;
    const request={...candidate.request};
    if(request.action==='reset_identity'){
     request.password=el('account-password').value;request.factor=el('account-factor').value.trim();
@@ -209,6 +209,7 @@ if(root){
    catch(error){if(request.action==='reset_identity'&&(error.status===403||error.status===422))throw Error('reset_auth_error');throw error;}
    finally{delete request.password;delete request.factor;}
    const verified=await verifyBundle(saved,user);
+   if(!active||generation!==epoch)return;
    if(saved.manifest!==candidate.request.manifest||saved.signature!==candidate.request.signature||verified.hash!==candidate.recoveryCode.split('.')[3])throw Error('manifest_hash');
    if(pins[user]&&pins[user].identity_key!==verified.pin.identity_key)await replaceIdentityPin(user,pins[user],verified.pin,candidate.local);
    else{pins[user]=verified.pin;await persist({vault:candidate.local,pins});}
@@ -233,7 +234,7 @@ if(root){
    }else{pins[peer]=peerBundle.pin;await persist({pins});}
    el('fingerprint-input').value='';await refresh();await load();status('ready');});
   bind('send',send);bind('load',async()=>{await refresh();await load();status('ready');});
-  bind('mark-read',async()=>{if(cursor<1||!state)return;await api('read',{listing_id:listing,peer_id:peer,through:cursor});status('read_done');});
+  bind('mark-read',async()=>{if(cursor<1||!state||!peerBundle?.trusted)return;await api('read',{listing_id:listing,peer_id:peer,through:cursor});status('read_done');});
   bind('discard-send',async()=>{if(!outbox)return;for(const id of outbox.attachments){try{await api('discard',{id});}catch{/* A bound file remains with its message. */}}await persist({[outboxKey]:null});outbox=null;status('ready');});
   status('locked');controls();
   setInterval(()=>{if(Date.now()-lastActivity>300000&&(state||pending||busy))lock();if(active&&!document.hidden&&!busy&&state&&pins[peer])task(async()=>{await refresh();await load();status('ready');});},10000);

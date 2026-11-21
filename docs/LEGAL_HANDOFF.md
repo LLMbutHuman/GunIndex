@@ -162,8 +162,11 @@ serverseitig lesen. Der Datenschutzexport enthält für E2EE verschlüsselte Pak
 und öffentliche Prüfmanifeste; keine privaten Recoverygeheimnisse. Aufbewahrung,
 Löschverfahren, Missbrauchsmeldungen, Support bei Schlüsselverlust und Nutzertexte
 benötigen fachliche Prüfung. Ohne Geräte oder aktuellen Recoverycode ist keine
-Betreiberentschlüsselung möglich. Ein kompromittierter Autoritätsschlüssel kann
-derzeit nicht innerhalb desselben Kontos ersetzt werden.
+Betreiberentschlüsselung möglich. Für eine kompromittierte Kontoautorität gibt
+es einen ausdrücklichen Austausch mit Kontopasswort und zweitem Faktor.
+Vor neuen Nachrichten müssen Kontakte den neuen Fingerabdruck prüfen. Ältere
+Nachrichten benötigen passende alte Schlüssel und eine verifizierte Historie.
+Die Sicherheitsabnahme dieser Erweiterung steht aus. [E2EE-Protokoll](E2EE_PROTOCOL.md)
 Identitätsprüfung hat eigene deaktivierte Freigaben und Aufbewahrungseinstellungen.
 E-Mail-Bestätigung beweist weder Identität noch Erwerbsberechtigung. Der geschützte
 Mail-Assistent unterstützt lokalen Versand und TLS-Relay. Die tatsächliche

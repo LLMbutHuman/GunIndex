@@ -477,6 +477,7 @@ async function storageIsPrivate(page) {
     await action(second, 'open-archive', 'archive_opened'); await receiveFile(second, firstMessage);
     await action(seller, 'load', 'ready'); await seller.locator('#e2ee-peer-rotation').waitFor({ state: 'visible' });
     invariant(await seller.locator('#e2ee-send').isDisabled(), 'New authority must block sending until independently verified');
+    invariant(await seller.locator('#e2ee-mark-read').isDisabled(), 'Unverified new identity must not advance read receipts');
     await seller.locator('#e2ee-fingerprint-input').fill(buyerIdentity.fingerprint); await action(seller, 'verify', 'error_trust');
     await verifyPeer(seller, reset.fingerprint); await seller.locator('#e2ee-peer-rotation').waitFor({ state: 'hidden' });
     await visibleMessage(seller, firstMessage);

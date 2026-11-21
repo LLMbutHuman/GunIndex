@@ -27,6 +27,7 @@ Bereichsnamen. Die vorhandenen Berechtigungsfilter und die Kennzeichnung der
 aktuellen Seite bleiben wirksam. Lokal bestanden 19 Begriffe pro Sprache und
 elf PHP-Syntaxprüfungen. Der isolierte Finanz-HTTP-Test prüft die sichtbare
 Navigation und `aria-current` in allen acht Sprachen.
+Beide CI-Jobs waren erfolgreich. [CI 44841239433](https://github.com/LLMbutHuman/GunIndex/actions/runs/44841239433)
 
 ## Wiederaufnahmepunkt, 2026-11-21
 
@@ -58,6 +59,8 @@ Lokal bestanden zwölf Setup-Gruppen, Übersetzungsprüfung in acht Sprachen,
 prüfen die sichtbaren Statusangaben und den Healthcheck mit sieben Workern.
 Die isolierte Betriebsprobe mit allen sieben Workerzuständen war erfolgreich.
 [CI 44840320988](https://github.com/LLMbutHuman/GunIndex/actions/runs/44840320988)
+Auch PHP/MySQL und die Chromium-Regression waren erfolgreich.
+[CI 44840320951](https://github.com/LLMbutHuman/GunIndex/actions/runs/44840320951)
 
 ## Prüfsummengebundener PLZ-Import, 2026-11-21
 
