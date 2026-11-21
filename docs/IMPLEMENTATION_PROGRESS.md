@@ -15,7 +15,12 @@ Die neue Historienprüfung verlangt einen vorhandenen Vertrauensanker und bei
 binden beide aktuellen Manifestversionen. PHP-Syntax, JavaScript-Syntax,
 Sprachparität sowie 13 echte OpenPGP-Testgruppen bestanden lokal. PHP hat
 zusätzlich einen vom Browser-Code generierten neuen Schlüsselstand überprüft.
-Isolierter MySQL-/HTTP-/Chromium-Lauf und Sicherheitsabnahme stehen aus.
+Migration, Produktionsimage, verschlüsselte Wiederherstellung und PHP-/MySQL-
+Prüfungen bestanden. [Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44950707212)
+Der erste Chromium-Lauf stoppte an der Sprachannahme für das dritte Gerät.
+Das Gerät war zuvor mit dem noch italienischen Kontoprofil angemeldet worden.
+Der Test setzt seine Sprache explizit. [Erster Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/44950707264)
+Die erneute Chromium-Prüfung und unabhängige Sicherheitsabnahme stehen aus.
 Privilegierte Konten benötigen zusätzlich eine verifizierte Mitarbeiteranmeldung
 und einen frischen Code, der den bestehenden MFA-Zähler verwendet. Der HTTP-Test
 prüft Ablehnung eines bereits verwendeten Codes und eine idempotente Wiederholung.

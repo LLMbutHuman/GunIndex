@@ -472,9 +472,11 @@ async function storageIsPrivate(page) {
     const reset = await finishPending(second, data.users.buyer, 4, factor);
     invariant(reset.fingerprint !== buyerIdentity.fingerprint, 'Reset must generate a new account authority');
     assert.equal((await second.locator('#e2ee-devices li').count()), 1);
+    phase = 'open_cryptographically_anchored_archive';
     await unlock(second);
     await second.locator('#e2ee-archives summary').click(); await second.locator('#e2ee-archive-passphrase').fill(password);
     await action(second, 'open-archive', 'archive_opened'); await receiveFile(second, firstMessage);
+    phase = 'independent_peer_fingerprint_comparison';
     await action(seller, 'load', 'ready'); await seller.locator('#e2ee-peer-rotation').waitFor({ state: 'visible' });
     invariant(await seller.locator('#e2ee-send').isDisabled(), 'New authority must block sending until independently verified');
     invariant(await seller.locator('#e2ee-mark-read').isDisabled(), 'Unverified new identity must not advance read receipts');
@@ -482,7 +484,8 @@ async function storageIsPrivate(page) {
     await verifyPeer(seller, reset.fingerprint); await seller.locator('#e2ee-peer-rotation').waitFor({ state: 'hidden' });
     await visibleMessage(seller, firstMessage);
     await send(seller, newIdentityMessage, true); await action(second, 'load', 'ready'); await receiveFile(second, newIdentityMessage);
-    await third.reload(); await enabled(third, '#e2ee-passphrase');
+    phase = 'recover_a_new_device_with_the_replacement_code';
+    await language(third, 'de');
     await third.locator('#e2ee-recovery summary').click(); await third.locator('#e2ee-device-name').fill('Synthetic recovered new authority');
     await third.locator('#e2ee-passphrase').fill(password); await third.locator('#e2ee-recovery-input').fill(reset.code);
     await action(third, 'prepare-recovery', 'save_code'); const recovered = await finishPending(third, data.users.buyer, 5);
