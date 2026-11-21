@@ -717,6 +717,8 @@ try{
    $invoice=fin_order($pdo,$seller,$category);fin_pay($pdo,$admin['id'],$invoice);
    $request=finance_request_refund($pdo,$seller['id'],$invoice,1,'Synthetic request for an isolated rejection.');
    $reason='Synthetic explicitly reviewed rejection.';
+   $systemEvent='synthetic.audit.'.bin2hex(random_bytes(6));$eventDetails=json_encode(['detail'=>'Reserved <sample> & symbols'],JSON_THROW_ON_ERROR);
+   $pdo->prepare('INSERT INTO admin_logs(admin_id,action_type,details) VALUES (NULL,?,?)')->execute([$systemEvent,$eventDetails]);
    fin_reject(fn()=>finance_reject_refund_request($pdo,$seller['id'],$request,$reason),DomainException::class);
    $taxBefore=$pdo->query("SELECT * FROM market_tax_rules WHERE country_code='DE'")->fetch();
    $browser=fin_browser();$path='/admin/finance.php';
@@ -736,11 +738,15 @@ try{
      [$code,$page]=fin_request($browser,$path,['csrf_token'=>fin_csrf($page),'action'=>'tax','country_code'=>'DE','basis_points'=>'1900X',
       'explanation'=>'Synthetic invalid tax rate regression.','review_confirmed'=>'1']);
      fin_assert($code===422&&str_contains($page,h($copy['finance_admin.tax_invalid'])));
+     [$code,$audit]=fin_request($browser,'/admin/logs.php');
+     fin_assert($code===200&&str_contains($audit,'<h1>'.h($copy['admin_nav.audit']).'</h1>')&&str_contains($audit,h($systemEvent))
+      &&str_contains($audit,h($copy['admin_audit.system']))&&str_contains($audit,h($eventDetails)));
     }
     fin_assert($taxBefore===$pdo->query("SELECT * FROM market_tax_rules WHERE country_code='DE'")->fetch());
     $fields=['action'=>'reject','request_id'=>(string)$request,'reason'=>$reason];
     [$code]=fin_request($browser,$path,$fields);fin_assert($code===403);
     $fields['csrf_token']=fin_csrf($page);
+    [$code]=fin_request($browser,'/admin/logs.php',$fields);fin_assert($code===405);
     for($retry=0;$retry<2;$retry++){
      [$code,$page]=fin_request($browser,$path,$fields);
      fin_assert($code===200&&str_contains($page,h($copy['finance_admin.decision_saved'])));

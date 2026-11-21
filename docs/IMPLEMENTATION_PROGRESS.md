@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Administratives Änderungsprotokoll in acht Sprachen, 2026-11-21
+
+Das geschützte Protokoll zeigt jetzt auch automatische Ereignisse ohne
+Mitarbeiterkonto. Beispielsweise bleiben PLZ-Importe in der Übersicht sichtbar.
+Die Oberfläche kennzeichnet solche Zeilen als Systemereignisse, behandelt
+Protokolldaten als Text und liefert die Übersicht mit privater Cache-Sperre aus.
+
+Elf PHP-Syntaxprüfungen bestanden lokal. Der isolierte HTTP-Lauf prüft
+Sprachwechsel, Darstellung eines Systemereignisses und Ablehnung von POST.
+
 ## Austausch einer kompromittierten E2EE-Kontoautorität, 2026-11-21
 
 Ein normales Kundenkonto mit eingerichtetem zweiten Faktor kann die
