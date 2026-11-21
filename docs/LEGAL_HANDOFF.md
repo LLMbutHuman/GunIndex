@@ -188,6 +188,12 @@ des Nutzers bezieht sich auf genau diese Datei. Für weitere Quellen bleiben
 Herkunft, Datenstand, Lizenz und erforderliche Quellenangaben zu prüfen.
 [Quellennachweis](POSTCODE_SOURCES.md) · [CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
 
+Der französische Bestand enthält 6.051 Postleitzahlen des Mutterlands und
+Korsikas. Die Quellendatei von La Poste vom 8. November 2026 steht unter
+Licence Ouverte 2.0. Die Suchseite nennt Quelle, Datum und Lizenz. Rechtlich
+zu prüfen bleiben die tatsächlich freigegebenen Zielmärkte und zusätzliche
+Quellen. [Quellendetails und Umfang](INTERNATIONAL.md)
+
 ## Betriebliche Voraussetzungen
 
 Reale Betreiber-/Domain-/HTTPS-/Mailkonfiguration, gültige Providerverträge,
@@ -197,6 +203,9 @@ abgenommen werden. Die isolierte technische Probe bestätigt das Produktionsimag
 die Migrationsfortsetzung, verschlüsselte Sicherung und Wiederherstellung sowie
 sieben Worker-Heartbeats. Der geschützte Admin-Assistent zeigt den Konfigurations-
 und Prüfstatus. [CI 44838740876](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838740876)
+Der ausführbare Ubuntu-Installer und sein In-Place-Update bestanden die
+Hostprobe mit synthetischem Administratorkonto und privaten Testdaten.
+[Ubuntu-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/44957109960)
 
 Während einer Wartung bleiben Auktionen und bezahlte Werbezeiten geschützt. Die
 unbezahlte Reservierungsfrist läuft weiter. Verifizierte Eingänge bleiben

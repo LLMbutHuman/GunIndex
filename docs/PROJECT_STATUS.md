@@ -7,15 +7,18 @@ und geprüft, 7 technisch umgesetzt mit externer Abnahme und 2 technisch offen
 oder teilweise umgesetzt**. Die offenen Nummern sind 5, vollständige
 Übersetzungen, und 26, die reale Treuhandanbindung. Die Zählung gilt für die
 nummerierte Liste. Weitere Anforderungen umfassen die unabhängige E2EE-Abnahme,
-Vervollständigung des Admin-Assistenten, zusätzliche Länderquellen und die
+weitere Länderquellen und die
 Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
 fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
 [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
 
 Neu nachgewiesen sind Gebühren und Belege je Auktion, Wiedereröffnung nach
 simulierter neuntägiger Wartung, der deutsche PLZ-Import, die sichere Ersetzung
-einer E2EE-Kontoautorität sowie Installation und Restore auf dem isolierten
-Produktionsimage. Die älteren
+einer E2EE-Kontoautorität, die französische PLZ-Suche mit Quellenanzeige sowie
+Neuinstallation, Update und Restore in der isolierten Ubuntu-Umgebung.
+[Installationsanleitung](UBUNTU_22_04.md) · [Ubuntu-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/44957109960)
+
+Die älteren
 Prozent- und Stundenschätzungen unten stammen aus der Bestandsaufnahme vom
 4. November. Der aktuelle Wiederaufnahmepunkt steht im Fortschrittsprotokoll.
 [Implementierungsfortschritt](IMPLEMENTATION_PROGRESS.md)

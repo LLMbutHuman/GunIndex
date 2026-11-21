@@ -13,15 +13,15 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 ## Schnellstart
 
 Mit einem vorbereiteten Ubuntu-Server, dem geprüften Checkout und einer
-erreichbaren Domain genügen ein Installationsbefehl und der geschützte
-Einrichtungsassistent. Starte den Installer direkt aus dem Checkout und folge
-den Eingabeaufforderungen für den ersten Administrator und seine Authenticator-App.
+erreichbaren Domain startest du die geführte Installation direkt im Terminal.
 
 ```sh
-sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --setup-admin
+sudo ./ops/install-ubuntu-22.04.sh
 ```
 
-Danach zeigt der Installer den Link zu `/admin/setup.php`. Dort stehen die
+Der Installer fragt nach Domain, Zertifikatskontakt und dem ersten
+Administratorkonto mit Authenticator-App. Danach zeigt er den Link zu
+`/admin/setup.php`. Dort stehen die
 verbleibenden Betreiberangaben, Mail- und Rechtsprüfungen sowie die Zustände der
 Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ein.
 

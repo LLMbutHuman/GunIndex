@@ -4,10 +4,12 @@ set -euo pipefail
 umask 077
 usage() {
  cat <<'HELP'
-Usage: sudo ./ops/install-ubuntu-22.04.sh --domain market.your-domain.tld --email admin@your-domain.tld [options]
+Usage: sudo ./ops/install-ubuntu-22.04.sh
+       sudo ./ops/install-ubuntu-22.04.sh --domain market.your-domain.tld --email admin@your-domain.tld [options]
 
 Ubuntu 22.04 amd64. Docker's signed official repository, pinned PHP 8.4/nginx/MySQL.
   --directory DIR  Managed installation directory (default: /srv/gunindex).
+  --guided         Ask for missing domain and email. Prompt for the initial admin on a fresh install.
   --dry-run        Display planned actions only. No root required.
   --prepare-only   Skip certificate provisioning. New sites start with HTTP 503.
   --finish-tls     Configure HTTPS for an existing prepared installation, without rebuilding it.
@@ -18,13 +20,15 @@ Local monitoring starts automatically. No database is reset or overwritten.
 HTTPS needs real DNS and reachable ports 80 and 443.
 HELP
 }
-domain='' email='' directory='/srv/gunindex' dry=0 update=0 prepare=0 finish_tls=0 setup_admin=0 backup_timer=0
+domain='' email='' directory='/srv/gunindex' dry=0 update=0 prepare=0 finish_tls=0 setup_admin=0 backup_timer=0 guided=0
+if (( $# == 0 )); then guided=1; fi
 while [ "$#" -gt 0 ]; do
  case "$1" in
   --help|-h) usage;exit 0;;
   --domain|--email|--directory) [ "$#" -ge 2 ] || { usage >&2;exit 2; };key="$1";value="$2";shift 2;case "$key" in --domain) domain="$value";;--email) email="$value";;--directory) directory="$value";;esac;;
   --dry-run) dry=1;shift;; --update) update=1;shift;; --prepare-only) prepare=1;shift;;
   --finish-tls) finish_tls=1;shift;;
+  --guided) guided=1;shift;;
   --setup-admin) setup_admin=1;shift;;
   --backup-timer) backup_timer=1;shift;;
   *) printf '%s\n' 'Unknown option.' >&2;exit 2;;
@@ -32,6 +36,14 @@ while [ "$#" -gt 0 ]; do
 done
 if (( finish_tls && (update || prepare) )); then
  printf '%s\n' '--finish-tls cannot be combined with --update or --prepare-only.' >&2; exit 2
+fi
+if (( guided )); then
+ if [[ ! -t 0 || ! -t 1 ]]; then
+  printf '%s\n' 'Guided setup needs a terminal. Use --help for explicit options.' >&2; exit 2
+ fi
+ if [[ -z "$domain" ]]; then read -r -p 'Marketplace domain (without https://): ' domain; fi
+ if [[ -z "$email" ]]; then read -r -p 'Certificate contact email: ' email; fi
+ if (( !update && !finish_tls )); then setup_admin=1; fi
 fi
 if ! [[ "$domain" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$ ]] || [[ "$domain" == *example.* || "$domain" == *.invalid || "$domain" == *.test ]];then
  printf '%s\n' 'A real lowercase domain is required; placeholders are not accepted.' >&2;exit 2

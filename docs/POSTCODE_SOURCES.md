@@ -12,9 +12,9 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 8.289 validierte Einträge, null Dubletten, identischer SHA-256 wie unten.
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
-Recherche und lokale Prüfung: 2026-11-01. Die maschinenlesbaren Angaben stehen
-in [postcode-sources.json](postcode-sources.json). Die Datei enthält Quellmetadaten,
-keine automatische Freigabe und keine externen Koordinatendatensätze.
+Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
+Der Installer startet den verifizierten Import für DE und FR nur bei fehlender
+Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
 
 ## Bereitgestellte deutsche Datei
 
@@ -35,7 +35,7 @@ Der Nutzer bestätigt die erforderlichen Rechte an genau dieser Datei. Dies ist
 als **Nutzerangabe** dokumentiert. Ursprünglicher Herausgeber und Erhebungsstand
 sind nicht aus der Datei nachgewiesen. Die Formatprüfung beweist weder vollständige
 deutsche PLZ-Abdeckung noch die tatsächliche Lage oder Aktualität jedes Punktes.
-Ein Datenbankimport wurde in dieser Etappe nicht ausgeführt.
+Der spätere isolierte Datenbankimport ist oben belegt.
 
 ## Wiederholbare Vorprüfung ohne PHP oder Datenbank
 
@@ -139,16 +139,15 @@ Datensätzen muss das konkrete Weitergabemodell geprüft werden. Keine pauschale
 Rechtefreigabe für die kombinierte Datenbank und kein Download in dieser Etappe.
 [Lizenzbedingungen](https://creativecommons.org/licenses/by-sa/4.0/).
 
-### La Poste: zusätzliche französische Primärquelle
+### La Poste: französisches Mutterland
 
-Die offizielle PLZ-Datenbank ordnet PLZ und INSEE-Gemeinden zu und bietet einen
-CSV-Export mit Gemeindezentroiden. Gemeindezentroide sind keine exakten
-PLZ-Mittelpunkte. Die Produktseite nennt „Licence Ouverte / Open Licence“,
-halbjährliche Aktualisierung und zuletzt 2026-10-08. Die Auswahl muss über FR
-hinaus enthaltene Gebiete/Monaco berücksichtigen; vor Import ist eine passende
-Länderzuordnung erforderlich. Die verlinkten Lizenzbedingungen und der konkrete
-CSV-Ausgabestand sind vor Weitergabe gesondert zu dokumentieren.
-[La-Poste-Produktseite](https://data.laposte.fr/datasets/laposte-hexasmal).
+Die verifizierte La-Poste-Ausgabe vom 8. November 2026 enthält
+Gemeindemittelpunkte. GunIndex liefert daraus 6.051 PLZ für das französische
+Mutterland einschließlich Korsika. Die Umwandlung mittelt je PLZ die
+Koordinaten der eindeutig zugeordneten Gemeinden. Die Suchseite nennt
+Herausgeber, Datenstand und Licence Ouverte 2.0. Der isolierte Installer
+bestätigte Datenbankimport und Quellenanzeige.
+[Reproduktion und Lizenz](INTERNATIONAL.md) · [Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956675099)
 
 ## Kontrollierte Aktualisierung
 
@@ -163,6 +162,5 @@ CSV-Ausgabestand sind vor Weitergabe gesondert zu dokumentieren.
 6. Tatsächliche Länder-/PLZ-/Radiussuche testen, Quellenhinweis veröffentlichen,
    Importkennung/Hashes/Datum im Betriebsprotokoll nachtragen.
 
-Diese Aktualisierungsschritte sind ein Betriebsverfahren, kein bereits
-implementierter Download-Scheduler. Aktuell wurde kein externer Datenbestand
-bezogen und keine neue Landesabdeckung aktiviert.
+Neue Stände werden über dieses Betriebsverfahren übernommen. Der Installer
+verwendet die versionierten Bestände und prüft ihre Prüfsummen.

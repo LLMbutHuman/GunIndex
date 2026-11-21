@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-11-01",
-  "automatic_import_enabled": false,
+  "reviewed_on": "2026-11-21",
+  "automatic_import_enabled": true,
+  "automatic_import_policy": "Ubuntu installer seeds pinned DE and FR files only for countries with no import history.",
   "sources": [
     {
       "id": "operator-de-legacy",
@@ -26,7 +27,7 @@
       "independent_license_verification": false,
       "accuracy_verified": false,
       "complete_country_coverage_verified": false,
-      "status": "validated_read_only_not_imported"
+      "status": "bundled_seed_verified_in_isolated_installer"
     },
     {
       "id": "geonames-postcodes",
@@ -73,17 +74,24 @@
     },
     {
       "id": "laposte-postcodes",
-      "country_scope": "France including overseas territories and Monaco; must map to supported countries explicitly",
-      "source_url": "https://data.laposte.fr/datasets/laposte-hexasmal",
-      "license_label_as_published": "Licence Ouverte / Open Licence",
-      "license_review_complete": false,
-      "format": "CSV export with commune centroids available",
-      "update_frequency": "Twice a year, according to publisher",
-      "last_modified_as_published": "2026-10-08",
-      "dataset_date": null,
-      "sha256": null,
-      "constraints": ["Commune centroid is not an exact postcode centroid", "Review linked license version and required attribution before redistribution"],
-      "status": "researched_not_downloaded_not_imported"
+      "countries": ["FR"],
+      "country_scope": "Metropolitan France, including Corsica",
+      "path": "ZIP/PLZ-FR.csv",
+      "publisher": "La Poste",
+      "source_url": "https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux",
+      "export_url": "https://data.laposte.fr/data-fair/api/v1/datasets/laposte-hexasmal/metadata-attachments/base-officielle-codes-postaux.csv",
+      "source_sha256": "fb22ac624d7085b1840061b8090051912d850d276ca7f5e22745b9cd73026a0f",
+      "license": "Licence Ouverte 2.0",
+      "license_url": "https://www.data.gouv.fr/pages/legal/licences/etalab-2-0",
+      "attribution": "La Poste, Base officielle des codes postaux, 2026-11-08",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "dataset_date": "2026-11-08",
+      "dataset_date_evidence": "HTTP Last-Modified of the CSV export",
+      "sha256": "3f9471db1ba4f8e6de2bcb35357a8d4e9ad50e9b24e06ce342bf2f978f020634",
+      "bytes": 241001,
+      "validated_unique_postcodes": 6051,
+      "constraints": ["Monaco and overseas territories excluded", "Approximate points derived from distinct commune centroids"],
+      "status": "bundled_seed_verified_in_isolated_installer"
     }
   ]
 }

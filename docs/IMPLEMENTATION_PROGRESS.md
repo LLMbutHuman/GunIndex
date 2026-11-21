@@ -89,7 +89,12 @@ Probe läuft ohne Mailversand und rollt ihre Datenbankschreibvorgänge zurück.
 Die Ubuntu-Probe führt außerdem ein echtes Installer-Update durch. Sie
 vergleicht den vorherigen und neuen Release und prüft den Erhalt von
 Datenbankzugängen, Verschlüsselungsschlüsseln, Administratorkonto, PLZ-Quellen
-und einer synthetischen privaten Datei.
+und einer synthetischen privaten Datei. Der Ubuntu-Job war erfolgreich.
+[Update-Probe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44957109960)
+
+Der direkte Aufruf ohne Parameter startet die geführte Installation. Die
+Vorschau prüft die Eingaben zu Domain und Zertifikatskontakt über ein Terminal
+und plant auf frischen Installationen die Erstanlage des Administrators ein.
 
 Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
 Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.

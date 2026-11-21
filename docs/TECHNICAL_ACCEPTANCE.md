@@ -109,13 +109,21 @@ Die bereitgestellte deutsche CSV wurde bei der Installationsprobe mit 8.289
 PLZ importiert. Länderauswahl und Umkreissuche sind mit tatsächlichen Koordinaten
 geprüft. [CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
 
+Der ausführbare Installer wurde auf Ubuntu 22.04 mit Neuinstallation und
+In-Place-Update geprüft. Die Probe bestätigt TOTP-Einrichtung, geschützten
+Admin-Assistenten, lokale Timer, den HTTPS-Deploy-Hook mit Prüfzertifikat
+und unveränderte Schlüssel, Konten und private Testdaten beim Update.
+[Ubuntu-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/44957109960)
+Der zusätzliche La-Poste-Import bestand samt Herkunftshinweis im Suchablauf.
+[PLZ-CI](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956675099)
+
 Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
 neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL
 und Chromium geprüft. Alte Anhänge bleiben bei vorhandenen passenden Schlüsseln
 und verifiziertem Manifest lesbar. [CI 44951559532](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)
 
 Zusätzlich offen sind die unabhängige E2EE-Sicherheitsprüfung und Browsermatrix,
-der vollständige Admin-Einrichtungsablauf, weitere Länderimporte mit geprüften
+weitere Länderimporte mit geprüften
 Quellen, die Betriebsabnahme auf dem vorgesehenen Ubuntu-Host einschließlich
 DNS und TLS sowie die fachliche Prüfung mit dem Legal-Team. Alte serverseitige
 Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Non-destructive installer/configuration checks. Never installs on this host."""
-import importlib.util,json,os,subprocess,tempfile,unittest
+import importlib.util,json,os,shlex,subprocess,tempfile,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('production_configure',ROOT/'ops/production/configure.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
@@ -19,6 +19,20 @@ class Installation(unittest.TestCase):
   self.assertEqual(0,result.returncode);self.assertIn(b'No image rebuild or database migration',result.stdout)
   for option in ('--prepare-only','--update'):
    self.assertEqual(2,self.command(*args,option).returncode)
+ def test_guided_setup_requires_a_terminal_before_making_changes(self):
+  result=self.command('--guided','--dry-run')
+  self.assertEqual(2,result.returncode)
+  self.assertIn(b'Guided setup needs a terminal',result.stderr)
+ def test_guided_preview_reads_domain_and_email_through_a_terminal(self):
+  with tempfile.TemporaryDirectory() as temp:
+   target=Path(temp)/'deployment'
+   command=shlex.join(['bash',str(ROOT/'ops/install-ubuntu-22.04.sh'),'--guided','--dry-run','--directory',str(target)])
+   result=subprocess.run(['script','-qec',command,'/dev/null'],input=b'markt.gunindex.eu\noperator@gunindex.eu\n',
+                         stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=15)
+   self.assertEqual(0,result.returncode)
+   self.assertIn(b'Marketplace domain',result.stdout);self.assertIn(b'Certificate contact email',result.stdout)
+   self.assertIn(b'domain=markt.gunindex.eu',result.stdout);self.assertIn(b'setup_admin=1',result.stdout)
+   self.assertFalse(target.exists())
  def test_placeholder_and_injected_domains_are_rejected(self):
   for value in ('example.com','market.invalid','market.test','localhost','a.tld;touch/tmp/unsafe','https://gunindex.eu','gunindex.eu/other'):
    self.assertNotEqual(0,self.command('--domain',value,'--email','operator@gunindex.eu','--dry-run').returncode)
