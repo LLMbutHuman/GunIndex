@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Gemeinsame Admin-Navigation in acht Sprachen, 2026-11-21
+
+Die Administration verwendet lokalisierte Linktexte und zugängliche
+Bereichsnamen. Die vorhandenen Berechtigungsfilter und die Kennzeichnung der
+aktuellen Seite bleiben wirksam. Lokal bestanden 19 Begriffe pro Sprache und
+elf PHP-Syntaxprüfungen. Der isolierte Finanz-HTTP-Test prüft die sichtbare
+Navigation und `aria-current` in allen acht Sprachen.
+
 ## Wiederaufnahmepunkt, 2026-11-21
 
 Die technisch geprüften nummerierten Anforderungen stehen in der aktuellen
@@ -28,6 +36,8 @@ zu einer Warnung.
 Lokal bestanden zwölf Setup-Gruppen, Übersetzungsprüfung in acht Sprachen,
 14 PHP-Syntaxprüfungen und Bash-Syntax. HTTP- und Produktionsimage-Läufe
 prüfen die sichtbaren Statusangaben und den Healthcheck mit sieben Workern.
+Die isolierte Betriebsprobe mit allen sieben Workerzuständen war erfolgreich.
+[CI 44840320988](https://github.com/LLMbutHuman/GunIndex/actions/runs/44840320988)
 
 ## Prüfsummengebundener PLZ-Import, 2026-11-21
 

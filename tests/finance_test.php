@@ -731,6 +731,8 @@ try{
      $copy=i18n_dictionary($locale);
      fin_assert($code===200&&str_contains($page,'<html lang="'.$locale.'"')&&str_contains($page,'<h1>'.h($copy['finance_admin.heading']).'</h1>')
       &&str_contains($page,h($copy['finance_admin.tax_save']))&&str_contains($page,h($copy['finance_admin.reject_request'])));
+     fin_assert(str_contains($page,'aria-label="'.h($copy['admin_nav.sections']).'"')
+      &&str_contains($page,'href="/admin/finance.php" aria-current="page">'.h($copy['admin_nav.finance']).'</a>'));
      [$code,$page]=fin_request($browser,$path,['csrf_token'=>fin_csrf($page),'action'=>'tax','country_code'=>'DE','basis_points'=>'1900X',
       'explanation'=>'Synthetic invalid tax rate regression.','review_confirmed'=>'1']);
      fin_assert($code===422&&str_contains($page,h($copy['finance_admin.tax_invalid'])));
