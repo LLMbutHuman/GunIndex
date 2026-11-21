@@ -24,9 +24,18 @@ if sudo "$compose" exec -T php php ops/create-admin.php; then
     printf '%s\n' 'A second initial administrator was accepted.' >&2
     exit 1
 fi
+initial_release="$(sudo readlink "$directory/current")"
+initial_config="$(sudo sha256sum "$directory/config/app.env" "$directory/config/database.env" "$directory/keys/backup.key")"
+sudo "$compose" exec -T php sh -ec 'printf "%s\n" installer-update-probe > /var/lib/gunindex/private/installer-update-probe.txt'
 sudo test -s "$directory/keys/backup.key"
 sudo find "$directory/backups" -maxdepth 1 -name '*.json' -print -quit | grep -q .
 sudo bash "$directory/current/ops/production/install-timers.sh" "$directory" --with-backup
+sudo "$installer" --domain "$domain" --email "$email" --update --prepare-only
+[[ "$(sudo readlink "$directory/current")" != "$initial_release" ]]
+[[ "$(sudo sha256sum "$directory/config/app.env" "$directory/config/database.env" "$directory/keys/backup.key")" == "$initial_config" ]]
+sudo "$compose" exec -T php grep -qx installer-update-probe /var/lib/gunindex/private/installer-update-probe.txt
+sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM users WHERE is_admin=1")->fetchColumn() === 1 && (int)$pdo->query("SELECT COUNT(*) FROM geo_imports")->fetchColumn() === 2 ? 0 : 1);'
+[[ "$(curl --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1/)" == 503 ]]
 
 # Reject a preparation attempt for a different domain before making certificate changes.
 if sudo "$installer" --domain wrong.gunindex-ci.internal --email "$email" --finish-tls; then

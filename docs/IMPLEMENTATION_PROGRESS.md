@@ -69,6 +69,11 @@ Nicht lesbare oder ungültige Einstellungen werden als Fehler gemeldet. Die
 Probe läuft ohne Mailversand und rollt ihre Datenbankschreibvorgänge zurück.
 [Erfolgreiche Maildiagnose und Installer-Probe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956214430)
 
+Die Ubuntu-Probe führt außerdem ein echtes Installer-Update durch. Sie
+vergleicht den vorherigen und neuen Release und prüft den Erhalt von
+Datenbankzugängen, Verschlüsselungsschlüsseln, Administratorkonto, PLZ-Quellen
+und einer synthetischen privaten Datei.
+
 Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
 Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.
 [Installationsanleitung](UBUNTU_22_04.md)

@@ -79,7 +79,8 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
 
    Wer mit `--prepare-only` begonnen hat, schließt HTTPS später mit denselben
    Domain- und Verzeichniswerten ab. Dabei sind weder Image-Neubau noch
-   Datenbankmigration erforderlich.
+   Datenbankmigration erforderlich. Ein Update mit `--prepare-only` behält
+   eine bereits vorhandene HTTPS-Konfiguration bei.
 
    ```sh
    sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --finish-tls

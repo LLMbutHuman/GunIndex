@@ -9,7 +9,7 @@ Usage: sudo ./ops/install-ubuntu-22.04.sh --domain market.your-domain.tld --emai
 Ubuntu 22.04 amd64. Docker's signed official repository, pinned PHP 8.4/nginx/MySQL.
   --directory DIR  Managed installation directory (default: /srv/gunindex).
   --dry-run        Display planned actions only. No root required.
-  --prepare-only   Start HTTP in ACME-only mode with the marketplace closed.
+  --prepare-only   Skip certificate provisioning. New sites start with HTTP 503.
   --finish-tls     Configure HTTPS for an existing prepared installation, without rebuilding it.
   --setup-admin    Prompt for the first administrator and confirm TOTP on this terminal.
   --backup-timer   Schedule daily verified backup with a brief pause of application writers.
@@ -108,7 +108,12 @@ finish_setup() {
  "$directory/compose.sh" exec -T web nginx -t
  bash "$directory/current/ops/production/install-timers.sh" "$directory" "${timer_options[@]}"
  if (( prepare )); then
-  printf 'Prepared at %s. Use --finish-tls with the same domain and directory once DNS and ports are ready.\n' "$directory"
+  if [[ -s "$directory/tls/fullchain.pem" ]]; then
+   printf 'Updated at %s with the existing HTTPS configuration.\n' "$directory"
+   printf 'Protected setup: https://%s/admin/setup.php\n' "$domain"
+  else
+   printf 'Prepared at %s. Use --finish-tls with the same domain and directory once DNS and ports are ready.\n' "$directory"
+  fi
  else
   enable_https
   printf 'Protected setup: https://%s/admin/setup.php\n' "$domain"
