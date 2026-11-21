@@ -11,6 +11,7 @@ if(isset($_GET['listing_id'])||isset($_GET['user_id'])){
     catch(MarketAccessException){abort_request(403,t('e2ee.error_input'));}
 }
 $pageTitle=t('e2ee.title');$enabled=e2ee_enabled();if(!$enabled)http_response_code(503);
+$staffFactor=$enabled&&auth_requires_mfa($pdo,$user);
 $labels=array_filter(i18n_dictionary(),static fn($key)=>str_starts_with($key,'e2ee.'),ARRAY_FILTER_USE_KEY);
 include __DIR__.'/../includes/header.php';
 ?>
@@ -56,7 +57,7 @@ include __DIR__.'/../includes/header.php';
 <label class="check"><input type="checkbox" id="e2ee-code-saved"> <?=h(t('e2ee.code_saved'))?></label>
 <div id="e2ee-reset-auth" hidden>
 <label class="field" for="e2ee-account-password"><?=h(t('e2ee.account_password'))?><input id="e2ee-account-password" type="password" maxlength="1024" autocomplete="current-password"></label>
-<label class="field" for="e2ee-account-factor"><?=h(t('e2ee.account_factor'))?><input id="e2ee-account-factor" type="password" maxlength="64" autocomplete="off" spellcheck="false"></label>
+<label class="field" for="e2ee-account-factor"><?=h(t($staffFactor?'account.mfa_code':'e2ee.account_factor'))?><input id="e2ee-account-factor" type="password" maxlength="<?=$staffFactor?6:64?>" autocomplete="off" spellcheck="false"<?=$staffFactor?' inputmode="numeric"':''?>></label>
 </div>
 <div class="button-row"><button type="button" class="button" id="e2ee-commit" disabled><?=h(t('e2ee.commit'))?></button><button type="button" class="button secondary" id="e2ee-cancel"><?=h(t('e2ee.cancel'))?></button></div>
 </section></section>

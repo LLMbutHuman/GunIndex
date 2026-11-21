@@ -59,8 +59,9 @@ The account owner can explicitly replace the chat identity after confirming the
 current account password and an enrolled second factor. The reset requires a
 live session, CSRF protection and an exact previous manifest version/hash.
 The browser generates new Ed25519 authority, device and recovery keys. The server
-appends an identity epoch to the existing manifest history. Sessions with a
-privileged staff role require a separate verified step-up flow before using reset.
+appends an identity epoch to the existing manifest history. Staff accounts use a
+verified staff session and a fresh staff authenticator code. The code consumes
+the same replay counter used at staff login.
 
 The new recovery code covers the new identity epoch. The new encrypted recovery
 payload records its start version so that key counts use the epoch while manifest

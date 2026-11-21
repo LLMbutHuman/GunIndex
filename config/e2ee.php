@@ -150,14 +150,27 @@ function e2ee_reset_account_lock(PDO $pdo, array $viewer): array {
     $user = (int)$viewer['id'];
     $query = $pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');
     $query->execute([$user]); $locked = $query->fetch();
-    if (!$locked || (int)$locked['is_active'] !== 1 || (int)$locked['auth_version'] !== (int)$viewer['auth_version']
-        || auth_requires_mfa($pdo,$locked)) throw new MarketAccessException('Identity reset is unavailable for this account.');
+    if (!$locked || (int)$locked['is_active'] !== 1 || (int)$locked['auth_version'] !== (int)$viewer['auth_version']) {
+        throw new MarketAccessException('Identity reset is unavailable for this account.');
+    }
+    if (auth_requires_mfa($pdo,$locked) && (empty($locked['mfa_secret']) || ($_SESSION['admin_mfa_user_id']??null)!==$user)) {
+        throw new MarketAccessException('A staff MFA session is required.');
+    }
     $session = auth_session_key($_SESSION['auth_session_key'] ?? null);
     if ($session === null) throw new MarketAccessException('Current session required.');
     $query = $pdo->prepare('SELECT 1 FROM market_auth_sessions WHERE user_id=? AND token_hash=? AND auth_version=? AND revoked_at IS NULL AND expires_at>UTC_TIMESTAMP() FOR SHARE');
     $query->execute([$user,$session,$locked['auth_version']]);
     if (!$query->fetchColumn()) throw new MarketAccessException('Current session required.');
     return $locked;
+}
+
+/** Verify a fresh staff TOTP with the same replay counter as ordinary staff login. */
+function e2ee_reset_staff_factor(PDO $pdo,array $person,#[SensitiveParameter] string $code): void {
+    $secret=auth_secret_decrypt((string)$person['mfa_secret']);
+    try { $counter=auth_totp_counter($secret,trim($code),$person['mfa_last_counter']===null?-1:(int)$person['mfa_last_counter']); }
+    finally { sodium_memzero($secret); }
+    if ($counter===null) throw new InvalidArgumentException('Identity reset credentials were not verified.');
+    $pdo->prepare('UPDATE users SET mfa_last_counter=? WHERE id=?')->execute([$counter,$person['id']]);
 }
 
 /** Compare underlying v6 Ed25519/X25519 material, independent of armor, timestamps and certification packets. */
@@ -262,8 +275,9 @@ function e2ee_reset_identity(PDO $pdo, array $viewer, #[SensitiveParameter] arra
     try {
         maintenance_assert_market_available($pdo);
         $locked = e2ee_reset_account_lock($pdo,$viewer);
-        $factor = user_totp_state($pdo,$user,true);
-        if ($factor === null) throw new MarketAccessException('Identity reset requires an enrolled second factor.');
+        $staff = auth_requires_mfa($pdo,$locked);
+        $factor = $staff ? null : user_totp_state($pdo,$user,true);
+        if (!$staff && $factor === null) throw new MarketAccessException('Identity reset requires an enrolled second factor.');
         try { user_security_password($locked,$input['password']); }
         catch (InvalidArgumentException) { throw new MarketAccessException('Identity reset credentials were not verified.'); }
 
@@ -281,7 +295,10 @@ function e2ee_reset_identity(PDO $pdo, array $viewer, #[SensitiveParameter] arra
         $recentRetry = $retry && is_array($grant) && $grant['user'] === $user && $grant['auth_version'] === (int)$locked['auth_version']
             && $grant['hash'] === $hash && $grant['until'] >= time();
         if (!$recentRetry) {
-            try { user_totp_check($pdo,$user,$factor,$input['factor']); }
+            try {
+                if ($staff) e2ee_reset_staff_factor($pdo,$locked,$input['factor']);
+                else user_totp_check($pdo,$user,$factor,$input['factor']);
+            }
             catch (InvalidArgumentException) { throw new MarketAccessException('Identity reset credentials were not verified.'); }
         }
         if (!$retry) {

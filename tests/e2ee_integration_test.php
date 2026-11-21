@@ -143,13 +143,18 @@ function eit_token(string $body): string {
     eit_check(preg_match('/name="csrf_token"\s+value="([a-f0-9]{64})"/',$body,$matches)===1,'CSRF in authenticated page');
     return $matches[1];
 }
-function eit_browser(?array $user=null): array {
+function eit_browser(?array $user=null,?string $staffSecret=null): array {
     $curl=curl_init(); eit_check($curl instanceof CurlHandle,'curl init');
     curl_setopt_array($curl,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_COOKIEFILE=>'',CURLOPT_PROXY=>'',CURLOPT_TIMEOUT=>30,CURLOPT_FOLLOWLOCATION=>false]);
     if ($user===null) return ['curl'=>$curl,'csrf'=>''];
     $login=eit_http($curl,'/auth/login.php'); eit_check($login['status']===200,'login form');
     $response=eit_http($curl,'/auth/login.php',['csrf_token'=>eit_token($login['body']),'login'=>$user['username'],'password'=>$user['password']],false);
     eit_check($response['status']===303,'login success');
+    if ($staffSecret!==null) {
+        $challenge=eit_http($curl,'/auth/mfa.php'); eit_check($challenge['status']===200,'staff MFA challenge');
+        $response=eit_http($curl,'/auth/mfa.php',['csrf_token'=>eit_token($challenge['body']),'code'=>auth_totp($staffSecret,intdiv(time(),30))],false);
+        eit_check($response['status']===303,'staff MFA success');
+    }
     $profile=eit_http($curl,'/user/profile.php'); eit_check($profile['status']===200,'authenticated profile');
     return ['curl'=>$curl,'csrf'=>eit_token($profile['body'])];
 }
@@ -561,6 +566,27 @@ try {
         } finally {
             curl_close($browser['curl']);
             sodium_memzero($owner['secret']);
+            if (isset($replacement['secret'])) sodium_memzero($replacement['secret']);
+        }
+    });
+    eit_test('staff_identity_reset_requires_a_fresh_staff_factor',static function()use($pdo):void {
+        $owner=eit_user($pdo,'staff_reset');$secret=random_bytes(20);$browser=null;
+        try {
+            $pdo->prepare('UPDATE users SET is_admin=1,mfa_secret=? WHERE id=?')->execute([auth_secret_encrypt($secret),$owner['id']]);
+            $browser=eit_browser($owner,$secret);
+            eit_accept($owner,$browser,eit_manifest($owner,[eit_device(0)],1));
+            $pair=sodium_crypto_sign_keypair();
+            $replacement=array_replace($owner,['identity'=>base64_encode(sodium_crypto_sign_publickey($pair)),'secret'=>sodium_crypto_sign_secretkey($pair)]);
+            $request=eit_manifest($replacement,[eit_device(2)],3)+['password'=>$owner['password']];
+            $last=(int)eit_scalar($pdo,'SELECT mfa_last_counter FROM users WHERE id=?',[$owner['id']]);
+            eit_post($browser,'reset_identity',$request+['factor'=>auth_totp($secret,$last)],403);
+            $fresh=$request+['factor'=>auth_totp($secret,$last+1)];
+            $accepted=eit_post($browser,'reset_identity',$fresh)['account'];
+            eit_check($accepted['hash']===hash('sha256',$request['manifest'])&&eit_post($browser,'reset_identity',$fresh)['account']===$accepted);
+            eit_check((int)eit_scalar($pdo,'SELECT mfa_last_counter FROM users WHERE id=?',[$owner['id']])===$last+1);
+        } finally {
+            if ($browser) curl_close($browser['curl']);
+            sodium_memzero($secret);sodium_memzero($owner['secret']);
             if (isset($replacement['secret'])) sodium_memzero($replacement['secret']);
         }
     });

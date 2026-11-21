@@ -16,7 +16,9 @@ binden beide aktuellen Manifestversionen. PHP-Syntax, JavaScript-Syntax,
 Sprachparität sowie 13 echte OpenPGP-Testgruppen bestanden lokal. PHP hat
 zusätzlich einen vom Browser-Code generierten neuen Schlüsselstand überprüft.
 Isolierter MySQL-/HTTP-/Chromium-Lauf und Sicherheitsabnahme stehen aus.
-Für privilegierte Konten fehlt der gesonderte Reset mit ihrer bestehenden MFA.
+Privilegierte Konten benötigen zusätzlich eine verifizierte Mitarbeiteranmeldung
+und einen frischen Code, der den bestehenden MFA-Zähler verwendet. Der HTTP-Test
+prüft Ablehnung eines bereits verwendeten Codes und eine idempotente Wiederholung.
 
 ## Gemeinsame Admin-Navigation in acht Sprachen, 2026-11-21
 
