@@ -335,11 +335,32 @@ class MarketplaceHTTP(unittest.TestCase):
         session = customer['browser']
         route = '/admin/privacy.php'
         self.assertEqual(403, session.request(route)[0])
-        reason = 'Synthetic retention request ' + secrets.token_hex(8)
-        self.assertEqual(303, session.request('/user/privacy.php', {
-            'csrf_token': session.token('/user/privacy.php'), 'action': 'delete',
-            'current_password': customer['password'], 'confirm_deactivation': '1', 'reason': reason,
+        account_privacy = '/user/privacy.php'
+        self.assertEqual(303, session.request('/user/language.php', {
+            'csrf_token': session.token(account_privacy), 'locale': 'en', 'market_country': 'DE', 'return_path': account_privacy,
         })[0])
+        self.assertIn('<h1>Your data and account</h1>', session.request(account_privacy)[2])
+        export = {'csrf_token': session.token(account_privacy), 'action': 'export'}
+        status, _, body = session.request(account_privacy, export | {'current_password': 'Synthetic incorrect password'})
+        self.assertEqual(422, status)
+        self.assertIn('Please enter your current password correctly.', body)
+        status, headers, body = session.request(account_privacy, export | {'current_password': customer['password']})
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('attachment', headers['Content-Disposition'])
+        profile = json.loads(body)['profile']
+        self.assertEqual(customer['username'], profile['username'])
+        self.assertNotIn('password_hash', profile)
+        reason = 'Synthetic retention request ' + secrets.token_hex(8)
+        status, headers, _ = session.request(account_privacy, {
+            'csrf_token': session.token(account_privacy), 'action': 'delete',
+            'current_password': customer['password'], 'confirm_deactivation': '1', 'reason': reason,
+        })
+        self.assertEqual(303, status)
+        self.assertEqual('/auth/login.php', headers['Location'])
+        confirmation = 'Your account was deactivated. The operator will review your deletion request.'
+        self.assertIn(confirmation, session.request('/auth/login.php')[2])
+        self.assertNotIn(confirmation, session.request('/auth/login.php?msg=deletion_requested')[2])
 
         browser = self.user(admin=True)['browser']
         titles = {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 function privacy_verify_password(PDO $pdo,int $userId,string $password): array
 {
     $q=$pdo->prepare('SELECT * FROM users WHERE id=? AND is_active=1');$q->execute([$userId]);$user=$q->fetch();
-    if(!$user||strlen($password)>1024||!password_verify($password,(string)$user['password_hash']))throw new DomainException('Das aktuelle Passwort stimmt nicht.');
+    if(!$user||strlen($password)>1024||!password_verify($password,(string)$user['password_hash']))throw new DomainException(t('account.current_password_invalid'));
     return $user;
 }
 
@@ -111,10 +111,10 @@ function verification_decide(PDO $pdo,int $actor,int $id,string $decision,string
 
 function privacy_request_deletion(PDO $pdo,int $userId,string $password,string $reason): void
 {
-    $reason=trim($reason);if(mb_strlen($reason)>2000)throw new InvalidArgumentException('Die Erläuterung ist zu lang.');
+    $reason=trim($reason);if(mb_strlen($reason)>2000)throw new InvalidArgumentException(t('account.privacy_reason_too_long'));
     $pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');$q->execute([$userId]);$user=$q->fetch();
-        if(!$user||!password_verify($password,(string)$user['password_hash'])||(int)$user['is_active']!==1||(int)$user['is_admin']===1)throw new DomainException('Das Konto kann mit diesen Angaben nicht deaktiviert werden. Initiale Administrationskonten benötigen ein getrenntes Übergabeverfahren.');
+        if(!$user||!password_verify($password,(string)$user['password_hash'])||(int)$user['is_active']!==1||(int)$user['is_admin']===1)throw new DomainException(t('account.privacy_deactivation_failed'));
         $pdo->prepare('INSERT INTO market_deletion_requests(user_id,request_reason) VALUES (?,?)')->execute([$userId,$reason]);
         $pdo->prepare('UPDATE users SET is_active=0,auth_version=auth_version+1 WHERE id=?')->execute([$userId]);
         $pdo->prepare("UPDATE market_mail_queue SET status='cancelled',payload_ciphertext='',processing_token=NULL,locked_until=NULL WHERE user_id=? AND status IN ('pending','failed','processing','retry')")->execute([$userId]);

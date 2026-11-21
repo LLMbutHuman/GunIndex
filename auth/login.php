@@ -3,6 +3,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
 if (current_user($pdo)) { redirect('/user/dashboard.php'); }
 $error = ''; $login = '';
+$deletionConfirmed = $_SERVER['REQUEST_METHOD'] === 'GET' && ($_SESSION['privacy_deletion_confirmed'] ?? false) === true;
+if ($deletionConfirmed) unset($_SESSION['privacy_deletion_confirmed']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     try {
@@ -28,6 +30,7 @@ $pageTitle = t('Anmelden'); require __DIR__ . '/../includes/header.php';
 ?>
 <main class="auth-shell container"><section class="panel">
 <p class="eyebrow"><?=h(t('account.login_intro_label'))?></p><h1><?=h(t('account.welcome'))?></h1><p><?=h(t('account.login_intro'))?></p>
+<?php if ($deletionConfirmed): ?><p class="notice success" role="status"><?=h(t('account.privacy_deletion_received'))?></p><?php endif; ?>
 <?php if ($error !== ''): ?><p class="notice error" role="alert"><?= h($error) ?></p><?php endif; ?>
 <form method="post" class="form-grid"><?= csrf_field() ?>
 <label class="field"><?=h(t('account.login_identifier'))?><input name="login" value="<?= h($login) ?>" maxlength="190" autocomplete="username" required></label>

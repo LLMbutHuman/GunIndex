@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Konto- und Datenanfragen
+
+Die Kontoseite erklärt in acht Sprachen den passwortgeschützten Datenexport
+und den Löschantrag mit sofortiger Deaktivierung. Nach dem Antrag erscheint
+eine einmalige Bestätigung in der Sitzung. Der HTTP-Test prüft Export nach
+erneuter Passworteingabe, private Download-Header, Statusmeldung und
+anschließende Bearbeitung durch einen berechtigten Administrator.
+
 ## Moderation und Beschwerden
 
 Die geschützte Moderationsseite zeigt acht Sprachfassungen für Fälle,
