@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Datenschutzprüfung
+
+Die geschützte Seite für Löschanträge zeigt Bearbeitungsstatus,
+Aufbewahrungsprüfung und Ablehnungsgründe in acht Sprachen. Die Bestätigung
+erscheint einmalig nach einer gespeicherten Entscheidung. Der HTTP-Test
+deckt Sprachwechsel, Zugriffsgrenzen, die erforderliche Prüfung vor
+Anonymisierung und einen echten Statuswechsel ab.
+Lokal bestanden elf PHP-Syntaxprüfungen und 19 Übersetzungsschlüssel samt
+Platzhaltern in allen acht Sprachen.
+
 ## Französische Postleitzahlen
 
 Der Installer kann zusätzlich 6.051 Postleitzahlen des französischen
@@ -10,6 +20,9 @@ Bestehende Quellen bleiben bei der Erstbefüllung unberührt. Die Suchseite
 verlinkt Herausgeber und Lizenz, wenn der mitgelieferte Bestand aktiv ist.
 Lokal bestanden der Konverterlauf, die Prüfsumme aller 6.051 Importdatensätze
 und vier PHP-Syntaxprüfungen.
+Der Ubuntu-Lauf bestätigte Import, führende Nullen, Korsika, korrekte
+Quellenanzeige im HTTPS-Suchablauf und den Ausschluss von Monaco und Übersee.
+[Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956675099)
 
 ## Manuelle Zahlungsprüfung in acht Sprachen
 
@@ -54,6 +67,7 @@ Der Monitor liest die verschlüsselte Mailkonfiguration des Admin-Assistenten.
 Eine gültige Konfiguration beseitigt die Warnung für deaktivierte Zustellung.
 Nicht lesbare oder ungültige Einstellungen werden als Fehler gemeldet. Die
 Probe läuft ohne Mailversand und rollt ihre Datenbankschreibvorgänge zurück.
+[Erfolgreiche Maildiagnose und Installer-Probe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956214430)
 
 Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
 Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.

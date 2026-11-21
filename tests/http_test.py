@@ -330,6 +330,47 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(503, self.login(admin)[0])
         self.assertEqual(303, admin['browser'].request('/admin/index.php')[0])
 
+    def test_admin_privacy_review_uses_session_language_and_real_confirmation(self):
+        customer = self.user()
+        session = customer['browser']
+        route = '/admin/privacy.php'
+        self.assertEqual(403, session.request(route)[0])
+        reason = 'Synthetic retention request ' + secrets.token_hex(8)
+        self.assertEqual(303, session.request('/user/privacy.php', {
+            'csrf_token': session.token('/user/privacy.php'), 'action': 'delete',
+            'current_password': customer['password'], 'confirm_deactivation': '1', 'reason': reason,
+        })[0])
+
+        browser = self.user(admin=True)['browser']
+        titles = {
+            'en': 'Privacy requests', 'fr': 'Demandes relatives aux données personnelles',
+            'nl': 'Privacyverzoeken', 'pl': 'Wnioski dotyczące prywatności',
+            'cs': 'Žádosti týkající se ochrany osobních údajů', 'da': 'Anmodninger om personoplysninger',
+            'it': 'Richieste relative ai dati personali', 'de': 'Datenschutzanträge',
+        }
+        for locale, title in titles.items():
+            self.assertEqual(303, browser.request('/user/language.php', {
+                'csrf_token': browser.token(route), 'locale': locale, 'market_country': 'DE', 'return_path': route,
+            })[0])
+            status, headers, body = browser.request(route + '?saved=1')
+            self.assertEqual(200, status)
+            self.assertIn('no-store', headers['Cache-Control'])
+            self.assertIn('<h1>' + title + '</h1>', body)
+            self.assertIn(reason, body)
+            self.assertNotIn('notice success', body)
+
+        section = next(part for part in body.split('</section>') if reason in part)
+        request_id = re.search(r'name="request_id" value="([0-9]+)"', section).group(1)
+        values = dict(csrf_token=browser.token(route), request_id=request_id, decision='anonymized',
+                      reason='Synthetic documented retention review')
+        status, _, body = browser.request(route, values)
+        self.assertEqual(422, status)
+        self.assertIn('betroffene Datensysteme müssen vorab geprüft werden', body)
+        values['decision'] = 'waiting_retention'
+        self.assertEqual(303, browser.request(route, values)[0])
+        self.assertIn('Die Entscheidung wurde dokumentiert.', browser.request(route)[2])
+        self.assertNotIn('Die Entscheidung wurde dokumentiert.', browser.request(route)[2])
+
     def test_totp_success_cannot_be_replayed_in_another_session(self):
         admin = self.user(admin=True, login=False)
         self.assertEqual(303, self.login(admin)[0])

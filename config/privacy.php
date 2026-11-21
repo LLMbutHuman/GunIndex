@@ -128,12 +128,12 @@ function privacy_request_deletion(PDO $pdo,int $userId,string $password,string $
 
 function privacy_review_deletion(PDO $pdo,int $actor,int $requestId,string $decision,string $reason,bool $retentionConfirmed): void
 {
-    governance_assert_actor($pdo,$actor,'privacy.review');$reason=trim($reason);if(!in_array($decision,['waiting_retention','anonymized'],true)||mb_strlen($reason)<20||mb_strlen($reason)>4000)throw new InvalidArgumentException('Bitte eine dokumentierte Aufbewahrungs-/Löschentscheidung angeben.');
-    if($decision==='anonymized'&&!$retentionConfirmed)throw new DomainException('Offene Verträge, gesetzliche Aufbewahrung und betroffene Datensysteme müssen vorab geprüft werden.');
+    governance_assert_actor($pdo,$actor,'privacy.review');$reason=trim($reason);if(!in_array($decision,['waiting_retention','anonymized'],true)||mb_strlen($reason)<20||mb_strlen($reason)>4000)throw new InvalidArgumentException(t('admin_privacy.invalid_decision'));
+    if($decision==='anonymized'&&!$retentionConfirmed)throw new DomainException(t('admin_privacy.review_required'));
     $pdo->beginTransaction();try{
-        $q=$pdo->prepare('SELECT r.*,u.is_admin FROM market_deletion_requests r JOIN users u ON u.id=r.user_id WHERE r.id=? FOR UPDATE');$q->execute([$requestId]);$row=$q->fetch();if(!$row||$row['status']==='anonymized'||(int)$row['is_admin']===1)throw new DomainException('Der Antrag ist nicht für diese Änderung verfügbar.');
+        $q=$pdo->prepare('SELECT r.*,u.is_admin FROM market_deletion_requests r JOIN users u ON u.id=r.user_id WHERE r.id=? FOR UPDATE');$q->execute([$requestId]);$row=$q->fetch();if(!$row||$row['status']==='anonymized'||(int)$row['is_admin']===1)throw new DomainException(t('admin_privacy.unavailable'));
         if($decision==='anonymized'){
-            $q=$pdo->prepare("SELECT COUNT(*) FROM market_listings WHERE seller_id=? AND status IN ('active','review') AND type='auction'");$q->execute([$row['user_id']]);if((int)$q->fetchColumn()>0)throw new DomainException('Offene oder zu prüfende Auktionen müssen zuerst fachlich bearbeitet werden.');
+            $q=$pdo->prepare("SELECT COUNT(*) FROM market_listings WHERE seller_id=? AND status IN ('active','review') AND type='auction'");$q->execute([$row['user_id']]);if((int)$q->fetchColumn()>0)throw new DomainException(t('admin_privacy.open_auctions'));
             $suffix=bin2hex(random_bytes(8));$pdo->prepare("UPDATE users SET username=?,email=?,full_name='',zip='',city='',password_hash=?,mfa_secret=NULL,is_active=0,is_verified=0,auth_version=auth_version+1 WHERE id=?")->execute(['deleted_'.$row['user_id'].'_'.$suffix,'deleted_'.$suffix.'@example.invalid',password_hash(bin2hex(random_bytes(32)),PASSWORD_DEFAULT),$row['user_id']]);
             $pdo->prepare('DELETE FROM market_role_grants WHERE user_id=?')->execute([$row['user_id']]);
             $pdo->prepare('DELETE FROM market_listing_drafts WHERE seller_id=?')->execute([$row['user_id']]);
