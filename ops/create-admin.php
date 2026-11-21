@@ -8,14 +8,16 @@ require_once __DIR__ . '/../config/bootstrap.php';
 function admin_prompt(string $label, bool $hidden = false): string
 {
     if (!function_exists('stream_isatty') || !stream_isatty(STDIN)) { throw new RuntimeException('A trusted interactive terminal is required.'); }
-    fwrite(STDOUT, $label); $terminal = null;
+    $terminal = null;
     if ($hidden) {
-        if (!function_exists('shell_exec')) { throw new RuntimeException('Terminal hiding is unavailable.'); }
+        if (!function_exists('shell_exec') || !function_exists('exec')) { throw new RuntimeException('Terminal hiding is unavailable.'); }
         $terminal = shell_exec('stty -g');
         if (!is_string($terminal) || trim($terminal) === '') { throw new RuntimeException('Cannot read terminal settings.'); }
-        shell_exec('stty -echo');
+        exec('stty -echo', $output, $status);
+        if ($status !== 0) { throw new RuntimeException('Cannot turn off terminal echo.'); }
     }
     try {
+        fwrite(STDOUT, $label);
         $value = fgets(STDIN, 2048);
         if ($value === false) { throw new RuntimeException('Input aborted.'); }
         return rtrim($value, "\r\n");

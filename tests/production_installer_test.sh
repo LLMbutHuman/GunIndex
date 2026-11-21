@@ -17,6 +17,12 @@ for timer in gunindex-monitor.timer gunindex-backup.timer; do
     sudo systemctl is-active --quiet "$timer"
 done
 sudo "$compose" exec -T php php ops/health.php --installation
+sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM geo_locations WHERE country_code = '\''DE'\''")->fetchColumn() === 8289 ? 0 : 1);'
+python3 tests/production_admin_enrollment.py "$compose"
+if sudo "$compose" exec -T php php ops/create-admin.php; then
+    printf '%s\n' 'A second initial administrator was accepted.' >&2
+    exit 1
+fi
 sudo test -s "$directory/keys/backup.key"
 sudo find "$directory/backups" -maxdepth 1 -name '*.json' -print -quit | grep -q .
 sudo bash "$directory/current/ops/production/install-timers.sh" "$directory" --with-backup

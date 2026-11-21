@@ -144,8 +144,10 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    oder Nachrichtentexte in Logs/Tickets kopieren. Die Versandqueue liefert mindestens
    einmal und dedupliziert Anwendungsereignisse; SMTP besitzt keine Exactly-once-Garantie.
 
-10. PLZ-Daten nur mit geprüften Nutzungsrechten lokal importieren. Datenformat,
-    Länderabdeckung und tatsächlichen Importbefehl beschreibt `INTERNATIONAL.md`.
+10. Der Installer importiert die bereitgestellten deutschen PLZ anhand der
+    bestätigten Datei und ihres SHA-256. Der geschützte Länderbereich zeigt die
+    Abdeckung. Bei weiteren Ländern beschreibt `INTERNATIONAL.md` Datenformat
+    und Importbefehl für Quellen mit geprüften Nutzungsrechten.
     Ohne passende Koordinaten darf keine erfundene Entfernung angezeigt werden.
 
 11. Verschlüsseltes Backup und Wiederherstellung in eine **neue** Datenbank proben:

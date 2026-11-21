@@ -61,8 +61,9 @@ if [ "$dry" -eq 1 ];then
   '4. Copy a clean source release without .git, old exports/uploads or runtime secrets.' \
   '5. Build locked PHP8.4-FPM/local Postfix and start private MySQL without host ports.' \
   '6. Bootstrap only an empty database; verify encrypted DB/files backup before migrations.' \
-  '7. Verify database, private storage and worker startup. Start the local health timer.' \
-  '8. Start ACME-only HTTP 503; request real TLS unless --prepare-only.' \
+  '7. Seed the reviewed German postcode file if the country has no import history.' \
+  '8. Verify database, private storage and worker startup. Start the local health timer.' \
+  '9. Start ACME-only HTTP 503; request real TLS unless --prepare-only.' \
   'Fresh installations start with mail delivery and payments disabled.'
  exit 0
 fi
@@ -191,6 +192,15 @@ done
 count="$(mysql_database -e 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()')"
 if [ "$count" = 0 ];then mysql_database < "$release_dir/sql/schema.sql";fi
 python3 "$release_dir/ops/production/backup.py" --directory "$directory" backup
-"$directory/compose.sh" run --rm --no-deps maintenance php ops/migrate.php --backup-confirmed
+"$directory/compose.sh" run --rm -T --no-deps maintenance php ops/migrate.php --backup-confirmed
+postcodes="$release_dir/ZIP/PLZ.csv"
+test -f "$postcodes"
+chmod 0444 "$postcodes"
+"$directory/compose.sh" run --rm -T --no-deps -v "$postcodes:/run/gunindex-postcodes.csv:ro" \
+ maintenance php ops/import-postcodes.php --country=DE --file=/run/gunindex-postcodes.csv --format=legacy-de \
+ --expected-sha256=3f8a041a81caceb948ba30b285ba80281d464cd22fc4a049eba4bebdd8aab59b \
+ --source='German postcode CSV ZIP/PLZ.csv supplied by the GunIndex project owner' \
+ --license-note='Project owner confirmed rights to the exact bundled SHA-256. Original provider and data date are undocumented.' \
+ --license-reviewed --seed-if-empty
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

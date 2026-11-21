@@ -16,6 +16,12 @@ CA-Bündel außerhalb des Build-Kontexts. Der Installer baut die gepinnten
 Images jetzt mit einem gezielt eingebundenen CA-Bündel vor der Update-Pause.
 [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/44955709343)
 
+Die freigegebene Datei `ZIP/PLZ.csv` wird bei einer frischen deutschen
+Datenbasis automatisch importiert. Die transaktionale Wiederholung lässt
+vorhandene und deaktivierte Quellen bestehen. Der lokale Probelauf prüfte den
+SHA-256 und alle 8.289 PLZ ohne Schreibzugriff. Die Betriebsprobe prüft außerdem
+die TOTP-Einrichtung des ersten Administrators über ein isoliertes Terminal.
+
 Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
 Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.
 [Installationsanleitung](UBUNTU_22_04.md)

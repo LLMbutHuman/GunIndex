@@ -57,7 +57,7 @@ fi
 postal_digest=3f8a041a81caceb948ba30b285ba80281d464cd22fc4a049eba4bebdd8aab59b
 import_postcodes=("$compose" run --rm -T --no-deps -v "$release/ZIP/PLZ.csv:/run/gunindex-postcodes.csv:ro"
   maintenance php ops/import-postcodes.php --country=DE --file=/run/gunindex-postcodes.csv --format=legacy-de
-  --source='User-provided German postcode CSV fixture' --license-note='Rights to these bytes affirmed by the owner of the project. Isolated import test.' --license-reviewed)
+  --source='User-provided German postcode CSV fixture' --license-note='Rights to these bytes affirmed by the owner of the project. Isolated import test.' --license-reviewed --seed-if-empty)
 if "${import_postcodes[@]}" --expected-sha256="$(printf '%064d' 0)"; then
   printf '%s\n' 'A mismatching source digest was accepted.' >&2
   exit 1
@@ -65,6 +65,9 @@ fi
 [[ "$(mysql_fixture -e 'SELECT COUNT(*) FROM geo_imports')" == 0 ]]
 "${import_postcodes[@]}" --expected-sha256="$postal_digest"
 "$compose" run --rm -T --no-deps -e GUNINDEX_CI_FIXTURE=postal-reference maintenance php tests/production_postcodes_test.php
+mysql_fixture -e "UPDATE geo_imports SET is_active=0 WHERE country_code='DE'"
+"${import_postcodes[@]}" --expected-sha256="$postal_digest"
+[[ "$(mysql_fixture -e "SELECT CONCAT(COUNT(*),':',SUM(is_active)) FROM geo_imports WHERE country_code='DE'")" == 1:0 ]]
 
 python3 "$release/ops/production/backup.py" --directory "$deployment" restore \
   --manifest "${manifests[0]}" --database gunindex_restore_ci_archive --files-directory "$deployment/restored"

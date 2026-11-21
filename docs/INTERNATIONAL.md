@@ -50,9 +50,13 @@ Nullen, die ausschließlich im expliziten Legacy-DE-Import ergänzt werden. Die
 Datei belegt ihre Nutzungsrechte nicht. Im Fortsetzungsauftrag hat der Nutzer
 ausdrücklich erklärt, die erforderlichen Rechte an diesem Bestand zu besitzen.
 Diese Nutzerangabe gilt nur für diese Datei und ersetzt keinen unabhängigen
-Lizenznachweis für andere Datenquellen. SHA-256 und aktueller Importstatus stehen
-in [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md). Ein tatsächlicher
-Import wurde in der lokalen Windows-Sitzung noch nicht durchgeführt.
+Lizenznachweis für andere Datenquellen. Ursprünglicher Datenanbieter und
+Datenstand sind bei diesem Altbestand nicht belegt. Der Ubuntu-Installer
+importiert die bestätigten Bytes anhand des fest hinterlegten SHA-256, wenn
+für Deutschland noch keine Importhistorie existiert. Bestehende und bewusst
+deaktivierte Quellen bleiben bei Updates erhalten. Der vollständige Datensatz
+mit 8.289 PLZ wurde im isolierten MySQL-Integrationstest geprüft.
+[Fortschritt und Belege](IMPLEMENTATION_PROGRESS.md)
 
 Standardformat für selbst bereitgestellte, rechtmäßig nutzbare UTF-8-Dateien:
 

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit(1);}
 require_once __DIR__.'/../config/geo.php';
-$options=getopt('',['country:','file:','source:','license-note:','license-reviewed','format:','expected-sha256:','dry-run']);
+$options=getopt('',['country:','file:','source:','license-note:','license-reviewed','format:','expected-sha256:','dry-run','seed-if-empty']);
 try{
     if(!is_string($options['country']??null))throw new InvalidArgumentException('An explicit --country code is required.');
     $country=geo_country($options['country']);
@@ -11,7 +11,9 @@ try{
     $source=$options['source']??'';$license=$options['license-note']??'';
     if(!$dry&&(!array_key_exists('license-reviewed',$options)||!is_string($source)||strlen(trim($source))<3||strlen($source)>200||!is_string($license)||strlen(trim($license))<10||strlen($license)>2000||!preg_match('//u',$source.$license)))throw new InvalidArgumentException('A source description, license note and explicit --license-reviewed are required before importing.');
     $expected=$options['expected-sha256']??null;
+    $seed=array_key_exists('seed-if-empty',$options);
     if($expected!==null&&(!is_string($expected)||!preg_match('/\A[0-9a-f]{64}\z/i',$expected)))throw new InvalidArgumentException('Expected a SHA-256 digest of 64 hexadecimal characters.');
+    if($seed&&$expected===null)throw new InvalidArgumentException('An expected SHA-256 digest is required for initial seeding.');
     $input=fopen($file,'rb');if($input===false)throw new InvalidArgumentException('Cannot read CSV.');
     $handle=fopen('php://temp','w+b');if($handle===false){fclose($input);throw new RuntimeException('Cannot store CSV snapshot.');}
     try{$bytes=stream_copy_to_stream($input,$handle,33554433);}finally{fclose($input);}
@@ -35,6 +37,15 @@ try{
     if($dry){fwrite(STDOUT,'Validated '.count($records).' locations for '.$country.'; duplicates: '.$duplicate.'; SHA256 '.$digest.". No database changes.\n");exit(0);}
     require_once __DIR__.'/../config/bootstrap.php';$pdo->beginTransaction();
     $lock=$pdo->prepare('SELECT code FROM market_countries WHERE code=? FOR UPDATE');$lock->execute([$country]);if(!$lock->fetchColumn())throw new RuntimeException('Country schema is missing. Apply migrations first.');
+    if($seed){
+        $existing=$pdo->prepare('SELECT 1 FROM geo_imports WHERE country_code=? LIMIT 1');
+        $existing->execute([$country]);
+        if($existing->fetchColumn()){
+            $pdo->rollBack();
+            fwrite(STDOUT,"Existing sources for $country retained.\n");
+            exit(0);
+        }
+    }
     $q=$pdo->prepare('INSERT INTO geo_imports(country_code,source_name,source_sha256,license_note,license_reviewed,record_count) VALUES (?,?,?,?,1,?)');$q->execute([$country,trim($source),$digest,trim($license),count($records)]);$import=(int)$pdo->lastInsertId();
     $q=$pdo->prepare('INSERT INTO geo_locations(country_code,postal_code,city,latitude,longitude,import_id) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE city=VALUES(city),latitude=VALUES(latitude),longitude=VALUES(longitude),import_id=VALUES(import_id)');
     foreach($records as $postal=>$record)$q->execute([$country,(string)$postal,$record[0],$record[1],$record[2],$import]);
