@@ -162,6 +162,9 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
     stellt nur in ein bisher nicht existierendes Schema/Verzeichnis wieder her.
     Die laufende Anwendung wird niemals automatisch umgeschaltet. APP_KEY und der
     rootgeschützte Archivschlüssel unter `/srv/gunindex/keys/` gehören getrennt verwahrt.
+    Der geschützte Einrichtungsassistent zeigt die Zeitpunkte der letzten lokal
+    verifizierten Sicherung und Wiederherstellung. Die Offsite-Kopie wird am
+    tatsächlichen Ziel geprüft.
 
 12. Offsite-Ziel mit unabhängig geprüftem SSH-Hostschlüssel konfigurieren. Beispiel
     und Grenzen: `MONITORING.md`. Es werden nur verschlüsselte Archive übertragen,

@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Tutti e sette i processi devono aver segnalato un esito positivo recente. Un errore simultaneo o successivo genera un avviso.',
     'setup.workers.next' => 'Controlla i container dei worker e i log privati; esegui ops/health.php sul sistema di destinazione.',
     'setup.backups.title' => 'Backup e ripristino',
-    'setup.backups.detail' => 'Questa pagina non dispone di prove verificate di backup, ripristino o copie fuori sede.',
+    'setup.backups.detail' => 'Backup locale verificato: {backup}. Ripristino su una destinazione separata verificato: {restore}. Verifica la copia esterna e la custodia separata delle chiavi.',
     'setup.backups.next' => 'Crea un backup cifrato, ripristinalo realmente in un ambiente isolato e verifica una copia fuori sede con chiavi conservate separatamente.',
     'setup.monitoring.title' => 'Monitoraggio',
     'setup.monitoring.detail' => 'L’attività dei worker è visibile; la consegna degli avvisi e la disponibilità esterna non vengono testate qui.',

@@ -84,6 +84,25 @@ $tests = [
         setup_assert(setup_step(['mail_transport'=>'sendmail','mail_ready'=>true], 'mail')['status'] === 'external', 'MTA configuration became inbox proof.');
         setup_assert(setup_step(['mail_transport'=>'sendmail','mail_ready'=>true,'mail_failed'=>1], 'mail')['status'] === 'error', 'Mail failure was hidden.');
     },
+    'backup_status_requires_actual_local_evidence' => static function (): void {
+        $file = tempnam(sys_get_temp_dir(), 'setup-op-');
+        if ($file === false) throw new RuntimeException('Test fixture could not be created.');
+        try {
+            $now = 1800000000;
+            file_put_contents($file, ($now + 1)."\n");
+            setup_assert(setup_verified_operation($file, $now) === null, 'Future proof was accepted.');
+            file_put_contents($file, "invalid\n");
+            setup_assert(setup_verified_operation($file, $now) === null, 'Invalid proof was accepted.');
+            file_put_contents($file, $now."\n");
+            $backup = setup_verified_operation($file, $now);
+            setup_assert($backup === gmdate('c', $now), 'Verified local timestamp was rejected.');
+            $facts = ['backup_verified_at'=>$backup];
+            setup_assert(setup_step($facts, 'backups')['status'] === 'configured', 'Backup alone was treated as a restore.');
+            $facts['restore_verified_at'] = $backup;
+            $step = setup_step($facts, 'backups');
+            setup_assert($step['status'] === 'tested' && str_contains($step['detail'], $backup), 'Verified recovery was not shown.');
+        } finally { unlink($file); }
+    },
     'configured_payments_do_not_imply_provider_acceptance' => static function (): void {
         $facts = ['manual_recipient'=>true,'manual_enabled'=>true,'manual_ready'=>true,'paypal_enabled'=>true,'paypal_ready'=>true];
         setup_assert(setup_step($facts, 'paypal')['status'] === 'external', 'Manual configuration proves too much.');

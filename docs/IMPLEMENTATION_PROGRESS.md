@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Sicherung und Wiederherstellung im Einrichtungsassistenten
+
+Der Assistent zeigt Zeitpunkte tatsächlich verifizierter lokaler Backups
+und Wiederherstellungen. Der Backup-Prozess schreibt nur den Zeitpunkt nach
+erfolgreicher Integritätsprüfung in ein schreibgeschützt eingebundenes
+Statusverzeichnis. Der PHP-Container erhält dabei weder Sicherungsinhalt noch
+Archivschlüssel. Der Nachweis einer Offsite-Kopie bleibt eine Prüfung am Ziel.
+Lokal bestanden dreizehn Setup-Gruppen einschließlich Sprachparität und
+Ablehnung fehlender, ungültiger und zukünftiger Zeitstempel.
+
 ## Meldungen und Beschwerden für Kunden
 
 Meldeformular und Fallübersicht sind in allen acht Sprachen verfügbar.

@@ -29,6 +29,14 @@ function setup_private_directory(string $directory, string $webroot): bool
     return $permissions !== false && ($permissions & 0077) === 0;
 }
 
+function setup_verified_operation(string $path, int $now): ?string
+{
+    if (!is_file($path) || is_link($path)) return null;
+    $stamp = @file_get_contents($path, false, null, 0, 32);
+    if (!is_string($stamp) || !preg_match('/\A[1-9][0-9]{0,10}\n\z/', $stamp) || (int)$stamp > $now) return null;
+    return gmdate('c', (int)$stamp);
+}
+
 function setup_collect(PDO $pdo, int $actor): array
 {
     governance_assert_actor($pdo, $actor, 'site.manage');
@@ -85,6 +93,8 @@ function setup_collect(PDO $pdo, int $actor): array
         if (!setup_private_directory($directory, $webroot)) $facts['storage'] = false;
     }
     $now = time();
+    $facts['backup_verified_at'] = setup_verified_operation('/run/gunindex-ops/backup.verified', $now);
+    $facts['restore_verified_at'] = setup_verified_operation('/run/gunindex-ops/restore.verified', $now);
     foreach (worker_heartbeat_limits() as $worker=>$maximum) {
         $base = '/var/lib/gunindex/heartbeats/'.$worker;
         $facts['workers'][$worker] = worker_heartbeat_status(worker_read_heartbeat($base.'.ok'), worker_read_heartbeat($base.'.failed'), $now, $maximum)['ready'];
@@ -142,7 +152,10 @@ function setup_steps(array $facts): array
     $workerReady = true;
     foreach (worker_heartbeat_limits() as $worker=>$maximum) if (($workers[$worker] ?? false) !== true) $workerReady = false;
     $add('workers', $workerReady?'tested':'error');
-    $add('backups', 'external');
+    $backup = $facts['backup_verified_at'] ?? null;
+    $restore = $facts['restore_verified_at'] ?? null;
+    $add('backups', $backup !== null && $restore !== null ? 'tested' : ($backup !== null ? 'configured' : 'external'),
+        ['backup'=>$backup ?? t('setup.unknown'), 'restore'=>$restore ?? t('setup.unknown')]);
     $add('monitoring', 'external');
     $add('tests', 'external');
     $add('acceptance', $yes('database')&&empty($facts['query_errors'])?'external':'error', ['reachable'=>t($yes('database')?'setup.yes':'setup.no')]);

@@ -42,6 +42,7 @@ mysql_fixture < "$release/sql/migrations/038_auction_relisting_outcomes.sql"
 "$compose" run --rm -T --no-deps --entrypoint sh maintenance -c 'printf "%s\n" synthetic-recovery > /var/lib/gunindex/private/recovery-probe.txt'
 
 python3 "$release/ops/production/backup.py" --directory "$deployment" backup
+[[ -s "$deployment/ops-status/backup.verified" && ! -e "$deployment/ops-status/restore.verified" ]]
 shopt -s nullglob
 manifests=("$deployment"/backups/*.json)
 [[ "${#manifests[@]}" == 1 ]]
@@ -72,6 +73,7 @@ mysql_fixture -e "UPDATE geo_imports SET is_active=0 WHERE country_code='DE'"
 python3 "$release/ops/production/backup.py" --directory "$deployment" restore \
   --manifest "${manifests[0]}" --database gunindex_restore_ci_archive --files-directory "$deployment/restored"
 [[ "$(cat "$deployment/restored/private/recovery-probe.txt")" == synthetic-recovery ]]
+[[ -s "$deployment/ops-status/restore.verified" ]]
 "$compose" up -d --no-build php worker
 ready=0
 for ((attempt=0;attempt<45;attempt++)); do
@@ -83,6 +85,7 @@ for ((attempt=0;attempt<45;attempt++)); do
 done
 [[ "$ready" == 1 ]]
 "$compose" exec -T php php ops/health.php --core-only
+"$compose" exec -T php php -r 'require "config/setup.php"; exit(setup_verified_operation("/run/gunindex-ops/backup.verified",time()) && setup_verified_operation("/run/gunindex-ops/restore.verified",time()) && !is_writable("/run/gunindex-ops") ? 0 : 1);'
 bash "$release/ops/production/check-readiness.sh" "$compose"
 "$compose" exec -T -e GUNINDEX_CI_FIXTURE=mail-health php php tests/production_mail_health_test.php
 health_status=0

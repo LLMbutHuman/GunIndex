@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Alle syv processer skal have meldt om succes for nylig. En samtidig eller senere fejl udløser en advarsel.',
     'setup.workers.next' => 'Kontrollér workercontainere og private logfiler; kør ops/health.php på målsystemet.',
     'setup.backups.title' => 'Sikkerhedskopiering og gendannelse',
-    'setup.backups.detail' => 'Denne side har ingen verificeret dokumentation for sikkerhedskopiering, gendannelse eller kopier på en anden lokation.',
+    'setup.backups.detail' => 'Lokal sikkerhedskopi verificeret: {backup}. Gendannelse til et særskilt mål verificeret: {restore}. Kontrollér den eksterne kopi og separat opbevaring af nøgler.',
     'setup.backups.next' => 'Opret en krypteret sikkerhedskopi, gendan den faktisk i et isoleret miljø, og verificér en ekstern kopi med separat opbevarede nøgler.',
     'setup.monitoring.title' => 'Overvågning',
     'setup.monitoring.detail' => 'Workeraktivitet er synlig; levering af alarmer og ekstern tilgængelighed testes ikke her.',

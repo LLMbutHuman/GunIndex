@@ -10,6 +10,7 @@ x-app: &app
   volumes:
     - private:/var/lib/gunindex
     - ${ENV_DIR}/msmtprc:/etc/msmtprc:ro
+    - ${INSTALL_DIR}/ops-status:/run/gunindex-ops:ro
   networks:
     backend: {ipv4_address: "${APP_IP:-172.30.81.10}"}
     frontend: {}

@@ -37,6 +37,9 @@ def configure(directory,domain,email,release,source):
  (config/'compose.env').write_text(compose_env);(config/'compose.env').chmod(0o600)
  for name,mode in (('acme',0o755),('tls',0o710)):
   path=base/name;path.mkdir(mode=mode,exist_ok=True);path.chmod(mode)
+ status=base/'ops-status'
+ if status.is_symlink():raise RuntimeError('The operations status directory must be local.')
+ status.mkdir(mode=0o755,exist_ok=True);status.chmod(0o755)
  if os.geteuid()==0:os.chown(base/'tls',0,101)
  units=config/'systemd';units.mkdir(mode=0o700,exist_ok=True)
  for template in (source/'ops/production').glob('gunindex-*.*'):

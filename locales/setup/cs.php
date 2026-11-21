@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Všech sedm procesů musí mít nedávný signál úspěchu. Souběžná nebo novější chyba vyvolá upozornění.',
     'setup.workers.next' => 'Zkontrolujte kontejnery procesů a soukromé protokoly; na cílovém systému spusťte ops/health.php.',
     'setup.backups.title' => 'Zálohování a obnova',
-    'setup.backups.detail' => 'Tato stránka nemá ověřený důkaz zálohy, obnovy ani kopie mimo hlavní lokalitu.',
+    'setup.backups.detail' => 'Místní záloha ověřena: {backup}. Obnova do odděleného cíle ověřena: {restore}. Prověřte vzdálenou kopii a samostatné uložení klíčů.',
     'setup.backups.next' => 'Vytvořte šifrovanou zálohu, skutečně ji obnovte v izolovaném prostředí a ověřte vzdálenou kopii s odděleně uloženými klíči.',
     'setup.monitoring.title' => 'Monitoring',
     'setup.monitoring.detail' => 'Aktivita procesů je viditelná; doručování upozornění a vnější dostupnost se zde netestují.',

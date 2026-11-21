@@ -4,7 +4,7 @@
 No plaintext SQL is saved. Backup key is mounted only into an ops container.
 Never overwrites a database or switches the application to a restored schema.
 """
-import argparse,datetime,hashlib,hmac,json,os,re,secrets,subprocess,sys,tarfile
+import argparse,contextlib,datetime,hashlib,hmac,json,os,re,secrets,subprocess,sys,tarfile,tempfile,time
 from pathlib import Path
 
 def file_digest(path):
@@ -87,6 +87,22 @@ class Operations:
   signature=self.run(['run','--rm','-T','--no-deps','backup','ops/production/manifest-auth.php'],canonical).decode().strip()
   if not re.fullmatch(r'[a-f0-9]{64}',signature):raise RuntimeError('Manifest authentication failed.')
   return signature
+ def report_verified(self,operation):
+  status=self.base/'ops-status'
+  if not status.is_dir() or status.is_symlink():return
+  temporary=None
+  try:
+   with tempfile.NamedTemporaryFile(mode='w',dir=status,delete=False) as handle:
+    temporary=Path(handle.name)
+    handle.write(str(int(time.time()))+'\n')
+    handle.flush()
+    os.fsync(handle.fileno())
+   temporary.chmod(0o644)
+   temporary.replace(status/(operation+'.verified'))
+  except OSError:
+   with contextlib.suppress(OSError):
+    if temporary is not None:temporary.unlink(missing_ok=True)
+   print('The verified operation could not update its local status marker.',file=sys.stderr)
  def backup(self,maintenance=False,leave_stopped=False):
   running=set(self.run(['ps','--status','running','--services']).decode().splitlines())&{'php','worker'}
   if running and not maintenance:raise RuntimeError('Writers are running. Use --maintenance for a consistent DB/files snapshot.')
@@ -105,6 +121,7 @@ class Operations:
    meta['manifest_hmac']=self.manifest_signature(meta)
    fd=os.open(prefix.with_suffix('.json'),os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
    with os.fdopen(fd,'w') as handle:json.dump(meta,handle,ensure_ascii=False)
+   self.report_verified('backup')
    print('Verified encrypted snapshot: '+str(prefix.with_suffix('.json')))
    return prefix.with_suffix('.json')
   finally:
@@ -153,6 +170,7 @@ class Operations:
    if opened.wait()!=0:raise RuntimeError('Private archive authentication failed.')
   finally:
    if opened.poll() is None:opened.kill();opened.wait()
+  self.report_verified('restore')
   print('Validated fresh restore: '+database+'; private files: '+str(target))
   print('Application was NOT switched. Revoke historical sessions and perform operator acceptance before reopening.')
 
