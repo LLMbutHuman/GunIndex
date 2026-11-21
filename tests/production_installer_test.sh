@@ -18,6 +18,7 @@ for timer in gunindex-monitor.timer gunindex-backup.timer; do
 done
 sudo "$compose" exec -T php php ops/health.php --installation
 sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM geo_locations WHERE country_code = '\''DE'\''")->fetchColumn() === 8289 ? 0 : 1);'
+sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=french-postcodes php php tests/production_french_postcodes_test.php
 python3 tests/production_admin_enrollment.py "$compose"
 if sudo "$compose" exec -T php php ops/create-admin.php; then
     printf '%s\n' 'A second initial administrator was accepted.' >&2
@@ -44,6 +45,7 @@ sudo "$directory/renew-certificate.sh"
 https=(curl --silent --show-error --retry 3 --retry-connrefused --max-time 10
        --cacert "$RUNNER_TEMP/gunindex-test-ca.pem" --resolve "$domain:443:127.0.0.1")
 "${https[@]}" --fail "https://$domain/" -o /dev/null
+"${https[@]}" --fail "https://$domain/marketplace/search.php?country_code=FR&zip=75001&radius_km=10" | grep -F 'Base officielle des codes postaux (2026-11-08)' >/dev/null
 headers="$("${https[@]}" -D - -o /dev/null "https://$domain/admin/setup.php")"
 grep -qi '^location: .*login' <<<"$headers"
 

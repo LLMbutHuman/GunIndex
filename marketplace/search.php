@@ -21,6 +21,10 @@ foreach(['attributes','attribute_min','attribute_max'] as $key){
 }
 $attributeCategory=(int)$filters['category_id'];
 try{$results=market_search($pdo,$filters,(int)$page,24);}catch(InvalidArgumentException $e){http_response_code(422);$error=t($e->getMessage());$results=['items'=>[],'total'=>0];}
+$showFrenchSource = false;
+if ($filters['scope'] === 'international' || in_array('FR', [$filters['country_code'], $filters['origin_country']], true)) {
+    $showFrenchSource = geo_uses_french_seed($pdo);
+}
 $pageTitle=$filters['q']?t('Suche: {query}',['query'=>$filters['q']]):t('Entdecken');
 include __DIR__.'/../includes/header.php';
 ?>
@@ -44,6 +48,7 @@ include __DIR__.'/../includes/header.php';
 <?php if(in_array($attributeCategory,array_column($categories,'id'),true))classification_fields(classification_definitions($pdo,$attributeCategory),$filters,true);?>
 </div>
 <p class="help"><?=h(t('Entfernungen sind ungefähre Luftlinien zwischen PLZ-Mittelpunkten, keine Straßenentfernungen.'))?></p>
+<?php if ($showFrenchSource): ?><p class="help"><a href="https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux">La Poste – Base officielle des codes postaux (2026-11-08)</a> · <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2-0">Licence Ouverte 2.0</a></p><?php endif; ?>
 <p class="help"><?=h(t('Preise werden in EUR angezeigt. Es erfolgt keine automatische Währungsumrechnung.'))?></p>
 </form>
 <?php if($error):?><div class="notice error" role="alert"><?=h($error)?></div><?php endif;?>

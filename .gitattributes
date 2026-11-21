@@ -1,2 +1,4 @@
 # Preserve the exact audited dependency bytes and their SHA256 provenance.
 assets/vendor/openpgp/* -text
+# Installer seeds are verified byte-for-byte on each platform.
+ZIP/PLZ*.csv -text

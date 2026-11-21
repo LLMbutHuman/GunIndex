@@ -1,5 +1,16 @@
 <?php
 declare(strict_types=1);
+
+function geo_uses_french_seed(PDO $pdo): bool
+{
+    $query = $pdo->prepare("SELECT EXISTS(
+        SELECT 1 FROM geo_imports i JOIN market_countries c ON c.code=i.country_code
+        WHERE i.country_code='FR' AND i.source_sha256=? AND i.is_active=1 AND i.license_reviewed=1
+          AND c.is_active=1 AND EXISTS(SELECT 1 FROM geo_locations l WHERE l.import_id=i.id)
+    )");
+    $query->execute(['3f9471db1ba4f8e6de2bcb35357a8d4e9ad50e9b24e06ce342bf2f978f020634']);
+    return (bool)$query->fetchColumn();
+}
 /** Local geographic data only; postcode centroids are not exact addresses. */
 function geo_countries(): array {
     $names=['DE'=>'Deutschland','AT'=>'Österreich','CH'=>'Schweiz','FR'=>'Frankreich','BE'=>'Belgien','NL'=>'Niederlande','LU'=>'Luxemburg','DK'=>'Dänemark','PL'=>'Polen','CZ'=>'Tschechien','LI'=>'Liechtenstein'];

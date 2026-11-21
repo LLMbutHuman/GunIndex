@@ -58,6 +58,37 @@ deaktivierte Quellen bleiben bei Updates erhalten. Der vollständige Datensatz
 mit 8.289 PLZ wurde im isolierten MySQL-Integrationstest geprüft.
 [Fortschritt und Belege](IMPLEMENTATION_PROGRESS.md)
 
+### Frankreich
+
+Der Installer enthält `ZIP/PLZ-FR.csv` mit 6.051 Postleitzahlen aus dem
+Mutterland einschließlich Korsika. Monaco und Übersee sind aus diesem Bestand
+ausgeschlossen. Herausgeber ist La Poste. Der verwendete UTF-8-Export enthält
+Gemeindecodes, PLZ, Zustellbezeichnungen und Gemeindemittelpunkte. Sein Stand
+ist der **8. November 2026** laut HTTP-`Last-Modified` der Exportdatei.
+[La Poste bei data.gouv.fr](https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux) · [Licence Ouverte 2.0](https://www.data.gouv.fr/pages/legal/licences/etalab-2-0)
+
+Bei mehreren Gemeinden pro PLZ mittelt der Konverter die Koordinaten
+eindeutiger Gemeinden und verwendet die häufigste hinterlegte
+Zustellbezeichnung. Dieser abgeleitete Punkt eignet sich zur ungefähren
+Umkreissuche. La Poste stellt hier Gemeindemittelpunkte bereit. Die Suchseite
+verlinkt Quelle, Datenstand und Lizenz, solange der Seed verwendet wird.
+
+Zur Aktualisierung den [La-Poste-Export herunterladen](https://data.laposte.fr/data-fair/api/v1/datasets/laposte-hexasmal/metadata-attachments/base-officielle-codes-postaux.csv),
+Datenstand und Lizenz prüfen und Eingabe- und Ausgabedigest neu ermitteln.
+Der folgende Befehl reproduziert den gegenwärtigen Bestand in einer neuen Datei.
+
+```sh
+php ops/prepare-fr-postcodes.php --file=/private/la-poste.csv --output=/private/PLZ-FR.csv \
+  --expected-source-sha256=fb22ac624d7085b1840061b8090051912d850d276ca7f5e22745b9cd73026a0f
+php ops/import-postcodes.php --country=FR --file=/private/PLZ-FR.csv --dry-run \
+  --expected-sha256=3f9471db1ba4f8e6de2bcb35357a8d4e9ad50e9b24e06ce342bf2f978f020634
+```
+
+Ein neuer Stand erfordert aktualisierte Prüfsummen und Quellenangaben im
+Installer und in der Suchseite. Bestehende Datenbanken behalten ihre
+Importhistorie. Einen dort gewünschten neuen Stand kontrolliert über das
+Standardformat importieren.
+
 Standardformat für selbst bereitgestellte, rechtmäßig nutzbare UTF-8-Dateien:
 
 ```text

@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Französische Postleitzahlen
+
+Der Installer kann zusätzlich 6.051 Postleitzahlen des französischen
+Mutterlands inklusive Korsika einsetzen. Sie stammen aus dem La-Poste-Export
+vom 8. November 2026. Geprüfte Hashes, reproduzierbare Umwandlung,
+Abdeckungsgrenzen und Quellennennung stehen in [INTERNATIONAL.md](INTERNATIONAL.md).
+Bestehende Quellen bleiben bei der Erstbefüllung unberührt. Die Suchseite
+verlinkt Herausgeber und Lizenz, wenn der mitgelieferte Bestand aktiv ist.
+Lokal bestanden der Konverterlauf, die Prüfsumme aller 6.051 Importdatensätze
+und vier PHP-Syntaxprüfungen.
+
 ## Manuelle Zahlungsprüfung in acht Sprachen
 
 Die geschützte Prüfseite lokalisiert Empfängerkonto, Zahlungsstatus,
@@ -34,6 +45,10 @@ Datenbasis automatisch importiert. Die transaktionale Wiederholung lässt
 vorhandene und deaktivierte Quellen bestehen. Der lokale Probelauf prüfte den
 SHA-256 und alle 8.289 PLZ ohne Schreibzugriff. Die Betriebsprobe prüft außerdem
 die TOTP-Einrichtung des ersten Administrators über ein isoliertes Terminal.
+Beide Betriebsjobs bestanden einschließlich TOTP-Anlage, Ablehnung eines
+zweiten Erstkontos, bestätigtem PLZ-Bestand und Schutz einer deaktivierten
+Quelle vor erneuter Erstbefüllung.
+[Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956070324)
 
 Der Monitor liest die verschlüsselte Mailkonfiguration des Admin-Assistenten.
 Eine gültige Konfiguration beseitigt die Warnung für deaktivierte Zustellung.
