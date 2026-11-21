@@ -7,13 +7,15 @@ und geprüft, 7 technisch umgesetzt mit externer Abnahme und 2 technisch offen
 oder teilweise umgesetzt**. Die offenen Nummern sind 5, vollständige
 Übersetzungen, und 26, die reale Treuhandanbindung. Die Zählung gilt für die
 nummerierte Liste. Weitere Anforderungen umfassen die unabhängige E2EE-Abnahme,
-den Wechsel einer kompromittierten E2EE-Kontoautorität, den Admin-Assistenten,
-zusätzliche Länderquellen und Betriebsabnahme auf dem vorgesehenen Server.
+Vervollständigung des Admin-Assistenten, zusätzliche Länderquellen und die
+Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
+fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
 [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
 
 Neu nachgewiesen sind Gebühren und Belege je Auktion, Wiedereröffnung nach
-simulierter neuntägiger Wartung, der deutsche PLZ-Import sowie ein isolierter
-Installations- und Restore-Lauf auf dem Produktionsimage. Die älteren
+simulierter neuntägiger Wartung, der deutsche PLZ-Import, die sichere Ersetzung
+einer E2EE-Kontoautorität sowie Installation und Restore auf dem isolierten
+Produktionsimage. Die älteren
 Prozent- und Stundenschätzungen unten stammen aus der Bestandsaufnahme vom
 4. November. Der aktuelle Wiederaufnahmepunkt steht im Fortschrittsprotokoll.
 [Implementierungsfortschritt](IMPLEMENTATION_PROGRESS.md)

@@ -109,10 +109,15 @@ Die bereitgestellte deutsche CSV wurde bei der Installationsprobe mit 8.289
 PLZ importiert. Länderauswahl und Umkreissuche sind mit tatsächlichen Koordinaten
 geprüft. [CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)
 
-Zusätzlich offen sind die vollständige E2EE-Abnahme und der Wechsel einer
-kompromittierten Kontoautorität, der vollständige Admin-Einrichtungsablauf,
-weitere Länderimporte mit geprüften Quellen, die Betriebsabnahme auf dem vorgesehenen Ubuntu-
-Host einschließlich DNS und TLS sowie die Legal-Team-Übergabe. Alte serverseitige
+Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
+neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL
+und Chromium geprüft. Alte Anhänge bleiben bei vorhandenen passenden Schlüsseln
+und verifiziertem Manifest lesbar. [CI 44951559532](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)
+
+Zusätzlich offen sind die unabhängige E2EE-Sicherheitsprüfung und Browsermatrix,
+der vollständige Admin-Einrichtungsablauf, weitere Länderimporte mit geprüften
+Quellen, die Betriebsabnahme auf dem vorgesehenen Ubuntu-Host einschließlich
+DNS und TLS sowie die fachliche Prüfung mit dem Legal-Team. Alte serverseitige
 Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md
 getrennt beschrieben. Neue Sprachmodule sind nicht mit einer
 vollständigen Übersetzung sämtlicher Seiten gleichzusetzen.

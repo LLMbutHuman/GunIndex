@@ -202,7 +202,7 @@ Linux job 132611100770: complete pass, including existing regression suite.
 | A | Interrupted delivery, locked plaintext lifecycle, cross-tab trust state | Real lost-response retry without duplicate row; manual lock aborts stalled HTTP; old tab cannot lower a newer persisted pin |
 | A | Server/file confidentiality and permissions | Canary checks for plaintext/private material; private downloads, quotas, CAS, access failures, export and legacy preservation |
 | B | Production assurance | Independent crypto/application review, additional supported browsers and actual target-server backup/restore |
-| C | Compromised account authority replacement | Explicit account reset, re-verification and historical trust anchors implemented for enrolled customer accounts. Local real OpenPGP tests passed; MySQL, Chromium and independent security acceptance pending for this change |
+| A | Compromised account authority replacement | Customer and staff MFA, prior-key archive, independent re-verification and renewed recovery passed in CI with 13 crypto groups, 17 HTTP/MySQL groups and 20 Chromium checks. [Run 44951559532](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532) |
 
 The earlier failed browser run 43436883236 identified mobile overflow from a long
 participant name; this was corrected and the entire subsequent run passed.

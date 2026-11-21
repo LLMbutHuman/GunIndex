@@ -166,7 +166,8 @@ Betreiberentschlüsselung möglich. Für eine kompromittierte Kontoautorität gi
 es einen ausdrücklichen Austausch mit Kontopasswort und zweitem Faktor.
 Vor neuen Nachrichten müssen Kontakte den neuen Fingerabdruck prüfen. Ältere
 Nachrichten benötigen passende alte Schlüssel und eine verifizierte Historie.
-Die Sicherheitsabnahme dieser Erweiterung steht aus. [E2EE-Protokoll](E2EE_PROTOCOL.md)
+Der isolierte Browserlauf hat den Ablauf bestätigt. Die unabhängige Sicherheits-
+und Betriebsabnahme stehen aus. [E2EE-Protokoll](E2EE_PROTOCOL.md) · [CI 44951559532](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)
 Identitätsprüfung hat eigene deaktivierte Freigaben und Aufbewahrungseinstellungen.
 E-Mail-Bestätigung beweist weder Identität noch Erwerbsberechtigung. Der geschützte
 Mail-Assistent unterstützt lokalen Versand und TLS-Relay. Die tatsächliche

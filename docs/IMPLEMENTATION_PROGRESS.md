@@ -7,8 +7,10 @@ Mitarbeiterkonto. Beispielsweise bleiben PLZ-Importe in der Übersicht sichtbar.
 Die Oberfläche kennzeichnet solche Zeilen als Systemereignisse, behandelt
 Protokolldaten als Text und liefert die Übersicht mit privater Cache-Sperre aus.
 
-Elf PHP-Syntaxprüfungen bestanden lokal. Der isolierte HTTP-Lauf prüft
+Elf PHP-Syntaxprüfungen bestanden lokal. Der isolierte HTTP-Lauf bestätigte
 Sprachwechsel, Darstellung eines Systemereignisses und Ablehnung von POST.
+Beide CI-Jobs einschließlich der vollständigen Chromium-Regression bestanden.
+[CI 44951839888](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951839888)
 
 ## Austausch einer kompromittierten E2EE-Kontoautorität, 2026-11-21
 
@@ -30,7 +32,11 @@ Prüfungen bestanden. [Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/ac
 Der erste Chromium-Lauf stoppte an der Sprachannahme für das dritte Gerät.
 Das Gerät war zuvor mit dem noch italienischen Kontoprofil angemeldet worden.
 Der Test setzt seine Sprache explizit. [Erster Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/44950707264)
-Die erneute Chromium-Prüfung und unabhängige Sicherheitsabnahme stehen aus.
+Die vollständige Wiederholung bestand mit 13 OpenPGP-, 17 PHP/MySQL- und
+20 Chromium-Gruppen. Chromium bestätigte den Austausch, das Öffnen des alten
+Anhangs, die erneute Kontaktprüfung, die Sperre vor der Prüfung und die
+Wiederherstellung auf einem weiteren Gerät. Die unabhängige Sicherheitsabnahme
+steht aus. [Erfolgreicher CI-Lauf 44951559532](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)
 Privilegierte Konten benötigen zusätzlich eine verifizierte Mitarbeiteranmeldung
 und einen frischen Code, der den bestehenden MFA-Zähler verwendet. Der HTTP-Test
 prüft Ablehnung eines bereits verwendeten Codes und eine idempotente Wiederholung.
@@ -46,17 +52,18 @@ Beide CI-Jobs waren erfolgreich. [CI 44841239433](https://github.com/LLMbutHuman
 
 ## Wiederaufnahmepunkt, 2026-11-21
 
-Die technisch geprüften nummerierten Anforderungen stehen in der aktuellen
-Abnahmematrix. Offene Nummern sind die vollständige Sprachabdeckung und die
-reale Treuhandanbindung. Die letzten isolierten Nachweise betreffen Gebühren,
-Restlaufzeiten, Produktionstest und Deutschland-PLZ. Der Code für die neue
-Admin- und Workerdiagnose liegt in `e48d0e3`.
+Die Abnahmematrix zählt 17 technisch geprüfte, sieben extern zu prüfende und
+zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Die beiden
+offenen Nummern betreffen die vollständige Sprachabdeckung und einen realen
+Treuhandadapter. Der Identitätswechsel im Chat ist ab `b4cf0d2` in der isolierten
+Regression bestätigt. Die Änderung `71cfb65` erweitert das Auditprotokoll.
 
-Als Nächstes die laufenden Prüfungen für `e48d0e3` verifizieren. Danach den
-sicheren Ersatz einer kompromittierten E2EE-Kontoautorität mit erneuter
-Peer-Verifikation und historischer Prüfung umsetzen. Weitere Altseiten und
-Admin-Texte können parallel lokalisiert werden. Reale Treuhand, zusätzliche
-Länderquellen und Zielsystemabnahme haben externe Voraussetzungen.
+Als Nächstes die übrigen Finanz-, Moderations- und Datenschutzmasken sowie
+Konto-/Supporttexte lokalisieren. Der Einstieg ist `/admin/payments.php`.
+Rechtsfassungen benötigen fachliche Freigabe. Reale Treuhand, zusätzliche
+Länderquellen, unabhängige E2EE-Sicherheitsprüfung und Zielsystemabnahme haben
+externe Voraussetzungen. Die erneute Windows-Prüfung fand keine installierte
+WSL-Distribution und keinen lokalen Docker-Desktop-Dienst.
 [Abnahmematrix](TECHNICAL_ACCEPTANCE.md) · [Legal-Team](LEGAL_HANDOFF.md)
 
 ## Zahlungs- und Workerdiagnose im Admin-Setup, 2026-11-21
