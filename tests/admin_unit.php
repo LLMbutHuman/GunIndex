@@ -9,6 +9,23 @@ function admin_invalid(callable $operation): void {
     throw new RuntimeException('Unsafe setting was accepted.');
 }
 $tests = [
+    'settings_forms_have_matching_localized_fields_and_errors' => static function (): void {
+        $base = require __DIR__ . '/../locales/admin_settings/de.php';
+        admin_assert(count($base) === 70, 'Settings catalogue coverage changed.');
+        foreach (i18n_locales() as $locale=>$label) {
+            $catalog = require __DIR__ . '/../locales/admin_settings/' . $locale . '.php';
+            $dictionary = i18n_dictionary($locale);
+            admin_assert(array_keys($base) === array_keys($catalog), 'Settings translation keys differ.');
+            foreach ($base as $key=>$text) {
+                preg_match_all('/\{[a-z_]+\}/', $text, $sourceParameters);
+                preg_match_all('/\{[a-z_]+\}/', $catalog[$key], $targetParameters);
+                admin_assert($sourceParameters === $targetParameters && $dictionary[$key] === $catalog[$key], 'Settings translation is incomplete.');
+            }
+            foreach (site_setting_definitions() as $definition) {
+                admin_assert(isset($dictionary[$definition['label']]), 'Undefined settings field label.');
+            }
+        }
+    },
     'active_parent_controls_child' => static function (): void {
         $rows = [1 => ['parent_id' => null, 'name' => 'Outdoor', 'is_active' => 1], 2 => ['parent_id' => 1, 'name' => 'Camping', 'is_active' => 1]];
         admin_assert(catalog_row_allowed($rows, 2), 'Ordinary active child must be available.');

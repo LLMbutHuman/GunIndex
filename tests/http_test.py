@@ -330,6 +330,26 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(503, self.login(admin)[0])
         self.assertEqual(303, admin['browser'].request('/admin/index.php')[0])
 
+    def test_admin_roles_localizes_mfa_requirement_without_advancing_state(self):
+        subject = self.user()
+        route = '/admin/roles.php'
+        self.assertEqual(403, subject['browser'].request(route)[0])
+        browser = self.user(admin=True)['browser']
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        status, headers, body = browser.request(route + '?saved=1')
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Roles and permissions</h1>', body)
+        self.assertNotIn('Role change saved.', body)
+        payload = {'user_id': subject['id'], 'role': 'support', 'action': 'grant'}
+        self.assertEqual(403, browser.request(route, payload)[0])
+        status, _, body = browser.request(route, payload | {'csrf_token': browser.token(route)})
+        self.assertEqual(422, status)
+        self.assertIn('have two-factor authentication enabled before you can assign a staff role', body)
+        self.assertEqual(403, subject['browser'].request('/admin/privacy.php')[0])
+
     def test_admin_privacy_review_uses_session_language_and_real_confirmation(self):
         customer = self.user()
         session = customer['browser']
@@ -464,6 +484,17 @@ class MarketplaceHTTP(unittest.TestCase):
         browser = admin['browser']
         route = '/admin/settings.php'
         original = self.settings(admin)
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': original['csrf_token'], 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        status, headers, body = browser.request(route)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Brand and website</h1>', body)
+        self.assertIn('Verified PayPal recipient account', body)
+        status, _, body = browser.request(route, original | {'accent': 'invalid'})
+        self.assertEqual(422, status)
+        self.assertIn('Check “Accent colour”.', body)
         key = 'legal_existing_account_required'
         self.assertIn(key, original)
         try:

@@ -1,56 +1,57 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/i18n.php';
 
 function site_setting_definitions(): array
 {
     return [
-        'brand_name' => ['type' => 'text', 'default' => 'GunIndex.eu', 'label' => 'Name der Website', 'max' => 60, 'min' => 2],
-        'tagline' => ['type' => 'text', 'default' => 'Gute Dinge. Neue Geschichten.', 'label' => 'Kurzer Markenclaim', 'max' => 120, 'min' => 0],
-        'hero_title' => ['type' => 'text', 'default' => 'Besonderes finden. Neues möglich machen.', 'label' => 'Startseitenüberschrift', 'max' => 120, 'min' => 2],
-        'hero_text' => ['type' => 'text', 'default' => 'Besondere Fundstücke, ehrliche Angebote und spannende Auktionen für deinen Alltag.', 'label' => 'Startseitentext', 'max' => 500, 'min' => 0],
-        'accent' => ['type' => 'color', 'default' => '#35e6bd', 'label' => 'Akzentfarbe'],
-        'secondary' => ['type' => 'color', 'default' => '#ffb86c', 'label' => 'Zweite Akzentfarbe'],
-        'animation_mode' => ['type' => 'animation', 'default' => 'full', 'label' => 'Bewegung und Animationen'],
+        'brand_name' => ['type' => 'text', 'default' => 'GunIndex.eu', 'label' => 'admin_settings.field.brand_name', 'max' => 60, 'min' => 2],
+        'tagline' => ['type' => 'text', 'default' => 'Gute Dinge. Neue Geschichten.', 'label' => 'admin_settings.field.tagline', 'max' => 120, 'min' => 0],
+        'hero_title' => ['type' => 'text', 'default' => 'Besonderes finden. Neues möglich machen.', 'label' => 'admin_settings.field.hero_title', 'max' => 120, 'min' => 2],
+        'hero_text' => ['type' => 'text', 'default' => 'Besondere Fundstücke, ehrliche Angebote und spannende Auktionen für deinen Alltag.', 'label' => 'admin_settings.field.hero_text', 'max' => 500, 'min' => 0],
+        'accent' => ['type' => 'color', 'default' => '#35e6bd', 'label' => 'admin_settings.field.accent'],
+        'secondary' => ['type' => 'color', 'default' => '#ffb86c', 'label' => 'admin_settings.field.secondary'],
+        'animation_mode' => ['type' => 'animation', 'default' => 'full', 'label' => 'admin_settings.field.animation_mode'],
         'maintenance_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'maintenance.enable'],
-        'seo_indexing_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'Öffentliche Suchmaschinenindexierung freigeben'],
-        'registration_enabled' => ['type' => 'boolean', 'default' => '1', 'label' => 'Neue Registrierungen erlauben'],
-        'contact_email' => ['type' => 'email', 'default' => '', 'label' => 'Öffentliche Kontakt-E-Mail'],
-        'manual_paypal_enabled' => ['type'=>'boolean','default'=>'0','label'=>'Manuelle PayPal-Zahlungsaufträge anbieten'],
-        'manual_paypal_recipient' => ['type'=>'email','default'=>'','label'=>'Geprüftes PayPal-Empfängerkonto'],
-        'manual_paypal_approved' => ['type'=>'boolean','default'=>'0','label'=>'Geschäftliche Zahlungen und Zahlungsbutton sind für mein Konto und diesen Zweck zulässig'],
-        'manual_tax_reviewed' => ['type'=>'boolean','default'=>'0','label'=>'Steuerbehandlung und Bestellbedingungen sind fachlich geprüft'],
-        'manual_tax_bps' => ['type'=>'tax','default'=>'0','label'=>'Geprüfter Umsatzsteuersatz in Basispunkten (1900 entspricht 19 %)'],
-        'business_promotions_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Premiumplätze und Händlerwerbung anbieten'],
-        'dealer_profiles_enabled'=>['type'=>'boolean','default'=>'1','label'=>'Händlerprofile erlauben'],
-        'business_reservation_minutes'=>['type'=>'integer','default'=>'1440','label'=>'Reservierungsdauer für manuelle Zahlungen (Minuten)','min_value'=>15,'max_value'=>2880],
-        'verification_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Identitätsprüfung anbieten'],
-        'verification_review_approved'=>['type'=>'boolean','default'=>'0','label'=>'Identitätsprüfung und Aufbewahrung sind fachlich freigegeben'],
-        'verification_retention_days'=>['type'=>'integer','default'=>'0','label'=>'Geprüfte Aufbewahrungsdauer der Identitätsbilder (Tage)','min_value'=>0,'max_value'=>90],
-        'privacy_contact_email'=>['type'=>'email','default'=>'','label'=>'Kontakt für Datenschutzanfragen'],
-        'legal_publication_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Explizit geprüfte Rechtsdokumente veröffentlichen'],
+        'seo_indexing_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'admin_settings.field.seo_indexing_enabled'],
+        'registration_enabled' => ['type' => 'boolean', 'default' => '1', 'label' => 'admin_settings.field.registration_enabled'],
+        'contact_email' => ['type' => 'email', 'default' => '', 'label' => 'admin_settings.field.contact_email'],
+        'manual_paypal_enabled' => ['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.manual_paypal_enabled'],
+        'manual_paypal_recipient' => ['type'=>'email','default'=>'','label'=>'admin_settings.field.manual_paypal_recipient'],
+        'manual_paypal_approved' => ['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.manual_paypal_approved'],
+        'manual_tax_reviewed' => ['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.manual_tax_reviewed'],
+        'manual_tax_bps' => ['type'=>'tax','default'=>'0','label'=>'admin_settings.field.manual_tax_bps'],
+        'business_promotions_enabled'=>['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.business_promotions_enabled'],
+        'dealer_profiles_enabled'=>['type'=>'boolean','default'=>'1','label'=>'admin_settings.field.dealer_profiles_enabled'],
+        'business_reservation_minutes'=>['type'=>'integer','default'=>'1440','label'=>'admin_settings.field.business_reservation_minutes','min_value'=>15,'max_value'=>2880],
+        'verification_enabled'=>['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.verification_enabled'],
+        'verification_review_approved'=>['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.verification_review_approved'],
+        'verification_retention_days'=>['type'=>'integer','default'=>'0','label'=>'admin_settings.field.verification_retention_days','min_value'=>0,'max_value'=>90],
+        'privacy_contact_email'=>['type'=>'email','default'=>'','label'=>'admin_settings.field.privacy_contact_email'],
+        'legal_publication_enabled'=>['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.legal_publication_enabled'],
         'legal_registration_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.registration_codes','max'=>809],
         'legal_existing_account_required'=>['type'=>'boolean','default'=>'0','label'=>'account_consent.required_setting'],
         'legal_checkout_documents'=>['type'=>'document_codes','default'=>'','label'=>'consent.checkout_codes','max'=>809],
-        'finance_enabled'=>['type'=>'boolean','default'=>'0','label'=>'Unveränderliche Rechnungsdokumente ausstellen'],
+        'finance_enabled'=>['type'=>'boolean','default'=>'0','label'=>'admin_settings.field.finance_enabled'],
         'auction_fees_enabled'=>['type'=>'boolean','default'=>'0','label'=>'auction_billing.enabled'],
         'auction_fees_approved'=>['type'=>'boolean','default'=>'0','label'=>'auction_billing.approved'],
-        'operator_legal_name'=>['type'=>'text','default'=>'','label'=>'Rechtlicher Betreibername','min'=>0,'max'=>150],
-        'operator_address_line1'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Straße und Hausnummer','min'=>0,'max'=>150],
-        'operator_address_line2'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Zusatz','min'=>0,'max'=>150],
-        'operator_postcode'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Postleitzahl','min'=>0,'max'=>16],
-        'operator_city'=>['type'=>'text','default'=>'','label'=>'Betreiberanschrift: Ort','min'=>0,'max'=>100],
-        'operator_country'=>['type'=>'country','default'=>'DE','label'=>'Land des Betreibers'],
-        'operator_email'=>['type'=>'email','default'=>'','label'=>'Kontakt-E-Mail des Betreibers'],
-        'operator_vat_id'=>['type'=>'text','default'=>'','label'=>'Umsatzsteuer-ID (falls vorhanden)','min'=>0,'max'=>40],
-        'operator_tax_number'=>['type'=>'text','default'=>'','label'=>'Steuernummer für Rechnungen (falls erforderlich)','min'=>0,'max'=>50],
-        'operator_registration'=>['type'=>'text','default'=>'','label'=>'Registerangaben (falls erforderlich)','min'=>0,'max'=>150],
-        'invoice_prefix'=>['type'=>'code','default'=>'GI','label'=>'Rechnungsnummern-Präfix'],
-        'fee_auction_listing_cents' => ['type' => 'cents', 'default' => '50', 'label' => 'Auktion einstellen'],
-        'fee_bump_single_cents' => ['type' => 'cents', 'default' => '199', 'label' => 'Einzelner Bump'],
-        'fee_bump_pack_cents' => ['type' => 'cents', 'default' => '499', 'label' => 'Drei Bumps'],
-        'fee_category_top_cents' => ['type' => 'cents', 'default' => '990', 'label' => 'Kategorie-Top / sieben Tage'],
-        'fee_home_top_cents' => ['type' => 'cents', 'default' => '1990', 'label' => 'Startseiten-Top / sieben Tage'],
-        'fee_banner_monthly_cents' => ['type' => 'cents', 'default' => '12900', 'label' => 'Händlerbanner / Monat'],
+        'operator_legal_name'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_legal_name','min'=>0,'max'=>150],
+        'operator_address_line1'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_address_line1','min'=>0,'max'=>150],
+        'operator_address_line2'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_address_line2','min'=>0,'max'=>150],
+        'operator_postcode'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_postcode','min'=>0,'max'=>16],
+        'operator_city'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_city','min'=>0,'max'=>100],
+        'operator_country'=>['type'=>'country','default'=>'DE','label'=>'admin_settings.field.operator_country'],
+        'operator_email'=>['type'=>'email','default'=>'','label'=>'admin_settings.field.operator_email'],
+        'operator_vat_id'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_vat_id','min'=>0,'max'=>40],
+        'operator_tax_number'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_tax_number','min'=>0,'max'=>50],
+        'operator_registration'=>['type'=>'text','default'=>'','label'=>'admin_settings.field.operator_registration','min'=>0,'max'=>150],
+        'invoice_prefix'=>['type'=>'code','default'=>'GI','label'=>'admin_settings.field.invoice_prefix'],
+        'fee_auction_listing_cents' => ['type' => 'cents', 'default' => '50', 'label' => 'admin_settings.field.fee_auction_listing_cents'],
+        'fee_bump_single_cents' => ['type' => 'cents', 'default' => '199', 'label' => 'admin_settings.field.fee_bump_single_cents'],
+        'fee_bump_pack_cents' => ['type' => 'cents', 'default' => '499', 'label' => 'admin_settings.field.fee_bump_pack_cents'],
+        'fee_category_top_cents' => ['type' => 'cents', 'default' => '990', 'label' => 'admin_settings.field.fee_category_top_cents'],
+        'fee_home_top_cents' => ['type' => 'cents', 'default' => '1990', 'label' => 'admin_settings.field.fee_home_top_cents'],
+        'fee_banner_monthly_cents' => ['type' => 'cents', 'default' => '12900', 'label' => 'admin_settings.field.fee_banner_monthly_cents'],
     ];
 }
 
@@ -58,7 +59,7 @@ function site_setting_validate(string $key, mixed $value): string
 {
     $definition = site_setting_definitions()[$key] ?? null;
     if ($definition === null || !is_string($value) || !preg_match('//u', $value)) {
-        throw new InvalidArgumentException('Ungültiger Einstellungswert.');
+        throw new InvalidArgumentException(t('admin_settings.invalid_value'));
     }
     $value = trim($value);
     if($definition['type']==='document_codes'){
@@ -79,7 +80,7 @@ function site_setting_validate(string $key, mixed $value): string
             && preg_match('/\A.{' . $definition['min'] . ',' . $definition['max'] . '}\z/us', $value) === 1,
         default => false,
     };
-    if (!$valid) throw new InvalidArgumentException('Bitte prüfe „' . $definition['label'] . '“.');
+    if (!$valid) throw new InvalidArgumentException(t('admin_settings.invalid_field', ['field'=>t($definition['label'])]));
     return $definition['type'] === 'color' ? strtolower($value) : $value;
 }
 
@@ -127,7 +128,7 @@ function settings_assert_admin(PDO $pdo, int $actorId): void
     if(function_exists('governance_assert_actor')){governance_assert_actor($pdo,$actorId,'site.manage');return;}
     $statement = $pdo->prepare('SELECT is_admin FROM users WHERE id = ? AND is_active=1');
     $statement->execute([$actorId]);
-    if ((int)$statement->fetchColumn() !== 1) throw new DomainException('Diese Änderung benötigt aktuelle Adminrechte.');
+    if ((int)$statement->fetchColumn() !== 1) throw new DomainException(t('admin_settings.permission'));
 }
 
 function site_settings_save(PDO $pdo, int $actorId, array $submitted, string $expectedRevision): array
@@ -135,7 +136,7 @@ function site_settings_save(PDO $pdo, int $actorId, array $submitted, string $ex
     settings_assert_admin($pdo, $actorId);
     $validated = [];
     foreach (site_setting_definitions() as $key => $definition) {
-        if (!array_key_exists($key, $submitted)) throw new InvalidArgumentException('Ein Einstellungsfeld fehlt. Bitte lade das Formular neu.');
+        if (!array_key_exists($key, $submitted)) throw new InvalidArgumentException(t('admin_settings.reload_required'));
         $validated[$key] = site_setting_validate($key, $submitted[$key]);
     }
     $lockName = 'gunindex.settings.' . substr(hash('sha256', (string)$pdo->query('SELECT DATABASE()')->fetchColumn()), 0, 24);
@@ -148,7 +149,7 @@ function site_settings_save(PDO $pdo, int $actorId, array $submitted, string $ex
         if(function_exists('maintenance_state'))maintenance_state($pdo,true);
         settings_assert_admin($pdo, $actorId);
         $previous = site_settings($pdo, true);
-        if (!hash_equals(site_settings_revision($previous), $expectedRevision)) throw new DomainException('Die Einstellungen wurden zwischenzeitlich geändert. Deine Eingaben bleiben erhalten; lade den aktuellen Stand vor erneutem Speichern neu.');
+        if (!hash_equals(site_settings_revision($previous), $expectedRevision)) throw new DomainException(t('admin_settings.stale'));
         if(function_exists('maintenance_transition'))maintenance_transition($pdo,$actorId,$previous['maintenance_enabled'],$validated['maintenance_enabled']);
         $changed = [];
         $statement = $pdo->prepare('INSERT INTO system_settings(setting_key, setting_value, updated_at) VALUES (?, ?, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_at=UTC_TIMESTAMP()');

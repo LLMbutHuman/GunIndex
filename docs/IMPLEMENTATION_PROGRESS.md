@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Website-Einstellungen und Personalrollen
+
+Die geschützten Einstellungen zeigen Betreiberangaben, PayPal-Freigaben,
+Rechnungsdaten, Preise und Validierungsfehler in acht Sprachen. Die Rollenmaske
+lokalisiert Rechte, Status und MFA-Voraussetzungen. Eine Rollenentscheidung
+wird erst nach Speicherung einmalig bestätigt. Die Prüfungen decken
+Übersetzungsschlüssel, Formularrevision, Datenschutz und MFA-Grenzen ab.
+Lokal bestanden acht Admin-Testgruppen mit 70 neuen Einstellungsbegriffen
+je Sprache. Die Rollenmaske bestand 45 Schlüssel und 96 lokale CGI-Fälle.
+
 ## Sicherung und Wiederherstellung im Einrichtungsassistenten
 
 Der Assistent zeigt Zeitpunkte tatsächlich verifizierter lokaler Backups
@@ -9,6 +19,9 @@ Statusverzeichnis. Der PHP-Container erhält dabei weder Sicherungsinhalt noch
 Archivschlüssel. Der Nachweis einer Offsite-Kopie bleibt eine Prüfung am Ziel.
 Lokal bestanden dreizehn Setup-Gruppen einschließlich Sprachparität und
 Ablehnung fehlender, ungültiger und zukünftiger Zeitstempel.
+Beide isolierten Betriebsjobs bestätigten den Sicherungs- und Restore-Nachweis
+über die schreibgeschützte Einbindung.
+[Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44958201913)
 
 ## Meldungen und Beschwerden für Kunden
 
