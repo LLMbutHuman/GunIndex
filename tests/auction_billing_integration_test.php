@@ -825,6 +825,38 @@ try {
                 [$status]=abt_request($staff,'/admin/finance.php',$fields+['csrf_token'=>abt_csrf($body)]);
                 abt_check($status===303,'Correction submit did not redirect to the new reference.');
                 $replacement=(int)auction_fee_replacement($pdo,$original)['replacement_invoice_id'];
+                $reviewPath='/admin/payments.php?invoice='.$replacement;
+                [$status,$body]=abt_request($staff,$reviewPath);
+                abt_check($status===200,'Payment review unavailable.');
+                foreach (['en','fr','nl','pl','cs','da','it','de'] as $locale) {
+                    [$status]=abt_request($staff,'/user/language.php',['csrf_token'=>abt_csrf($body),'locale'=>$locale,
+                        'market_country'=>'DE','return_path'=>$reviewPath]);
+                    abt_check($status===303,'Payment reviewer language switch failed.');
+                    [$status,$body]=abt_request($staff,$reviewPath);
+                    $copy=i18n_dictionary($locale);
+                    abt_check($status===200&&str_contains($body,'<html lang="'.$locale.'"')
+                        &&str_contains($body,'<h1>'.h($copy['finance_admin.payment_heading']).'</h1>')
+                        &&str_contains($body,h($copy['finance_admin.payment_configured']))
+                        &&str_contains($body,h($copy['finance_admin.payment_confirm']))
+                        &&str_contains($body,'value="approve">'.h($copy['finance_admin.payment_approve']))
+                        &&str_contains($body,'value="reject">'.h($copy['finance_admin.payment_reject']))
+                        &&str_contains($body,h($copy['payment_customer.service_auction_listing'])),
+                        'Payment review translation or form binding missing.');
+                    if ($locale==='en') {
+                        [$status,$invalid]=abt_request($staff,$reviewPath,['csrf_token'=>abt_csrf($body),'decision'=>'approve',
+                            'invoice_id'=>(string)$replacement,'received_amount'=>'0.35','transaction_id'=>'','reference'=>$reference,
+                            'reason'=>'Synthetic invalid manual transaction fixture.','review_confirmed'=>'1']);
+                        abt_check($status===422&&str_contains($invalid,h($copy['finance_admin.payment_error_transaction']))
+                            &&abt_status($pdo,$replacement)==='issued','Manual verification error was not translated or changed payment state.');
+                        $enabled=(string)abt_scalar($pdo,"SELECT setting_value FROM system_settings WHERE setting_key='manual_paypal_enabled'");
+                        abt_setting($pdo,'manual_paypal_enabled','0');
+                        try {
+                            [$status,$disabled]=abt_request($staff,$reviewPath);
+                            abt_check($status===200&&str_contains($disabled,h($copy['billing_customer.manual_off'])),
+                                'Disabled manual payment diagnostic was not translated.');
+                        } finally { abt_setting($pdo,'manual_paypal_enabled',$enabled); }
+                    }
+                }
                 abt_login($owner,$seller);
                 $oldPath='/user/billing.php?order='.$original;$newPath='/user/billing.php?order='.$replacement;
                 [$status,$body]=abt_request($owner,$oldPath);

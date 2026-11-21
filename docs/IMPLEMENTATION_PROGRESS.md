@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Manuelle Zahlungsprüfung in acht Sprachen
+
+Die geschützte Prüfseite lokalisiert Empfängerkonto, Zahlungsstatus,
+Entscheidungsformular, PayPal-Hinweise und bekannte Ablehnungsgründe. Referenzen
+und Beträge bleiben unverändert. Der zusätzliche HTTP-Test wechselt alle acht
+Sprachen und prüft, dass eine ungültige Transaktionskennung keinen Zahlungsstatus
+ändert. Lokal sind zehn PHP-Syntaxprüfungen, 33 Schlüssel je Sprache mit
+Platzhalterparität und 40 isolierte Konfigurationsfälle bestätigt.
+
 ## Ausführbarer Ubuntu-Installer
 
 `ops/install-ubuntu-22.04.sh` prüft Datenbank, privaten Speicher und sieben
