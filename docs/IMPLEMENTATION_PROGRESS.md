@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Einstellungen für bestehende Rechtszustimmungen
+
+Die Einstellung für die Pflichtzustimmung von Bestandskonten ist jetzt auf
+der geschützten Einstellungsseite sichtbar. Ein unvollständiges Formular
+übernimmt vorhandene Werte für ausgelassene Felder. Explizite Änderungen,
+CSRF, Formularrevision, Validierung und Protokoll bleiben wirksam. Der
+HTTP-Test speichert zunächst die Pflichtzustimmung und ändert anschließend
+allein den Markenclaim.
+
 ## Konto- und Datenanfragen
 
 Die Kontoseite erklärt in acht Sprachen den passwortgeschützten Datenexport

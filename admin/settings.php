@@ -11,8 +11,8 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     $submitted = [];
-    foreach ($definitions as $key => $definition) {
-        $submitted[$key] = $_POST[$key] ?? ($definition['type'] === 'boolean' ? '0' : '');
+    foreach (array_keys($definitions) as $key) {
+        $submitted[$key] = $_POST[$key] ?? $values[$key];
         if (is_string($submitted[$key])) $values[$key] = $submitted[$key];
     }
     $receivedRevision = $_POST['_revision'] ?? null;
@@ -38,7 +38,7 @@ $groups = [
     'Verfügbarkeit' => ['registration_enabled', 'maintenance_enabled','seo_indexing_enabled'],
     'Manuelle PayPal-Prüfung' => ['manual_paypal_enabled','manual_paypal_recipient','manual_paypal_approved','manual_tax_reviewed','manual_tax_bps'],
     'Regionale Geschäftsleistungen' => ['business_promotions_enabled','dealer_profiles_enabled','business_reservation_minutes'],
-    'Datenschutz & Identitätsprüfung' => ['verification_enabled','verification_review_approved','verification_retention_days','privacy_contact_email','legal_publication_enabled','legal_registration_documents','legal_checkout_documents'],
+    'Datenschutz & Identitätsprüfung' => ['verification_enabled','verification_review_approved','verification_retention_days','privacy_contact_email','legal_publication_enabled','legal_registration_documents','legal_existing_account_required','legal_checkout_documents'],
     'Rechnungen & Betreiberangaben' => ['finance_enabled','operator_legal_name','operator_address_line1','operator_address_line2','operator_postcode','operator_city','operator_country','operator_email','operator_vat_id','operator_tax_number','operator_registration','invoice_prefix'],
     'Geplante Plattformpreise' => ['fee_auction_listing_cents', 'fee_bump_single_cents', 'fee_bump_pack_cents', 'fee_category_top_cents', 'fee_home_top_cents', 'fee_banner_monthly_cents'],
     t('auction_billing.heading') => ['auction_fees_enabled','auction_fees_approved'],

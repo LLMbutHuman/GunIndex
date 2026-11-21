@@ -435,6 +435,31 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(422, second.request('/auth/mfa.php', {'csrf_token': second.token('/auth/mfa.php'), 'code': code})[0])
         self.assertEqual(303, second.request('/admin/settings.php')[0])
 
+    def test_settings_keep_required_existing_account_consent_on_partial_update(self):
+        admin = self.user(admin=True)
+        browser = admin['browser']
+        route = '/admin/settings.php'
+        original = self.settings(admin)
+        key = 'legal_existing_account_required'
+        self.assertIn(key, original)
+        try:
+            self.assertEqual(200, browser.request(route, original | {key: '1'})[0])
+            current = self.settings(admin)
+            self.assertEqual('1', current[key])
+            new_tagline = 'Synthetic tagline ' + secrets.token_hex(8)
+            self.assertEqual(200, browser.request(route, {
+                'csrf_token': current['csrf_token'], '_revision': current['_revision'], 'tagline': new_tagline,
+            })[0])
+            updated = self.settings(admin)
+            self.assertEqual('1', updated[key])
+            self.assertEqual(new_tagline, updated['tagline'])
+            self.assertEqual(original['registration_enabled'], updated['registration_enabled'])
+        finally:
+            latest = self.settings(admin)
+            self.assertEqual(200, browser.request(route, original | {
+                '_revision': latest['_revision'], 'csrf_token': latest['csrf_token'],
+            })[0])
+
     def test_settings_require_csrf_and_public_brand_changes(self):
         admin = self.user(admin=True); original = self.settings(admin)
         changed = dict(original, brand_name='TestMarket ' + secrets.token_hex(6), accent='#123abc', secondary='#de9012', animation_mode='reduced')
