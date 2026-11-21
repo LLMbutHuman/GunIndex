@@ -397,13 +397,27 @@ class MarketplaceHTTP(unittest.TestCase):
         subject = self.user(login=False)
         self.assertEqual(403, reporter.request('/admin/moderation.php')[0])
         report = '/marketplace/report.php?type=user&id=' + str(subject['id'])
+        self.assertEqual(303, reporter.request('/user/language.php', {
+            'csrf_token': reporter.token(report), 'locale': 'en', 'market_country': 'DE', 'return_path': report,
+        })[0])
+        status, headers, body = reporter.request(report)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Report a problem</h1>', body)
         evidence = 'Synthetic voluntarily submitted details ' + secrets.token_hex(8)
         status, headers, _ = reporter.request(report, {
             'csrf_token': reporter.token(report), 'target_type': 'user', 'target_id': subject['id'],
             'reason': 'Synthetic account report for the moderation HTTP check.', 'evidence': evidence,
         })
         self.assertEqual(303, status)
+        customer_case = headers['Location']
         case_id = urllib.parse.parse_qs(urllib.parse.urlsplit(headers['Location']).query)['id'][0]
+        status, headers, body = reporter.request(customer_case)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Your cases</h1>', body)
+        self.assertNotIn('Submit appeal', body)
+        self.assertEqual(404, self.user()['browser'].request(customer_case)[0])
         route = '/admin/moderation.php?id=' + case_id
         browser = self.user(admin=True)['browser']
         for locale, heading in [('fr', 'Signalements et recours'), ('en', 'Reports and appeals')]:
@@ -425,6 +439,16 @@ class MarketplaceHTTP(unittest.TestCase):
         status, _, body = browser.request(route, fields)
         self.assertEqual(200, status)
         self.assertIn(evidence, body)
+        for action in ('assign', 'dismiss'):
+            self.assertEqual(303, browser.request(route, fields | {'action': action})[0])
+        status, _, body = reporter.request(customer_case)
+        self.assertEqual(200, status)
+        self.assertIn('Submit appeal', body)
+        self.assertEqual(303, reporter.request(customer_case, {
+            'csrf_token': reporter.token(customer_case), 'case_id': case_id,
+            'appeal': 'Synthetic appeal requesting review of the reported conduct.',
+        })[0])
+        self.assertNotIn('Submit appeal', reporter.request(customer_case)[2])
 
     def test_totp_success_cannot_be_replayed_in_another_session(self):
         admin = self.user(admin=True, login=False)

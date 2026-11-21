@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Meldungen und Beschwerden für Kunden
+
+Meldeformular und Fallübersicht sind in allen acht Sprachen verfügbar.
+Persönliche Fälle und Formularantworten tragen eine private Cache-Sperre.
+Lokal bestanden zehn PHP-Syntaxprüfungen und 72 CGI-Fälle mit synthetischen
+Daten. Der HTTP-Test prüft den Ablauf vom Melden über die Moderation bis
+zur Beschwerde sowie die Sperre für unbeteiligte Konten.
+
 ## Einstellungen für bestehende Rechtszustimmungen
 
 Die Einstellung für die Pflichtzustimmung von Bestandskonten ist jetzt auf
