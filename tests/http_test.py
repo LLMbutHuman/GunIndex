@@ -371,6 +371,40 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('Die Entscheidung wurde dokumentiert.', browser.request(route)[2])
         self.assertNotIn('Die Entscheidung wurde dokumentiert.', browser.request(route)[2])
 
+    def test_admin_moderation_keeps_private_evidence_behind_a_documented_action(self):
+        reporter = self.user()['browser']
+        subject = self.user(login=False)
+        self.assertEqual(403, reporter.request('/admin/moderation.php')[0])
+        report = '/marketplace/report.php?type=user&id=' + str(subject['id'])
+        evidence = 'Synthetic voluntarily submitted details ' + secrets.token_hex(8)
+        status, headers, _ = reporter.request(report, {
+            'csrf_token': reporter.token(report), 'target_type': 'user', 'target_id': subject['id'],
+            'reason': 'Synthetic account report for the moderation HTTP check.', 'evidence': evidence,
+        })
+        self.assertEqual(303, status)
+        case_id = urllib.parse.parse_qs(urllib.parse.urlsplit(headers['Location']).query)['id'][0]
+        route = '/admin/moderation.php?id=' + case_id
+        browser = self.user(admin=True)['browser']
+        for locale, heading in [('fr', 'Signalements et recours'), ('en', 'Reports and appeals')]:
+            self.assertEqual(303, browser.request('/user/language.php', {
+                'csrf_token': browser.token(route), 'locale': locale, 'market_country': 'DE', 'return_path': route,
+            })[0])
+            status, headers, body = browser.request(route)
+            self.assertEqual(200, status)
+            self.assertIn('no-store', headers['Cache-Control'])
+            self.assertIn('<h1>' + heading + '</h1>', body)
+            self.assertIn('value="evidence"', body)
+            self.assertNotIn(evidence, body)
+        fields = {'csrf_token': browser.token(route), 'case_id': case_id, 'action': 'evidence', 'reason': 'short'}
+        status, _, body = browser.request(route, fields)
+        self.assertEqual(422, status)
+        self.assertIn('Enter the reason for viewing details of this case.', body)
+        self.assertNotIn(evidence, body)
+        fields['reason'] = 'Synthetic documented reason for a moderator to inspect.'
+        status, _, body = browser.request(route, fields)
+        self.assertEqual(200, status)
+        self.assertIn(evidence, body)
+
     def test_totp_success_cannot_be_replayed_in_another_session(self):
         admin = self.user(admin=True, login=False)
         self.assertEqual(303, self.login(admin)[0])

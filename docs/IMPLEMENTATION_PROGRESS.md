@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Moderation und Beschwerden
+
+Die geschützte Moderationsseite zeigt acht Sprachfassungen für Fälle,
+Meldungsarten, Status, Aktionen und bekannte Fehlermeldungen. Freiwillige
+Zusatzangaben werden erst nach begründeter und protokollierter Einsicht
+angezeigt. Lokal bestanden neun Syntaxprüfungen, 51 Schlüssel samt
+Platzhalterparität und acht isolierte Renderprüfungen. Ein HTTP-Test prüft
+Login-Schutz, Sprachwechsel und Vertraulichkeit von Zusatzangaben.
+
 ## Datenschutzprüfung
 
 Die geschützte Seite für Löschanträge zeigt Bearbeitungsstatus,
