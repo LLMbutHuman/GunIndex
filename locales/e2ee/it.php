@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Sostituisci l’identità della chat',
+    'e2ee.reset_help'=>'Usa questa funzione se qualcuno potrebbe aver ottenuto l’identità della chat o il codice di recupero. Ti servono la password dell’account e un secondo fattore configurato. Scegli sopra il nome e la passphrase del dispositivo.',
+    'e2ee.reset_confirm'=>'Voglio escludere i dispositivi precedenti dai nuovi messaggi e creare un’identità della chat. I miei contatti devono verificare la nuova impronta.',
+    'e2ee.prepare_reset'=>'Genera una nuova identità e un codice',
+    'e2ee.archives'=>'Chiavi dei dispositivi precedenti salvate',
+    'e2ee.archive_help'=>'Le chiavi precedenti sono cifrate in questo browser. Sblocca il dispositivo attuale, poi apri quello precedente per leggere i messaggi precedenti verificabili.',
+    'e2ee.archive_device'=>'Dispositivo precedente',
+    'e2ee.archive_passphrase'=>'Passphrase del dispositivo precedente',
+    'e2ee.open_archive'=>'Apri le chiavi precedenti per la lettura',
+    'e2ee.account_password'=>'Password dell’account',
+    'e2ee.account_factor'=>'Secondo fattore o codice di recupero dell’account',
+    'e2ee.reset_auth_error'=>'Verifica la password e il secondo fattore configurato.',
+    'e2ee.peer_rotation'=>'L’identità del tuo contatto è cambiata. Confronta l’impronta completa tramite un canale indipendente prima di inviare altri messaggi.',
+    'e2ee.archive_opened'=>'Le chiavi precedenti sono aperte per la lettura.',
     'e2ee.title' => 'Chat con crittografia end-to-end',
     'e2ee.intro' => 'Messaggi e allegati vengono cifrati sui tuoi dispositivi. La piattaforma vede comunque partecipanti, orari e dimensioni dei file. Una chiave compromessa può esporre anche i messaggi precedenti.',
     'e2ee.legacy' => 'Apri la cronologia precedente',

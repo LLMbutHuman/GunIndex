@@ -51,8 +51,30 @@ the account authority and the newly generated current recovery private key. That
 current key exists only inside the independently encrypted recovery backup.
 Revocation rotates the recovery recipient so revoked devices cannot use a historical
 recovery key for future messages. Previously decrypted/received information cannot
-be erased. Recovery-secret/authority compromise requires separate identity recovery;
-automatic root identity replacement is not part of this initial implementation.
+be erased.
+
+## Replacement of a compromised account authority
+
+The account owner can explicitly replace the chat identity after confirming the
+current account password and an enrolled second factor. The reset requires a
+live session, CSRF protection and an exact previous manifest version/hash.
+The browser generates new Ed25519 authority, device and recovery keys. The server
+appends an identity epoch to the existing manifest history. Sessions with a
+privileged staff role require a separate verified step-up flow before using reset.
+
+The new recovery code covers the new identity epoch. The new encrypted recovery
+payload records its start version so that key counts use the epoch while manifest
+versions stay globally increasing. This browser retains the previous encrypted
+vault, which may be opened for reading with its own device passphrase. Historical
+access requires applicable private keys and a manifest anchored to a previously
+verified identity. To read a retired manifest below the pinned version, the browser
+checks a bounded chain to that stored hash. A retired signature alone is insufficient.
+
+Contacts compare the complete new fingerprint through a separate channel before
+resuming sending. The browser replaces the current pin and stores the previous
+anchor together in an IndexedDB transaction. New attachments bind both current
+manifest versions. Earlier committed attachments retain their original format
+and remain available with their messages.
 
 ## Messages and files
 
@@ -179,7 +201,7 @@ Linux job 132611100770: complete pass, including existing regression suite.
 | A | Interrupted delivery, locked plaintext lifecycle, cross-tab trust state | Real lost-response retry without duplicate row; manual lock aborts stalled HTTP; old tab cannot lower a newer persisted pin |
 | A | Server/file confidentiality and permissions | Canary checks for plaintext/private material; private downloads, quotas, CAS, access failures, export and legacy preservation |
 | B | Production assurance | Independent crypto/application review, additional supported browsers and actual target-server backup/restore |
-| C | Compromised account authority replacement | Not implemented. Recovery-code rotation does not revoke already extracted authority material. Requires an explicit authenticated identity reset, peer re-verification and preserved historical verification |
+| C | Compromised account authority replacement | Explicit account reset, re-verification and historical trust anchors implemented for enrolled customer accounts. Local real OpenPGP tests passed; MySQL, Chromium and independent security acceptance pending for this change |
 
 The earlier failed browser run 43436883236 identified mobile overflow from a long
 participant name; this was corrected and the entire subsequent run passed.

@@ -12,10 +12,11 @@ const password = 'Synthetic private device phrase ' + token;
 const firstMessage = 'Encrypted browser message ' + token + ' \u{1f4e8}';
 const sharedMessage = 'Both active buyer devices receive ' + token;
 const futureMessage = 'Only the replacement device receives ' + token;
+const newIdentityMessage = 'Verified new account identity receives ' + token;
 const lockedDraft = 'Unsent draft cleared during an interrupted refresh ' + token;
 const filename = 'private-note-' + token + '.txt';
 const fileBytes = Buffer.from('Encrypted file canary ' + token + '\nUnicode: \u00e4 \u{1f4e8}\n', 'utf8');
-const probes = new Set([password, firstMessage, sharedMessage, futureMessage, lockedDraft, filename, fileBytes.toString('utf8')]);
+const probes = new Set([password, firstMessage, sharedMessage, futureMessage, newIdentityMessage, lockedDraft, filename, fileBytes.toString('utf8')]);
 const checks = [], pageErrors = [], external = [], wire = [], pendingResponses = [];
 const expectedAborts = new WeakSet();
 const activeApiRequests = new Set();
@@ -112,7 +113,7 @@ async function context(browser) {
   });
   return result;
 }
-async function finishPending(page, user, expectedVersion) {
+async function finishPending(page, user, expectedVersion, factor = null) {
   await page.locator('#e2ee-pending').waitFor({ state: 'visible' });
   invariant(!await page.locator('#e2ee-code-saved').isChecked(), 'Saving recovery code requires explicit confirmation');
   invariant(await page.locator('#e2ee-commit').isDisabled(), 'Unconfirmed recovery code must not commit');
@@ -124,6 +125,10 @@ async function finishPending(page, user, expectedVersion) {
   invariant(download.suggestedFilename() === 'GunIndex-recovery.txt', 'Explicit recovery download');
   invariant((await downloadBytes(download)).equals(Buffer.from(code + '\n')), 'Downloaded recovery code differs from displayed code');
   await mobile(page, 'de');
+  if (factor) {
+    await page.locator('#e2ee-account-password').fill(user.password);
+    await page.locator('#e2ee-account-factor').fill(factor);
+  }
   await page.locator('#e2ee-code-saved').check(); await action(page, 'commit', 'created');
   invariant(await page.locator('#e2ee-pending').isHidden(), 'Committed pending secret must be cleared');
   invariant(await page.locator('#e2ee-new-code').inputValue() === '', 'Recovery textarea must be cleared');
@@ -456,24 +461,52 @@ async function storageIsPrivate(page) {
       await mobile(second, locale); checks.push('mobile_' + locale + '_history_and_lock');
     }
 
+    phase = 'compromised_identity_reset_and_peer_reverification';
+    const thirdContext = await context(browser);
+    const third = await login(thirdContext, data.users.buyer, chat(data.users.seller.id));
+    const { factor } = fixture('reset_factor', { fixture: data.fixture });
+    await language(second, 'de');
+    await second.locator('#e2ee-device-name').fill('Synthetic new authority'); await second.locator('#e2ee-passphrase').fill(password);
+    await second.locator('#e2ee-identity-reset summary').click(); await second.locator('#e2ee-reset-confirm').check();
+    await action(second, 'prepare-reset', 'save_code');
+    const reset = await finishPending(second, data.users.buyer, 4, factor);
+    invariant(reset.fingerprint !== buyerIdentity.fingerprint, 'Reset must generate a new account authority');
+    assert.equal((await second.locator('#e2ee-devices li').count()), 1);
+    await unlock(second);
+    await second.locator('#e2ee-archives summary').click(); await second.locator('#e2ee-archive-passphrase').fill(password);
+    await action(second, 'open-archive', 'archive_opened'); await receiveFile(second, firstMessage);
+    await action(seller, 'load', 'ready'); await seller.locator('#e2ee-peer-rotation').waitFor({ state: 'visible' });
+    invariant(await seller.locator('#e2ee-send').isDisabled(), 'New authority must block sending until independently verified');
+    await seller.locator('#e2ee-fingerprint-input').fill(buyerIdentity.fingerprint); await action(seller, 'verify', 'error_trust');
+    await verifyPeer(seller, reset.fingerprint); await seller.locator('#e2ee-peer-rotation').waitFor({ state: 'hidden' });
+    await visibleMessage(seller, firstMessage);
+    await send(seller, newIdentityMessage, true); await action(second, 'load', 'ready'); await receiveFile(second, newIdentityMessage);
+    await third.reload(); await enabled(third, '#e2ee-passphrase');
+    await third.locator('#e2ee-recovery summary').click(); await third.locator('#e2ee-device-name').fill('Synthetic recovered new authority');
+    await third.locator('#e2ee-passphrase').fill(password); await third.locator('#e2ee-recovery-input').fill(reset.code);
+    await action(third, 'prepare-recovery', 'save_code'); const recovered = await finishPending(third, data.users.buyer, 5);
+    invariant(recovered.fingerprint === reset.fingerprint, 'Recovery must preserve the replacement authority');
+    await unlock(third); await verifyPeer(third, sellerIdentity.fingerprint); await receiveFile(third, newIdentityMessage);
+    checks.push('identity_reset_requires_revalidation_and_preserves_anchored_history');
+
     phase = 'server_and_browser_plaintext_absence';
     const finalState = fixture('status', { fixture: data.fixture });
-    assert.equal(finalState.messages.length, 3); assert.equal(finalState.envelopes.length, 3); assert.equal(finalState.attachments.length, 2);
-    assert.equal(finalState.accounts.seller.version, 1); assert.equal(finalState.accounts.buyer.version, 3); assert.equal(finalState.accounts.outsider, null);
+    assert.equal(finalState.messages.length, 4); assert.equal(finalState.envelopes.length, 4); assert.equal(finalState.attachments.length, 3);
+    assert.equal(finalState.accounts.seller.version, 1); assert.equal(finalState.accounts.buyer.version, 5); assert.equal(finalState.accounts.outsider, null);
     for (const probe of probes) {
       for (const value of [probe, Buffer.from(probe).toString('base64')]) {
         const state = fixture('status', { fixture: data.fixture, plaintext_probe: value });
         invariant(!state.plaintext_found && !state.private_key_marker_found && state.cipher2_empty_legacy_text, 'Private material found in server storage');
       }
     }
-    for (const page of [seller, buyer, second]) await storageIsPrivate(page);
+    for (const page of [seller, buyer, second, third]) await storageIsPrivate(page);
     // Stop new API traffic and drain existing responses before closing pages.
     freezeApiRequests=true;
     const drainDeadline=Date.now()+10000;
     while (activeApiRequests.size>0&&Date.now()<drainDeadline) await new Promise(resolve=>setTimeout(resolve,25));
     invariant(activeApiRequests.size===0,'E2EE network audit did not drain');
     await Promise.all(pendingResponses);
-    for (const page of [seller, buyer, second, stranger]) await page.close();
+    for (const page of [seller, buyer, second, third, stranger]) await page.close();
     for (const bytes of wire) privateFree(bytes);
     assert.equal(pageErrors.length, 0); assert.equal(external.length, 0);
     checks.push('no_private_plaintext_in_http_browser_storage_server_rows_or_attachment_files');

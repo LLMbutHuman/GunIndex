@@ -137,11 +137,170 @@ function e2ee_account_save(PDO $pdo, int $user, array $input): array {
         if ((int)$q->fetchColumn() >= 60) throw new OverflowException('Device manifest update limit exceeded.');
         if ($old === null) $pdo->prepare('INSERT INTO market_e2ee_accounts(user_id,identity_key,current_version,current_hash) VALUES (?,?,?,?)')->execute([$user,$value['identity_key'],$value['version'],$hash]);
         $pdo->prepare('INSERT INTO market_e2ee_manifests(user_id,version,manifest,signature,manifest_hash,recovery_cipher) VALUES (?,?,?,?,?,?)')->execute([$user,$value['version'],$input['manifest'],$input['signature'],$hash,$input['recovery_cipher']]);
+        if ($old === null) $pdo->prepare('INSERT INTO market_e2ee_identity_epochs(user_id,start_version,identity_key) VALUES (?,1,?)')->execute([$user,$value['identity_key']]);
         if ($old !== null) $pdo->prepare('UPDATE market_e2ee_accounts SET current_version=?,current_hash=? WHERE user_id=?')->execute([$value['version'],$hash,$user]);
         audit_log($pdo,$user,'e2ee.manifest_updated',$user,['version'=>$value['version'],'hash'=>$hash]);
         $pdo->commit();
         return ['manifest'=>$input['manifest'],'signature'=>$input['signature'],'hash'=>$hash,'recovery_cipher'=>$input['recovery_cipher']];
     } catch (Throwable $e) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $e; }
+}
+
+/** Require a live session under the same locked account as the reauthentication. */
+function e2ee_reset_account_lock(PDO $pdo, array $viewer): array {
+    $user = (int)$viewer['id'];
+    $query = $pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');
+    $query->execute([$user]); $locked = $query->fetch();
+    if (!$locked || (int)$locked['is_active'] !== 1 || (int)$locked['auth_version'] !== (int)$viewer['auth_version']
+        || auth_requires_mfa($pdo,$locked)) throw new MarketAccessException('Identity reset is unavailable for this account.');
+    $session = auth_session_key($_SESSION['auth_session_key'] ?? null);
+    if ($session === null) throw new MarketAccessException('Current session required.');
+    $query = $pdo->prepare('SELECT 1 FROM market_auth_sessions WHERE user_id=? AND token_hash=? AND auth_version=? AND revoked_at IS NULL AND expires_at>UTC_TIMESTAMP() FOR SHARE');
+    $query->execute([$user,$session,$locked['auth_version']]);
+    if (!$query->fetchColumn()) throw new MarketAccessException('Current session required.');
+    return $locked;
+}
+
+/** Compare underlying v6 Ed25519/X25519 material, independent of armor, timestamps and certification packets. */
+function e2ee_reset_key_material(string $armor): array {
+    $lines = explode("\n",str_replace("\r\n","\n",trim(e2ee_public_key($armor))));
+    $separator = array_search('', $lines, true);
+    if ($separator === false) throw new InvalidArgumentException('Invalid OpenPGP armor.');
+    $encoded = array_slice($lines,$separator+1,-1);
+    if (preg_match('/\A=[A-Za-z0-9+\/]{4}\z/',end($encoded) ?: '')) array_pop($encoded);
+    $bytes = base64_decode(implode('',$encoded),true);
+    if ($bytes === false || $bytes === '') throw new InvalidArgumentException('Invalid OpenPGP armor.');
+    $size = strlen($bytes); $offset = 0; $keys = []; $fingerprint = null;
+    while ($offset+2 <= $size) {
+        $tag = ord($bytes[$offset++]); $length = ord($bytes[$offset++]);
+        if (($tag & 0xc0) !== 0xc0) throw new InvalidArgumentException('Invalid OpenPGP packet header.');
+        $tag &= 0x3f;
+        if ($length >= 192 && $length <= 223 && $offset < $size) {
+            $length = (($length-192)<<8) + ord($bytes[$offset++]) + 192;
+        } elseif ($length === 255 && $size-$offset >= 4) {
+            $length = unpack('N',substr($bytes,$offset,4))[1]; $offset += 4;
+        } elseif ($length >= 192) {
+            throw new InvalidArgumentException('Unsupported OpenPGP packet length.');
+        }
+        if ($length > $size-$offset || in_array($tag,[5,7],true)) throw new InvalidArgumentException('Invalid OpenPGP public packet.');
+        if ($tag === 6 || $tag === 14) {
+            $packet = substr($bytes,$offset,$length);
+            $algorithm = $tag === 6 ? "\x1b" : "\x19";
+            if ($length !== 42 || $packet[0] !== "\x06" || $packet[5] !== $algorithm
+                || substr($packet,6,4) !== "\x00\x00\x00\x20" || isset($keys[$tag])) {
+                throw new InvalidArgumentException('An independent v6 Curve25519 key pair is required.');
+            }
+            $keys[$tag] = hash('sha256',$algorithm.substr($packet,10,32));
+            if ($tag === 6) $fingerprint = hash('sha256',"\x9b".pack('N',$length).$packet);
+        }
+        $offset += $length;
+    }
+    if ($offset !== $size || count($keys) !== 2 || $fingerprint === null) throw new InvalidArgumentException('Incomplete OpenPGP public key.');
+    return ['fingerprint'=>$fingerprint,'material'=>array_values($keys)];
+}
+
+function e2ee_assert_reset_keys_fresh(PDO $pdo, int $user, array $next): void {
+    $device = $next['devices'][0];
+    $deviceKey = e2ee_reset_key_material($device['public_key']);
+    $recoveryKey = e2ee_reset_key_material($next['recovery_public']);
+    $material = [hash('sha256',"\x1b".e2ee_base64($next['identity_key'],32,32)),...$deviceKey['material'],...$recoveryKey['material']];
+    if (!hash_equals($device['fingerprint'],$deviceKey['fingerprint']) || count(array_unique($material)) !== 5) {
+        throw new InvalidArgumentException('Reset keys must be independent.');
+    }
+    $query = $pdo->prepare('SELECT version,manifest FROM market_e2ee_manifests WHERE user_id=? AND version>? ORDER BY version LIMIT 32');
+    $after = 0;
+    do {
+        $query->execute([$user,$after]); $rows = $query->fetchAll();
+        foreach ($rows as $row) {
+            $after = (int)$row['version'];
+            $old = json_decode($row['manifest'],true,32,JSON_THROW_ON_ERROR);
+            if ($old['recovery_hash'] === $next['recovery_hash']
+                || in_array(hash('sha256',"\x1b".e2ee_base64($old['identity_key'],32,32)),$material,true)) {
+                throw new E2EEConflictException('Retired account material cannot be reused.');
+            }
+            foreach ($old['devices'] as $entry) {
+                if ($entry['id'] === $device['id'] || $entry['fingerprint'] === $device['fingerprint']) {
+                    throw new E2EEConflictException('Retired devices cannot be reused.');
+                }
+            }
+            foreach ([$old['recovery_public'],...array_column($old['devices'],'public_key')] as $armor) {
+                if ($armor === $device['public_key'] || $armor === $next['recovery_public']) {
+                    throw new E2EEConflictException('Retired OpenPGP material cannot be reused.');
+                }
+                // Earlier storage validated only the armor envelope. A malformed historic key
+                // cannot prevent reset, and must still be verified by clients before use.
+                try { $oldKey = e2ee_reset_key_material($armor); }
+                catch (InvalidArgumentException) { continue; }
+                if (array_intersect($oldKey['material'],$material)) throw new E2EEConflictException('Retired OpenPGP material cannot be reused.');
+            }
+        }
+    } while (count($rows) === 32);
+}
+
+function e2ee_reset_identity(PDO $pdo, array $viewer, #[SensitiveParameter] array $input): array {
+    e2ee_require_enabled();
+    e2ee_fields($input,['expected_version','expected_hash','manifest','signature','recovery_cipher','password','factor']);
+    $user = (int)$viewer['id'];
+    $expected = e2ee_integer($input['expected_version']); $expectedHash = e2ee_hex($input['expected_hash'],64);
+    if (!is_string($input['manifest']) || !is_string($input['signature']) || !is_string($input['password'])
+        || !is_string($input['factor']) || strlen($input['password']) > 1024 || strlen($input['factor']) > 64) {
+        throw new InvalidArgumentException('Invalid reset request.');
+    }
+    auth_rate_limit('e2ee-reset-ip',auth_ip(),35,300);
+    auth_rate_limit('e2ee-reset-account',(string)$user,12,300);
+    $next = e2ee_validate_manifest($input['manifest'],$input['signature'],$user);
+    if ($next['version'] !== $expected + 1 || !hash_equals($next['previous_hash'],$expectedHash)) {
+        throw new E2EEConflictException('Invalid expected manifest version.');
+    }
+    if (!hash_equals($next['recovery_hash'],hash('sha256',e2ee_base64($input['recovery_cipher'],1048576)))) {
+        throw new InvalidArgumentException('Recovery digest mismatch.');
+    }
+    if (count($next['devices']) !== 1 || $next['devices'][0]['revoked']) {
+        throw new InvalidArgumentException('Identity reset requires one new device.');
+    }
+    $hash = hash('sha256',$input['manifest']);
+    $pdo->beginTransaction();
+    try {
+        maintenance_assert_market_available($pdo);
+        $locked = e2ee_reset_account_lock($pdo,$viewer);
+        $factor = user_totp_state($pdo,$user,true);
+        if ($factor === null) throw new MarketAccessException('Identity reset requires an enrolled second factor.');
+        try { user_security_password($locked,$input['password']); }
+        catch (InvalidArgumentException) { throw new MarketAccessException('Identity reset credentials were not verified.'); }
+
+        $old = e2ee_account($pdo,$user,true);
+        if ($old === null) throw new E2EEConflictException('An existing identity is required.');
+        $current = json_decode($old['manifest'],true,32,JSON_THROW_ON_ERROR);
+        $epoch = $pdo->prepare('SELECT start_version FROM market_e2ee_identity_epochs WHERE user_id=? AND identity_key=?');
+        $epoch->execute([$user,$next['identity_key']]); $used = $epoch->fetchColumn();
+        $retry = $used !== false && (int)$used === $next['version'] && hash_equals($old['hash'],$hash)
+            && $old['manifest'] === $input['manifest'] && $old['signature'] === $input['signature'] && $old['recovery_cipher'] === $input['recovery_cipher'];
+        if (!$retry && ($used !== false || $current['version'] !== $expected || !hash_equals($old['hash'],$expectedHash))) {
+            throw new E2EEConflictException('Device manifest or identity changed.');
+        }
+        $grant = $_SESSION['e2ee_reset_retry'] ?? null;
+        $recentRetry = $retry && is_array($grant) && $grant['user'] === $user && $grant['auth_version'] === (int)$locked['auth_version']
+            && $grant['hash'] === $hash && $grant['until'] >= time();
+        if (!$recentRetry) {
+            try { user_totp_check($pdo,$user,$factor,$input['factor']); }
+            catch (InvalidArgumentException) { throw new MarketAccessException('Identity reset credentials were not verified.'); }
+        }
+        if (!$retry) {
+            e2ee_assert_reset_keys_fresh($pdo,$user,$next);
+            $pdo->prepare('INSERT INTO market_e2ee_manifests(user_id,version,manifest,signature,manifest_hash,recovery_cipher) VALUES (?,?,?,?,?,?)')
+                ->execute([$user,$next['version'],$input['manifest'],$input['signature'],$hash,$input['recovery_cipher']]);
+            $pdo->prepare('INSERT INTO market_e2ee_identity_epochs(user_id,start_version,identity_key) VALUES (?,?,?)')
+                ->execute([$user,$next['version'],$next['identity_key']]);
+            $pdo->prepare('UPDATE market_e2ee_accounts SET identity_key=?,current_version=?,current_hash=? WHERE user_id=?')
+                ->execute([$next['identity_key'],$next['version'],$hash,$user]);
+            audit_log($pdo,$user,'e2ee.identity_reset',$user,['version'=>$next['version'],'hash'=>$hash,'previous_hash'=>$expectedHash]);
+        }
+        $pdo->commit();
+        if (!$recentRetry) $_SESSION['e2ee_reset_retry'] = ['user'=>$user,'auth_version'=>(int)$locked['auth_version'],'hash'=>$hash,'until'=>time()+300];
+        return ['manifest'=>$input['manifest'],'signature'=>$input['signature'],'hash'=>$hash,'recovery_cipher'=>$input['recovery_cipher']];
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 function e2ee_context(PDO $pdo, int $user, int $listing, int $peer): array {
@@ -174,6 +333,12 @@ function e2ee_current_devices(PDO $pdo, int $user, int $peer, string $device): a
     foreach ($ownManifest['devices'] as $item) if ($item['id'] === $device && !$item['revoked']) $found = true;
     if (!$found) throw new MarketAccessException('Device unavailable.');
     return [$ownManifest,$peerManifest];
+}
+
+/** Caller holds both user rows under the conversation lock. */
+function e2ee_pair_has_identity_reset(PDO $pdo, int $user, int $peer): bool {
+    $query = $pdo->prepare('SELECT 1 FROM market_e2ee_identity_epochs WHERE user_id IN (?,?) AND start_version>1 LIMIT 1 FOR SHARE');
+    $query->execute([$user,$peer]); return $query->fetchColumn() !== false;
 }
 
 function e2ee_storage_dir(bool $create = false): string {
@@ -212,17 +377,31 @@ function e2ee_attachment_summary(array $row): array {
 }
 
 function e2ee_upload(PDO $pdo, int $user, array $input): array {
-    e2ee_require_enabled(); e2ee_fields($input,['listing_id','peer_id','device_id','client_id','id','ciphertext']);
+    e2ee_require_enabled();
+    $fields = ['listing_id','peer_id','device_id','client_id','id','ciphertext'];
+    $versioned = array_key_exists('sender_version',$input) || array_key_exists('receiver_version',$input);
+    if ($versioned) array_push($fields,'sender_version','receiver_version');
+    e2ee_fields($input,$fields);
     $listing = e2ee_integer($input['listing_id']); $peer = e2ee_integer($input['peer_id']);
     $device = e2ee_hex($input['device_id']); $client = e2ee_hex($input['client_id']); $id = e2ee_hex($input['id']);
+    $senderVersion = $versioned ? e2ee_integer($input['sender_version']) : null;
+    $receiverVersion = $versioned ? e2ee_integer($input['receiver_version']) : null;
     $bytes = e2ee_base64($input['ciphertext'],5242880); $hash = hash('sha256',$bytes); $size = strlen($bytes);
     $path = null; $commitAttempted = false;
     $pdo->beginTransaction();
     try {
-        e2ee_lock_conversation($pdo,$user,$listing,$peer); e2ee_current_devices($pdo,$user,$peer,$device);
+        e2ee_lock_conversation($pdo,$user,$listing,$peer);
+        [$own,$other] = e2ee_current_devices($pdo,$user,$peer,$device);
+        $resetPair = !$versioned && e2ee_pair_has_identity_reset($pdo,$user,$peer);
+        if ($resetPair || ($versioned && ($senderVersion !== $own['version'] || $receiverVersion !== $other['version']))) {
+            throw new E2EEConflictException('Device manifest changed. Refresh recipients before uploading.');
+        }
         $q = $pdo->prepare('SELECT * FROM market_e2ee_attachments WHERE id=? FOR UPDATE'); $q->execute([$id]); $existing = $q->fetch();
         if ($existing) {
-            if ((int)$existing['owner_id'] !== $user || (int)$existing['listing_id'] !== $listing || (int)$existing['peer_id'] !== $peer || $existing['device_id'] !== $device || $existing['client_id'] !== $client || !hash_equals($existing['cipher_hash'],$hash) || (int)$existing['cipher_bytes'] !== $size) throw new E2EEConflictException('Attachment identifier already used.');
+            if ((int)$existing['owner_id'] !== $user || (int)$existing['listing_id'] !== $listing || (int)$existing['peer_id'] !== $peer || $existing['device_id'] !== $device || $existing['client_id'] !== $client || !hash_equals($existing['cipher_hash'],$hash) || (int)$existing['cipher_bytes'] !== $size
+                || ($existing['sender_version'] === null ? $versioned : ((int)$existing['sender_version'] !== $own['version'] || (int)$existing['receiver_version'] !== $other['version']))) {
+                throw new E2EEConflictException('Attachment identifier already used.');
+            }
             $stream = e2ee_attachment_stream($existing); fclose($stream);
             $pdo->commit(); return e2ee_attachment_summary($existing);
         }
@@ -240,7 +419,8 @@ function e2ee_upload(PDO $pdo, int $user, array $input): array {
             }
             if (!fflush($file) || (function_exists('fsync') && !fsync($file))) throw new E2EEUnavailableException('Private attachment write failed.');
         } finally { fclose($file); }
-        $pdo->prepare('INSERT INTO market_e2ee_attachments(id,owner_id,listing_id,peer_id,device_id,client_id,storage_key,cipher_hash,cipher_bytes) VALUES (?,?,?,?,?,?,?,?,?)')->execute([$id,$user,$listing,$peer,$device,$client,$key,$hash,$size]);
+        $pdo->prepare('INSERT INTO market_e2ee_attachments(id,owner_id,listing_id,peer_id,device_id,client_id,storage_key,cipher_hash,cipher_bytes,sender_version,receiver_version) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute([$id,$user,$listing,$peer,$device,$client,$key,$hash,$size,$own['version'],$other['version']]);
         $commitAttempted = true; $pdo->commit();
         return ['id'=>$id,'sha256'=>$hash,'bytes'=>$size];
     } catch (Throwable $e) {
@@ -277,6 +457,10 @@ function e2ee_send(PDO $pdo, int $user, array $input): int {
         foreach ($input['attachments'] as $id) {
             $q = $pdo->prepare('SELECT * FROM market_e2ee_attachments WHERE id=? FOR UPDATE'); $q->execute([$id]); $attachment = $q->fetch();
             if (!$attachment || (int)$attachment['owner_id'] !== $user || (int)$attachment['listing_id'] !== $listing || (int)$attachment['peer_id'] !== $peer || $attachment['device_id'] !== $device || $attachment['client_id'] !== $client || $attachment['message_id'] !== null) throw new MarketAccessException('Attachment unavailable.');
+            if ($attachment['sender_version'] === null ? e2ee_pair_has_identity_reset($pdo,$user,$peer)
+                : ((int)$attachment['sender_version'] !== $senderVersion || (int)$attachment['receiver_version'] !== $receiverVersion)) {
+                throw new E2EEConflictException('Attachment recipients have changed. Encrypt the file again.');
+            }
             // Detect missing/corrupted private data before binding it permanently.
             $stream = e2ee_attachment_stream($attachment); fclose($stream);
         }
@@ -294,6 +478,31 @@ function e2ee_historical_manifest(PDO $pdo, int $user, int $version): array {
     $q = $pdo->prepare('SELECT manifest,signature,manifest_hash AS hash FROM market_e2ee_manifests WHERE user_id=? AND version=?'); $q->execute([$user,$version]); $row = $q->fetch();
     if (!$row || !hash_equals($row['hash'],hash('sha256',$row['manifest']))) throw new E2EEUnavailableException('Historical manifest unavailable.');
     return $row;
+}
+
+/** Authorized, bounded public proof pages. Clients independently validate the pinned chain. */
+function e2ee_manifest_chain(PDO $pdo, int $user, int $listing, int $peer, int $subject, int $from, int $through): array {
+    e2ee_require_enabled();
+    if ($from < 1 || $through < $from || $through-$from >= 32) throw new InvalidArgumentException('Invalid historical manifest range.');
+    if ($subject !== $user && $subject !== $peer) throw new MarketAccessException('Manifest history unavailable.');
+    $context = chat_context($pdo,$user,$listing,$peer);
+    if ($subject === $peer && !$context['existing']) throw new MarketAccessException('Manifest history unavailable.');
+    $query = $pdo->prepare('SELECT version,manifest,signature,manifest_hash AS hash FROM market_e2ee_manifests WHERE user_id=? AND version BETWEEN ? AND ? ORDER BY version');
+    $query->execute([$subject,$from,$through]); $rows = $query->fetchAll();
+    if (count($rows) !== $through-$from+1) throw new MarketNotFoundException('Historical manifest range unavailable.');
+    $previous = null;
+    foreach ($rows as $index => &$row) {
+        try { $manifest = json_decode($row['manifest'],true,32,JSON_THROW_ON_ERROR); }
+        catch (JsonException) { throw new E2EEUnavailableException('Historical manifest chain unavailable.'); }
+        if ((int)$row['version'] !== $from+$index || ($manifest['version'] ?? null) !== $from+$index
+            || ($manifest['user_id'] ?? null) !== $subject || !hash_equals($row['hash'],hash('sha256',$row['manifest']))
+            || ($previous !== null && ($manifest['previous_hash'] ?? null) !== $previous)) {
+            throw new E2EEUnavailableException('Historical manifest chain unavailable.');
+        }
+        $previous = $row['hash']; unset($row['version']);
+    }
+    unset($row);
+    return $rows;
 }
 
 function e2ee_history(PDO $pdo, int $user, int $listing, int $peer, int $after = 0): array {

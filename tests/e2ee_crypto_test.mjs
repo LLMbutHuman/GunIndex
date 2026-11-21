@@ -282,6 +282,43 @@ test('device revocation rotates recovery and excludes the revoked device from fu
   await assert.rejects(crypto.recover(ba3, a3.recoveryCode, 'Reactivate', PASSWORD, [a2.local.device_id]), /invalid_revocation/);
 });
 
+test('a replaced authority has independent recovery and explicitly anchored history', async () => {
+  const replacement = await crypto.prepareIdentityReset(ba3, 101, 'Replacement authority', PASSWORD);
+  assert.equal(replacement.request.action, 'reset_identity');
+  assert.equal(replacement.request.expected_version, 3);
+  assert.equal(replacement.request.expected_hash, ba3.hash);
+  const replaced = account(replacement);
+  const inspected = await crypto.verifyBundle(replaced, 101);
+  assert.notEqual(inspected.manifest.identity_key, va3.manifest.identity_key);
+  assert.equal(inspected.manifest.version, 4);
+  assert.equal(inspected.manifest.devices.length, 1);
+  assert.equal(inspected.trusted, false);
+  await assert.rejects(crypto.verifyBundle(replaced, 101, va3.pin), /identity_changed/);
+  const verified = await trust(replaced, 101);
+  const recovered = await crypto.recover(replaced, replacement.recoveryCode, 'Recovered new epoch', PASSWORD);
+  const recoveredState = await crypto.unlock(recovered.local, PASSWORD);
+  assert.equal(recoveredState.recoveryKeys.length, 1);
+  assert.equal(recoveredState.recoveryKeys[0].getFingerprint(), verified.recovery.getFingerprint());
+  await assert.rejects(crypto.recover(replaced, a3.recoveryCode, 'Retired recovery', PASSWORD), /identity_changed/);
+
+  const newState = await crypto.unlock(replacement.local, PASSWORD);
+  const history = { retiredPins: { 101: [va2.pin] }, loadChain: (id, from, through) => {
+    assert.deepEqual([id, from, through], [101, 2, 2]); return [ba2];
+  } };
+  const currentPins = pins(verified, vb2);
+  await assert.rejects(crypto.decryptMessage(sb1, oldRecord, currentPins, { retiredPins: { 101: [] } }), /history_unanchored/);
+  await assert.rejects(crypto.decryptMessage(sb1, oldRecord, currentPins, { ...history, loadChain: () => [ba3] }), /history_unanchored/);
+  assert.equal((await crypto.decryptMessage(sb1, oldRecord, currentPins, history)).body, MESSAGE);
+  await assert.rejects(crypto.decryptMessage(newState, oldRecord, currentPins, history));
+  const restoredArchive = crypto.includeHistoricalVault(newState, sa1);
+  assert.equal((await crypto.decryptMessage(restoredArchive, oldRecord, currentPins, history)).body, MESSAGE);
+  assert.throws(() => crypto.includeHistoricalVault(newState, sb1), /vault_binding/);
+  const next = await crypto.encryptMessage(restoredArchive, verified, vb2, routing(), MESSAGE);
+  const nextRecord = record(next, replaced, bb2);
+  assert.equal((await crypto.decryptMessage(sb2, nextRecord, currentPins)).body, MESSAGE);
+  await assert.rejects(crypto.decryptMessage(sa1, nextRecord, currentPins));
+});
+
 test('foreign account, fabricated verified objects and mutated pins cannot bypass trust', async () => {
   await assert.rejects(crypto.encryptMessage(sa1, { ...va3 }, vb2, routing(), MESSAGE), /identity_untrusted/);
   await assert.rejects(crypto.encryptMessage({ ...sa1 }, va3, vb2, routing(), MESSAGE), /vault_locked/);

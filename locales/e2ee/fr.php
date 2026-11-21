@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Remplacer l’identité de messagerie',
+    'e2ee.reset_help'=>'Utilisez cette fonction si quelqu’un a pu obtenir votre identité de messagerie ou votre code de récupération. Il vous faut le mot de passe du compte et un second facteur configuré. Choisissez un nom et une phrase secrète pour l’appareil.',
+    'e2ee.reset_confirm'=>'Je souhaite révoquer les anciens appareils pour les nouveaux messages et créer une nouvelle identité. Mes contacts doivent vérifier la nouvelle empreinte.',
+    'e2ee.prepare_reset'=>'Créer une identité et un code',
+    'e2ee.archives'=>'Clés des anciens appareils conservées',
+    'e2ee.archive_help'=>'Les anciennes clés sont chiffrées dans ce navigateur. Déverrouillez votre appareil actuel, puis ouvrez l’ancien appareil pour lire les messages précédents vérifiables.',
+    'e2ee.archive_device'=>'Ancien appareil',
+    'e2ee.archive_passphrase'=>'Phrase secrète de l’ancien appareil',
+    'e2ee.open_archive'=>'Ouvrir les anciennes clés en lecture',
+    'e2ee.account_password'=>'Mot de passe du compte',
+    'e2ee.account_factor'=>'Second facteur ou code de récupération du compte',
+    'e2ee.reset_auth_error'=>'Vérifiez le mot de passe et le second facteur du compte.',
+    'e2ee.peer_rotation'=>'L’identité de votre contact a changé. Comparez l’empreinte complète via un canal indépendant avant de renvoyer des messages.',
+    'e2ee.archive_opened'=>'Les clés de l’ancien appareil sont ouvertes en lecture.',
     'e2ee.title' => 'Discussion chiffrée de bout en bout',
     'e2ee.intro' => 'Les messages et pièces jointes sont chiffrés sur vos appareils. La plateforme voit toujours les participants, les horaires et les tailles des fichiers. Une clé compromise peut aussi exposer les anciens messages.',
     'e2ee.legacy' => 'Ouvrir les échanges précédents',

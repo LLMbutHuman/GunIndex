@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Zmień tożsamość czatu',
+    'e2ee.reset_help'=>'Użyj tej funkcji, jeśli ktoś mógł uzyskać tożsamość czatu lub kod odzyskiwania. Potrzebne są hasło konta i skonfigurowany drugi składnik. Wybierz wyżej nazwę urządzenia i jego hasło.',
+    'e2ee.reset_confirm'=>'Chcę odłączyć poprzednie urządzenia od nowych wiadomości i utworzyć nową tożsamość czatu. Moje kontakty muszą zweryfikować nowy odcisk klucza.',
+    'e2ee.prepare_reset'=>'Utwórz nową tożsamość i kod',
+    'e2ee.archives'=>'Zapisane klucze poprzednich urządzeń',
+    'e2ee.archive_help'=>'Poprzednie klucze są zaszyfrowane w tej przeglądarce. Odblokuj aktualne urządzenie, a następnie otwórz poprzednie, aby odczytać wcześniejsze wiadomości, które można zweryfikować.',
+    'e2ee.archive_device'=>'Poprzednie urządzenie',
+    'e2ee.archive_passphrase'=>'Hasło poprzedniego urządzenia',
+    'e2ee.open_archive'=>'Otwórz poprzednie klucze do odczytu',
+    'e2ee.account_password'=>'Hasło konta',
+    'e2ee.account_factor'=>'Drugi składnik lub kod odzyskiwania konta',
+    'e2ee.reset_auth_error'=>'Sprawdź hasło konta i skonfigurowany drugi składnik.',
+    'e2ee.peer_rotation'=>'Zmieniła się tożsamość kontaktu. Przed wysłaniem kolejnych wiadomości porównaj pełny nowy odcisk klucza innym kanałem.',
+    'e2ee.archive_opened'=>'Poprzednie klucze urządzenia są otwarte do odczytu.',
     'e2ee.title' => 'Czat szyfrowany od końca do końca',
     'e2ee.intro' => 'Wiadomości i załączniki są szyfrowane na Twoich urządzeniach. Platforma nadal widzi uczestników, czas i rozmiary plików. Przejęty klucz może ujawnić również starsze wiadomości.',
     'e2ee.legacy' => 'Otwórz wcześniejszą historię czatu',

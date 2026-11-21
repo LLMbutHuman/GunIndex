@@ -59,6 +59,10 @@ try {
             case 'history':
                 e2ee_fields($_GET,isset($_GET['after']) ? ['action','listing_id','peer_id','after'] : ['action','listing_id','peer_id']);
                 $respond(['messages'=>e2ee_history($pdo,$userId,$readInteger($_GET['listing_id']),$readInteger($_GET['peer_id']),isset($_GET['after']) ? $readInteger($_GET['after'],0) : 0)]);
+            case 'manifest_chain':
+                e2ee_fields($_GET,['action','listing_id','peer_id','user_id','from_version','through_version']);
+                $respond(['manifests'=>e2ee_manifest_chain($pdo,$userId,$readInteger($_GET['listing_id']),$readInteger($_GET['peer_id']),
+                    $readInteger($_GET['user_id']),$readInteger($_GET['from_version']),$readInteger($_GET['through_version']))]);
             case 'download':
                 e2ee_fields($_GET,['action','id']);
                 $download = e2ee_download($pdo,$userId,e2ee_hex($_GET['id']));
@@ -89,6 +93,7 @@ try {
     unset($request['action'],$request['csrf_token']);
     switch ($action) {
         case 'account': $respond(['account'=>e2ee_account_save($pdo,$userId,$request)]);
+        case 'reset_identity': $respond(['account'=>e2ee_reset_identity($pdo,$user,$request)]);
         case 'upload': $respond(['attachment'=>e2ee_upload($pdo,$userId,$request)]);
         case 'send': $respond(['id'=>e2ee_send($pdo,$userId,$request)]);
         case 'read':

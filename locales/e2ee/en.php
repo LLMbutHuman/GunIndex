@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Replace chat identity',
+    'e2ee.reset_help'=>'Use this if someone may have obtained your chat identity or recovery code. Replacement requires your account password and an enrolled second factor. Choose a device name and passphrase above.',
+    'e2ee.reset_confirm'=>'I want to revoke previous devices for new messages and create a new chat identity. My contacts must verify the new fingerprint again.',
+    'e2ee.prepare_reset'=>'Generate a new identity and code',
+    'e2ee.archives'=>'Saved previous device keys',
+    'e2ee.archive_help'=>'Previous device keys are encrypted in this browser. Unlock your current device, then open the previous device to read earlier messages that can be verified.',
+    'e2ee.archive_device'=>'Previous device',
+    'e2ee.archive_passphrase'=>'Previous device passphrase',
+    'e2ee.open_archive'=>'Open previous keys for reading',
+    'e2ee.account_password'=>'Account password',
+    'e2ee.account_factor'=>'Second factor or account recovery code',
+    'e2ee.reset_auth_error'=>'Check your account password and enrolled second factor.',
+    'e2ee.peer_rotation'=>'Your contact’s chat identity has changed. Compare the full new fingerprint over a separate channel before sending again.',
+    'e2ee.archive_opened'=>'Previous device keys are open for reading.',
     'e2ee.title' => 'End-to-end encrypted chat',
     'e2ee.intro' => 'Messages and attachments are encrypted on your devices. The platform can still see participants, timestamps and file sizes. A compromised key can also expose older messages.',
     'e2ee.legacy' => 'Open previous chat history',

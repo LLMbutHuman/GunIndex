@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Chat-Identität ersetzen',
+    'e2ee.reset_help'=>'Verwende diese Funktion, wenn jemand die bisherige Chat-Identität oder den Wiederherstellungscode besitzen könnte. Für den Austausch brauchst du dein Kontopasswort und einen eingerichteten zweiten Faktor. Wähle oben einen Gerätenamen und eine Gerätepassphrase.',
+    'e2ee.reset_confirm'=>'Ich möchte bisherige Geräte für neue Nachrichten sperren und eine neue Chat-Identität erstellen. Meine Kontakte müssen den neuen Fingerabdruck erneut prüfen.',
+    'e2ee.prepare_reset'=>'Neue Identität und neuen Code erzeugen',
+    'e2ee.archives'=>'Gesicherte frühere Geräteschlüssel',
+    'e2ee.archive_help'=>'Frühere Geräteschlüssel sind verschlüsselt in diesem Browser gespeichert. Entsperre zuerst dein aktuelles Gerät und öffne danach das alte Gerät, um verifizierbare frühere Nachrichten zu lesen.',
+    'e2ee.archive_device'=>'Früheres Gerät',
+    'e2ee.archive_passphrase'=>'Passphrase des früheren Geräts',
+    'e2ee.open_archive'=>'Frühere Geräteschlüssel zum Lesen öffnen',
+    'e2ee.account_password'=>'Kontopasswort',
+    'e2ee.account_factor'=>'Zweiter Faktor oder Konto-Wiederherstellungscode',
+    'e2ee.reset_auth_error'=>'Prüfe Kontopasswort und den eingerichteten zweiten Faktor.',
+    'e2ee.peer_rotation'=>'Die Chat-Identität deines Kontakts wurde geändert. Vergleiche den vollständigen neuen Fingerabdruck über einen unabhängigen Kanal, bevor du wieder sendest.',
+    'e2ee.archive_opened'=>'Frühere Geräteschlüssel sind zum Lesen geöffnet.',
     'e2ee.title' => 'Ende-zu-Ende-verschlüsselter Chat',
     'e2ee.intro' => 'Nachrichten und Anhänge werden auf deinen Geräten verschlüsselt. Teilnehmer, Zeitpunkte und Dateigrößen bleiben für die Plattform sichtbar. Ein kompromittierter Schlüssel kann auch ältere Nachrichten gefährden.',
     'e2ee.legacy' => 'Bisherigen Chatverlauf öffnen',

@@ -39,15 +39,31 @@ include __DIR__.'/../includes/header.php';
 <label class="field" for="e2ee-revoke"><?=h(t('e2ee.revoke'))?><select id="e2ee-revoke" disabled><option value=""><?=h(t('e2ee.no_revoke'))?></option></select></label>
 <button class="button secondary" type="button" id="e2ee-prepare-recovery" disabled><?=h(t('e2ee.prepare_recovery'))?></button>
 </details>
+<details id="e2ee-identity-reset" hidden><summary><?=h(t('e2ee.reset_title'))?></summary>
+<p><?=h(t('e2ee.reset_help'))?></p>
+<label class="check"><input type="checkbox" id="e2ee-reset-confirm"> <?=h(t('e2ee.reset_confirm'))?></label>
+<button class="button secondary" type="button" id="e2ee-prepare-reset" disabled><?=h(t('e2ee.prepare_reset'))?></button>
+</details>
+<details id="e2ee-archives" hidden><summary><?=h(t('e2ee.archives'))?></summary>
+<p><?=h(t('e2ee.archive_help'))?></p>
+<label class="field" for="e2ee-archive-device"><?=h(t('e2ee.archive_device'))?><select id="e2ee-archive-device"></select></label>
+<label class="field" for="e2ee-archive-passphrase"><?=h(t('e2ee.archive_passphrase'))?><input id="e2ee-archive-passphrase" type="password" maxlength="256" autocomplete="off"></label>
+<button class="button secondary" type="button" id="e2ee-open-archive" disabled><?=h(t('e2ee.open_archive'))?></button>
+</details>
 <section id="e2ee-pending" class="panel" hidden><h3><?=h(t('e2ee.save_code'))?></h3><p><?=h(t('e2ee.confirm_help'))?></p>
 <label class="field" for="e2ee-new-code"><?=h(t('e2ee.recovery_code'))?><textarea id="e2ee-new-code" readonly rows="5" spellcheck="false" autocomplete="off"></textarea></label>
 <button type="button" class="button secondary" id="e2ee-download-code"><?=h(t('e2ee.download'))?></button>
 <label class="check"><input type="checkbox" id="e2ee-code-saved"> <?=h(t('e2ee.code_saved'))?></label>
+<div id="e2ee-reset-auth" hidden>
+<label class="field" for="e2ee-account-password"><?=h(t('e2ee.account_password'))?><input id="e2ee-account-password" type="password" maxlength="1024" autocomplete="current-password"></label>
+<label class="field" for="e2ee-account-factor"><?=h(t('e2ee.account_factor'))?><input id="e2ee-account-factor" type="password" maxlength="64" autocomplete="off" spellcheck="false"></label>
+</div>
 <div class="button-row"><button type="button" class="button" id="e2ee-commit" disabled><?=h(t('e2ee.commit'))?></button><button type="button" class="button secondary" id="e2ee-cancel"><?=h(t('e2ee.cancel'))?></button></div>
 </section></section>
 <details class="panel"><summary><?=h(t('e2ee.pending_uploads'))?></summary><p><?=h(t('e2ee.pending_uploads_help'))?></p><ul id="e2ee-uploads"></ul></details>
 <?php if($context): ?>
 <section class="panel"><h2><?=h(t('e2ee.peer_fingerprint'))?></h2><code id="e2ee-peer-fingerprint" class="e2ee-fingerprint"></code><p><?=h(t('e2ee.verify_help'))?></p>
+<p class="notice" id="e2ee-peer-rotation" role="status" hidden><?=h(t('e2ee.peer_rotation'))?></p>
 <label class="field" for="e2ee-fingerprint-input"><?=h(t('e2ee.fingerprint_input'))?><input id="e2ee-fingerprint-input" maxlength="128" autocomplete="off" spellcheck="false" disabled></label><button type="button" class="button secondary" id="e2ee-verify" disabled><?=h(t('e2ee.verify'))?></button>
 </section>
 <section class="panel"><h2><?=h(t('e2ee.body'))?></h2><label class="field" for="e2ee-body"><?=h(t('e2ee.body'))?><textarea id="e2ee-body" maxlength="10000" rows="5" disabled></textarea></label>

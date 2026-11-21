@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Erstat chatidentitet',
+    'e2ee.reset_help'=>'Brug funktionen, hvis nogen kan have fået din chatidentitet eller gendannelseskode. Du skal bruge din kontoadgangskode og en konfigureret ekstra faktor. Vælg navn og adgangssætning til enheden ovenfor.',
+    'e2ee.reset_confirm'=>'Jeg vil afskære tidligere enheder fra nye beskeder og oprette en ny chatidentitet. Mine kontakter skal verificere det nye fingeraftryk.',
+    'e2ee.prepare_reset'=>'Opret ny identitet og kode',
+    'e2ee.archives'=>'Gemte nøgler fra tidligere enheder',
+    'e2ee.archive_help'=>'Tidligere nøgler er krypteret i denne browser. Lås din aktuelle enhed op, og åbn derefter den tidligere enhed for at læse tidligere beskeder, der kan verificeres.',
+    'e2ee.archive_device'=>'Tidligere enhed',
+    'e2ee.archive_passphrase'=>'Adgangssætning til tidligere enhed',
+    'e2ee.open_archive'=>'Åbn tidligere nøgler til læsning',
+    'e2ee.account_password'=>'Kontoadgangskode',
+    'e2ee.account_factor'=>'Ekstra faktor eller kontogendannelseskode',
+    'e2ee.reset_auth_error'=>'Kontrollér kontoadgangskoden og din konfigurerede ekstra faktor.',
+    'e2ee.peer_rotation'=>'Din kontakts chatidentitet er ændret. Sammenlign hele det nye fingeraftryk via en uafhængig kanal, før du sender igen.',
+    'e2ee.archive_opened'=>'Tidligere enhedsnøgler er åbne til læsning.',
     'e2ee.title' => 'Ende-til-ende-krypteret chat',
     'e2ee.intro' => 'Beskeder og vedhæftninger krypteres på dine enheder. Platformen kan stadig se deltagere, tidspunkter og filstørrelser. En kompromitteret nøgle kan også afsløre ældre beskeder.',
     'e2ee.legacy' => 'Åbn tidligere chathistorik',

@@ -471,6 +471,99 @@ try {
         eit_check(eit_scalar($pdo,'SELECT current_hash FROM market_e2ee_accounts WHERE user_id=?',[$outsider['id']])===$winnerHash);
         eit_check((int)eit_scalar($pdo,'SELECT COUNT(*) FROM market_e2ee_manifests WHERE user_id=?',[$outsider['id']])===2);
     });
+
+    eit_test('reauthenticated_identity_reset_preserves_history_and_requires_current_recipients',static function()use($pdo,$seller,$browsers,$listing):void {
+        $owner=eit_user($pdo,'reset');
+        $browser=eit_browser($owner);
+        try {
+            eit_accept($owner,$browser,eit_manifest($owner,[eit_device(0)]));
+            $oldBundle=eit_get($browser,'account')['data']['account'];
+            $oldFileBytes='Synthetic historical ciphertext';
+            $oldFile=eit_upload_payload($owner,$seller,$listing,bin2hex(random_bytes(16)),$oldFileBytes);
+            eit_post($browser,'upload',$oldFile);
+            $oldMessage=eit_message($owner,$seller,$listing,$oldFile['client_id'],[$oldFile['id']]);
+            $messageId=eit_post($browser,'send',$oldMessage)['id'];
+            $peerBrowser=$browsers['seller'];
+            $pendingFile=eit_upload_payload($seller,$owner,$listing,bin2hex(random_bytes(16)),'Synthetic retired-recipient ciphertext');
+            eit_post($peerBrowser,'upload',$pendingFile);
+            $oldPeerSend=eit_message($seller,$owner,$listing);
+
+            $pair=sodium_crypto_sign_keypair();
+            $replacement=array_replace($owner,['identity'=>base64_encode(sodium_crypto_sign_publickey($pair)),'secret'=>sodium_crypto_sign_secretkey($pair)]);
+            sodium_memzero($pair);
+            $newDevice=eit_device(1);
+            $change=eit_manifest($replacement,[$newDevice],3);
+            $credentials=['password'=>$owner['password'],'factor'=>'invalid synthetic factor'];
+            eit_post($browser,'reset_identity',$change+$credentials,403);
+            eit_post($browsers['guest'],'reset_identity',$change+$credentials,401);
+            $response=eit_http($browser['curl'],'/user/e2ee-api.php',['action'=>'reset_identity']+$change+$credentials);
+            eit_check($response['status']===403,'reset requires CSRF');
+            eit_post($browser,'account',$change,409);
+
+            $secret=random_bytes(20);
+            try {
+                $pdo->prepare('INSERT INTO market_user_totp(user_id,secret_cipher,last_counter) VALUES (?,?,?)')
+                    ->execute([$owner['id'],crypto_encrypt('user_totp',$secret),intdiv(time(),30)-1]);
+            } finally { sodium_memzero($secret); }
+            $codes=user_totp_make_recovery($pdo,$owner['id']);
+            $credentials['factor']=$codes[0];
+            $request=$change+$credentials;
+            eit_post($browser,'reset_identity',array_replace($request,['password'=>'incorrect synthetic password']),403);
+            eit_post($browser,'reset_identity',array_replace($request,['factor'=>'invalid synthetic factor']),403);
+            $pdo->prepare('UPDATE users SET is_admin=1 WHERE id=?')->execute([$owner['id']]);
+            try { eit_post($browser,'reset_identity',$request,403); }
+            finally { $pdo->prepare('UPDATE users SET is_admin=0 WHERE id=?')->execute([$owner['id']]); }
+            $stale=eit_manifest(array_replace($replacement,['hash'=>str_repeat('f',64)]),[$newDevice],3);
+            eit_post($browser,'reset_identity',$stale+$credentials,409);
+            $retiredDevice=eit_device(0); // distinct id, but the same underlying public key
+            eit_post($browser,'reset_identity',eit_manifest($replacement,[$retiredDevice],3)+$credentials,409);
+            $factorHash=user_totp_recovery_hash($codes[0]);
+            eit_check(eit_scalar($pdo,'SELECT used_at FROM market_totp_recovery_codes WHERE user_id=? AND code_hash=?',[$owner['id'],$factorHash])===null);
+
+            $saved=eit_post($browser,'reset_identity',$request)['account'];
+            eit_check($saved['hash']===hash('sha256',$change['manifest'])&&$saved['recovery_cipher']===$change['recovery_cipher']);
+            $usedAt=eit_scalar($pdo,'SELECT used_at FROM market_totp_recovery_codes WHERE user_id=? AND code_hash=?',[$owner['id'],$factorHash]);
+            eit_check(is_string($usedAt)&&eit_post($browser,'reset_identity',$request)['account']===$saved);
+            eit_post($browser,'reset_identity',array_replace($request,['password'=>'incorrect synthetic password']),403);
+            eit_check(eit_scalar($pdo,'SELECT used_at FROM market_totp_recovery_codes WHERE user_id=? AND code_hash=?',[$owner['id'],$factorHash])===$usedAt);
+            eit_check((int)eit_scalar($pdo,'SELECT COUNT(*) FROM market_e2ee_identity_epochs WHERE user_id=?',[$owner['id']])===2
+                &&(int)eit_scalar($pdo,'SELECT COUNT(*) FROM market_e2ee_manifests WHERE user_id=?',[$owner['id']])===2
+                &&(int)eit_scalar($pdo,"SELECT COUNT(*) FROM admin_logs WHERE admin_id=? AND action_type='e2ee.identity_reset'",[$owner['id']])===1);
+
+            $historyQuery=['listing_id'=>$listing,'peer_id'=>$owner['id']];
+            $history=eit_get($peerBrowser,'history',$historyQuery)['data']['messages'];
+            eit_check(count($history)===1&&$history[0]['id']===$messageId&&$history[0]['ciphertext']===$oldMessage['ciphertext']
+                &&$history[0]['sender_manifest']===e2ee_public_account($oldBundle)&&$history[0]['attachments'][0]['id']===$oldFile['id']);
+            $download=eit_get($peerBrowser,'download',['id'=>$oldFile['id']]);
+            eit_check($download['body']===$oldFileBytes,'historical attachment bytes retained');
+            $proof=$historyQuery+['user_id'=>$owner['id'],'from_version'=>1,'through_version'=>2];
+            $chain=eit_get($peerBrowser,'manifest_chain',$proof)['data']['manifests'];
+            eit_check($chain===[e2ee_public_account($oldBundle),e2ee_public_account($saved)],'public exact historical manifests');
+            eit_get($peerBrowser,'manifest_chain',array_replace($proof,['through_version'=>33]),400);
+            eit_get($browsers['outsider'],'manifest_chain',array_replace($proof,['peer_id'=>$seller['id']]),403);
+
+            eit_check(eit_post($browser,'send',$oldMessage)['id']===$messageId,'already committed send retry retained');
+            eit_post($browser,'send',eit_message($owner,$seller,$listing),403);
+            eit_post($peerBrowser,'send',$oldPeerSend,409);
+            eit_post($peerBrowser,'upload',$pendingFile,409);
+            eit_post($peerBrowser,'upload',$pendingFile+['sender_version'=>$seller['version'],'receiver_version'=>1],409);
+            $replacement['version']=2;
+            $replacement['hash']=$saved['hash'];
+            $replacement['devices']=[$newDevice];
+            eit_post($peerBrowser,'send',eit_message($seller,$replacement,$listing,$pendingFile['client_id'],[$pendingFile['id']]),409);
+            eit_check(eit_scalar($pdo,'SELECT message_id FROM market_e2ee_attachments WHERE id=?',[$pendingFile['id']])===null);
+            eit_post($peerBrowser,'discard',['id'=>$pendingFile['id']]);
+            $newFile=eit_upload_payload($replacement,$seller,$listing,bin2hex(random_bytes(16)),'Synthetic current-recipient ciphertext');
+            eit_post($browser,'upload',$newFile+['sender_version'=>2,'receiver_version'=>$seller['version']]);
+            $next=eit_post($browser,'send',eit_message($replacement,$seller,$listing,$newFile['client_id'],[$newFile['id']]))['id'];
+            $context=eit_get($peerBrowser,'context',$historyQuery)['data'];
+            eit_check($next>$messageId&&$context['peer']===e2ee_public_account($saved)&&!isset($context['peer']['recovery_cipher']));
+        } finally {
+            curl_close($browser['curl']);
+            sodium_memzero($owner['secret']);
+            if (isset($replacement['secret'])) sodium_memzero($replacement['secret']);
+        }
+    });
     echo 'E2EE synthetic server checks passed: '.$eitPassed.PHP_EOL;
 } catch (Throwable $error) {
     if ($pdo->inTransaction()) $pdo->rollBack();

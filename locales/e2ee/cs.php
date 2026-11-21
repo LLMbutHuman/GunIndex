@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Nahradit identitu chatu',
+    'e2ee.reset_help'=>'Použijte tuto funkci, pokud někdo mohl získat vaši identitu chatu nebo kód pro obnovení. Potřebujete heslo účtu a nastavený druhý faktor. Nahoře zadejte název zařízení a jeho přístupovou frázi.',
+    'e2ee.reset_confirm'=>'Chci odebrat dřívějším zařízením přístup k novým zprávám a vytvořit novou identitu chatu. Kontakty musí ověřit nový otisk.',
+    'e2ee.prepare_reset'=>'Vytvořit novou identitu a kód',
+    'e2ee.archives'=>'Uložené klíče dřívějších zařízení',
+    'e2ee.archive_help'=>'Dřívější klíče jsou v tomto prohlížeči zašifrované. Odemkněte aktuální zařízení, poté otevřete dřívější zařízení a přečtěte si ověřitelné starší zprávy.',
+    'e2ee.archive_device'=>'Dřívější zařízení',
+    'e2ee.archive_passphrase'=>'Přístupová fráze dřívějšího zařízení',
+    'e2ee.open_archive'=>'Otevřít dřívější klíče pro čtení',
+    'e2ee.account_password'=>'Heslo účtu',
+    'e2ee.account_factor'=>'Druhý faktor nebo kód pro obnovení účtu',
+    'e2ee.reset_auth_error'=>'Zkontrolujte heslo účtu a nastavený druhý faktor.',
+    'e2ee.peer_rotation'=>'Identita vašeho kontaktu se změnila. Před dalším odesíláním zpráv porovnejte celý nový otisk pomocí nezávislého kanálu.',
+    'e2ee.archive_opened'=>'Klíče dřívějšího zařízení jsou otevřené pro čtení.',
     'e2ee.title' => 'Chat s koncovým šifrováním',
     'e2ee.intro' => 'Zprávy a přílohy se šifrují na vašich zařízeních. Platforma nadále vidí účastníky, časy a velikosti souborů. Získání vašeho klíče útočníkem může odhalit i starší zprávy.',
     'e2ee.legacy' => 'Otevřít předchozí historii chatu',

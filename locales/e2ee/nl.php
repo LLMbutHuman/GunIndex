@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 return [
+    'e2ee.reset_title'=>'Chatidentiteit vervangen',
+    'e2ee.reset_help'=>'Gebruik dit als iemand je chatidentiteit of herstelcode in handen kan hebben. Voor vervanging heb je je accountwachtwoord en een ingestelde tweede factor nodig. Kies hierboven een apparaatnaam en wachtwoordzin.',
+    'e2ee.reset_confirm'=>'Ik wil vorige apparaten uitsluiten van nieuwe berichten en een nieuwe chatidentiteit maken. Mijn contacten moeten de nieuwe vingerafdruk opnieuw controleren.',
+    'e2ee.prepare_reset'=>'Genereer een nieuwe identiteit en code',
+    'e2ee.archives'=>'Opgeslagen sleutels van vorige apparaten',
+    'e2ee.archive_help'=>'Vorige sleutels zijn versleuteld in deze browser. Ontgrendel je huidige apparaat en open daarna het vorige apparaat om verifieerbare eerdere berichten te lezen.',
+    'e2ee.archive_device'=>'Vorig apparaat',
+    'e2ee.archive_passphrase'=>'Wachtwoordzin van het vorige apparaat',
+    'e2ee.open_archive'=>'Vorige sleutels openen om te lezen',
+    'e2ee.account_password'=>'Accountwachtwoord',
+    'e2ee.account_factor'=>'Tweede factor of accountherstelcode',
+    'e2ee.reset_auth_error'=>'Controleer je accountwachtwoord en ingestelde tweede factor.',
+    'e2ee.peer_rotation'=>'De chatidentiteit van je contact is gewijzigd. Vergelijk de volledige nieuwe vingerafdruk via een onafhankelijk kanaal voordat je weer berichten verstuurt.',
+    'e2ee.archive_opened'=>'Vorige apparaatsleutels zijn geopend om te lezen.',
     'e2ee.title' => 'End-to-endversleutelde chat',
     'e2ee.intro' => 'Berichten en bijlagen worden op je apparaten versleuteld. Het platform ziet nog wel deelnemers, tijdstippen en bestandsgroottes. Een gecompromitteerde sleutel kan ook oudere berichten blootleggen.',
     'e2ee.legacy' => 'Eerdere chatgeschiedenis openen',

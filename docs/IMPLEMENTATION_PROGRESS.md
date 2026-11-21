@@ -1,5 +1,23 @@
 # Implementierungsfortschritt
 
+## Austausch einer kompromittierten E2EE-Kontoautorität, 2026-11-21
+
+Ein normales Kundenkonto mit eingerichtetem zweiten Faktor kann die
+Chat-Identität mit Kontopasswort, zweitem Faktor und bestätigtem neuen
+Wiederherstellungscode ersetzen. Der neue Schlüsselstand sperrt frühere
+Geräte für neue Nachrichten. Kontakte müssen den neuen Fingerabdruck über
+einen unabhängigen Kanal prüfen. Historische Manifeste, Nachrichten und Dateien
+bleiben gespeichert. Dieser Browser kann das alte verschlüsselte Gerätearchiv
+mit der früheren Passphrase öffnen, soweit verifizierbare Schlüssel vorliegen.
+
+Die neue Historienprüfung verlangt einen vorhandenen Vertrauensanker und bei
+älteren Manifesten eine Hash-Kette zu diesem Anker. Neue verschlüsselte Anhänge
+binden beide aktuellen Manifestversionen. PHP-Syntax, JavaScript-Syntax,
+Sprachparität sowie 13 echte OpenPGP-Testgruppen bestanden lokal. PHP hat
+zusätzlich einen vom Browser-Code generierten neuen Schlüsselstand überprüft.
+Isolierter MySQL-/HTTP-/Chromium-Lauf und Sicherheitsabnahme stehen aus.
+Für privilegierte Konten fehlt der gesonderte Reset mit ihrer bestehenden MFA.
+
 ## Gemeinsame Admin-Navigation in acht Sprachen, 2026-11-21
 
 Die Administration verwendet lokalisierte Linktexte und zugängliche

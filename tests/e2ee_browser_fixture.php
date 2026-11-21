@@ -54,6 +54,16 @@ try {
             $listing=(int)$pdo->lastInsertId(); $pdo->commit();
         } catch (Throwable $error) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $error; }
         $out=['fixture'=>$fixture,'users'=>$users,'listing_id'=>$listing];
+    } elseif ($operation==='reset_factor') {
+        $owners=ebf_owners($pdo,$input['fixture']??null);
+        $buyer=$owners['buyer']['id'];$secret=random_bytes(20);
+        $pdo->beginTransaction();
+        try {
+            ebf_assert(user_totp_state($pdo,$buyer,true)===null);
+            $pdo->prepare('INSERT INTO market_user_totp(user_id,secret_cipher,last_counter) VALUES (?,?,0)')->execute([$buyer,crypto_encrypt('user_totp',$secret)]);
+            $codes=user_totp_make_recovery($pdo,$buyer);$pdo->commit();
+            $out=['factor'=>$codes[0]];
+        } finally { if ($pdo->inTransaction()) $pdo->rollBack(); sodium_memzero($secret); }
     } elseif (in_array($operation,['status','restore'],true)) {
         $owners=ebf_owners($pdo,$input['fixture']??null);
         if ($operation==='restore') {
