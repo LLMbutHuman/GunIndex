@@ -118,7 +118,10 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    rechtliche Dokumente prüfen. Zahlungsfreigaben bleiben standardmäßig aus.
    Die Installation setzt keine rechtlichen oder vertraglichen Freigaben.
 
-9. E-Mail lokal einrichten. Der private Postfix-Container veröffentlicht keinen
+9. E-Mail im geschützten Assistenten unter `/admin/mail-setup.php` einrichten.
+   Dort lassen sich lokales Postfix oder ein TLS-Relay konfigurieren, die
+   DNS-Einträge prüfen und eine Testmail an das eigene Konto beauftragen.
+   Der private Postfix-Container veröffentlicht keinen
    SMTP-Hostport. Nur PHP und Worker dürfen intern weiterleiten. Für echte
    Zustellung sind passende A/PTR-, SPF-, DKIM- und DMARC-Einstellungen, ein zulässiger
    Absender und eine nicht blockierte ausgehende SMTP-Verbindung nötig. Diese
@@ -126,15 +129,11 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    eigener MTA, kein externer API-Dienst. Falls Port 25 nicht nutzbar ist, ist ein
    ausdrücklich konfigurierter TLS-SMTP-Relay eine mögliche externe Ausnahme.
 
-   ```sh
-   sudoedit /srv/gunindex/config/app.env
-   ```
-
-   Erst nach der Mail-/DNS-Prüfung `MAIL_TRANSPORT=none` auf `sendmail` ändern;
-   `MAIL_FROM` und `APP_URL` müssen zur eigenen Domain passen. Anschließend:
+   Absender und Domain müssen zur beim Betreiber eingerichteten Zustellung passen.
+   Die verschlüsselt gespeicherten Einstellungen werden von Worker und Monitor
+   übernommen. Optional den lokalen Status und die Dienste prüfen:
 
    ```sh
-   sudo /srv/gunindex/compose.sh up -d --force-recreate php worker
    sudo /srv/gunindex/compose.sh exec -T php php ops/monitor.php
    sudo /srv/gunindex/compose.sh logs --tail=50 mailer worker
    ```

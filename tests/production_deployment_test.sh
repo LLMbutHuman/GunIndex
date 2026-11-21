@@ -84,6 +84,7 @@ done
 [[ "$ready" == 1 ]]
 "$compose" exec -T php php ops/health.php --core-only
 bash "$release/ops/production/check-readiness.sh" "$compose"
+"$compose" exec -T -e GUNINDEX_CI_FIXTURE=mail-health php php tests/production_mail_health_test.php
 health_status=0
 "$compose" exec -T php php ops/health.php > "$deployment/health.json" || health_status=$?
 [[ "$health_status" == 2 ]]

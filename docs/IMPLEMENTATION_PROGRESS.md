@@ -15,12 +15,21 @@ Installer. Im ersten Lauf blockierte Docker Compose den Lesenachweis für das
 CA-Bündel außerhalb des Build-Kontexts. Der Installer baut die gepinnten
 Images jetzt mit einem gezielt eingebundenen CA-Bündel vor der Update-Pause.
 [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/44955709343)
+Die Korrektur bestand auf einem frischen Ubuntu-22.04-Runner inklusive
+HTTP-Sperre, HTTPS-Deploy-Hook mit isoliertem Testzertifikat,
+Login-Schutz des Assistenten und Erhalt angepasster Timer-Dateien.
+[Erfolgreiche Betriebsprobe](https://github.com/LLMbutHuman/GunIndex/actions/runs/44955864941)
 
 Die freigegebene Datei `ZIP/PLZ.csv` wird bei einer frischen deutschen
 Datenbasis automatisch importiert. Die transaktionale Wiederholung lässt
 vorhandene und deaktivierte Quellen bestehen. Der lokale Probelauf prüfte den
 SHA-256 und alle 8.289 PLZ ohne Schreibzugriff. Die Betriebsprobe prüft außerdem
 die TOTP-Einrichtung des ersten Administrators über ein isoliertes Terminal.
+
+Der Monitor liest die verschlüsselte Mailkonfiguration des Admin-Assistenten.
+Eine gültige Konfiguration beseitigt die Warnung für deaktivierte Zustellung.
+Nicht lesbare oder ungültige Einstellungen werden als Fehler gemeldet. Die
+Probe läuft ohne Mailversand und rollt ihre Datenbankschreibvorgänge zurück.
 
 Zielserver, öffentliche DNS-/TLS-Prüfung, Mailzustellung und
 Offsite-Wiederherstellung benötigen Betreiberinfrastruktur.

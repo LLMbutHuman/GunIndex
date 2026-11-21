@@ -2,6 +2,9 @@
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit(1);}
 require_once __DIR__.'/../config/db.php';
+require_once __DIR__.'/../config/crypto.php';
+require_once __DIR__.'/../config/mail.php';
+require_once __DIR__.'/../config/mail_setup.php';
 require_once __DIR__.'/../config/worker_health.php';
 function ops_health(PDO $pdo,bool $coreOnly=false):array {
  $checks=['database'=>false,'private_storage'=>false];$warnings=[];$queues=[];$workers=[];$maintenance=null;
@@ -14,7 +17,13 @@ function ops_health(PDO $pdo,bool $coreOnly=false):array {
    $checks['maintenance_state']=$state&&in_array($state['configured'],['0','1'],true)&&(int)$state['active']===(int)$state['configured']&&((int)$state['active']===1?($state['window_id']!==null&&$state['ended_at']===null):($state['window_id']===null||$state['ended_at']!==null));
    if($checks['maintenance_state'])$maintenance=['active'=>(int)$state['active']===1,'window_id'=>$state['window_id']===null?null:(int)$state['window_id'],'started_at'=>(int)$state['active']===1?$state['started_at']:null];
   }catch(Throwable){$checks['maintenance_state']=false;}
-  if((getenv('MAIL_TRANSPORT')?:'none')==='none')$warnings[]='mail_not_configured';
+  try {
+   $transport = mail_runtime_config($pdo);
+   if ($transport['mode'] === 'off') $warnings[] = 'mail_not_configured';
+   elseif (mail_transport_reason($pdo, $transport) !== null) $warnings[] = 'mail_configuration_invalid';
+  } catch (Throwable) {
+   $warnings[] = 'mail_configuration_invalid';
+  }
   try{$exists=$pdo->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='market_mail_queue'")->fetchColumn();if($exists){$queues['mail']=$pdo->query('SELECT status,COUNT(*) AS count FROM market_mail_queue GROUP BY status')->fetchAll();$old=(int)$pdo->query("SELECT COUNT(*) FROM market_mail_queue WHERE status IN('pending','processing') AND created_at<UTC_TIMESTAMP()-INTERVAL 1 HOUR")->fetchColumn();if($old>0)$warnings[]='old_mail_backlog';}}catch(Throwable){$warnings[]='queue_check_failed';}
   if(getenv('APP_ENV')==='production'){
    $now=time();
