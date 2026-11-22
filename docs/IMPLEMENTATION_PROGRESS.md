@@ -1,5 +1,12 @@
 # Implementierungsfortschritt
 
+## Rückkehr vom Login zum Einrichtungsassistenten
+
+Wer den vom Installer ausgegebenen Admin-Link öffnet, landet nach Passwort
+und bestätigtem zweiten Faktor direkt im Assistenten. Ein normales Konto
+behält seinen üblichen Einstieg. Der Zugriff setzt weiterhin die
+Berechtigung zur Website-Einrichtung voraus.
+
 ## Kategorien bearbeiten
 
 Kategoriebaum, Formulare und Validierungen sind in acht Sprachen verfügbar.

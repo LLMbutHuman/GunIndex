@@ -7,7 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     try {
         $code = auth_input($_POST, 'code');
-        if (($verified=auth_verify_pending_mfa($pdo, $code)) !== null) { redirect((int)$verified['is_admin']===1 ? '/admin/index.php' : '/user/dashboard.php'); }
+        $openSetup = ($_SESSION['pending_admin_setup'] ?? false) === true;
+        if (($verified=auth_verify_pending_mfa($pdo, $code)) !== null) {
+            if ($openSetup && rbac_has_permission($pdo, (int)$verified['id'], 'site.manage')) redirect('/admin/setup.php');
+            redirect((int)$verified['is_admin']===1 ? '/admin/index.php' : '/user/dashboard.php');
+        }
         $error = t('account.mfa_error'); http_response_code(422);
     } catch (InvalidArgumentException $exception) { $error = $exception->getMessage(); http_response_code(422); }
 }

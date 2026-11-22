@@ -1,10 +1,14 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
-$admin = require_permission($pdo, 'site.manage');
-require_once __DIR__.'/../config/setup.php';
 header('Cache-Control: private, no-store, max-age=0');
 header('X-Robots-Tag: noindex, nofollow');
+if (current_user($pdo) === null) {
+    $_SESSION['open_setup_after_login'] = true;
+    redirect('/auth/login.php');
+}
+$admin = require_permission($pdo, 'site.manage');
+require_once __DIR__.'/../config/setup.php';
 if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET','HEAD'], true)) {
     header('Allow: GET, HEAD');
     abort_request(405, t('setup.ui.readonly'));

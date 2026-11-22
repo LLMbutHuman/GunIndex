@@ -17,10 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($user['mfa_secret'])) {
                 $error = t('account.mfa_setup'); http_response_code(503);
             } else {
+                $openSetup = ($_SESSION['open_setup_after_login'] ?? false) === true
+                    && rbac_has_permission($pdo, (int)$user['id'], 'site.manage');
                 auth_clear_session();
                 $_SESSION['pending_admin_id'] = (int)$user['id'];
                 $_SESSION['pending_admin_version'] = (int)$user['auth_version'];
                 $_SESSION['pending_admin_started'] = time();
+                $_SESSION['pending_admin_setup'] = $openSetup;
                 redirect('/auth/mfa.php');
             }
         } else { redirect(user_security_primary($pdo,$user)); }

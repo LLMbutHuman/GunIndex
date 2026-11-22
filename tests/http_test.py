@@ -332,6 +332,30 @@ class MarketplaceHTTP(unittest.TestCase):
         self.mfa_login(admin)
         self.assertEqual(200, browser.request('/admin/settings.php')[0])
 
+    def test_setup_link_returns_to_the_assistant_after_authorized_mfa(self):
+        route = '/admin/setup.php'
+        customer = self.user(login=False)
+        self.assertEqual(303, customer['browser'].request(route)[0])
+        status, headers, _ = self.login(customer)
+        self.assertEqual(303, status)
+        self.assertEqual('/user/dashboard.php', headers['Location'])
+        self.assertEqual(403, customer['browser'].request(route)[0])
+
+        operator = self.user(admin=True, login=False)
+        browser = operator['browser']
+        status, headers, _ = browser.request(route)
+        self.assertEqual(303, status)
+        self.assertEqual('/auth/login.php', headers['Location'])
+        status, headers, _ = self.login(operator)
+        self.assertEqual(303, status)
+        self.assertEqual('/auth/mfa.php', headers['Location'])
+        self.assertEqual(303, browser.request(route)[0])
+        code = fixture('code', username=operator['username'])['code']
+        status, headers, _ = browser.request('/auth/mfa.php', {'csrf_token': browser.token('/auth/mfa.php'), 'code': code})
+        self.assertEqual(303, status)
+        self.assertEqual(route, headers['Location'])
+        self.assertEqual(200, browser.request(route)[0])
+
     def test_admin_without_enrolled_mfa_cannot_login(self):
         admin = self.user(admin=True, mfa=False, login=False)
         self.assertEqual(503, self.login(admin)[0])
