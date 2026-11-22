@@ -11,6 +11,9 @@ Grenzen, tatsächliche Treffer und die Erkennung gleicher Filter in anderer
 Reihenfolge.
 Lokal bestanden fünf PHP-Syntaxprüfungen und 14 Such- sowie
 Koordinatengruppen. Der neue MySQL-Fall läuft in der Regression.
+Die Oberfläche steht in acht Sprachfassungen zur Verfügung. Der HTTP-Test
+öffnet einen Suchalarm aus der Trefferseite, speichert einen Merkmalswert
+und prüft die Wiederanzeige sowie den Schutz vor fremden Konten.
 
 ## Rückkehr vom Login zum Einrichtungsassistenten
 

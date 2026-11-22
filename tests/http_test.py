@@ -431,6 +431,45 @@ class MarketplaceHTTP(unittest.TestCase):
             self.assertEqual(303, admin.request(geography, payload | {'is_active': '1'})[0])
         self.assertIn(label, buyer.request(watchlist)[2])
 
+    def test_saved_search_carries_structured_filter_from_results_to_private_editor(self):
+        admin = self.user(admin=True)
+        category = self.category(admin)['id']
+        attributes = '/admin/category-attributes.php?category_id=' + str(category)
+        staff = admin['browser']
+        status, _, _ = staff.request(attributes, {
+            'csrf_token': staff.token(attributes), 'category_id': category, 'id': '0', 'code': 'width',
+            'label': 'Synthetic width', 'kind': 'number', 'unit': 'cm', 'choices': '',
+            'is_required': '0', 'is_active': '1',
+        })
+        self.assertEqual(303, status)
+        attribute = re.search(r'name="id" value="([1-9][0-9]*)"', staff.request(attributes)[2]).group(1)
+
+        browser = self.user()['browser']
+        filters = {'category_id': category, 'country_code': 'DE', 'scope': 'country',
+                   'type': 'negotiated', 'sort': 'relevance', f'attribute_min[{attribute}]': '75'}
+        search = '/marketplace/search.php?' + urllib.parse.urlencode(filters)
+        body = browser.request(search)[2]
+        prefill = html.unescape(re.search(r'href="(/user/saved-searches.php\?[^"]+)"', body).group(1))
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(prefill), 'locale': 'en', 'market_country': 'DE', 'return_path': prefill,
+        })[0])
+        status, headers, body = browser.request(prefill)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Saved searches</h1>', body)
+        self.assertIn(f'name="attribute_min[{attribute}]" inputmode="decimal" maxlength="14" value="75"', body)
+        data = filters | {'csrf_token': browser.token(prefill), 'action': 'save', 'name': 'Synthetic saved search',
+                          'notify_mode': 'off'}
+        status, headers, _ = browser.request(prefill, data)
+        self.assertEqual(303, status)
+        saved = headers['Location']
+        status, _, body = browser.request(saved)
+        self.assertEqual(200, status)
+        self.assertIn('The search was saved.', body)
+        self.assertIn(f'name="attribute_min[{attribute}]" inputmode="decimal" maxlength="14" value="75"', body)
+        self.assertNotIn('The search was saved.', browser.request(saved + '&saved=1')[2])
+        self.assertEqual(404, self.user()['browser'].request(saved)[0])
+
     def test_admin_privacy_review_uses_session_language_and_real_confirmation(self):
         customer = self.user()
         session = customer['browser']
