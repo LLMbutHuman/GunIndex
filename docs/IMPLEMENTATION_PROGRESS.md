@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Händler- und Kampagnenprüfung
+
+Die Kampagnenverwaltung und die gemeinsamen Statusmeldungen für Buchungen
+stehen in acht Sprachen zur Verfügung. Der Wechsel zwischen Bannern und
+Händlerprofilen öffnet den jeweils passenden Filter. Gespeicherte
+Prüfentscheidungen leiten zurück zur Auswahl und bestätigen die Änderung
+einmalig. Zahlungsklärungen erfordern Finanzberechtigung und Banneransichten
+werden beim tatsächlichen Abruf protokolliert. Lokal bestanden 19
+PHP-Syntaxprüfungen sowie 25 Schlüssel und 12 Statuswerte in acht Sprachen.
+
 ## Benutzerkonten und Sitzungswiderruf
 
 Die Administration zeigt Kontaktdaten mit `private, no-store`. Meldungen
@@ -8,6 +18,7 @@ einmalig nach dem protokollierten Widerruf. Der HTTP-Test prüft den
 Sitzungswechsel in zwei Browsern, erneute Anmeldung, fehlendes CSRF-Token
 und Versuche zur Selbständerung. Lokal bestanden zehn PHP-Syntaxprüfungen
 und der Abgleich von 14 neuen Schlüsseln in acht Katalogen.
+[CI zur Kontoverwaltung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45017969204)
 
 ## Inserats- und Auktionsübersicht
 
@@ -347,8 +358,8 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes Kampagnenverwaltung sowie die verbleibenden
-Kundenseiten mit den acht Katalogen abgleichen. Die ausführbare Installation hat
+Als Nächstes Händler-Dashboard und verbleibende Kundenseiten mit den
+acht Katalogen abgleichen. Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
 verschlüsselter externer Sicherung steht für eine reale Betriebsabnahme

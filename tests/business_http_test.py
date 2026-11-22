@@ -48,7 +48,7 @@ class BusinessHTTP(unittest.TestCase):
  def published(self):
   user=self.user();admin=self.user(admin=True);self.profile(user);record=read(user,'profile');self.assertEqual('pending',record['status'])
   fields=dict(csrf_token=admin['browser'].token('/admin/settings.php'),action='profile',target_id=user['id'],status='published',reason='Synthetic content review',revision=record['revision'])
-  self.assertEqual(200,admin['browser'].request('/admin/campaigns.php?kind=profiles',fields)[0]);self.assertEqual('published',read(user,'profile')['status']);return user,admin
+  self.assertEqual(303,admin['browser'].request('/admin/campaigns.php?kind=profiles',fields)[0]);self.assertEqual('published',read(user,'profile')['status']);return user,admin
  def campaign(self,user,data=None,name='banner.png',mime='image/png'):
   browser=user['browser'];fields=dict(csrf_token=browser.token('/user/dealer.php'),action='campaign',title='Synthetic outdoor equipment',target_url='https://shop.example.org/outdoor',country_code='DE',category_id=self.category_id)
   body,kind=upload(fields,'banner[]',name,mime,png() if data is None else data);return browser.request('/user/dealer.php',raw=body,content_type=kind)
@@ -61,22 +61,33 @@ class BusinessHTTP(unittest.TestCase):
   self.assertNotIn('value="'+user['username']+'@example.invalid"',body);self.assertEqual(403,browser.request('/user/dealer.php',{'action':'profile'})[0]);self.profile(user);self.assertEqual('pending',read(user,'profile')['status'])
  def test_stale_profile_review_does_not_publish_changed_details(self):
   user=self.user();admin=self.user(admin=True);fields=self.profile(user);old=read(user,'profile')['revision'];fields['company_name']='Changed Synthetic Company';fields['csrf_token']=user['browser'].token('/user/dealer.php');self.assertEqual(200,user['browser'].request('/user/dealer.php',fields)[0])
-  result=admin['browser'].request('/admin/campaigns.php',dict(csrf_token=admin['browser'].token('/admin/settings.php'),action='profile',target_id=user['id'],status='published',reason='Synthetic review',revision=old));self.assertEqual(422,result[0]);self.assertEqual('pending',read(user,'profile')['status'])
+  browser=admin['browser'];route='/admin/campaigns.php?kind=profiles'
+  self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(route),locale='en',market_country='DE',return_path=route))[0])
+  result=browser.request(route,dict(csrf_token=browser.token(route),action='profile',target_id=user['id'],status='published',reason='Synthetic review',revision=old));self.assertEqual(422,result[0]);self.assertIn('The details have changed. Review the current information.',result[2]);self.assertEqual('pending',read(user,'profile')['status'])
+  status,headers,body=browser.request('/admin/campaigns.php?status=approved')
+  self.assertEqual(200,status);self.assertIn('no-store',headers['Cache-Control']);self.assertIn('href="?kind=profiles"',body)
+  status,_,body=browser.request(route+'&reviewed=1')
+  self.assertEqual(200,status);self.assertIn('Publish business details',body);self.assertNotIn('The decision was recorded.',body)
+  profile=read(user,'profile')
+  status,headers,_=browser.request(route,dict(csrf_token=browser.token(route),action='profile',target_id=user['id'],status='published',reason='Synthetic follow-up review',revision=profile['revision']))
+  self.assertEqual(303,status);self.assertEqual('published',read(user,'profile')['status'])
+  self.assertIn('The decision was recorded.',browser.request(headers['Location'])[2]);self.assertNotIn('The decision was recorded.',browser.request(headers['Location'])[2])
  def test_pending_banner_is_private_and_reencoded(self):
   user,admin=self.published();self.assertEqual(200,self.campaign(user)[0]);campaign=read(user,'campaigns')[0];self.assertEqual('pending',campaign['status'])
+  preview='/admin/campaigns.php?image='+str(campaign['id']);self.assertEqual(405,admin['browser'].request(preview,{'unused':'1'})[0]);self.assertEqual(200,admin['browser'].request(preview,binary=True)[0]);self.assertEqual(403,user['browser'].request(preview)[0])
   status,headers,data=user['browser'].request('/user/dealer.php?banner_image='+str(campaign['id']),binary=True);self.assertEqual(200,status);self.assertEqual('image/webp',headers['Content-Type']);self.assertEqual(b'RIFF',data[:4]);self.assertEqual(b'WEBP',data[8:12]);other=self.user();self.assertEqual(404,other['browser'].request('/user/dealer.php?banner_image='+str(campaign['id']))[0]);self.assertEqual(404,Browser().request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE')[0])
  def test_approved_paid_banner_is_country_scoped_and_counted_once(self):
   user,admin=self.published();original=self.settings(admin);values=dict(original,business_promotions_enabled='1',manual_paypal_enabled='1',manual_paypal_approved='1',manual_paypal_recipient='merchant@example.invalid',manual_tax_reviewed='1',manual_tax_bps='1900',finance_enabled='0')
   self.assertEqual(200,admin['browser'].request('/admin/settings.php',values)[0]);self.addCleanup(self.restore_settings,admin,original)
   self.assertEqual(200,self.campaign(user)[0]);campaign=read(user,'campaigns')[0]
   moderation=dict(csrf_token=admin['browser'].token('/admin/settings.php'),action='campaign',target_id=campaign['id'],status='approved',reason='Synthetic banner content review')
-  self.assertEqual(200,admin['browser'].request('/admin/campaigns.php',moderation)[0]);listing=self.seed_listing(user,type='fixed');browser=user['browser'];body=browser.request('/user/promotions.php')[2];key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
+  self.assertEqual(303,admin['browser'].request('/admin/campaigns.php',moderation)[0]);listing=self.seed_listing(user,type='fixed');browser=user['browser'];body=browser.request('/user/promotions.php')[2];key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
   result=browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='order',order_key=key,service='banner_monthly',listing_id=listing,campaign_id=campaign['id'],accept_terms='1'));self.assertEqual(303,result[0]);booking=read(user,'bookings')[0]
   self.assertEqual(404,Browser().request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE')[0])
   cents=int(booking['gross_cents']);approval=dict(csrf_token=admin['browser'].token('/admin/settings.php'),invoice_id=booking['invoice_id'],transaction_id='SYNTHETIC'+secrets.token_hex(8).upper(),reference=booking['reference'],received_amount=f'{cents//100}.{cents%100:02}',decision='approve',reason='Synthetic direct account verification',review_confirmed='1')
   self.assertEqual(200,admin['browser'].request('/admin/payments.php',approval)[0]);self.assertEqual(200,browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='start',booking_id=booking['id'],immediate_start='1'))[0])
   url='/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE';visitor=Browser();self.assertEqual(200,visitor.request(url,binary=True)[0]);self.assertEqual(200,visitor.request(url,binary=True)[0]);self.assertEqual(404,visitor.request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=AT')[0]);click=visitor.request('/marketplace/banner-click.php?id='+str(campaign['id'])+'&country=DE');self.assertEqual(303,click[0]);self.assertEqual('https://shop.example.org/outdoor',click[1]['Location']);counts=read(user,'stats');self.assertEqual(1,int(counts['impressions']));self.assertEqual(1,int(counts['clicks']))
-  moderation['csrf_token']=admin['browser'].token('/admin/settings.php');moderation['status']='disabled';self.assertEqual(200,admin['browser'].request('/admin/campaigns.php',moderation)[0]);self.assertEqual(404,visitor.request(url)[0])
+  moderation['csrf_token']=admin['browser'].token('/admin/settings.php');moderation['status']='disabled';self.assertEqual(303,admin['browser'].request('/admin/campaigns.php',moderation)[0]);self.assertEqual(404,visitor.request(url)[0])
  def test_disguised_script_is_not_a_banner(self):
   user,_=self.published();self.assertEqual(422,self.campaign(user,b'<?php echo "bad"; ?>','banner.png','image/png')[0]);self.assertEqual([],read(user,'campaigns'))
  def test_csv_has_real_partial_success_duplicate_and_error_report(self):

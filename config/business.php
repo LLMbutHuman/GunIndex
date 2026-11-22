@@ -43,7 +43,8 @@ function business_scope(string $scope): array
 
 function business_state_label(string $state): string
 {
-    $label = ['reserved'=>'Reserviert · unbezahlt','awaiting_start'=>'Bezahlt · Start wählen','active'=>'Aktiv','expired'=>'Abgelaufen','paid_unfulfilled'=>'Bezahlt · Erfüllung oder Erstattung prüfen','cancelled'=>'Beendet','pending'=>'Prüfung ausstehend','approved'=>'Freigegeben','rejected'=>'Abgelehnt','disabled'=>'Deaktiviert','published'=>'Veröffentlicht'][$state] ?? 'In Bearbeitung';return business_label($label);
+    $known = ['reserved','awaiting_start','active','expired','paid_unfulfilled','cancelled','pending','approved','rejected','disabled','published'];
+    return t('promotion.status_'.(in_array($state, $known, true) ? $state : 'other'));
 }
 
 function business_assert_manager(PDO $pdo,int $actorId):void
@@ -60,22 +61,22 @@ function business_profile_revision(array $profile):string
 function business_review_dealer(PDO $pdo,int $actorId,int $userId,string $status,string $reason,string $revision):void
 {
     business_assert_manager($pdo,$actorId);
-    if(!in_array($status,['published','rejected'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException('Bitte eine zulässige Entscheidung und nachvollziehbare Begründung angeben.');
-    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_dealer_profiles WHERE user_id=? FOR UPDATE');$q->execute([$userId]);$profile=$q->fetch();if(!$profile)throw new DomainException('Profil nicht gefunden.');if(!hash_equals(business_profile_revision($profile),$revision))throw new DomainException('Die Angaben wurden geändert. Bitte den aktuellen Inhalt erneut prüfen.');$pdo->prepare('UPDATE market_dealer_profiles SET status=?,moderation_reason=? WHERE user_id=?')->execute([$status,trim($reason),$userId]);audit_log($pdo,$actorId,'dealer.reviewed',$userId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
+    if(!in_array($status,['published','rejected'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException(t('admin_campaigns.review_validation'));
+    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_dealer_profiles WHERE user_id=? FOR UPDATE');$q->execute([$userId]);$profile=$q->fetch();if(!$profile)throw new DomainException(t('admin_campaigns.profile_missing'));if(!hash_equals(business_profile_revision($profile),$revision))throw new DomainException(t('admin_campaigns.profile_changed'));$pdo->prepare('UPDATE market_dealer_profiles SET status=?,moderation_reason=? WHERE user_id=?')->execute([$status,trim($reason),$userId]);audit_log($pdo,$actorId,'dealer.reviewed',$userId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
 }
 
 function business_review_campaign(PDO $pdo,int $actorId,int $campaignId,string $status,string $reason):void
 {
     business_assert_manager($pdo,$actorId);
-    if(!in_array($status,['approved','rejected','disabled'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException('Bitte eine zulässige Entscheidung und nachvollziehbare Begründung angeben.');
-    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_campaigns WHERE id=? FOR UPDATE');$q->execute([$campaignId]);$campaign=$q->fetch();if(!$campaign)throw new DomainException('Kampagne nicht gefunden.');if($status==='approved'&&(!business_dealer_profile($pdo,(int)$campaign['user_id'])||!catalog_category_allowed($pdo,(int)$campaign['category_id'])))throw new DomainException('Händlerprofil oder Kategorie ist nicht freigegeben.');$pdo->prepare('UPDATE market_campaigns SET status=?,moderation_reason=?,moderated_by=? WHERE id=?')->execute([$status,trim($reason),$actorId,$campaignId]);audit_log($pdo,$actorId,'campaign.reviewed',$campaignId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
+    if(!in_array($status,['approved','rejected','disabled'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException(t('admin_campaigns.review_validation'));
+    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_campaigns WHERE id=? FOR UPDATE');$q->execute([$campaignId]);$campaign=$q->fetch();if(!$campaign)throw new DomainException(t('admin_campaigns.campaign_missing'));if($status==='approved'&&(!business_dealer_profile($pdo,(int)$campaign['user_id'])||!catalog_category_allowed($pdo,(int)$campaign['category_id'])))throw new DomainException(t('admin_campaigns.approval_required'));$pdo->prepare('UPDATE market_campaigns SET status=?,moderation_reason=?,moderated_by=? WHERE id=?')->execute([$status,trim($reason),$actorId,$campaignId]);audit_log($pdo,$actorId,'campaign.reviewed',$campaignId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
 }
 
 function business_output_banner(string $key,bool $thumbnail=false,?callable $onServe=null):never
 {
-    if(!preg_match('/\A[a-f0-9]{48}\z/',$key))abort_request(404,'Banner nicht gefunden.');
+    if(!preg_match('/\A[a-f0-9]{48}\z/',$key))abort_request(404,t('admin_campaigns.banner_missing'));
     $directory=market_image_directory();$path=$directory.'/'.$key.($thumbnail?'-thumb':'').'.webp';
-    if(!is_file($path)||is_link($path)||realpath(dirname($path))!==realpath($directory))abort_request(404,'Banner nicht gefunden.');
+    if(!is_file($path)||is_link($path)||realpath(dirname($path))!==realpath($directory))abort_request(404,t('admin_campaigns.banner_missing'));
     if($onServe!==null&&($_SERVER['REQUEST_METHOD']??'GET')==='GET')$onServe();
     header('Content-Type: image/webp');header('X-Content-Type-Options: nosniff');header('Cache-Control: private, no-store');header('Content-Length: '.filesize($path));
     if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')readfile($path);exit;
