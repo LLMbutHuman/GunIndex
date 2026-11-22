@@ -377,6 +377,36 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('Change saved.', browser.request(route)[2])
         self.assertNotIn('Change saved.', browser.request(route)[2])
 
+    def test_watchlist_hides_disabled_market_and_keeps_saved_listing(self):
+        seller = self.user()
+        buyer = self.user()['browser']
+        label = title()
+        listing = self.seed_listing(seller, title=label, type='fixed')
+        watchlist = '/user/watchlist.php'
+        self.assertEqual(303, buyer.request('/user/language.php', {
+            'csrf_token': buyer.token(watchlist), 'locale': 'en', 'market_country': 'DE', 'return_path': watchlist,
+        })[0])
+        self.assertEqual(303, buyer.request('/user/toggle-watchlist.php', {
+            'csrf_token': buyer.token(watchlist), 'listing_id': listing,
+        })[0])
+        status, headers, body = buyer.request(watchlist)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn(label, body)
+        self.assertIn('Remove from watchlist', body)
+        admin = self.user(admin=True)['browser']
+        geography = '/admin/geography.php'
+        payload = {'csrf_token': admin.token(geography), 'action': 'country', 'country_code': 'DE'}
+        try:
+            self.assertEqual(303, admin.request(geography, payload | {'is_active': '0'})[0])
+            status, _, body = buyer.request(watchlist)
+            self.assertEqual(200, status)
+            self.assertNotIn(label, body)
+            self.assertIn('No available listings saved', body)
+        finally:
+            self.assertEqual(303, admin.request(geography, payload | {'is_active': '1'})[0])
+        self.assertIn(label, buyer.request(watchlist)[2])
+
     def test_admin_privacy_review_uses_session_language_and_real_confirmation(self):
         customer = self.user()
         session = customer['browser']

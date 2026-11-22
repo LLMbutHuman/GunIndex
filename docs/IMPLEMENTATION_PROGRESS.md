@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Merkliste in deaktivierten Ländermärkten
+
+Die Merkliste verwendet dieselbe Ländersperre wie die öffentlichen
+Angebotsseiten. Gespeicherte Inserate erscheinen nach dem erneuten Aktivieren
+des Marktes wieder. Anzeigen, leere Zustände und Fehler sind in acht Sprachen
+verfügbar. Der HTTP-Test prüft Deaktivierung und Wiederanzeige über die
+regulären geschützten Oberflächen.
+
 ## Ländermärkte, Standortquellen und redaktionelle Übersetzungen
 
 Die geschützte Länderübersicht zeigt Standortquellen, Marktzustände und

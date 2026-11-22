@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Udfør',
     'dashboard.pages'=>'Sider',
     'dashboard.page'=>'Side {page}',
+    'dashboard.watchlist_count' => 'Tilgængelige annoncer på din observationsliste · {count}',
+    'dashboard.watchlist_empty' => 'Ingen tilgængelige annoncer gemt',
+    'dashboard.watchlist_help' => 'Gem annoncer fra deres detaljeside.',
+    'dashboard.watchlist_remove' => 'Fjern fra observationslisten',
+    'dashboard.watchlist_page_invalid' => 'Vælg en gyldig side.',
+    'dashboard.watchlist_listing_invalid' => 'Vælg en gyldig annonce.',
+    'dashboard.watchlist_login' => 'Log ind igen.',
+    'dashboard.watchlist_listing_unavailable' => 'Denne annonce er ikke tilgængelig.',
 ];

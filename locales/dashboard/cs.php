@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Provést',
     'dashboard.pages'=>'Stránky',
     'dashboard.page'=>'Stránka {page}',
+    'dashboard.watchlist_count' => 'Dostupné inzeráty ve sledovaných · {count}',
+    'dashboard.watchlist_empty' => 'Nejsou uloženy žádné dostupné inzeráty',
+    'dashboard.watchlist_help' => 'Inzeráty můžete uložit na stránce jejich detailu.',
+    'dashboard.watchlist_remove' => 'Odebrat ze sledovaných',
+    'dashboard.watchlist_page_invalid' => 'Vyberte platnou stránku.',
+    'dashboard.watchlist_listing_invalid' => 'Vyberte platný inzerát.',
+    'dashboard.watchlist_login' => 'Přihlaste se znovu.',
+    'dashboard.watchlist_listing_unavailable' => 'Tento inzerát není dostupný.',
 ];

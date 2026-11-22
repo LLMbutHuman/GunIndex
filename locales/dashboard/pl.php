@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Wykonaj',
     'dashboard.pages'=>'Strony',
     'dashboard.page'=>'Strona {page}',
+    'dashboard.watchlist_count' => 'Dostępne ogłoszenia na liście obserwowanych · {count}',
+    'dashboard.watchlist_empty' => 'Brak zapisanych dostępnych ogłoszeń',
+    'dashboard.watchlist_help' => 'Dodaj ogłoszenia do obserwowanych na ich stronach.',
+    'dashboard.watchlist_remove' => 'Usuń z obserwowanych',
+    'dashboard.watchlist_page_invalid' => 'Wybierz prawidłową stronę.',
+    'dashboard.watchlist_listing_invalid' => 'Wybierz prawidłowe ogłoszenie.',
+    'dashboard.watchlist_login' => 'Zaloguj się ponownie.',
+    'dashboard.watchlist_listing_unavailable' => 'To ogłoszenie jest niedostępne.',
 ];

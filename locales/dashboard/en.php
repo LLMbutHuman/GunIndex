@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Apply',
     'dashboard.pages'=>'Pages',
     'dashboard.page'=>'Page {page}',
+    'dashboard.watchlist_count' => 'Available listings on your watchlist · {count}',
+    'dashboard.watchlist_empty' => 'No available listings saved',
+    'dashboard.watchlist_help' => 'Save listings from their detail pages.',
+    'dashboard.watchlist_remove' => 'Remove from watchlist',
+    'dashboard.watchlist_page_invalid' => 'Choose a valid page.',
+    'dashboard.watchlist_listing_invalid' => 'Choose a valid listing.',
+    'dashboard.watchlist_login' => 'Sign in again.',
+    'dashboard.watchlist_listing_unavailable' => 'This listing is unavailable.',
 ];

@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Ausführen',
     'dashboard.pages'=>'Seiten',
     'dashboard.page'=>'Seite {page}',
+    'dashboard.watchlist_count' => 'Verfügbare Angebote auf deiner Merkliste · {count}',
+    'dashboard.watchlist_empty' => 'Keine verfügbaren Angebote gespeichert',
+    'dashboard.watchlist_help' => 'Merke dir interessante Angebote auf ihrer Detailseite.',
+    'dashboard.watchlist_remove' => 'Von Merkliste entfernen',
+    'dashboard.watchlist_page_invalid' => 'Wähle eine gültige Seite.',
+    'dashboard.watchlist_listing_invalid' => 'Wähle ein gültiges Angebot.',
+    'dashboard.watchlist_login' => 'Melde dich erneut an.',
+    'dashboard.watchlist_listing_unavailable' => 'Dieses Angebot ist nicht verfügbar.',
 ];

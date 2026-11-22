@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Uitvoeren',
     'dashboard.pages'=>'Pagina’s',
     'dashboard.page'=>'Pagina {page}',
+    'dashboard.watchlist_count' => 'Beschikbare advertenties op je volglijst · {count}',
+    'dashboard.watchlist_empty' => 'Geen beschikbare advertenties opgeslagen',
+    'dashboard.watchlist_help' => 'Sla advertenties op vanaf hun detailpagina.',
+    'dashboard.watchlist_remove' => 'Van volglijst verwijderen',
+    'dashboard.watchlist_page_invalid' => 'Kies een geldige pagina.',
+    'dashboard.watchlist_listing_invalid' => 'Kies een geldige advertentie.',
+    'dashboard.watchlist_login' => 'Meld je opnieuw aan.',
+    'dashboard.watchlist_listing_unavailable' => 'Deze advertentie is niet beschikbaar.',
 ];

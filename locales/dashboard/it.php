@@ -38,4 +38,12 @@ return [
     'dashboard.execute'=>'Applica',
     'dashboard.pages'=>'Pagine',
     'dashboard.page'=>'Pagina {page}',
+    'dashboard.watchlist_count' => 'Annunci disponibili nei preferiti · {count}',
+    'dashboard.watchlist_empty' => 'Nessun annuncio disponibile salvato',
+    'dashboard.watchlist_help' => 'Salva gli annunci dalla pagina dei dettagli.',
+    'dashboard.watchlist_remove' => 'Rimuovi dai preferiti',
+    'dashboard.watchlist_page_invalid' => 'Scegli una pagina valida.',
+    'dashboard.watchlist_listing_invalid' => 'Scegli un annuncio valido.',
+    'dashboard.watchlist_login' => 'Accedi di nuovo.',
+    'dashboard.watchlist_listing_unavailable' => 'Questo annuncio non è disponibile.',
 ];
