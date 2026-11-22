@@ -1,5 +1,12 @@
 # Implementierungsfortschritt
 
+## Persönliche und öffentliche Gesuche
+
+Die Gesuchsseiten, Fehlermeldungen und gespeicherten Gründe für passende
+Treffer sind in acht Sprachen verfügbar. Die private Bearbeitung bestätigt
+ein gespeichertes Gesuch einmalig. Der HTTP-Test prüft Formularvalidierung,
+öffentliche Anzeige ohne Konto-E-Mail und Pausieren.
+
 ## Rechtsdokumente und Zustimmungsnachweise
 
 Die Verwaltung von Entwürfen und die öffentliche Dokumentansicht sind in

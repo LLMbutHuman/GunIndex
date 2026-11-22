@@ -499,6 +499,37 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertNotIn('The search was saved.', browser.request(saved + '&saved=1')[2])
         self.assertEqual(404, self.user()['browser'].request(saved)[0])
 
+    def test_wanted_request_is_localized_public_without_account_contact_and_can_be_paused(self):
+        account = self.user()
+        browser = account['browser']
+        route = '/user/wanted.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        self.assertIn('<h1>My wanted requests</h1>', browser.request(route)[2])
+        name = 'Synthetic wanted sofa ' + secrets.token_hex(6)
+        form = {'csrf_token': browser.token(route), 'action': 'save', 'title': name,
+                'description': 'Synthetic furniture request for isolated publication testing.',
+                'country_code': 'DE', 'scope': 'country', 'condition_label': 'any', 'notify_mode': 'off'}
+        status, _, body = browser.request(route, form | {'description': 'Too short'})
+        self.assertEqual(422, status)
+        self.assertIn('at least 20 characters of description', body)
+        status, headers, _ = browser.request(route, form)
+        self.assertEqual(303, status)
+        edit = headers['Location']
+        self.assertIn('Your request was saved.', browser.request(edit)[2])
+        self.assertNotIn('Your request was saved.', browser.request(edit + '&saved=1')[2])
+        identity = urllib.parse.parse_qs(urllib.parse.urlsplit(edit).query)['id'][0]
+        public = '/marketplace/wanted.php?id=' + identity
+        status, _, body = Browser().request(public)
+        self.assertEqual(200, status)
+        self.assertIn(name, body)
+        self.assertNotIn(account['username'] + '@example.invalid', body)
+        self.assertEqual(303, browser.request(edit, {
+            'csrf_token': browser.token(edit), 'action': 'pause', 'id': identity,
+        })[0])
+        self.assertEqual(404, Browser().request(public)[0])
+
     def test_admin_privacy_review_uses_session_language_and_real_confirmation(self):
         customer = self.user()
         session = customer['browser']
