@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'La spiegazione è troppo lunga.',
     'account.privacy_deactivation_failed' => 'Non è possibile disattivare l’account con questi dati. Per gli account amministrativi iniziali serve una procedura di trasferimento separata.',
     'account.privacy_deletion_received' => 'Il tuo account è stato disattivato. Il gestore esaminerà la richiesta di cancellazione.',
+    'account.logout_prompt' => 'Disconnettersi?',
+    'account.logout_back' => 'Torna al tuo account',
 ];

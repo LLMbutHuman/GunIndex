@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'Die Erläuterung ist zu lang.',
     'account.privacy_deactivation_failed' => 'Das Konto kann mit diesen Angaben nicht deaktiviert werden. Initiale Administrationskonten benötigen ein getrenntes Übergabeverfahren.',
     'account.privacy_deletion_received' => 'Dein Konto wurde deaktiviert. Der Betreiber prüft deinen Löschantrag.',
+    'account.logout_prompt' => 'Abmelden?',
+    'account.logout_back' => 'Zurück zum Konto',
 ];

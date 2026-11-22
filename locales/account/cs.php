@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'Vysvětlení je příliš dlouhé.',
     'account.privacy_deactivation_failed' => 'S těmito údaji účet nelze deaktivovat. Původní účty správců vyžadují samostatné předání.',
     'account.privacy_deletion_received' => 'Váš účet byl deaktivován. Provozovatel posoudí žádost o výmaz.',
+    'account.logout_prompt' => 'Odhlásit se?',
+    'account.logout_back' => 'Zpět k účtu',
 ];

@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'De toelichting is te lang.',
     'account.privacy_deactivation_failed' => 'Het account kan met deze gegevens niet worden gedeactiveerd. Voor oorspronkelijke beheerdersaccounts geldt een aparte overdrachtsprocedure.',
     'account.privacy_deletion_received' => 'Je account is gedeactiveerd. De beheerder beoordeelt je verwijderingsverzoek.',
+    'account.logout_prompt' => 'Afmelden?',
+    'account.logout_back' => 'Terug naar je account',
 ];

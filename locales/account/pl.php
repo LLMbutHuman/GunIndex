@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'Wyjaśnienie jest za długie.',
     'account.privacy_deactivation_failed' => 'Nie można dezaktywować konta przy użyciu tych danych. Początkowe konta administratorów wymagają odrębnego przekazania.',
     'account.privacy_deletion_received' => 'Twoje konto zostało dezaktywowane. Operator rozpatrzy wniosek o usunięcie.',
+    'account.logout_prompt' => 'Wylogować się?',
+    'account.logout_back' => 'Wróć do konta',
 ];

@@ -92,9 +92,19 @@ class ManualHTTP(unittest.TestCase):
   body=Browser().request('/marketplace/profile.php?user_id='+str(seller['id']))[2];self.assertNotIn(message,body);self.assertIn('&lt;script&gt;rating_',body);self.assertNotIn(seller['username']+'@example.invalid',body)
  def test_rating_moderation_needs_csrf_and_preserves_record(self):
   seller,winner,listing=self.closed_auction();browser=winner['browser'];url='/user/rate-user.php?listing_id='+str(listing);message='Public feedback '+secrets.token_hex(8)
-  self.assertEqual(200,browser.request(url,dict(csrf_token=browser.token(url),stars='4',comment=message))[0]);record=fixture('rating_state',username=winner['username'],listing_id=listing);admin=self.user(admin=True)
-  self.assertEqual(405,admin['browser'].request('/admin/ratings.php?delete_id='+str(record['id']))[0]);self.assertEqual(403,admin['browser'].request('/admin/ratings.php',{'id':record['id'],'status':'hidden'})[0])
-  self.assertEqual(303,admin['browser'].request('/admin/ratings.php',dict(csrf_token=admin['browser'].token('/admin/ratings.php'),id=record['id'],status='hidden',reason='Synthetic documented moderation'))[0])
+  self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(url),locale='en',market_country='DE',return_path=url))[0])
+  self.assertIn('<h1>Rate your auction</h1>',browser.request(url)[2])
+  status,_,body=browser.request(url,dict(csrf_token=browser.token(url),stars='4',comment=message))
+  self.assertEqual(200,status);self.assertIn('Your rating was saved.',body)
+  record=fixture('rating_state',username=winner['username'],listing_id=listing);admin=self.user(admin=True)['browser']
+  route='/admin/ratings.php'
+  self.assertEqual(303,admin.request('/user/language.php',dict(csrf_token=admin.token(route),locale='en',market_country='DE',return_path=route))[0])
+  self.assertIn('<h1>Moderate ratings</h1>',admin.request(route)[2])
+  self.assertNotIn('Moderation decision saved.',admin.request(route+'?saved=1')[2])
+  self.assertEqual(405,admin.request(route+'?delete_id='+str(record['id']))[0]);self.assertEqual(403,admin.request(route,{'id':record['id'],'status':'hidden'})[0])
+  self.assertEqual(303,admin.request(route,dict(csrf_token=admin.token(route),id=record['id'],status='hidden',reason='Synthetic documented moderation'))[0])
+  self.assertIn('Moderation decision saved.',admin.request(route)[2])
+  self.assertNotIn('Moderation decision saved.',admin.request(route)[2])
   self.assertEqual('hidden',fixture('rating_state',username=winner['username'],listing_id=listing)['status']);self.assertNotIn(message,Browser().request('/marketplace/profile.php?user_id='+str(seller['id']))[2])
  def test_foreign_payment_order_is_not_readable(self):
   self.enabled();owner=self.user();invoice,_,_=self.order(owner);outsider=self.user()

@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Auktionsbewertungen und Abmeldung
+
+Auktionsbewertungen, die geschützte Bewertungsmoderation und der
+Abmeldedialog sind in acht Sprachen verfügbar. Der HTTP-Test prüft die
+private Bestätigung, CSRF und das Ausblenden einer Bewertung, deren
+gespeicherter Nachweis erhalten bleibt.
+Lokal bestanden 19 PHP-Syntaxprüfungen sowie 19 Textschlüssel und
+Platzhalter in allen acht Sprachfassungen.
+
 ## Nachrichtenübersicht und älterer Chatverlauf
 
 Die Nachrichtenübersicht, der ältere Verlauf und seine Rückmeldungen sind in

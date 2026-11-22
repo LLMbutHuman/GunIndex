@@ -293,7 +293,14 @@ class MarketplaceHTTP(unittest.TestCase):
         cookie = next(cookie for cookie in browser.cookies if cookie.name == 'gunindex_session')
         self.assertTrue(cookie.has_nonstandard_attr('HttpOnly'))
         self.assertEqual('Lax', cookie.get_nonstandard_attr('SameSite'))
-        self.assertEqual(200, browser.request('/auth/logout.php')[0])
+        logout = '/auth/logout.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(logout), 'locale': 'en', 'market_country': 'DE', 'return_path': logout,
+        })[0])
+        status, headers, body = browser.request(logout)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Sign out?</h1>', body)
         self.assertEqual(403, browser.request('/auth/logout.php', {})[0])
         self.assertEqual(200, browser.request('/user/profile.php')[0])
         self.assertEqual(303, browser.request('/auth/logout.php', {'csrf_token': browser.token()})[0])

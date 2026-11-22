@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'L’explication est trop longue.',
     'account.privacy_deactivation_failed' => 'Ces informations ne permettent pas de désactiver le compte. Les comptes d’administration initiaux nécessitent une procédure de transfert distincte.',
     'account.privacy_deletion_received' => 'Votre compte a été désactivé. L’exploitant examinera votre demande de suppression.',
+    'account.logout_prompt' => 'Se déconnecter ?',
+    'account.logout_back' => 'Retour à votre compte',
 ];

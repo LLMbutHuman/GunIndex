@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'The explanation is too long.',
     'account.privacy_deactivation_failed' => 'The account cannot be deactivated using these details. Initial administrator accounts require a separate handover process.',
     'account.privacy_deletion_received' => 'Your account was deactivated. The operator will review your deletion request.',
+    'account.logout_prompt' => 'Sign out?',
+    'account.logout_back' => 'Back to your account',
 ];

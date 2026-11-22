@@ -115,4 +115,6 @@ return [
     'account.privacy_reason_too_long' => 'Forklaringen er for lang.',
     'account.privacy_deactivation_failed' => 'Kontoen kan ikke deaktiveres med disse oplysninger. Oprindelige administratorkonti kræver en særskilt overdragelse.',
     'account.privacy_deletion_received' => 'Din konto er deaktiveret. Operatøren behandler din anmodning om sletning.',
+    'account.logout_prompt' => 'Log ud?',
+    'account.logout_back' => 'Tilbage til din konto',
 ];
