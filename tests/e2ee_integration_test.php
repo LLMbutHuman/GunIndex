@@ -263,6 +263,18 @@ try {
         eit_check(!isset($rows[0]['sender_manifest']['recovery_cipher'])&&!isset($rows[0]['message_text']));
         eit_get($browsers['outsider'],'history',['listing_id'=>$listing,'peer_id'=>$buyer['id']],403);
         $reply=eit_post($browsers['seller'],'send',eit_message($seller,$buyer,$listing))['id'];
+        $historyRoute='/user/chat.php?listing_id='.$listing.'&user_id='.$buyer['id'];
+        $localeChange=['csrf_token'=>$browsers['seller']['csrf'],'market_country'=>'DE','return_path'=>$historyRoute];
+        eit_check(eit_http($browsers['seller']['curl'],'/user/language.php',$localeChange+['locale'=>'en'],false)['status']===303,'Change legacy chat language');
+        $history=eit_http($browsers['seller']['curl'],$historyRoute);
+        eit_check($history['status']===200 && str_contains($history['headers']['cache-control']??'','no-store'),'Private legacy view');
+        eit_check(str_contains($history['body'],'Mark legacy messages as read'),'Legacy chat action was localized.');
+        $inbox=eit_http($browsers['seller']['curl'],'/user/messages.php');
+        eit_check($inbox['status']===200 && str_contains($inbox['body'],'<h1>My messages</h1>'),'Inbox was localized.');
+        $marked=eit_http($browsers['seller']['curl'],$historyRoute,['csrf_token'=>eit_token($history['body']),'action'=>'read'],false);
+        eit_check($marked['status']===303,'Mark legacy history read');
+        eit_check((int)eit_scalar($pdo,'SELECT is_read FROM market_messages WHERE id=?',[$legacyId])===1,'Legacy message was marked read.');
+        eit_check((int)eit_scalar($pdo,'SELECT is_read FROM market_messages WHERE id=?',[$firstMessage])===0,'Encrypted message still requires the secure chat path.');
         $read=['listing_id'=>$listing,'peer_id'=>$buyer['id'],'through'=>$reply];
         eit_post($browsers['outsider'],'read',$read,403);
         $invalid=$read; $invalid['through']=[$reply]; eit_post($browsers['seller'],'read',$invalid,400);
@@ -272,7 +284,8 @@ try {
         eit_check(eit_post($browsers['seller'],'read',$read)['read']===0);
         eit_check((int)eit_scalar($pdo,'SELECT is_read FROM market_messages WHERE id=?',[$firstMessage])===1);
         eit_check((int)eit_scalar($pdo,'SELECT is_read FROM market_messages WHERE id=?',[$reply])===0);
-        eit_check((int)eit_scalar($pdo,'SELECT is_read FROM market_messages WHERE id=?',[$legacyId])===0);
+        eit_check((int)eit_scalar($pdo,'SELECT is_read FROM market_messages WHERE id=?',[$legacyId])===1);
+        eit_check(eit_http($browsers['seller']['curl'],'/user/language.php',$localeChange+['locale'=>'de'],false)['status']===303,'Restore seller test language');
     });
 
     eit_test('append_device_revoke_immutability_and_old_message_history_preserved',static function()use($pdo,&$buyer,$seller,$browsers,$listing,$firstMessage):void {

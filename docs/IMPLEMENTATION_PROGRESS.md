@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Nachrichtenübersicht und älterer Chatverlauf
+
+Die Nachrichtenübersicht, der ältere Verlauf und seine Rückmeldungen sind in
+allen acht Sprachen verfügbar. Der ältere Verlauf kennzeichnet seine
+serverseitige Lesbarkeit und verweist auf den sicheren Chat. Seine
+Lesemarkierung betrifft ausschließlich ältere Nachrichten. Der isolierte
+HTTP-Test vergleicht die Lesestatus beider Nachrichtenarten innerhalb
+derselben Unterhaltung.
+Lokal bestanden 28 Textschlüssel je Sprache, 13 PHP-Syntaxprüfungen,
+JavaScript-Syntax und alle 13 echten OpenPGP-Prüfgruppen.
+
 ## Website-Einstellungen und Personalrollen
 
 Die geschützten Einstellungen zeigen Betreiberangaben, PayPal-Freigaben,
@@ -9,6 +20,8 @@ wird erst nach Speicherung einmalig bestätigt. Die Prüfungen decken
 Übersetzungsschlüssel, Formularrevision, Datenschutz und MFA-Grenzen ab.
 Lokal bestanden acht Admin-Testgruppen mit 70 neuen Einstellungsbegriffen
 je Sprache. Die Rollenmaske bestand 45 Schlüssel und 96 lokale CGI-Fälle.
+Der vollständige HTTP-, MySQL- und Chromium-Lauf war erfolgreich.
+[Regression](https://github.com/LLMbutHuman/GunIndex/actions/runs/44958704895)
 
 ## Sicherung und Wiederherstellung im Einrichtungsassistenten
 

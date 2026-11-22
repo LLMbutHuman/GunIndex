@@ -11,7 +11,7 @@
    for(const message of data.messages){
     if(!Number.isInteger(message.id)||message.id<=last||typeof message.message_text!=='string')continue;
     const item=document.createElement('article');item.className='panel';item.dataset.chatMessage=String(message.id);
-    const author=document.createElement('strong');author.textContent=Number(message.sender_id)===Number(box.dataset.chatSelf)?'Du':'Neue Nachricht';
+    const author=document.createElement('strong');author.textContent=Number(message.sender_id)===Number(box.dataset.chatSelf)?box.dataset.chatSelfLabel:box.dataset.chatPeerLabel;
     const body=document.createElement('p');body.style.whiteSpace='pre-wrap';body.style.overflowWrap='anywhere';body.textContent=message.message_text;
     const date=document.createElement('small');date.textContent=message.created_at+' UTC';item.append(author,body,date);box.append(item);last=message.id;
    }
