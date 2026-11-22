@@ -59,14 +59,15 @@ try {
     } elseif ($operation === 'seed') {
         $name = fixture_name($request['username'] ?? null);
         $password = $request['password'] ?? null; $admin = $request['admin'] ?? false; $mfa = $request['mfa'] ?? true;
-        if (!is_string($password) || !is_bool($admin) || !is_bool($mfa)) throw new InvalidArgumentException('Invalid synthetic account.');
-        $secret = $admin && $mfa ? auth_secret_encrypt(random_bytes(20)) : null;
+        $staffMfa = $request['staff_mfa'] ?? false;
+        if (!is_string($password) || !is_bool($admin) || !is_bool($mfa) || !is_bool($staffMfa)) throw new InvalidArgumentException('Invalid synthetic account.');
+        $secret = ($admin || $staffMfa) && $mfa ? auth_secret_encrypt(random_bytes(20)) : null;
         $q = $pdo->prepare("INSERT INTO users(username,email,password_hash,full_name,zip,city,is_admin,mfa_secret) VALUES (?,?,?,'Synthetic test fixture','10115','Teststadt',?,?)");
         $q->execute([$name, $name . '@example.invalid', auth_hash($password), (int)$admin, $secret]);
         $out = ['id' => (int)$pdo->lastInsertId()];
     } elseif ($operation === 'code') {
         $user = fixture_user($pdo, $request['username'] ?? null);
-        if (!$user['is_admin'] || !$user['mfa_secret']) throw new InvalidArgumentException('MFA fixture required.');
+        if (!$user['mfa_secret']) throw new InvalidArgumentException('MFA fixture required.');
         $counter = max(intdiv(time(), 30), (int)($user['mfa_last_counter'] ?? -1) + 1);
         if ($counter > intdiv(time(), 30) + 1) throw new RuntimeException('Wait for a fresh authenticator window.');
         $out = ['code' => auth_totp(auth_secret_decrypt($user['mfa_secret']), $counter)];

@@ -150,10 +150,10 @@ class MarketplaceHTTP(unittest.TestCase):
         fixture('reset_limits')
         cls.category_id = int(fixture('categories')['categories'][0]['id'])
 
-    def user(self, *, admin=False, mfa=True, login=True, password=None):
+    def user(self, *, admin=False, mfa=True, login=True, password=None, staff_mfa=False):
         name = identity()
         secret = password or ('Synthetic ' + secrets.token_hex(20))
-        row = fixture('seed', username=name, password=secret, admin=admin, mfa=mfa)
+        row = fixture('seed', username=name, password=secret, admin=admin, mfa=mfa, staff_mfa=staff_mfa)
         user = dict(username=name, password=secret, id=int(row['id']), browser=Browser())
         if login:
             status, headers, _ = self.login(user)
@@ -413,7 +413,7 @@ class MarketplaceHTTP(unittest.TestCase):
     def test_admin_overview_is_localized_and_only_shows_authorized_totals(self):
         route = '/admin/index.php'
         admin = self.user(admin=True)['browser']
-        finance = self.user(login=False)
+        finance = self.user(login=False, staff_mfa=True)
         roles = '/admin/roles.php'
         self.assertEqual(303, admin.request(roles, {
             'csrf_token': admin.token(roles), 'user_id': finance['id'], 'role': 'finance', 'action': 'grant',
