@@ -64,6 +64,21 @@ try{
     contract_test('each_order_has_its_own_exact_document_receipt',static function()use($pdo,$userId,$listing,$input,$second,$key,&$order):void{$order=manual_order($pdo,$userId,$listing,'bump_single',$key,null,$input);$other=manual_order($pdo,$userId,$listing,'bump_single',bin2hex(random_bytes(32)),null,$input);contract_check($order!==$other);$q=$pdo->prepare("SELECT invoice_id,document_id,content_hash FROM market_contract_receipts WHERE user_id=? AND scope='checkout' ORDER BY invoice_id");$q->execute([$userId]);$receipts=$q->fetchAll();contract_check(count($receipts)===2);foreach($receipts as $receipt)contract_check(in_array((int)$receipt['invoice_id'],[$order,$other],true)&&(int)$receipt['document_id']===$second&&$receipt['content_hash']===$input['legal_documents'][$second]);});
     contract_test('idempotent_order_retry_preserves_original_receipts',static function()use($pdo,$userId,$listing,$key,$order):void{contract_check(manual_order($pdo,$userId,$listing,'bump_single',$key)===$order);$q=$pdo->prepare('SELECT COUNT(*) FROM market_contract_receipts WHERE invoice_id=?');$q->execute([$order]);contract_check((int)$q->fetchColumn()===1);});
     contract_test('unseen_current_document_cannot_be_accepted_by_old_form',static function()use($pdo,$browser,$code,$first,$body1,$userId):void{$form=contract_request($browser,'/marketplace/legal.php?document='.$code.'&language=de');$response=contract_request($browser,'/marketplace/legal.php?document='.$code.'&language=de',['csrf_token'=>contract_csrf($form),'accept_document'=>'1','document_id'=>(string)$first,'document_hash'=>hash('sha256',$body1)]);contract_check($response['status']===422);$q=$pdo->prepare("SELECT COUNT(*) FROM market_legal_acceptances WHERE user_id=? AND acceptance_type='updated_terms'");$q->execute([$userId]);contract_check((int)$q->fetchColumn()===0);});
+    contract_test('public_confirmation_follows_real_version_acceptance_once',static function()use($pdo,$browser,$code,$second,$body2,$userId):void {
+        $path='/marketplace/legal.php?document='.$code.'&language=de&version_id='.$second;
+        $message='Die Zustimmung zu dieser Fassung wurde gespeichert.';
+        $form=contract_request($browser,$path.'&accepted=1');
+        contract_check($form['status']===200&&!str_contains($form['body'],$message));
+        contract_check(str_contains($form['body'],'document='.$code.'&amp;language=de&amp;version_id='.$second.'&amp;download=1'));
+        $response=contract_request($browser,$path,['csrf_token'=>contract_csrf($form),'accept_document'=>'1',
+            'document_id'=>(string)$second,'document_hash'=>hash('sha256',$body2)]);
+        contract_check($response['status']===303);
+        contract_check(str_contains(contract_request($browser,$path)['body'],$message));
+        contract_check(!str_contains(contract_request($browser,$path)['body'],$message));
+        $statement=$pdo->prepare("SELECT content_hash FROM market_legal_acceptances WHERE user_id=? AND document_id=? AND acceptance_type='updated_terms'");
+        $statement->execute([$userId,$second]);
+        contract_check($statement->fetchColumn()===hash('sha256',$body2));
+    });
     contract_test('returning_account_route_policy_preserves_existing_contract_and_privacy_actions',static function():void{
         foreach(['user/create-listing.php','user/edit-listing.php','user/checkout.php','user/relist.php','user/extend-listing.php'] as $route){
             foreach(['GET','HEAD','POST'] as $method)contract_check(consent_account_required_route($route,$method));

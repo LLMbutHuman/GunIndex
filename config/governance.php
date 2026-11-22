@@ -147,12 +147,12 @@ function governance_decide(PDO $pdo,int $actor,int $id,string $action,string $re
 
 function legal_accept(PDO $pdo,int $userId,int $documentId,string $type): void
 {
-    if(!in_array($type,['registration','checkout','updated_terms'],true))throw new InvalidArgumentException('Ungültige Zustimmungsart.');
+    if(!in_array($type,['registration','checkout','updated_terms'],true))throw new InvalidArgumentException(t('legal_public.confirm'));
     $own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();
     try{
-        $q=$pdo->prepare("SELECT content_hash,body_text FROM market_legal_documents WHERE id=? AND status='approved' AND effective_at<=UTC_TIMESTAMP() FOR SHARE");$q->execute([$documentId]);$document=$q->fetch();if(!$document||!hash_equals(hash('sha256',$document['body_text']),$document['content_hash']))throw new DomainException('Dieses Dokument ist nicht zur Zustimmung freigegeben.');$hash=$document['content_hash'];
+        $q=$pdo->prepare("SELECT content_hash,body_text FROM market_legal_documents WHERE id=? AND status='approved' AND effective_at<=UTC_TIMESTAMP() FOR SHARE");$q->execute([$documentId]);$document=$q->fetch();if(!$document||!hash_equals(hash('sha256',$document['body_text']),$document['content_hash']))throw new DomainException(t('consent.unavailable'));$hash=$document['content_hash'];
         $q=$pdo->prepare('SELECT content_hash FROM market_legal_acceptances WHERE user_id=? AND document_id=? AND acceptance_type=?');$q->execute([$userId,$documentId,$type]);$previous=$q->fetchColumn();
-        if($previous!==false&&!hash_equals($previous,$hash))throw new DomainException('Die gespeicherte Zustimmung stimmt nicht mit dieser Fassung überein.');
+        if($previous!==false&&!hash_equals($previous,$hash))throw new DomainException(t('consent.changed'));
         $pdo->prepare('INSERT IGNORE INTO market_legal_acceptances(user_id,document_id,content_hash,acceptance_type) VALUES (?,?,?,?)')->execute([$userId,$documentId,$hash,$type]);
         if($own)$pdo->commit();
     }catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();throw$e;}
@@ -161,16 +161,16 @@ function legal_accept(PDO $pdo,int $userId,int $documentId,string $type): void
 function legal_create(PDO $pdo,int $actor,string $code,string $version,string $language,string $title,string $body): int
 {
     governance_assert_actor($pdo,$actor,'legal.manage');
-    if(!preg_match('/\A[a-z0-9-]{2,80}\z/',$code)||!preg_match('/\A[a-zA-Z0-9.-]{1,30}\z/',$version)||!preg_match('/\A[a-z]{2}(?:-[A-Z]{2})?\z/',$language)||mb_strlen($title)<3||mb_strlen($title)>200||mb_strlen($body)<200||strlen($body)>200000||!preg_match('//u',$body))throw new InvalidArgumentException('Bitte Kennung, Version, Sprache, Titel und einen vollständigen Entwurf angeben.');
+    if(!preg_match('/\A[a-z0-9-]{2,80}\z/',$code)||!preg_match('/\A[a-zA-Z0-9.-]{1,30}\z/',$version)||!preg_match('/\A[a-z]{2}(?:-[A-Z]{2})?\z/',$language)||mb_strlen($title)<3||mb_strlen($title)>200||mb_strlen($body)<200||strlen($body)>200000||!preg_match('//u',$body))throw new InvalidArgumentException(t('legal_admin.invalid_document'));
     $pdo->beginTransaction();try{$q=$pdo->prepare('INSERT INTO market_legal_documents(document_code,version,language,title,body_text,content_hash) VALUES (?,?,?,?,?,?)');$q->execute([$code,$version,$language,$title,$body,hash('sha256',$body)]);$id=(int)$pdo->lastInsertId();audit_log($pdo,$actor,'legal.drafted',$id,['code'=>$code,'version'=>$version,'language'=>$language]);$pdo->commit();return$id;}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
 
 function legal_approve(PDO $pdo,int $actor,int $id,string $reviewer,string $effective,array $checks): void
 {
     governance_assert_actor($pdo,$actor,'legal.manage');$reviewer=trim($reviewer);$date=DateTimeImmutable::createFromFormat('!Y-m-d',$effective,new DateTimeZone('UTC'));
-    if(mb_strlen($reviewer)<5||mb_strlen($reviewer)>200||!$date||$date->format('Y-m-d')!==$effective||count(array_filter($checks,static fn($v)=>$v==='1'))!==5)throw new InvalidArgumentException('Verantwortliche fachliche Prüfstelle, Gültigkeitsdatum und alle fünf Prüfpunkte sind erforderlich.');
-    $pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM market_legal_documents WHERE id=? FOR UPDATE');$q->execute([$id]);$doc=$q->fetch();if(!$doc||$doc['status']!=='draft')throw new DomainException('Nur neue Entwürfe können freigegeben werden.');if(preg_match('/\[Pflichtfeld[^\]]*\]/iu',$doc['body_text']))throw new DomainException('Nicht ausgefüllte Pflichtfelder verhindern die Freigabe.');
-        if(!hash_equals($doc['content_hash'],hash('sha256',$doc['body_text'])))throw new DomainException('Der Dokumentenhash stimmt nicht überein.');
+    if(mb_strlen($reviewer)<5||mb_strlen($reviewer)>200||!$date||$date->format('Y-m-d')!==$effective||count(array_filter($checks,static fn($v)=>$v==='1'))!==5)throw new InvalidArgumentException(t('legal_admin.review_incomplete'));
+    $pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM market_legal_documents WHERE id=? FOR UPDATE');$q->execute([$id]);$doc=$q->fetch();if(!$doc||$doc['status']!=='draft')throw new DomainException(t('legal_admin.draft_only'));if(preg_match('/\[Pflichtfeld[^\]]*\]/iu',$doc['body_text']))throw new DomainException(t('legal_admin.placeholders'));
+        if(!hash_equals($doc['content_hash'],hash('sha256',$doc['body_text'])))throw new DomainException(t('legal_admin.hash_invalid'));
         $pdo->prepare("UPDATE market_legal_documents SET status='approved',reviewer_name=?,review_checklist=?,approved_by=?,approved_at=UTC_TIMESTAMP(),effective_at=? WHERE id=?")->execute([$reviewer,json_encode(array_fill(0,5,true),JSON_THROW_ON_ERROR),$actor,$date->format('Y-m-d H:i:s'),$id]);audit_log($pdo,$actor,'legal.approved',$id,['hash'=>$doc['content_hash'],'reviewer'=>$reviewer]);$pdo->commit();
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }

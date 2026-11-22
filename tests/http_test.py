@@ -356,6 +356,35 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(route, headers['Location'])
         self.assertEqual(200, browser.request(route)[0])
 
+    def test_legal_admin_shows_unapproved_draft_and_localized_review_requirements(self):
+        browser = self.user(admin=True)['browser']
+        route = '/admin/legal.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        status, headers, body = browser.request(route)
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Manage legal documents</h1>', body)
+        title_ = 'Synthetic draft ' + secrets.token_hex(8)
+        document = {'csrf_token': browser.token(route), 'action': 'create',
+                    'code': 'isolated-' + secrets.token_hex(8), 'version': '1.0', 'language': 'en',
+                    'title': title_, 'body': 'Synthetic technical fixture for an unapproved document. ' * 6}
+        status, headers, _ = browser.request(route, document)
+        self.assertEqual(303, status)
+        draft = headers['Location']
+        body = browser.request(draft)[2]
+        self.assertIn(title_, body)
+        self.assertIn('Draft · professional review pending', body)
+        doc_id = urllib.parse.parse_qs(urllib.parse.urlsplit(draft).query)['id'][0]
+        status, _, body = browser.request(route, {
+            'csrf_token': browser.token(draft), 'action': 'approve', 'document_id': doc_id,
+            'reviewer': '', 'effective_at': '', 'check_1': '1',
+        })
+        self.assertEqual(422, status)
+        self.assertIn('confirm all five review items', body)
+        self.assertIn('Draft · professional review pending', body)
+
     def test_admin_without_enrolled_mfa_cannot_login(self):
         admin = self.user(admin=True, mfa=False, login=False)
         self.assertEqual(503, self.login(admin)[0])

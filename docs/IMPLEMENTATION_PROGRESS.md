@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Rechtsdokumente und Zustimmungsnachweise
+
+Die Verwaltung von Entwürfen und die öffentliche Dokumentansicht sind in
+acht Sprachen verfügbar. Beide zeigen Versionen und Freigabestand getrennt
+vom eigentlichen Dokumenttext. Eine Bestätigung erscheint einmalig nach
+gespeicherter Zustimmung zur geprüften Fassung. Tests prüfen Entwurfsstatus,
+unvollständige Freigabe und einen Zustimmungsnachweis mit korrektem Hash.
+Lokal bestanden 13 PHP-Syntaxprüfungen, 49 Übersetzungsschlüssel je
+Sprache, Platzhalterparität und 14 Vertrags-/Zustimmungsprüfungen.
+
 ## Strukturierte Filter in gespeicherten Suchen
 
 Angemeldete Nutzer können die aktuellen Suchfilter in einen Suchalarm
@@ -14,6 +24,9 @@ Koordinatengruppen. Der neue MySQL-Fall läuft in der Regression.
 Die Oberfläche steht in acht Sprachfassungen zur Verfügung. Der HTTP-Test
 öffnet einen Suchalarm aus der Trefferseite, speichert einen Merkmalswert
 und prüft die Wiederanzeige sowie den Schutz vor fremden Konten.
+Die erste HTTP-Probe fand einen Namenskonflikt in der gemeinsamen Sprach-
+und Länderauswahl. Die Kopfzeile verwendet nun eigene lokale Variablen.
+[Erster HTTP-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45015171625)
 
 ## Rückkehr vom Login zum Einrichtungsassistenten
 
