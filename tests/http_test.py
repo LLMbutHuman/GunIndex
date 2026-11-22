@@ -170,12 +170,12 @@ class MarketplaceHTTP(unittest.TestCase):
         token = browser.token('/auth/login.php')
         return browser.request('/auth/login.php', {'csrf_token': token, 'login': user['username'], 'password': user['password']})
 
-    def mfa_login(self, user):
+    def mfa_login(self, user, expected_path='/admin/index.php'):
         code = fixture('code', username=user['username'])['code']
         browser = user['browser']
         result = browser.request('/auth/mfa.php', {'csrf_token': browser.token('/auth/mfa.php'), 'code': code})
         self.assertEqual(303, result[0])
-        self.assertEqual('/admin/index.php', result[1]['Location'])
+        self.assertEqual(expected_path, result[1]['Location'])
         return code
 
     def fields(self, user, **changes):
@@ -409,6 +409,31 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(422, status)
         self.assertIn('have two-factor authentication enabled before you can assign a staff role', body)
         self.assertEqual(403, subject['browser'].request('/admin/privacy.php')[0])
+
+    def test_admin_overview_is_localized_and_only_shows_authorized_totals(self):
+        route = '/admin/index.php'
+        admin = self.user(admin=True)['browser']
+        finance = self.user(login=False)
+        roles = '/admin/roles.php'
+        self.assertEqual(303, admin.request(roles, {
+            'csrf_token': admin.token(roles), 'user_id': finance['id'], 'role': 'finance', 'action': 'grant',
+        })[0])
+        status, headers, _ = self.login(finance)
+        self.assertEqual(303, status)
+        self.assertEqual('/auth/mfa.php', headers['Location'])
+        self.mfa_login(finance, '/user/dashboard.php')
+        for browser, full_access in ((admin, True), (finance['browser'], False)):
+            self.assertEqual(303, browser.request('/user/language.php', {
+                'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+            })[0])
+            status, headers, body = browser.request(route)
+            self.assertEqual(200, status)
+            self.assertIn('no-store', headers['Cache-Control'])
+            self.assertIn('<h1>Overview</h1>', body)
+            self.assertIn('Active listings', body)
+            self.assertIn('Recorded payment balance', body)
+            for restricted in ('>User accounts<', 'Open identity cases', 'Manage the website', 'Recent changes'):
+                self.assertEqual(full_access, restricted in body)
 
     def test_admin_geography_shows_postcode_sources_and_localized_validation(self):
         browser = self.user(admin=True)['browser']

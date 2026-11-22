@@ -1,11 +1,21 @@
 # Implementierungsfortschritt
 
+## Administrationsübersicht nach Rolle
+
+Die Übersicht und die Verfügbarkeitsmeldungen der Identitätsprüfung sind in
+acht Sprachen verfügbar. Administrative Kennzahlen werden mit `private,
+no-store` ausgeliefert. Der HTTP-Test prüft den Unterschied zwischen voller
+Administration und einer nach Mehrfaktoranmeldung aktiven Finanzrolle.
+Lokal bestanden elf PHP-Syntaxprüfungen und der Abgleich von 17 Schlüsseln in
+acht Sprachkatalogen einschließlich Parameterersetzung.
+
 ## Persönliche und öffentliche Gesuche
 
 Die Gesuchsseiten, Fehlermeldungen und gespeicherten Gründe für passende
 Treffer sind in acht Sprachen verfügbar. Die private Bearbeitung bestätigt
 ein gespeichertes Gesuch einmalig. Der HTTP-Test prüft Formularvalidierung,
 öffentliche Anzeige ohne Konto-E-Mail und Pausieren.
+[CI für Gesuche](https://github.com/LLMbutHuman/GunIndex/actions/runs/45016150225)
 
 ## Rechtsdokumente und Zustimmungsnachweise
 
@@ -16,6 +26,7 @@ gespeicherter Zustimmung zur geprüften Fassung. Tests prüfen Entwurfsstatus,
 unvollständige Freigabe und einen Zustimmungsnachweis mit korrektem Hash.
 Lokal bestanden 13 PHP-Syntaxprüfungen, 49 Übersetzungsschlüssel je
 Sprache, Platzhalterparität und 14 Vertrags-/Zustimmungsprüfungen.
+[CI für Rechtsdokumente und Zustimmung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45015788169)
 
 ## Strukturierte Filter in gespeicherten Suchen
 
@@ -34,6 +45,7 @@ und prüft die Wiederanzeige sowie den Schutz vor fremden Konten.
 Die erste HTTP-Probe fand einen Namenskonflikt in der gemeinsamen Sprach-
 und Länderauswahl. Die Kopfzeile verwendet nun eigene lokale Variablen.
 [Erster HTTP-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45015171625)
+[Wiederholung mit korrigierter Kopfzeile](https://github.com/LLMbutHuman/GunIndex/actions/runs/45015738108)
 
 ## Rückkehr vom Login zum Einrichtungsassistenten
 
@@ -285,20 +297,23 @@ elf PHP-Syntaxprüfungen. Der isolierte Finanz-HTTP-Test prüft die sichtbare
 Navigation und `aria-current` in allen acht Sprachen.
 Beide CI-Jobs waren erfolgreich. [CI 44841239433](https://github.com/LLMbutHuman/GunIndex/actions/runs/44841239433)
 
-## Wiederaufnahmepunkt, 2026-11-21
+## Wiederaufnahmepunkt, 2026-11-22
 
 Die Abnahmematrix zählt 17 technisch geprüfte, sieben extern zu prüfende und
-zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Die beiden
-offenen Nummern betreffen die vollständige Sprachabdeckung und einen realen
-Treuhandadapter. Der Identitätswechsel im Chat ist ab `b4cf0d2` in der isolierten
-Regression bestätigt. Die Änderung `71cfb65` erweitert das Auditprotokoll.
+zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
+betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
+eine freigegebene Infrastruktur.
 
-Als Nächstes die übrigen Finanz-, Moderations- und Datenschutzmasken sowie
-Konto-/Supporttexte lokalisieren. Der Einstieg ist `/admin/payments.php`.
-Rechtsfassungen benötigen fachliche Freigabe. Reale Treuhand, zusätzliche
-Länderquellen, unabhängige E2EE-Sicherheitsprüfung und Zielsystemabnahme haben
-externe Voraussetzungen. Die erneute Windows-Prüfung fand keine installierte
-WSL-Distribution und keinen lokalen Docker-Desktop-Dienst.
+Als Nächstes die Prüfmasken `user/verification.php` und
+`admin/verifications.php` einschließlich Formularfehlern, Statuswerten und
+Sprache bei gesperrtem Betrieb bearbeiten. Danach folgen Inserat-,
+Nutzer- und Kampagnenverwaltung sowie der Abgleich der verbleibenden
+Kundenseiten mit den acht Katalogen. Die ausführbare Installation hat
+einen isolierten Ubuntu-Test einschließlich Update bestanden.
+Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
+verschlüsselter externer Sicherung steht für eine reale Betriebsabnahme
+noch aus. Offen bleiben außerdem freigegebene Rechtsfassungen, die
+unabhängige E2EE-Prüfung sowie die jeweiligen Zahlungsanbieterfreigaben.
 [Abnahmematrix](TECHNICAL_ACCEPTANCE.md) · [Legal-Team](LEGAL_HANDOFF.md)
 
 ## Zahlungs- und Workerdiagnose im Admin-Setup, 2026-11-21

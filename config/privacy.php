@@ -19,11 +19,11 @@ function privacy_private_directory(): string
 
 function verification_reason(PDO $pdo): ?string
 {
-    if(site_setting($pdo,'verification_enabled','0')!=='1')return 'Die Identitätsprüfung ist derzeit nicht aktiviert.';
-    if(site_setting($pdo,'verification_review_approved','0')!=='1')return 'Prüfverfahren und Datenschutzvoraussetzungen sind noch nicht freigegeben.';
-    $days=(int)site_setting($pdo,'verification_retention_days','0');if($days<1||$days>90)return 'Eine fachlich festgelegte Aufbewahrungsfrist fehlt.';
-    if(!function_exists('crypto_encrypt')||!function_exists('crypto_decrypt'))return 'Die verschlüsselte Ablage ist noch nicht eingerichtet.';
-    try{crypto_decrypt('identity',crypto_encrypt('identity','availability'));privacy_private_directory();}catch(Throwable){return 'Die sichere Dokumentenablage ist nicht verfügbar.';}
+    if(site_setting($pdo,'verification_enabled','0')!=='1')return t('admin_overview.identity_disabled');
+    if(site_setting($pdo,'verification_review_approved','0')!=='1')return t('admin_overview.identity_approval');
+    $days=(int)site_setting($pdo,'verification_retention_days','0');if($days<1||$days>90)return t('admin_overview.identity_retention');
+    if(!function_exists('crypto_encrypt')||!function_exists('crypto_decrypt'))return t('admin_overview.identity_encryption');
+    try{crypto_decrypt('identity',crypto_encrypt('identity','availability'));privacy_private_directory();}catch(Throwable){return t('admin_overview.identity_storage');}
     return null;
 }
 
