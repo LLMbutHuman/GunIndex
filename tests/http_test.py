@@ -448,14 +448,33 @@ class MarketplaceHTTP(unittest.TestCase):
         try:
             route = '/user/verification.php'
             browser = member['browser']
+            self.assertEqual(303, browser.request('/user/language.php', {
+                'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+            })[0])
+            confirmation = 'Your request was encrypted and saved for review.'
+            status, headers, body = browser.request(route + '?submitted=1')
+            self.assertEqual(200, status)
+            self.assertIn('no-store', headers['Cache-Control'])
+            self.assertIn('<h1>Identity and age</h1>', body)
+            self.assertNotIn(confirmation, body)
+            status, _, body = browser.request(route, {'csrf_token': browser.token(route), 'consent': '1'})
+            self.assertEqual(422, status)
+            self.assertIn('Select one to three document images.', body)
             body, content_type = multipart(
                 {'csrf_token': browser.token(route), 'consent': '1'},
                 [('synthetic.png', 'image/png', png())], file_field='documents[]')
             self.assertEqual(303, browser.request(route, raw=body, content_type=content_type)[0])
+            self.assertIn(confirmation, browser.request(route)[2])
+            self.assertNotIn(confirmation, browser.request(route)[2])
             inbox = '/admin/verifications.php'
             self.assertEqual(403, browser.request(inbox)[0])
+            self.assertEqual(303, primary.request('/user/language.php', {
+                'csrf_token': primary.token(inbox), 'locale': 'en', 'market_country': 'DE', 'return_path': inbox,
+            })[0])
             result = primary.request(inbox)
             self.assertEqual(200, result[0])
+            self.assertIn('no-store', result[1]['Cache-Control'])
+            self.assertIn('<h1>Identity checks</h1>', result[2])
             matches = re.findall(r'<a href="\?id=(\d+)">#\d+</a>\s*</td>\s*<td>' + member['username'] + '</td>', result[2])
             self.assertEqual(1, len(matches))
             case = inbox + '?id=' + matches[0]
@@ -475,6 +494,17 @@ class MarketplaceHTTP(unittest.TestCase):
             self.assertIn('no-store', headers['Cache-Control'])
             self.assertEqual(b'WEBP', content[8:12])
             self.assertEqual(403, primary.request(endpoint, payload)[0])
+            decision = {
+                'csrf_token': primary.token(case), 'action': 'decide', 'request_id': matches[0],
+                'decision': 'approved', 'reason': 'Synthetic decision about identity only.', 'identity_confirmed': '1',
+            }
+            self.assertEqual(303, primary.request(case, decision)[0])
+            self.assertIn('The decision was recorded.', primary.request(case)[2])
+            self.assertNotIn('The decision was recorded.', primary.request(case)[2])
+            self.assertIn('A decision on your identity or age review is available.', browser.request('/user/notifications.php')[2])
+            history = browser.request(route)[2]
+            self.assertIn('Identity confirmed', history)
+            self.assertIn('Minimum age unconfirmed', history)
         finally:
             self.restore_settings(reviewer, original)
 

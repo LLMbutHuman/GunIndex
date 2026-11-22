@@ -34,13 +34,26 @@ function verification_document_path(string $key): string
     chmod($dir,0700);return $dir.'/'.$key.'.bin';
 }
 
+function verification_status_label(string $status): string
+{
+    return t(match ($status) {
+        'pending' => 'identity.pending',
+        'approved' => 'identity.approved',
+        'rejected' => 'identity.rejected',
+        'needs_information' => 'identity.needs_information',
+        'expired' => 'identity.expired',
+        'superseded' => 'identity.superseded',
+        default => 'admin_privacy.unknown_status',
+    });
+}
+
 /** JPEG/PNG only, recoded in memory and encrypted before persistent storage. */
 function verification_prepare_document(array $file): array
 {
-    if(($file['error']??null)!==UPLOAD_ERR_OK||!is_string($file['tmp_name']??null)||!is_uploaded_file($file['tmp_name'])||!is_int($file['size']??null)||$file['size']<1||$file['size']>5*1024*1024||filesize($file['tmp_name'])!==$file['size'])throw new InvalidArgumentException('Bitte ein vollständiges JPEG- oder PNG-Bild bis 5 MiB hochladen.');
+    if(($file['error']??null)!==UPLOAD_ERR_OK||!is_string($file['tmp_name']??null)||!is_uploaded_file($file['tmp_name'])||!is_int($file['size']??null)||$file['size']<1||$file['size']>5*1024*1024||filesize($file['tmp_name'])!==$file['size'])throw new InvalidArgumentException(t('identity.invalid_upload'));
     $mime=(new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);$info=@getimagesize($file['tmp_name']);
-    if(!$info||!in_array($mime,['image/jpeg','image/png'],true)||($info['mime']??'')!==$mime||$info[0]<1||$info[1]<1||$info[0]>6000||$info[1]>6000||$info[0]*$info[1]>12000000)throw new InvalidArgumentException('Dokumentbilder dürfen höchstens 12 Megapixel und 6.000 Pixel Seitenlänge besitzen. PDFs werden nicht angenommen.');
-    $image=$mime==='image/jpeg'?@imagecreatefromjpeg($file['tmp_name']):@imagecreatefrompng($file['tmp_name']);if(!$image instanceof GdImage)throw new InvalidArgumentException('Das Dokumentbild konnte nicht vollständig gelesen werden.');
+    if(!$info||!in_array($mime,['image/jpeg','image/png'],true)||($info['mime']??'')!==$mime||$info[0]<1||$info[1]<1||$info[0]>6000||$info[1]>6000||$info[0]*$info[1]>12000000)throw new InvalidArgumentException(t('identity.invalid_geometry'));
+    $image=$mime==='image/jpeg'?@imagecreatefromjpeg($file['tmp_name']):@imagecreatefrompng($file['tmp_name']);if(!$image instanceof GdImage)throw new InvalidArgumentException(t('identity.invalid_image'));
     ob_start();try{if(!imagewebp($image,null,92))throw new RuntimeException('Bildneucodierung fehlgeschlagen.');$plain=ob_get_contents();}finally{ob_end_clean();imagedestroy($image);}
     if(!is_string($plain)||strlen($plain)<1||strlen($plain)>8*1024*1024)throw new RuntimeException('Das Dokumentbild ist zu groß.');
     $cipher=crypto_encrypt('identity',$plain);unset($plain);$key=bin2hex(random_bytes(24));$path=verification_document_path($key);
@@ -52,14 +65,14 @@ function verification_prepare_document(array $file): array
 function verification_submit(PDO $pdo,int $userId,array $files): int
 {
     $reason=verification_reason($pdo);if($reason!==null)throw new DomainException($reason);
-    if(!isset($files['name'],$files['tmp_name'],$files['size'],$files['error'])||!is_array($files['error'])||count($files['error'])>3)throw new InvalidArgumentException('Bitte ein bis drei Dokumentbilder auswählen.');
+    if(!isset($files['name'],$files['tmp_name'],$files['size'],$files['error'])||!is_array($files['error'])||count($files['error'])>3)throw new InvalidArgumentException(t('identity.choose_images'));
     $prepared=[];
     try{
         foreach($files['error'] as $i=>$error){if($error===UPLOAD_ERR_NO_FILE)continue;$prepared[]=verification_prepare_document(['error'=>$error,'tmp_name'=>$files['tmp_name'][$i]??null,'size'=>$files['size'][$i]??null]);}
-        if(!$prepared)throw new InvalidArgumentException('Mindestens ein Dokumentbild fehlt.');
-        $pdo->beginTransaction();$q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new DomainException('Konto nicht verfügbar.');
+        if(!$prepared)throw new InvalidArgumentException(t('identity.choose_images'));
+        $pdo->beginTransaction();$q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new DomainException(t('identity.account_unavailable'));
         $q=$pdo->prepare("SELECT id,status,assigned_to FROM market_verification_requests WHERE user_id=? AND status IN ('pending','needs_information') ORDER BY id DESC LIMIT 1 FOR UPDATE");$q->execute([$userId]);$previous=$q->fetch();
-        if($previous&&$previous['status']==='pending')throw new DomainException('Es besteht bereits ein offener Prüfantrag.');
+        if($previous&&$previous['status']==='pending')throw new DomainException(t('identity.already_pending'));
         if($previous)$pdo->prepare("UPDATE market_verification_requests SET status='superseded' WHERE id=?")->execute([$previous['id']]);
         $days=(int)site_setting($pdo,'verification_retention_days','0');$expires=gmdate('Y-m-d H:i:s',time()+$days*86400);
         $q=$pdo->prepare('INSERT INTO market_verification_requests(user_id,expires_at,assigned_to) VALUES (?,?,?)');$q->execute([$userId,$expires,$previous['assigned_to']??null]);$id=(int)$pdo->lastInsertId();
@@ -75,11 +88,11 @@ function verification_token_hash(string $token): string
 
 function verification_access_token(PDO $pdo,int $actor,int $documentId,string $reason): string
 {
-    governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);$reason=trim($reason);if(mb_strlen($reason)<10||mb_strlen($reason)>1000)throw new InvalidArgumentException('Bitte einen zweckgebundenen Zugriffsgrund angeben.');
+    governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);$reason=trim($reason);if(mb_strlen($reason)<10||mb_strlen($reason)>1000)throw new InvalidArgumentException(t('identity.access_reason'));
     $pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT r.*,d.deleted_at FROM market_verification_documents d JOIN market_verification_requests r ON r.id=d.request_id WHERE d.id=? FOR UPDATE');$q->execute([$documentId]);$row=$q->fetch();
-        if(!$row||$row['deleted_at']!==null||strtotime($row['expires_at'].' UTC')<=time()||$row['purged_at']!==null||(int)$row['user_id']===$actor)throw new DomainException('Das Dokument steht für diese Prüfung nicht zur Verfügung.');
-        if($row['assigned_to']!==null&&(int)$row['assigned_to']!==$actor)throw new DomainException('Dieser Antrag ist einer anderen Prüfstelle zugewiesen.');
+        if(!$row||$row['deleted_at']!==null||strtotime($row['expires_at'].' UTC')<=time()||$row['purged_at']!==null||(int)$row['user_id']===$actor)throw new DomainException(t('identity.document_unavailable'));
+        if($row['assigned_to']!==null&&(int)$row['assigned_to']!==$actor)throw new DomainException(t('identity.access_assigned'));
         $pdo->prepare('UPDATE market_verification_requests SET assigned_to=? WHERE id=?')->execute([$actor,$row['id']]);
         $token=bin2hex(random_bytes(32));$pdo->prepare('INSERT INTO market_document_access(token_hash,document_id,actor_id,reason,expires_at) VALUES (?,?,?,?,?)')->execute([verification_token_hash($token),$documentId,$actor,$reason,gmdate('Y-m-d H:i:s',time()+120)]);
         audit_log($pdo,$actor,'identity.access_requested',(int)$row['id'],['document_id'=>$documentId,'reason'=>$reason]);$pdo->commit();return$token;
@@ -88,11 +101,11 @@ function verification_access_token(PDO $pdo,int $actor,int $documentId,string $r
 
 function verification_open_document(PDO $pdo,int $actor,string $token): string
 {
-    governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);if(!preg_match('/\A[a-f0-9]{64}\z/',$token))throw new DomainException('Zugriffstoken ungültig.');
+    governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);if(!preg_match('/\A[a-f0-9]{64}\z/',$token))throw new DomainException(t('identity.document_unavailable'));
     $tokenHash = verification_token_hash($token);
     $pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT a.*,d.storage_key,d.deleted_at,r.id AS request_id,r.assigned_to,r.expires_at AS retention_end,r.purged_at FROM market_document_access a JOIN market_verification_documents d ON d.id=a.document_id JOIN market_verification_requests r ON r.id=d.request_id WHERE a.token_hash=? AND a.actor_id=? FOR UPDATE');$q->execute([$tokenHash,$actor]);$row=$q->fetch();
-        if(!$row||$row['used_at']!==null||strtotime($row['expires_at'].' UTC')<=time()||strtotime($row['retention_end'].' UTC')<=time()||$row['deleted_at']!==null||$row['purged_at']!==null||(int)$row['assigned_to']!==$actor)throw new DomainException('Der Dokumentenzugriff ist abgelaufen oder nicht berechtigt.');
+        if(!$row||$row['used_at']!==null||strtotime($row['expires_at'].' UTC')<=time()||strtotime($row['retention_end'].' UTC')<=time()||$row['deleted_at']!==null||$row['purged_at']!==null||(int)$row['assigned_to']!==$actor)throw new DomainException(t('identity.document_unavailable'));
         $path=verification_document_path($row['storage_key']);if(!is_file($path)||is_link($path)||filesize($path)>12*1024*1024)throw new RuntimeException('Dokument nicht verfügbar.');
         $cipher=file_get_contents($path);if(!is_string($cipher))throw new RuntimeException('Dokument nicht verfügbar.');$plain=crypto_decrypt('identity',$cipher);
         $pdo->prepare('UPDATE market_document_access SET used_at=UTC_TIMESTAMP() WHERE token_hash=?')->execute([$tokenHash]);
@@ -102,16 +115,19 @@ function verification_open_document(PDO $pdo,int $actor,string $token): string
 
 function verification_decide(PDO $pdo,int $actor,int $id,string $decision,string $reason,bool $identity,bool $age): void
 {
-    governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);$reason=trim($reason);if(!in_array($decision,['approved','rejected','needs_information'],true)||mb_strlen($reason)<10||mb_strlen($reason)>2000)throw new InvalidArgumentException('Bitte Entscheidung und begründete Prüffeststellung angeben.');
-    if($decision==='approved'&&!$identity&&!$age)throw new InvalidArgumentException('Identität und Altersfeststellung müssen getrennt ausdrücklich bestätigt werden.');
+    governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);$reason=trim($reason);if(!in_array($decision,['approved','rejected','needs_information'],true)||mb_strlen($reason)<10||mb_strlen($reason)>2000)throw new InvalidArgumentException(t('identity.invalid_decision'));
+    if($decision==='approved'&&!$identity&&!$age)throw new InvalidArgumentException(t('identity.confirm_findings'));
     $pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT * FROM market_verification_requests WHERE id=? FOR UPDATE');$q->execute([$id]);$row=$q->fetch();
-        if(!$row||(int)$row['assigned_to']!==$actor||(int)$row['user_id']===$actor||!in_array($row['status'],['pending','needs_information'],true)||strtotime($row['expires_at'].' UTC')<=time())throw new DomainException('Der Antrag ist nicht für diese Entscheidung verfügbar.');
-        $q=$pdo->prepare('SELECT COUNT(*) FROM market_document_access a JOIN market_verification_documents d ON d.id=a.document_id WHERE d.request_id=? AND a.actor_id=? AND a.used_at>UTC_TIMESTAMP()-INTERVAL 15 MINUTE');$q->execute([$id,$actor]);if((int)$q->fetchColumn()===0)throw new DomainException('Vor einer Entscheidung ist eine dokumentierte, aktuelle Einsicht erforderlich.');
+        if(!$row||(int)$row['assigned_to']!==$actor||(int)$row['user_id']===$actor||!in_array($row['status'],['pending','needs_information'],true)||strtotime($row['expires_at'].' UTC')<=time())throw new DomainException(t('identity.decision_unavailable'));
+        $q=$pdo->prepare('SELECT COUNT(*) FROM market_document_access a JOIN market_verification_documents d ON d.id=a.document_id WHERE d.request_id=? AND a.actor_id=? AND a.used_at>UTC_TIMESTAMP()-INTERVAL 15 MINUTE');$q->execute([$id,$actor]);if((int)$q->fetchColumn()===0)throw new DomainException(t('identity.prior_access'));
         $pdo->prepare('UPDATE market_verification_requests SET status=?,identity_confirmed=?,age_confirmed=?,decision_reason=?,reviewed_at=UTC_TIMESTAMP() WHERE id=?')->execute([$decision,(int)($decision==='approved'&&$identity),(int)($decision==='approved'&&$age),$reason,$id]);
         if($decision==='approved'){$pdo->prepare('UPDATE users SET is_verified=IF(?=1,1,is_verified),identity_verified_at=IF(?=1,UTC_TIMESTAMP(),identity_verified_at),age_verified_at=IF(?=1,UTC_TIMESTAMP(),age_verified_at) WHERE id=?')->execute([(int)$identity,(int)$identity,(int)$age,$row['user_id']]);}
         audit_log($pdo,$actor,'identity.'.$decision,$id,['identity'=>$identity,'age'=>$age]);$pdo->commit();
-        if(function_exists('notify_user'))notify_user($pdo,(int)$row['user_id'],'identity:'.$id.':'.$decision,'Prüfung aktualisiert','Eine Entscheidung zu deiner Identitäts- oder Altersprüfung liegt vor.','/user/verification.php',true);
+        if(function_exists('notify_user')){
+            $userId=(int)$row['user_id'];
+            notify_user($pdo,$userId,'identity:'.$id.':'.$decision,i18n_user_text($pdo,$userId,'identity.notification_title'),i18n_user_text($pdo,$userId,'identity.notification_body'),'/user/verification.php',true);
+        }
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
 

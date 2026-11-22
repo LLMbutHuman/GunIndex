@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Identitätsprüfung in acht Sprachen
+
+Antrag, Prüffrist, Status, Prüfentscheidung, Zugriffsmeldungen und
+Ergebnisbenachrichtigungen sind lokalisiert. Der Antrag und die
+Prüfentscheidung melden eine erfolgreiche Speicherung einmalig.
+Die Ergebnisnachricht verwendet die Kontosprache der empfangenden Person.
+Lokal bestanden 13 PHP-Syntaxprüfungen sowie der Abgleich von 60 Schlüsseln,
+Parametern und Statuswerten in allen acht Sprachkatalogen.
+
 ## Einmaliger Zugriff auf Identitätsdokumente
 
 Neue Zugriffstokens sind kryptografisch an die ausstellende Sitzung
@@ -9,6 +18,7 @@ müssen nach dem Update erneut angefordert werden. Der HTTP-Test lädt
 ein synthetisches PNG hoch und prüft die Anzeige als WebP, fehlende
 Berechtigung, eine zweite Sitzung desselben Kontos und Wiederverwendung.
 PHP-Syntax und Git-Diff wurden lokal geprüft.
+[CI für Sitzungsbindung und Einmalzugriff](https://github.com/LLMbutHuman/GunIndex/actions/runs/45016809025)
 
 ## Administrationsübersicht nach Rolle
 
@@ -18,6 +28,7 @@ no-store` ausgeliefert. Der HTTP-Test prüft den Unterschied zwischen voller
 Administration und einer nach Mehrfaktoranmeldung aktiven Finanzrolle.
 Lokal bestanden elf PHP-Syntaxprüfungen und der Abgleich von 17 Schlüsseln in
 acht Sprachkatalogen einschließlich Parameterersetzung.
+[CI mit MFA-Testkonto für delegierte Rolle](https://github.com/LLMbutHuman/GunIndex/actions/runs/45016689099)
 
 ## Persönliche und öffentliche Gesuche
 
@@ -314,11 +325,8 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes die Prüfmasken `user/verification.php` und
-`admin/verifications.php` einschließlich Formularfehlern, Statuswerten und
-Sprache bei gesperrtem Betrieb bearbeiten. Danach folgen Inserat-,
-Nutzer- und Kampagnenverwaltung sowie der Abgleich der verbleibenden
-Kundenseiten mit den acht Katalogen. Die ausführbare Installation hat
+Als Nächstes Inserat-, Nutzer- und Kampagnenverwaltung sowie die verbleibenden
+Kundenseiten mit den acht Katalogen abgleichen. Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
 verschlüsselter externer Sicherung steht für eine reale Betriebsabnahme
