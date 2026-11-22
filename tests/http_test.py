@@ -536,6 +536,42 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('This overview is read-only.', body)
         self.assertEqual('active', fixture('state', listing_id=auction)['status'])
 
+    def test_admin_user_revocation_ends_both_sessions_and_confirms_after_commit(self):
+        route = '/admin/users.php'
+        member = self.user()
+        first = member['browser']
+        second = Browser()
+        self.assertEqual(303, self.login(member, second)[0])
+        self.assertEqual(403, first.request(route)[0])
+        admin = self.user(admin=True)
+        browser = admin['browser']
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        notice = 'The existing sessions for this account were revoked.'
+        status, headers, body = browser.request(route + '?revoked=1')
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>User accounts</h1>', body)
+        self.assertIn('End sessions for ' + member['username'], body)
+        self.assertNotIn(notice, body)
+        action = {'action': 'revoke_sessions', 'user_id': member['id']}
+        self.assertEqual(403, browser.request(route, action)[0])
+        self.assertEqual(405, browser.request(route + '?action=revoke_sessions')[0])
+        token = browser.token(route)
+        self.assertEqual(422, browser.request(route, action | {'csrf_token': token, 'user_id': admin['id']})[0])
+        for session in (first, second):
+            self.assertEqual(200, session.request('/user/profile.php')[0])
+        status, headers, _ = browser.request(route, action | {'csrf_token': token})
+        self.assertEqual(303, status)
+        self.assertEqual(route, headers['Location'])
+        self.assertIn(notice, browser.request(route)[2])
+        self.assertNotIn(notice, browser.request(route)[2])
+        for session in (first, second):
+            self.assertEqual(303, session.request('/user/profile.php')[0])
+        self.assertEqual(303, self.login(member, first)[0])
+        self.assertEqual(200, first.request('/user/profile.php')[0])
+
     def test_admin_geography_shows_postcode_sources_and_localized_validation(self):
         browser = self.user(admin=True)['browser']
         route = '/admin/geography.php'

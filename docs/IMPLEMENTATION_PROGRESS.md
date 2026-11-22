@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Benutzerkonten und Sitzungswiderruf
+
+Die Administration zeigt Kontaktdaten mit `private, no-store`. Meldungen
+und Bedienelemente sind in acht Sprachen verfügbar. Die Bestätigung folgt
+einmalig nach dem protokollierten Widerruf. Der HTTP-Test prüft den
+Sitzungswechsel in zwei Browsern, erneute Anmeldung, fehlendes CSRF-Token
+und Versuche zur Selbständerung. Lokal bestanden zehn PHP-Syntaxprüfungen
+und der Abgleich von 14 neuen Schlüsseln in acht Katalogen.
+
 ## Inserats- und Auktionsübersicht
 
 Die schreibgeschützte Übersicht zeigt Kategorien, Status, Auktionsereignisse
@@ -8,6 +17,7 @@ Details bleiben Statusfilter und Seite erhalten. Die HTTP-Regression prüft
 Berechtigungen, die Ablehnung von Schreibzugriffen und öffentliche
 Gebotsbeträge bei vertraulichen Maximalgeboten. Lokal bestanden zehn
 PHP-Syntaxprüfungen und der Abgleich von 23 Schlüsseln in acht Katalogen.
+[CI zur Inserats- und Auktionsübersicht](https://github.com/LLMbutHuman/GunIndex/actions/runs/45017760461)
 
 ## Identitätsprüfung in acht Sprachen
 
@@ -17,6 +27,9 @@ Prüfentscheidung melden eine erfolgreiche Speicherung einmalig.
 Die Ergebnisnachricht verwendet die Kontosprache der empfangenden Person.
 Lokal bestanden 13 PHP-Syntaxprüfungen sowie der Abgleich von 60 Schlüsseln,
 Parametern und Statuswerten in allen acht Sprachkatalogen.
+Die isolierte PHP-/MySQL-Regression einschließlich des Uploads und der
+Prüfentscheidung ist bestanden.
+[CI zur Identitätsprüfung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45017396680)
 
 ## Einmaliger Zugriff auf Identitätsdokumente
 
@@ -334,7 +347,7 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes Nutzer- und Kampagnenverwaltung sowie die verbleibenden
+Als Nächstes Kampagnenverwaltung sowie die verbleibenden
 Kundenseiten mit den acht Katalogen abgleichen. Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
