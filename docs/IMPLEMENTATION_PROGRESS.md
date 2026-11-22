@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Einmaliger Zugriff auf Identitätsdokumente
+
+Neue Zugriffstokens sind kryptografisch an die ausstellende Sitzung
+gebunden. Die vorhandenen Fall-, Berechtigungs-, Ablauf- und
+Einmalprüfungen bleiben aktiv. Vor dem Update ausgestellte Tokens
+müssen nach dem Update erneut angefordert werden. Der HTTP-Test lädt
+ein synthetisches PNG hoch und prüft die Anzeige als WebP, fehlende
+Berechtigung, eine zweite Sitzung desselben Kontos und Wiederverwendung.
+PHP-Syntax und Git-Diff wurden lokal geprüft.
+
 ## Administrationsübersicht nach Rolle
 
 Die Übersicht und die Verfügbarkeitsmeldungen der Identitätsprüfung sind in

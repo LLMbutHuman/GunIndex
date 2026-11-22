@@ -68,6 +68,11 @@ function verification_submit(PDO $pdo,int $userId,array $files): int
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();foreach($prepared as $doc)if(is_file($doc['path'])&&!is_link($doc['path']))@unlink($doc['path']);throw$e;}
 }
 
+function verification_token_hash(string $token): string
+{
+    return hash_hmac('sha256', $token, session_id());
+}
+
 function verification_access_token(PDO $pdo,int $actor,int $documentId,string $reason): string
 {
     governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);$reason=trim($reason);if(mb_strlen($reason)<10||mb_strlen($reason)>1000)throw new InvalidArgumentException('Bitte einen zweckgebundenen Zugriffsgrund angeben.');
@@ -76,7 +81,7 @@ function verification_access_token(PDO $pdo,int $actor,int $documentId,string $r
         if(!$row||$row['deleted_at']!==null||strtotime($row['expires_at'].' UTC')<=time()||$row['purged_at']!==null||(int)$row['user_id']===$actor)throw new DomainException('Das Dokument steht für diese Prüfung nicht zur Verfügung.');
         if($row['assigned_to']!==null&&(int)$row['assigned_to']!==$actor)throw new DomainException('Dieser Antrag ist einer anderen Prüfstelle zugewiesen.');
         $pdo->prepare('UPDATE market_verification_requests SET assigned_to=? WHERE id=?')->execute([$actor,$row['id']]);
-        $token=bin2hex(random_bytes(32));$pdo->prepare('INSERT INTO market_document_access(token_hash,document_id,actor_id,reason,expires_at) VALUES (?,?,?,?,?)')->execute([hash('sha256',$token),$documentId,$actor,$reason,gmdate('Y-m-d H:i:s',time()+120)]);
+        $token=bin2hex(random_bytes(32));$pdo->prepare('INSERT INTO market_document_access(token_hash,document_id,actor_id,reason,expires_at) VALUES (?,?,?,?,?)')->execute([verification_token_hash($token),$documentId,$actor,$reason,gmdate('Y-m-d H:i:s',time()+120)]);
         audit_log($pdo,$actor,'identity.access_requested',(int)$row['id'],['document_id'=>$documentId,'reason'=>$reason]);$pdo->commit();return$token;
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
@@ -84,12 +89,13 @@ function verification_access_token(PDO $pdo,int $actor,int $documentId,string $r
 function verification_open_document(PDO $pdo,int $actor,string $token): string
 {
     governance_assert_actor($pdo,$actor,'identity.review');$unavailable=verification_reason($pdo);if($unavailable!==null)throw new DomainException($unavailable);if(!preg_match('/\A[a-f0-9]{64}\z/',$token))throw new DomainException('Zugriffstoken ungültig.');
+    $tokenHash = verification_token_hash($token);
     $pdo->beginTransaction();try{
-        $q=$pdo->prepare('SELECT a.*,d.storage_key,d.deleted_at,r.id AS request_id,r.assigned_to,r.expires_at AS retention_end,r.purged_at FROM market_document_access a JOIN market_verification_documents d ON d.id=a.document_id JOIN market_verification_requests r ON r.id=d.request_id WHERE a.token_hash=? AND a.actor_id=? FOR UPDATE');$q->execute([hash('sha256',$token),$actor]);$row=$q->fetch();
+        $q=$pdo->prepare('SELECT a.*,d.storage_key,d.deleted_at,r.id AS request_id,r.assigned_to,r.expires_at AS retention_end,r.purged_at FROM market_document_access a JOIN market_verification_documents d ON d.id=a.document_id JOIN market_verification_requests r ON r.id=d.request_id WHERE a.token_hash=? AND a.actor_id=? FOR UPDATE');$q->execute([$tokenHash,$actor]);$row=$q->fetch();
         if(!$row||$row['used_at']!==null||strtotime($row['expires_at'].' UTC')<=time()||strtotime($row['retention_end'].' UTC')<=time()||$row['deleted_at']!==null||$row['purged_at']!==null||(int)$row['assigned_to']!==$actor)throw new DomainException('Der Dokumentenzugriff ist abgelaufen oder nicht berechtigt.');
         $path=verification_document_path($row['storage_key']);if(!is_file($path)||is_link($path)||filesize($path)>12*1024*1024)throw new RuntimeException('Dokument nicht verfügbar.');
         $cipher=file_get_contents($path);if(!is_string($cipher))throw new RuntimeException('Dokument nicht verfügbar.');$plain=crypto_decrypt('identity',$cipher);
-        $pdo->prepare('UPDATE market_document_access SET used_at=UTC_TIMESTAMP() WHERE token_hash=?')->execute([hash('sha256',$token)]);
+        $pdo->prepare('UPDATE market_document_access SET used_at=UTC_TIMESTAMP() WHERE token_hash=?')->execute([$tokenHash]);
         audit_log($pdo,$actor,'identity.document_viewed',(int)$row['request_id'],['document_id'=>(int)$row['document_id'],'reason'=>$row['reason']]);$pdo->commit();return$plain;
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }

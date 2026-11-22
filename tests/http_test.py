@@ -133,13 +133,13 @@ def png(width=80, height=60):
     return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(scanlines)) + chunk(b'IEND', b'')
 
 
-def multipart(fields, files):
+def multipart(fields, files, *, file_field='images[]'):
     boundary = 'GunIndexBoundary' + secrets.token_hex(16)
     pieces = []
     for key, value in fields.items():
         pieces.append(('--' + boundary + '\r\nContent-Disposition: form-data; name="' + key + '"\r\n\r\n' + str(value) + '\r\n').encode())
     for name, mime, data in files:
-        pieces.append(('--' + boundary + '\r\nContent-Disposition: form-data; name="images[]"; filename="' + name + '"\r\nContent-Type: ' + mime + '\r\n\r\n').encode() + data + b'\r\n')
+        pieces.append(('--' + boundary + '\r\nContent-Disposition: form-data; name="' + file_field + '"; filename="' + name + '"\r\nContent-Type: ' + mime + '\r\n\r\n').encode() + data + b'\r\n')
     pieces.append(('--' + boundary + '--\r\n').encode())
     return b''.join(pieces), 'multipart/form-data; boundary=' + boundary
 
@@ -434,6 +434,49 @@ class MarketplaceHTTP(unittest.TestCase):
             self.assertIn('Recorded payment balance', body)
             for restricted in ('>User accounts<', 'Open identity cases', 'Manage the website', 'Recent changes'):
                 self.assertEqual(full_access, restricted in body)
+
+    def test_identity_document_can_only_be_opened_once_in_the_issuing_session(self):
+        reviewer = self.user(admin=True)
+        primary = reviewer['browser']
+        parallel = Browser()
+        self.assertEqual('/auth/mfa.php', self.login(reviewer, parallel)[1]['Location'])
+        self.mfa_login(dict(reviewer, browser=parallel))
+        member = self.user()
+        original = self.settings(reviewer)
+        enabled = dict(original, verification_enabled='1', verification_review_approved='1', verification_retention_days='1')
+        self.assertEqual(200, primary.request('/admin/settings.php', enabled)[0])
+        try:
+            route = '/user/verification.php'
+            browser = member['browser']
+            body, content_type = multipart(
+                {'csrf_token': browser.token(route), 'consent': '1'},
+                [('synthetic.png', 'image/png', png())], file_field='documents[]')
+            self.assertEqual(303, browser.request(route, raw=body, content_type=content_type)[0])
+            inbox = '/admin/verifications.php'
+            self.assertEqual(403, browser.request(inbox)[0])
+            result = primary.request(inbox)
+            self.assertEqual(200, result[0])
+            matches = re.findall(r'<a href="\?id=(\d+)">#\d+</a>\s*</td>\s*<td>' + member['username'] + '</td>', result[2])
+            self.assertEqual(1, len(matches))
+            case = inbox + '?id=' + matches[0]
+            document = re.search(r'name="document_id" value="(\d+)"', primary.request(case)[2]).group(1)
+            status, _, body = primary.request(case, {
+                'csrf_token': primary.token(case), 'action': 'access', 'request_id': matches[0],
+                'document_id': document, 'reason': 'Synthetic purpose-bound document review.',
+            })
+            self.assertEqual(200, status)
+            token = re.search(r'name="token" value="([a-f0-9]{64})"', body).group(1)
+            endpoint = '/marketplace/verification-document.php'
+            self.assertEqual(403, parallel.request(endpoint, {'csrf_token': parallel.token(case), 'token': token})[0])
+            payload = {'csrf_token': primary.token(case), 'token': token}
+            status, headers, content = primary.request(endpoint, payload, binary=True)
+            self.assertEqual(200, status)
+            self.assertEqual('image/webp', headers.get_content_type())
+            self.assertIn('no-store', headers['Cache-Control'])
+            self.assertEqual(b'WEBP', content[8:12])
+            self.assertEqual(403, primary.request(endpoint, payload)[0])
+        finally:
+            self.restore_settings(reviewer, original)
 
     def test_admin_geography_shows_postcode_sources_and_localized_validation(self):
         browser = self.user(admin=True)['browser']
