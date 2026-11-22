@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/i18n.php';
 
 /** An additional platform rule, not a complete legal classification. */
 function catalog_text_allowed(string $text): bool
@@ -72,10 +73,10 @@ function catalog_save_category(PDO $pdo, int $actorId, array $data): int
     if ($id === false || $parent === false || $sort === false || !is_string($name) || !is_string($slug)
         || !preg_match('/\A.{2,100}\z/us', trim($name)) || preg_match('/[\x00-\x1F\x7F]/u', $name)
         || !preg_match('/\A[a-z0-9]+(?:-[a-z0-9]+)*\z/', $slug) || strlen($slug) > 100 || !in_array($active, ['0', '1'], true)) {
-        throw new InvalidArgumentException('Bitte prüfe Name, Kennung, Oberkategorie und Sortierung.');
+        throw new InvalidArgumentException(t('classification.category_invalid'));
     }
     $name = trim($name);
-    if (!catalog_text_allowed($name . ' ' . str_replace('-', ' ', $slug))) throw new InvalidArgumentException('Diese Produktgruppe ist für den allgemeinen Marktplatz nicht freigegeben.');
+    if (!catalog_text_allowed($name . ' ' . str_replace('-', ' ', $slug))) throw new InvalidArgumentException(t('classification.category_restricted'));
     $lockName = 'gunindex.categories.' . substr(hash('sha256', (string)$pdo->query('SELECT DATABASE()')->fetchColumn()), 0, 24);
     $statement = $pdo->prepare('SELECT GET_LOCK(?, 5)');
     $statement->execute([$lockName]);
@@ -84,12 +85,12 @@ function catalog_save_category(PDO $pdo, int $actorId, array $data): int
         $pdo->beginTransaction();
         function_exists('governance_assert_actor')?governance_assert_actor($pdo,$actorId,'categories.manage'):settings_assert_admin($pdo,$actorId);
         $rows = catalog_rows($pdo);
-        if (($id !== 0 && !isset($rows[$id])) || ($parent !== 0 && !isset($rows[$parent]))) throw new InvalidArgumentException('Kategorie oder Oberkategorie ist nicht vorhanden.');
-        if ($id === 0 && count($rows) >= 1000) throw new InvalidArgumentException('Das Limit von 1000 Kategorien ist erreicht.');
+        if (($id !== 0 && !isset($rows[$id])) || ($parent !== 0 && !isset($rows[$parent]))) throw new InvalidArgumentException(t('classification.category_missing_parent'));
+        if ($id === 0 && count($rows) >= 1000) throw new InvalidArgumentException(t('classification.category_limit'));
         $ancestor = $parent;
         $seen = [];
         while ($ancestor !== 0) {
-            if (($id > 0 && $ancestor === $id) || isset($seen[$ancestor])) throw new InvalidArgumentException('Eine Kategorie darf nicht unter sich selbst oder einem ihrer Nachfahren liegen.');
+            if (($id > 0 && $ancestor === $id) || isset($seen[$ancestor])) throw new InvalidArgumentException(t('classification.category_cycle'));
             $seen[$ancestor] = true;
             $ancestor = (int)($rows[$ancestor]['parent_id'] ?? 0);
         }
@@ -108,7 +109,7 @@ function catalog_save_category(PDO $pdo, int $actorId, array $data): int
         return $id;
     } catch (Throwable $error) {
         if ($pdo->inTransaction()) $pdo->rollBack();
-        if ($error instanceof PDOException && $error->getCode() === '23000') throw new InvalidArgumentException('Diese Kategoriekennung ist bereits vergeben oder die Zuordnung ist ungültig.');
+        if ($error instanceof PDOException && $error->getCode() === '23000') throw new InvalidArgumentException(t('classification.category_duplicate'));
         throw $error;
     } finally {
         $release = $pdo->prepare('SELECT RELEASE_LOCK(?)');

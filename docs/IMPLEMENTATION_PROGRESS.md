@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Kategorien bearbeiten
+
+Kategoriebaum, Formulare und Validierungen sind in acht Sprachen verfügbar.
+Fachlich hinterlegte Kategorienamen verwenden die gespeicherten
+Übersetzungen. Den gespeicherten Zustand bestätigt die Sitzung einmalig.
+HTTP-Tests prüfen Sprachwechsel, Schleifen im Kategoriebaum und
+Produktgruppenregeln.
+Lokal bestanden zehn PHP-Syntaxprüfungen und acht Admin-Testgruppen.
+
 ## Merkliste in deaktivierten Ländermärkten
 
 Die Merkliste verwendet dieselbe Ländersperre wie die öffentlichen
@@ -38,6 +47,9 @@ HTTP-Test vergleicht die Lesestatus beider Nachrichtenarten innerhalb
 derselben Unterhaltung.
 Lokal bestanden 28 Textschlüssel je Sprache, 13 PHP-Syntaxprüfungen,
 JavaScript-Syntax und alle 13 echten OpenPGP-Prüfgruppen.
+Der vollständige Lauf bestätigte auch im HTTP- und MySQL-Test, dass die
+Lesestatus im älteren und sicheren Chat getrennt behandelt werden.
+[Chat-Regression](https://github.com/LLMbutHuman/GunIndex/actions/runs/45013253878)
 
 ## Website-Einstellungen und Personalrollen
 

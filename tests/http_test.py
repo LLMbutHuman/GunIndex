@@ -608,9 +608,23 @@ class MarketplaceHTTP(unittest.TestCase):
 
     def test_category_creation_cycle_and_regulated_category_rejection(self):
         admin = self.user(admin=True)
+        browser = admin['browser']
+        route = '/admin/categories.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        status, headers, body = browser.request(route + '?saved=1')
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Manage categories</h1>', body)
+        self.assertNotIn('Category saved.', body)
         parent = self.category(admin); child = self.category(admin, int(parent['id']))
+        self.assertIn('Category saved.', browser.request(route)[2])
+        self.assertNotIn('Category saved.', browser.request(route)[2])
         fields = dict(csrf_token=admin['browser'].token('/admin/categories.php'), id=str(parent['id']), name=parent['name'], slug=parent['slug'], parent_id=str(child['id']), sort_order='0', is_active='1')
-        self.assertEqual(422, admin['browser'].request('/admin/categories.php', fields)[0])
+        status, _, body = browser.request(route, fields)
+        self.assertEqual(422, status)
+        self.assertIn('A category cannot use itself or one of its descendants as its parent.', body)
         self.assertIsNone(fixture('category', slug=parent['slug'])['parent_id'])
         fields.update(id='0', name='Waffen', slug='test-' + secrets.token_hex(8), parent_id='0')
         self.assertEqual(422, admin['browser'].request('/admin/categories.php', fields)[0])
