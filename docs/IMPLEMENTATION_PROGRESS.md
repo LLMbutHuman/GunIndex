@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Ländermärkte, Standortquellen und redaktionelle Übersetzungen
+
+Die geschützte Länderübersicht zeigt Standortquellen, Marktzustände und
+Formularprüfungen in acht Sprachen. Sie erklärt den automatischen Import
+der überprüften deutschen und französischen Bestände. Die Quellennotizen
+und vom Betreiber eingegebenen Übersetzungen bleiben unverändert. Der
+HTTP-Test prüft konkrete Eingabefehler und die einmalige Bestätigung
+einer gespeicherten Änderung.
+Lokal bestanden neun PHP-Syntaxprüfungen und 32 Textschlüssel
+einschließlich Platzhaltern in allen acht Sprachen.
+
 ## Auktionsbewertungen und Abmeldung
 
 Auktionsbewertungen, die geschützte Bewertungsmoderation und der

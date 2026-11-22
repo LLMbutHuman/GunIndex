@@ -357,6 +357,26 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('have two-factor authentication enabled before you can assign a staff role', body)
         self.assertEqual(403, subject['browser'].request('/admin/privacy.php')[0])
 
+    def test_admin_geography_shows_postcode_sources_and_localized_validation(self):
+        browser = self.user(admin=True)['browser']
+        route = '/admin/geography.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        status, headers, body = browser.request(route + '?saved=1')
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Countries, languages and location data</h1>', body)
+        self.assertIn('verified postcodes for Germany and metropolitan France', body)
+        self.assertNotIn('Change saved.', body)
+        fields = {'csrf_token': browser.token(route), 'action': 'country', 'country_code': 'DE', 'is_active': 'invalid'}
+        status, _, body = browser.request(route, fields)
+        self.assertEqual(422, status)
+        self.assertIn('Choose a valid status.', body)
+        self.assertEqual(303, browser.request(route, fields | {'is_active': '1'})[0])
+        self.assertIn('Change saved.', browser.request(route)[2])
+        self.assertNotIn('Change saved.', browser.request(route)[2])
+
     def test_admin_privacy_review_uses_session_language_and_real_confirmation(self):
         customer = self.user()
         session = customer['browser']
