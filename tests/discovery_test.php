@@ -48,6 +48,27 @@ if(in_array('--database',$argv,true)){
     $searchInput=['name'=>'Synthetic saved search '.$suffix,'q'=>$stem,'category_id'=>(string)$category,'type'=>'fixed','min_price'=>'100.00','max_price'=>'150.00','country_code'=>'DE','scope'=>'country','origin_country'=>'DE','zip'=>'','radius_km'=>'','sort'=>'newest','notify_mode'=>'instant'];
     $search=discovery_save_search($pdo,$ids['owner'],$searchInput);$finishBackfill('search',$search);$savedFresh=$newListing('saved search');
     discovery_test('database_saved_filters_are_reused_and_duplicates_rejected',static function()use($pdo,$search,$savedFresh,$ids,$searchInput,$countNotifications):void{discovery_scan_query($pdo,'search',$search,100);discovery_assert($countNotifications('discovery:search:'.$search.':'.$savedFresh)===1);discovery_expect(static fn()=>discovery_save_search($pdo,$ids['owner'],$searchInput),InvalidArgumentException::class);discovery_expect(static fn()=>discovery_matches($pdo,'search',$search,$ids['other']),DomainException::class);});
+    discovery_test('database_saved_attribute_bounds_survive_reopening_and_backfill',static function()use($pdo,$category,$suffix,$ids,$newListing,$searchInput,$finishBackfill):void {
+        $definition=$pdo->prepare("INSERT INTO market_category_attributes(category_id,code,label,kind,unit,choices) VALUES (?,?,?,'number','cm',JSON_ARRAY())");
+        $definition->execute([$category,'width-'.$suffix,'Synthetic width']);$width=(int)$pdo->lastInsertId();
+        $definition->execute([$category,'height-'.$suffix,'Synthetic height']);$height=(int)$pdo->lastInsertId();
+        $target=$newListing('matching dimensions');$excluded=$newListing('different dimensions');
+        $value=$pdo->prepare('INSERT INTO market_listing_attributes(listing_id,category_id,attribute_id,number_value) VALUES (?,?,?,?)');
+        foreach ([[$target,$width,80],[$target,$height,60],[$excluded,$width,30],[$excluded,$height,60]] as [$listing,$attribute,$number]) {
+            $value->execute([$listing,$category,$attribute,$number]);
+        }
+        $input=array_replace($searchInput,['sort'=>'relevance','attribute_min'=>[$height=>'50',$width=>'75'],'attribute_max'=>[$width=>'85']]);
+        $saved=discovery_save_search($pdo,$ids['owner'],$input);
+        $stored=json_decode(discovery_owner_query($pdo,'search',$saved,$ids['owner'])['criteria_json'],true,16,JSON_THROW_ON_ERROR);
+        discovery_assert($stored['attribute_min']===[$width=>'75',$height=>'50'] && $stored['attribute_max']===[$width=>'85']);
+        $finishBackfill('search',$saved);
+        $matches=discovery_matches($pdo,'search',$saved,$ids['owner']);
+        discovery_assert(array_map('intval',array_column($matches,'id'))===[$target]);
+        $reordered=array_replace($input,['attribute_min'=>[$width=>'75',$height=>'50']]);
+        discovery_expect(static fn()=>discovery_save_search($pdo,$ids['owner'],$reordered),InvalidArgumentException::class);
+        $invalid=array_replace($input,['attribute_min'=>[$width=>['75']]]);
+        discovery_expect(static fn()=>discovery_save_search($pdo,$ids['owner'],$invalid),InvalidArgumentException::class);
+    });
     $daily=discovery_save_wanted($pdo,$ids['owner'],array_replace($base,['notify_mode'=>'daily']));$finishBackfill('wanted',$daily);$dailyOther=discovery_save_wanted($pdo,$ids['owner'],array_replace($base,['title'=>$stem.' weiteres Sofa gesucht','notify_mode'=>'daily']));$finishBackfill('wanted',$dailyOther);$dailyFresh=$newListing('daily');discovery_scan_query($pdo,'wanted',$daily,100);discovery_scan_query($pdo,'wanted',$dailyOther,100);
     discovery_test('database_daily_digest_is_once_per_day_not_instant',static function()use($pdo,$daily,$dailyOther,$dailyFresh,$ids,$countNotifications):void{discovery_assert($countNotifications('discovery:wanted:'.$daily.':'.$dailyFresh)===0);$pdo->prepare("UPDATE market_discovery_matches SET matched_at=UTC_TIMESTAMP()-INTERVAL 2 DAY WHERE query_kind='wanted' AND query_id IN (?,?) AND listing_id=?")->execute([$daily,$dailyOther,$dailyFresh]);$old=getenv('DISCOVERY_DIGEST_HOUR_UTC');putenv('DISCOVERY_DIGEST_HOUR_UTC=0');try{discovery_daily_digests($pdo,100);discovery_daily_digests($pdo,100);}finally{if($old===false)putenv('DISCOVERY_DIGEST_HOUR_UTC');else putenv('DISCOVERY_DIGEST_HOUR_UTC='.$old);}discovery_assert($countNotifications('discovery:digest:'.gmdate('Y-m-d'))===1);$body=$pdo->prepare('SELECT body FROM market_notifications WHERE user_id=? AND event_key=?');$body->execute([$ids['owner'],'discovery:digest:'.gmdate('Y-m-d')]);discovery_assert(str_starts_with((string)$body->fetchColumn(),'1 neue passende Angebote'));$q=$pdo->prepare('SELECT COUNT(*) FROM market_discovery_digests WHERE user_id=? AND digest_date=UTC_DATE()');$q->execute([$ids['owner']]);discovery_assert((int)$q->fetchColumn()===1);});
     discovery_test('database_archived_queries_are_not_silently_restored',static function()use($pdo,$wanted,$ids,$base):void{discovery_transition($pdo,'wanted',$wanted,$ids['owner'],'archive');discovery_expect(static fn()=>discovery_transition($pdo,'wanted',$wanted,$ids['owner'],'resume'),DomainException::class);discovery_expect(static fn()=>discovery_save_wanted($pdo,$ids['owner'],$base,$wanted),DomainException::class);});

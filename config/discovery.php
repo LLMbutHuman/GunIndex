@@ -187,11 +187,30 @@ function discovery_save_wanted(PDO $pdo, int $userId, array $input, ?int $id = n
     } catch (Throwable $error) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $error; }
 }
 
+function discovery_search_attributes(array $input): array
+{
+    $attributes = [];
+    foreach (['attributes', 'attribute_min', 'attribute_max'] as $key) {
+        if (!array_key_exists($key, $input)) continue;
+        $values = $input[$key];
+        if (!is_array($values) || count($values) > CLASSIFICATION_LIMIT) throw new InvalidArgumentException(t('classification.invalid'));
+        foreach ($values as $id=>$value) {
+            if (!is_string($value)) throw new InvalidArgumentException(t('classification.invalid'));
+            if ($value === '') unset($values[$id]);
+        }
+        if (!$values) continue;
+        ksort($values, SORT_NUMERIC);
+        $attributes[$key] = $values;
+    }
+    return $attributes;
+}
+
 function discovery_validate_search(PDO $pdo, array $input): array
 {
     $allowed = ['q','category_id','type','min_price','max_price','country_code','scope','zip','origin_country','radius_km','sort'];
     $filters = [];
     foreach ($allowed as $key) $filters[$key] = discovery_text($input, $key, $key === 'q' ? 200 : 40);
+    $filters += discovery_search_attributes($input);
     $filters['country_code'] = geo_country($filters['country_code'] ?: 'DE');
     $filters['origin_country'] = geo_country($filters['origin_country'] ?: $filters['country_code']);
     $filters['scope'] = $filters['scope'] ?: 'country';

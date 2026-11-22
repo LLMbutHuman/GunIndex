@@ -51,6 +51,7 @@ include __DIR__.'/../includes/header.php';
 <?php if ($showFrenchSource): ?><p class="help"><a href="https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux">La Poste – Base officielle des codes postaux (2026-11-08)</a> · <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2-0">Licence Ouverte 2.0</a></p><?php endif; ?>
 <p class="help"><?=h(t('Preise werden in EUR angezeigt. Es erfolgt keine automatische Währungsumrechnung.'))?></p>
 </form>
+<?php if($viewer && $error===''): ?><p><a class="button secondary" href="/user/saved-searches.php?<?=h(http_build_query($filters))?>"><?=h(t('dashboard.alerts'))?></a></p><?php endif; ?>
 <?php if($error):?><div class="notice error" role="alert"><?=h($error)?></div><?php endif;?>
 <?php if(function_exists('ui_country_ads'))ui_country_ads($pdo,geo_country(),ctype_digit($filters['category_id'])?(int)$filters['category_id']:null);?>
 <?php if(ctype_digit($filters['category_id'])&&function_exists('ui_sponsored_cards'))ui_sponsored_cards($pdo,geo_country(),(int)$filters['category_id'],'category_top',3);?>

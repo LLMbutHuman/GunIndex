@@ -12,6 +12,11 @@ function classification_fields(array $definitions, array $values, bool $search):
         $raw = $values['attributes'][$id] ?? '';
         $value = is_string($raw)?$raw:'';
         if ($search&&$definition['kind']==='number'):
+            if ($value !== ''): ?>
+                <label class="field"><?=h($label)?>
+                    <input name="attributes[<?=$id?>]" inputmode="decimal" maxlength="14" value="<?=h($value)?>">
+                </label>
+            <?php endif;
             foreach (['attribute_min'=>'classification.minimum','attribute_max'=>'classification.maximum'] as $key=>$translation):
                 $bound = $values[$key][$id] ?? '';
                 ?>

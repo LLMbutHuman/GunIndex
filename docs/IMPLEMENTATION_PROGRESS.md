@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Strukturierte Filter in gespeicherten Suchen
+
+Angemeldete Nutzer können die aktuellen Suchfilter in einen Suchalarm
+übernehmen. Gespeicherte Kriterien behalten Kategorieattribute und
+Zahlenbereiche und verwenden dieselbe Suche bei Vorschlägen und Alarmauswertung.
+Verhandlungsbasis und Relevanz sind auch beim Bearbeiten auswählbar. Alte
+Suchaufträge ohne Merkmale behalten ihr Format. Der DB-Test prüft gespeicherte
+Grenzen, tatsächliche Treffer und die Erkennung gleicher Filter in anderer
+Reihenfolge.
+Lokal bestanden fünf PHP-Syntaxprüfungen und 14 Such- sowie
+Koordinatengruppen. Der neue MySQL-Fall läuft in der Regression.
+
 ## Rückkehr vom Login zum Einrichtungsassistenten
 
 Wer den vom Installer ausgegebenen Admin-Link öffnet, landet nach Passwort
