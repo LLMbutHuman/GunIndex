@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Questa panoramica è di sola lettura.',
+    'admin_listings.invalid_filter' => 'Seleziona un filtro di stato valido.',
+    'admin_listings.invalid_listing' => 'Inserisci un numero di annuncio valido.',
+    'admin_listings.missing' => 'Annuncio non trovato.',
+    'admin_listings.number' => 'Annuncio n. {id}',
+    'admin_listings.conflict' => 'Conflitto di chiusura',
+    'admin_listings.conflict_help' => 'La procedura automatica ha segnalato l’asta per la verifica. Segui la procedura di correzione documentata per esaminare la chiusura.',
+    'admin_listings.events' => 'Ultimi eventi dell’asta',
+    'admin_listings.event' => 'Evento',
+    'admin_listings.public_amount' => 'Importo pubblico',
+    'admin_listings.no_events' => 'Non ci sono ancora eventi per questa asta.',
+    'admin_listings.all' => 'Tutti gli stati',
+    'admin_listings.apply' => 'Filtra',
+    'admin_listings.listing' => 'Annuncio',
+    'admin_listings.seller' => 'Venditore',
+    'admin_listings.type_status' => 'Tipo e stato',
+    'admin_listings.price' => 'Prezzo',
+    'admin_listings.details' => 'Dettagli',
+    'admin_listings.empty' => 'Nessun annuncio corrisponde al filtro.',
+    'admin_listings.bid' => 'Offerta',
+    'admin_listings.buyout' => 'Compra subito',
+    'admin_listings.close' => 'Chiusa',
+    'admin_listings.close_no_bid' => 'Chiusa senza offerte',
+];

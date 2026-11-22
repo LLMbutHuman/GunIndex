@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Tento přehled je jen pro čtení.',
+    'admin_listings.invalid_filter' => 'Vyberte platný filtr stavu.',
+    'admin_listings.invalid_listing' => 'Zadejte platné číslo inzerátu.',
+    'admin_listings.missing' => 'Inzerát nebyl nalezen.',
+    'admin_listings.number' => 'Inzerát č. {id}',
+    'admin_listings.conflict' => 'Konflikt při ukončení',
+    'admin_listings.conflict_help' => 'Automatický proces označil aukci ke kontrole. Při kontrole ukončení postupujte podle zdokumentovaného postupu pro opravy.',
+    'admin_listings.events' => 'Nedávné události aukce',
+    'admin_listings.event' => 'Událost',
+    'admin_listings.public_amount' => 'Veřejná částka',
+    'admin_listings.no_events' => 'Aukce zatím nemá žádné události.',
+    'admin_listings.all' => 'Všechny stavy',
+    'admin_listings.apply' => 'Filtrovat',
+    'admin_listings.listing' => 'Inzerát',
+    'admin_listings.seller' => 'Prodejce',
+    'admin_listings.type_status' => 'Typ a stav',
+    'admin_listings.price' => 'Cena',
+    'admin_listings.details' => 'Podrobnosti',
+    'admin_listings.empty' => 'Filtru neodpovídají žádné inzeráty.',
+    'admin_listings.bid' => 'Příhoz',
+    'admin_listings.buyout' => 'Koupit ihned',
+    'admin_listings.close' => 'Ukončena',
+    'admin_listings.close_no_bid' => 'Ukončena bez příhozů',
+];

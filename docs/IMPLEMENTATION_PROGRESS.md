@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Inserats- und Auktionsübersicht
+
+Die schreibgeschützte Übersicht zeigt Kategorien, Status, Auktionsereignisse
+und Verhandlungsbasis in der gewählten von acht Sprachen. Beim Öffnen eines
+Details bleiben Statusfilter und Seite erhalten. Die HTTP-Regression prüft
+Berechtigungen, die Ablehnung von Schreibzugriffen und öffentliche
+Gebotsbeträge bei vertraulichen Maximalgeboten. Lokal bestanden zehn
+PHP-Syntaxprüfungen und der Abgleich von 23 Schlüsseln in acht Katalogen.
+
 ## Identitätsprüfung in acht Sprachen
 
 Antrag, Prüffrist, Status, Prüfentscheidung, Zugriffsmeldungen und
@@ -325,7 +334,7 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes Inserat-, Nutzer- und Kampagnenverwaltung sowie die verbleibenden
+Als Nächstes Nutzer- und Kampagnenverwaltung sowie die verbleibenden
 Kundenseiten mit den acht Katalogen abgleichen. Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und

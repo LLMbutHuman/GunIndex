@@ -508,6 +508,34 @@ class MarketplaceHTTP(unittest.TestCase):
         finally:
             self.restore_settings(reviewer, original)
 
+    def test_admin_listings_localizes_negotiation_and_only_shows_public_bids(self):
+        route = '/admin/listings.php'
+        seller = self.user()
+        buyer = self.user()
+        auction = self.seed_listing(seller)
+        self.assertEqual(303, self.bid(buyer, auction, '1876.43')[0])
+        fields = self.fields(seller, type='negotiated')
+        self.assertEqual(303, seller['browser'].request('/user/create-listing.php', fields)[0])
+        self.assertEqual(403, seller['browser'].request(route)[0])
+        browser = self.user(admin=True)['browser']
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        status, headers, body = browser.request(route + '?id=' + str(auction) + '&status=active')
+        self.assertEqual(200, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('<h1>Listings and auctions</h1>', body)
+        self.assertRegex(body, r'<strong>' + re.escape(fields['title']) + r'</strong>.*?</td>\s*<td>.*?</td>\s*<td><span>Negotiable price</span>')
+        self.assertIn('Public amount', body)
+        self.assertIn('<td>Bid</td>', body)
+        self.assertNotIn('1.876,43', body)
+        self.assertEqual(422, browser.request(route + '?status[]=active')[0])
+        status, headers, body = browser.request(route, {'delete_id': auction})
+        self.assertEqual(405, status)
+        self.assertEqual('GET, HEAD', headers['Allow'])
+        self.assertIn('This overview is read-only.', body)
+        self.assertEqual('active', fixture('state', listing_id=auction)['status'])
+
     def test_admin_geography_shows_postcode_sources_and_localized_validation(self):
         browser = self.user(admin=True)['browser']
         route = '/admin/geography.php'

@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Diese Übersicht ist schreibgeschützt.',
+    'admin_listings.invalid_filter' => 'Wähle einen gültigen Statusfilter.',
+    'admin_listings.invalid_listing' => 'Gib eine gültige Inseratsnummer an.',
+    'admin_listings.missing' => 'Inserat nicht gefunden.',
+    'admin_listings.number' => 'Inserat #{id}',
+    'admin_listings.conflict' => 'Abschlusskonflikt',
+    'admin_listings.conflict_help' => 'Der automatische Abschluss hat diese Auktion zur Prüfung zurückgestellt. Verwende das dokumentierte Korrekturverfahren, um den Abschluss zu prüfen.',
+    'admin_listings.events' => 'Letzte Auktionsereignisse',
+    'admin_listings.event' => 'Ereignis',
+    'admin_listings.public_amount' => 'Öffentlicher Betrag',
+    'admin_listings.no_events' => 'Noch keine Auktionsereignisse.',
+    'admin_listings.all' => 'Alle Status',
+    'admin_listings.apply' => 'Filtern',
+    'admin_listings.listing' => 'Angebot',
+    'admin_listings.seller' => 'Verkäufer',
+    'admin_listings.type_status' => 'Typ und Status',
+    'admin_listings.price' => 'Preis',
+    'admin_listings.details' => 'Details',
+    'admin_listings.empty' => 'Keine Angebote für diesen Filter.',
+    'admin_listings.bid' => 'Gebot',
+    'admin_listings.buyout' => 'Sofortkauf',
+    'admin_listings.close' => 'Abgeschlossen',
+    'admin_listings.close_no_bid' => 'Ohne Gebot beendet',
+];

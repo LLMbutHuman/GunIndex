@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'This overview is read-only.',
+    'admin_listings.invalid_filter' => 'Choose a valid status filter.',
+    'admin_listings.invalid_listing' => 'Enter a valid listing number.',
+    'admin_listings.missing' => 'Listing not found.',
+    'admin_listings.number' => 'Listing #{id}',
+    'admin_listings.conflict' => 'Closing conflict',
+    'admin_listings.conflict_help' => 'The automatic process flagged this auction for review. Follow the documented correction procedure to review the closing.',
+    'admin_listings.events' => 'Recent auction events',
+    'admin_listings.event' => 'Event',
+    'admin_listings.public_amount' => 'Public amount',
+    'admin_listings.no_events' => 'There are no auction events yet.',
+    'admin_listings.all' => 'All statuses',
+    'admin_listings.apply' => 'Filter',
+    'admin_listings.listing' => 'Listing',
+    'admin_listings.seller' => 'Seller',
+    'admin_listings.type_status' => 'Type and status',
+    'admin_listings.price' => 'Price',
+    'admin_listings.details' => 'Details',
+    'admin_listings.empty' => 'No listings match this filter.',
+    'admin_listings.bid' => 'Bid',
+    'admin_listings.buyout' => 'Buy it now',
+    'admin_listings.close' => 'Closed',
+    'admin_listings.close_no_bid' => 'Closed without bids',
+];

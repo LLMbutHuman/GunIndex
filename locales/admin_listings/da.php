@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Oversigten kan kun læses.',
+    'admin_listings.invalid_filter' => 'Vælg et gyldigt statusfilter.',
+    'admin_listings.invalid_listing' => 'Angiv et gyldigt annoncenummer.',
+    'admin_listings.missing' => 'Annoncen blev ikke fundet.',
+    'admin_listings.number' => 'Annonce nr. {id}',
+    'admin_listings.conflict' => 'Konflikt ved afslutning',
+    'admin_listings.conflict_help' => 'Den automatiske proces markerede auktionen til gennemgang. Følg den dokumenterede korrektionsprocedure for at gennemgå afslutningen.',
+    'admin_listings.events' => 'Seneste auktionshændelser',
+    'admin_listings.event' => 'Hændelse',
+    'admin_listings.public_amount' => 'Offentligt beløb',
+    'admin_listings.no_events' => 'Der er endnu ingen auktionshændelser.',
+    'admin_listings.all' => 'Alle statusser',
+    'admin_listings.apply' => 'Filtrer',
+    'admin_listings.listing' => 'Annonce',
+    'admin_listings.seller' => 'Sælger',
+    'admin_listings.type_status' => 'Type og status',
+    'admin_listings.price' => 'Pris',
+    'admin_listings.details' => 'Detaljer',
+    'admin_listings.empty' => 'Ingen annoncer passer til filteret.',
+    'admin_listings.bid' => 'Bud',
+    'admin_listings.buyout' => 'Køb nu',
+    'admin_listings.close' => 'Afsluttet',
+    'admin_listings.close_no_bid' => 'Afsluttet uden bud',
+];

@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Cette liste est en lecture seule.',
+    'admin_listings.invalid_filter' => 'Choisissez un filtre d’état valide.',
+    'admin_listings.invalid_listing' => 'Indiquez un numéro d’annonce valide.',
+    'admin_listings.missing' => 'Annonce introuvable.',
+    'admin_listings.number' => 'Annonce nº {id}',
+    'admin_listings.conflict' => 'Conflit à la clôture',
+    'admin_listings.conflict_help' => 'Le processus automatique a signalé cette enchère pour vérification. Suivez la procédure de correction documentée pour examiner la clôture.',
+    'admin_listings.events' => 'Derniers événements de l’enchère',
+    'admin_listings.event' => 'Événement',
+    'admin_listings.public_amount' => 'Montant public',
+    'admin_listings.no_events' => 'Aucun événement pour cette enchère.',
+    'admin_listings.all' => 'Tous les statuts',
+    'admin_listings.apply' => 'Filtrer',
+    'admin_listings.listing' => 'Annonce',
+    'admin_listings.seller' => 'Vendeur',
+    'admin_listings.type_status' => 'Type et statut',
+    'admin_listings.price' => 'Prix',
+    'admin_listings.details' => 'Détails',
+    'admin_listings.empty' => 'Aucune annonce ne correspond à ce filtre.',
+    'admin_listings.bid' => 'Offre',
+    'admin_listings.buyout' => 'Achat immédiat',
+    'admin_listings.close' => 'Clôturée',
+    'admin_listings.close_no_bid' => 'Clôturée sans offre',
+];

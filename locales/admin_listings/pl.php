@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Ten przegląd jest tylko do odczytu.',
+    'admin_listings.invalid_filter' => 'Wybierz poprawny filtr statusu.',
+    'admin_listings.invalid_listing' => 'Wpisz poprawny numer ogłoszenia.',
+    'admin_listings.missing' => 'Nie znaleziono ogłoszenia.',
+    'admin_listings.number' => 'Ogłoszenie nr {id}',
+    'admin_listings.conflict' => 'Konflikt przy zakończeniu',
+    'admin_listings.conflict_help' => 'Proces automatyczny skierował aukcję do sprawdzenia. Postępuj zgodnie z udokumentowaną procedurą korekty, aby sprawdzić zakończenie.',
+    'admin_listings.events' => 'Ostatnie zdarzenia aukcji',
+    'admin_listings.event' => 'Zdarzenie',
+    'admin_listings.public_amount' => 'Kwota publiczna',
+    'admin_listings.no_events' => 'Brak zdarzeń aukcji.',
+    'admin_listings.all' => 'Wszystkie statusy',
+    'admin_listings.apply' => 'Filtruj',
+    'admin_listings.listing' => 'Ogłoszenie',
+    'admin_listings.seller' => 'Sprzedawca',
+    'admin_listings.type_status' => 'Typ i status',
+    'admin_listings.price' => 'Cena',
+    'admin_listings.details' => 'Szczegóły',
+    'admin_listings.empty' => 'Brak ogłoszeń spełniających kryteria filtra.',
+    'admin_listings.bid' => 'Oferta',
+    'admin_listings.buyout' => 'Kup teraz',
+    'admin_listings.close' => 'Zakończona',
+    'admin_listings.close_no_bid' => 'Zakończona bez ofert',
+];

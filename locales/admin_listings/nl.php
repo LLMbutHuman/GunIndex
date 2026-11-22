@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+return [
+    'admin_listings.readonly' => 'Dit overzicht is alleen-lezen.',
+    'admin_listings.invalid_filter' => 'Kies een geldig statusfilter.',
+    'admin_listings.invalid_listing' => 'Voer een geldig advertentienummer in.',
+    'admin_listings.missing' => 'Advertentie niet gevonden.',
+    'admin_listings.number' => 'Advertentie #{id}',
+    'admin_listings.conflict' => 'Conflict bij afsluiting',
+    'admin_listings.conflict_help' => 'Het automatische proces heeft deze veiling ter controle gemarkeerd. Volg de gedocumenteerde correctieprocedure om de afsluiting te beoordelen.',
+    'admin_listings.events' => 'Recente veilinggebeurtenissen',
+    'admin_listings.event' => 'Gebeurtenis',
+    'admin_listings.public_amount' => 'Openbaar bedrag',
+    'admin_listings.no_events' => 'Er zijn nog geen veilinggebeurtenissen.',
+    'admin_listings.all' => 'Alle statussen',
+    'admin_listings.apply' => 'Filteren',
+    'admin_listings.listing' => 'Advertentie',
+    'admin_listings.seller' => 'Verkoper',
+    'admin_listings.type_status' => 'Type en status',
+    'admin_listings.price' => 'Prijs',
+    'admin_listings.details' => 'Details',
+    'admin_listings.empty' => 'Geen advertenties voldoen aan dit filter.',
+    'admin_listings.bid' => 'Bod',
+    'admin_listings.buyout' => 'Direct kopen',
+    'admin_listings.close' => 'Afgesloten',
+    'admin_listings.close_no_bid' => 'Afgesloten zonder biedingen',
+];
