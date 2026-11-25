@@ -51,7 +51,7 @@ return [
     'legal_public.version_info' => 'Version {version} · {language} · gældende fra {date} UTC',
     'legal_public.confirm_checkbox' => 'Jeg accepterer udtrykkeligt den viste dokumentversion.',
     'legal_admin.bundled_title' => 'Medfølgende juridiske udkast',
-    'legal_admin.bundled_help' => 'Importér de medfølgende tyske skabeloner som udkast. Eksisterende versioner bevares. Udfyld og gennemgå teksterne i en ny version.',
+    'legal_admin.bundled_help' => 'Importér de medfølgende skabeloner på det valgte sprog som udkast. Eksisterende versioner bevares. Udfyld og gennemgå teksterne i en ny version.',
     'legal_admin.bundled_import' => 'Importér udkast',
     'legal_admin.bundled_result' => 'Nye udkast: {created}. Eksisterende versioner: {existing}.',
     'legal_admin.bundle_unavailable' => 'Det lykkedes ikke at indlæse alle medfølgende udkast.',

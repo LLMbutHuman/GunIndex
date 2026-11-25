@@ -25,7 +25,9 @@ if ($method === 'POST') {
             legal_approve($pdo,(int)$admin['id'],$selectedId,post_string('reviewer',200),post_string('effective_at',10),$checks);
             redirect('/admin/legal.php?id='.$selectedId);
         } elseif ($action === 'import_bundled') {
-            $_SESSION['legal_bundled_import'] = legal_import_bundled_drafts($pdo,(int)$admin['id']);
+            $language = $_POST['language'] ?? 'de';
+            if (!is_string($language)) throw new InvalidArgumentException(t('legal_admin.bundle_unavailable'));
+            $_SESSION['legal_bundled_import'] = legal_import_bundled_drafts($pdo,(int)$admin['id'],$language);
             redirect('/admin/legal.php');
         } elseif ($action === 'import_file') {
             $_SESSION['legal_bundled_import'] = legal_import_draft_file($pdo,(int)$admin['id'],(array)($_FILES['drafts']??[]));
@@ -71,6 +73,11 @@ include __DIR__.'/../includes/header.php';?>
     <p><?=h(t('legal_admin.bundled_help'))?></p>
     <form method="post" action="/admin/legal.php">
         <?=csrf_field()?><input type="hidden" name="action" value="import_bundled">
+        <label class="field"><?=h(t('legal_admin.language'))?>
+            <select name="language"><?php foreach (legal_bundled_draft_languages() as $code=>$name): ?>
+                <option value="<?=h($code)?>"><?=h($name)?></option>
+            <?php endforeach; ?></select>
+        </label>
         <button class="button secondary" type="submit"><?=h(t('legal_admin.bundled_import'))?></button>
     </form>
 </section>

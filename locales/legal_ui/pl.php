@@ -51,7 +51,7 @@ return [
     'legal_public.version_info' => 'Wersja {version} · {language} · obowiązuje od {date} UTC',
     'legal_public.confirm_checkbox' => 'Wyraźnie wyrażam zgodę na wyświetloną wersję dokumentu.',
     'legal_admin.bundled_title' => 'Dołączone projekty dokumentów',
-    'legal_admin.bundled_help' => 'Zaimportuj dołączone niemieckie wzory jako projekty. Istniejące wersje zostaną zachowane. Uzupełnij i sprawdź teksty w nowej wersji.',
+    'legal_admin.bundled_help' => 'Zaimportuj dołączone wzory w wybranym języku jako projekty. Istniejące wersje zostaną zachowane. Uzupełnij i sprawdź teksty w nowej wersji.',
     'legal_admin.bundled_import' => 'Importuj projekty',
     'legal_admin.bundled_result' => 'Nowe projekty: {created}. Istniejące wersje: {existing}.',
     'legal_admin.bundle_unavailable' => 'Nie udało się wczytać wszystkich dołączonych projektów.',

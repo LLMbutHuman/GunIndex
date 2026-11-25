@@ -187,26 +187,61 @@ function legal_insert_draft(PDO $pdo,int $actor,string $code,string $version,str
     return $id;
 }
 
-function legal_import_bundled_drafts(PDO $pdo,int $actor): array
+function legal_bundled_draft_languages(): array
 {
-    governance_assert_actor($pdo,$actor,'legal.manage');
+    $directory=__DIR__.'/../docs/legal/translations/';
+    return array_filter(i18n_locales(),static fn(string $language):bool => $language==='de'
+        || (is_file($directory.$language.'.php') && !is_link($directory.$language.'.php')),ARRAY_FILTER_USE_KEY);
+}
+
+function legal_has_required_fields(string $body): bool
+{
+    return preg_match('/\[(?:Pflichtfeld|REQUIRED\b)[^\]]*\]/iu',$body)===1;
+}
+
+/** Load repository-owned draft text in an available language. */
+function legal_bundled_drafts(string $language): array
+{
+    if (!isset(legal_bundled_draft_languages()[$language])) throw new InvalidArgumentException(t('legal_admin.bundle_unavailable'));
     $directory = __DIR__.'/../docs/legal';
     $manifest = require $directory.'/manifest.php';
+    $translation = $language==='de' ? null : require $directory.'/translations/'.$language.'.php';
+    $translated = $translation['documents'] ?? null;
+    $header = $translation['header'] ?? null;
+    if ($language!=='de' && (!is_array($translated) || !is_string($header) || !legal_has_required_fields($header)
+        || array_diff_key($manifest,$translated) || array_diff_key($translated,$manifest))) {
+        throw new DomainException(t('legal_admin.bundle_unavailable'));
+    }
     $drafts = [];
     foreach ($manifest as $code => $title) {
-        $path = $directory.'/'.$code.'.md';
-        $body = is_file($path) && !is_link($path) ? file_get_contents($path,false,null,0,200001) : false;
-        if ($body === false || !str_contains($body, '[Pflichtfeld:') || strlen($body) > 200000) {
+        if ($language==='de') {
+            $path=$directory.'/'.$code.'.md';
+            $body=is_file($path) && !is_link($path) ? file_get_contents($path,false,null,0,200001) : false;
+        } else {
+            $title=$translated[$code]['title'] ?? null;
+            $provisions=$translated[$code]['provisions'] ?? null;
+            if (!is_string($title) || !is_string($provisions) || !legal_has_required_fields($provisions)) {
+                throw new DomainException(t('legal_admin.bundle_unavailable'));
+            }
+            $body='# '.$title."\n\n".trim($header)."\n\n".trim($provisions)."\n";
+        }
+        if (!is_string($body) || !legal_has_required_fields($body) || strlen($body) > 200000) {
             throw new DomainException(t('legal_admin.bundle_unavailable'));
         }
         $drafts[$code] = [$title,$body];
     }
+    return $drafts;
+}
 
+function legal_import_bundled_drafts(PDO $pdo,int $actor,string $language='de'): array
+{
+    governance_assert_actor($pdo,$actor,'legal.manage');
+    $drafts=legal_bundled_drafts($language);
     $created = 0;
     $pdo->beginTransaction();
     try {
         foreach ($drafts as $code => [$title,$body]) {
-            if (legal_insert_draft($pdo,$actor,$code,'draft-1.0','de',$title,$body,true) !== null) $created++;
+            if (legal_insert_draft($pdo,$actor,$code,'draft-1.0',$language,$title,$body,true) !== null) $created++;
         }
         $pdo->commit();
         return ['created'=>$created,'existing'=>count($drafts)-$created];
@@ -298,7 +333,7 @@ function legal_approve(PDO $pdo,int $actor,int $id,string $reviewer,string $effe
 {
     governance_assert_actor($pdo,$actor,'legal.manage');$reviewer=trim($reviewer);$date=DateTimeImmutable::createFromFormat('!Y-m-d',$effective,new DateTimeZone('UTC'));
     if(mb_strlen($reviewer)<5||mb_strlen($reviewer)>200||!$date||$date->format('Y-m-d')!==$effective||count(array_filter($checks,static fn($v)=>$v==='1'))!==5)throw new InvalidArgumentException(t('legal_admin.review_incomplete'));
-    $pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM market_legal_documents WHERE id=? FOR UPDATE');$q->execute([$id]);$doc=$q->fetch();if(!$doc||$doc['status']!=='draft')throw new DomainException(t('legal_admin.draft_only'));if(preg_match('/\[Pflichtfeld[^\]]*\]/iu',$doc['body_text']))throw new DomainException(t('legal_admin.placeholders'));
+    $pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM market_legal_documents WHERE id=? FOR UPDATE');$q->execute([$id]);$doc=$q->fetch();if(!$doc||$doc['status']!=='draft')throw new DomainException(t('legal_admin.draft_only'));if(legal_has_required_fields($doc['body_text']))throw new DomainException(t('legal_admin.placeholders'));
         if(!hash_equals($doc['content_hash'],hash('sha256',$doc['body_text'])))throw new DomainException(t('legal_admin.hash_invalid'));
         $pdo->prepare("UPDATE market_legal_documents SET status='approved',reviewer_name=?,review_checklist=?,approved_by=?,approved_at=UTC_TIMESTAMP(),effective_at=? WHERE id=?")->execute([$reviewer,json_encode(array_fill(0,5,true),JSON_THROW_ON_ERROR),$actor,$date->format('Y-m-d H:i:s'),$id]);audit_log($pdo,$actor,'legal.approved',$id,['hash'=>$doc['content_hash'],'reviewer'=>$reviewer]);$pdo->commit();
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}

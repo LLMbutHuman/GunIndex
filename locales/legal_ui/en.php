@@ -51,7 +51,7 @@ return [
     'legal_public.version_info' => 'Version {version} · {language} · effective from {date} UTC',
     'legal_public.confirm_checkbox' => 'I expressly agree to the document version shown.',
     'legal_admin.bundled_title' => 'Bundled legal drafts',
-    'legal_admin.bundled_help' => 'Import the included German templates as drafts. Existing versions are preserved. Complete and review the text in a new version.',
+    'legal_admin.bundled_help' => 'Import the included templates in the selected language as drafts. Existing versions are preserved. Complete and review the text in a new version.',
     'legal_admin.bundled_import' => 'Import drafts',
     'legal_admin.bundled_result' => 'New drafts: {created}. Existing versions: {existing}.',
     'legal_admin.bundle_unavailable' => 'The bundled drafts could not all be loaded.',

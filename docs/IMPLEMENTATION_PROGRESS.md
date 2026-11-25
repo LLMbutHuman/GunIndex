@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Mitgelieferte Rechtsfassungen auf Englisch, Französisch und Italienisch
+
+Je 20 vollständig übersetzte deutsche Vorlagen mit übereinstimmenden Abschnitten,
+Pflichtfeldern und Formularzeilen. Die Rechtsverwaltung importiert das gewählte
+Sprachpaket als unveröffentlichten Entwurf `draft-1.0`. Der Freigabeschutz erkennt
+auch `[REQUIRED: …]`. Die PHP-Syntaxprüfung und der lokale Strukturabgleich
+bestanden in allen drei neuen Sprachen. Die MySQL-Regression prüft den regulären
+Import, die Wiederholung mit identischen Versionen und die Ablehnung der noch
+unvollständigen Vorlage beim Freigabeversuch.
+
 ## Mehrsprachige Rechtsentwürfe als Paket einspielen
 
 Die MFA-geschützte Rechtsverwaltung nimmt versionierte JSON-Entwürfe in acht

@@ -14,10 +14,13 @@ gekennzeichnet. Es liegen dadurch keine freigegebenen Rechtstextübersetzungen v
 Die acht Oberflächensprachen sind kein Nachweis acht juristisch geprüfter Fassungen.
 
 Die geschützte Rechtsverwaltung bietet **Entwürfe importieren**. Der
-Import legt fehlende deutsche Fassungen als `draft-1.0` an. Über
+Import legt fehlende Fassungen der gewählten Sprache als `draft-1.0` an.
+Die 20 Vorlagen liegen auf Deutsch, Englisch, Französisch und Italienisch vor.
+Die Sprachfassungen sind als ungeprüfte Entwürfe gekennzeichnet. Über
 **Als neue Version übernehmen** lassen sich Betreiberangaben und
 fachliche Änderungen als separate Fassung speichern. Die mitgelieferten
-Entwürfe behalten ihre Pflichtfelder und bleiben im Entwurfsstatus.
+Entwürfe behalten ihre Pflichtfelder und bleiben im Entwurfsstatus. Die
+Freigabeprüfung erkennt sowohl `[Pflichtfeld: …]` als auch `[REQUIRED: …]`.
 
 Die Sprachübersicht zeigt für jedes der 20 Dokumente offene Sprachen, Entwürfe
 und bereits freigegebene Fassungen. Unter **Mehrsprachige Entwürfe hochladen**

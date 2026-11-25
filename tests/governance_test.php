@@ -52,6 +52,28 @@ gov_test('moderator_cannot_restrict_accounts_without_permission',static function
 gov_test('twenty_legal_drafts_present_and_unapproved',static function():void{
     $manifest=require __DIR__.'/../docs/legal/manifest.php';gov_check(count($manifest)===20);foreach($manifest as $code=>$title){$body=file_get_contents(__DIR__.'/../docs/legal/'.$code.'.md');gov_check(is_string($body)&&strlen($body)>1000&&str_contains($body,'Prüfung ausstehend')&&str_contains($body,'[Pflichtfeld:'));}
 });
+gov_test('translated_bundles_preserve_structure_and_remain_drafts',static function()use($pdo,$admin):void{
+    $original=legal_bundled_drafts('de');
+    $languages=legal_bundled_draft_languages();
+    gov_check(isset($languages['en'],$languages['fr']));
+    foreach (array_diff_key($languages,['de'=>true]) as $language=>$name) {
+        $translated=legal_bundled_drafts($language);
+        gov_check(array_keys($translated)===array_keys($original));
+        foreach ($translated as $code=>[$title,$body]) {
+            $sourceBody=$original[$code][1];
+            gov_check($title!=='' && $body!==$sourceBody && preg_match('//u',$body)===1);
+            gov_check(preg_match_all('/^## /m',$body)===preg_match_all('/^## /m',$sourceBody));
+            gov_check(substr_count($body,'[REQUIRED:')===substr_count($sourceBody,'[Pflichtfeld:'));
+        }
+    }
+    gov_check(legal_import_bundled_drafts($pdo,$admin['id'],'en')===['created'=>20,'existing'=>0]);
+    gov_check(legal_import_bundled_drafts($pdo,$admin['id'],'en')===['created'=>0,'existing'=>20]);
+    $q=$pdo->query("SELECT id,body_text,status FROM market_legal_documents WHERE document_code='terms' AND language='en' AND version='draft-1.0'");
+    $draft=$q->fetch();
+    $translatedEnglish=legal_bundled_drafts('en')['terms'][1];
+    gov_check($draft['status']==='draft' && $draft['body_text']===$translatedEnglish);
+    gov_reject(static fn()=>legal_approve($pdo,$admin['id'],(int)$draft['id'],'Synthetic test reviewer',gmdate('Y-m-d'),array_fill(0,5,'1')));
+});
 gov_test('legal_placeholders_block_approval',static function()use($pdo,$admin):void{
     $body=str_repeat('Synthetic legal draft with required operator details. ',8).'[Pflichtfeld: Betreiber]';$id=legal_create($pdo,$admin['id'],'test-'.bin2hex(random_bytes(8)),'1.0','de','Synthetic unfinished legal document',$body);
     gov_reject(static fn()=>legal_approve($pdo,$admin['id'],$id,'Synthetic test reviewer',gmdate('Y-m-d'),array_fill(0,5,'1')));

@@ -51,7 +51,7 @@ return [
     'legal_public.version_info' => 'Version {version} · {language} · gültig ab {date} UTC',
     'legal_public.confirm_checkbox' => 'Ich stimme der angezeigten Dokumentfassung ausdrücklich zu.',
     'legal_admin.bundled_title' => 'Mitgelieferte Rechtsentwürfe',
-    'legal_admin.bundled_help' => 'Lege die enthaltenen deutschen Vorlagen als Entwürfe an. Vorhandene Versionen bleiben erhalten. Vervollständige und prüfe die Texte in einer neuen Version.',
+    'legal_admin.bundled_help' => 'Lege die enthaltenen Vorlagen in der gewählten Sprache als Entwürfe an. Vorhandene Versionen bleiben erhalten. Vervollständige und prüfe die Texte in einer neuen Version.',
     'legal_admin.bundled_import' => 'Entwürfe importieren',
     'legal_admin.bundled_result' => 'Neue Entwürfe: {created}. Bereits vorhandene Versionen: {existing}.',
     'legal_admin.bundle_unavailable' => 'Die mitgelieferten Entwürfe konnten nicht vollständig geladen werden.',
