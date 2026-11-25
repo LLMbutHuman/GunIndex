@@ -60,14 +60,14 @@ def up():
    old=docker('inspect','--format','{{.Image}}',container,capture=True).stdout.strip()
    new=docker('image','inspect','--format','{{.Id}}',IMAGE,capture=True).stdout.strip()
    version=docker('inspect','--format','{{index .Config.Labels \"gunindex.runtime\"}}',container,capture=True).stdout.strip()
-   if old!=new or version!=b'phase5':docker('stop',container,capture=True);docker('rm',container,capture=True)
+   if old!=new or version!=b'phase6':docker('stop',container,capture=True);docker('rm',container,capture=True)
   if not exists(container):
-   args=['run','-d','--name',container,'--label','gunindex.runtime=phase5','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
+   args=['run','-d','--name',container,'--label','gunindex.runtime=phase6','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
    for name in ('PAYPAL_CLIENT_ID','PAYPAL_CLIENT_SECRET','PAYPAL_MERCHANT_ID','PAYPAL_WEBHOOK_ID','PAYPAL_MODE','PAYPAL_ACCOUNT_TYPE','PAYPAL_BUSINESS_SCOPE','PAYPAL_ENABLED','PLATFORM_BILLING_APPROVED','PAYPAL_LIVE_APPROVED','APP_URL'):
     if name in os.environ:args+=['-e',name]
    if worker:
     args+=['--restart','unless-stopped',IMAGE,'sh','-c','exec sh ops/production/worker.sh']
-   else:args+=['-p','127.0.0.1:8081:8081',IMAGE,'php','-d','memory_limit=256M','-d','upload_max_filesize=5M','-d','post_max_size=28M','-d','max_file_uploads=20','-S','0.0.0.0:8081','-t','public','public/index.php']
+   else:args+=['-p','127.0.0.1:8081:8081',IMAGE,'php','-d','display_errors=0','-d','display_startup_errors=0','-d','log_errors=1','-d','memory_limit=256M','-d','upload_max_filesize=5M','-d','post_max_size=28M','-d','max_file_uploads=20','-S','0.0.0.0:8081','-t','public','public/index.php']
    docker(*args,capture=True)
   else:docker('start',container,capture=True)
  docker('exec',APP,'sh','-c','mkdir -p /var/lib/gunindex/limits /var/lib/gunindex/images /var/lib/gunindex/private /var/lib/gunindex/heartbeats && chmod 700 /var/lib/gunindex /var/lib/gunindex/limits /var/lib/gunindex/images /var/lib/gunindex/private /var/lib/gunindex/heartbeats',capture=True)

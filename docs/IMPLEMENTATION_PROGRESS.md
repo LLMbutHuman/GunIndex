@@ -10,6 +10,11 @@ Meldung. Das PHP-Protokoll enthält die Fehlerklasse und Fundstelle.
 Mitarbeitermasken zeigen
 Berechtigungs- und MFA-Fehler in acht Sprachen. Lokal bestanden elf
 PHP-Syntaxprüfungen, der Katalogabgleich und vier gerenderte Fehlerseiten.
+Die erste Linux-Regression erhielt HTTP 200, weil eine PHP-Meldung beim
+Einlesen des Request-Bodys vor dem Start des Anwendungscodes gesendet
+wurde. Die PHP-Startkonfiguration protokolliert diese Meldung intern.
+Die isolierte lokale HTTP-Probe liefert jetzt HTTP 413, englischen Text
+und `Cache-Control: no-store`. [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45619163415)
 
 ## Inseratsänderungen im Konto
 
