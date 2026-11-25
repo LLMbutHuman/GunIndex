@@ -23,6 +23,13 @@ const FILE = 'Synthetic private attachment canary: d3526289';
 const config = { v6Keys: true, aeadProtect: true, preferredAEADAlgorithm: pgp.enums.aead.gcm, preferredCompressionAlgorithm: pgp.enums.compression.uncompressed };
 const checks = [];
 function test(name, fn) { checks.push([name, fn]); }
+test('ed25519_capability_check_verifies_known_signature_without_generating_keys', async () => {
+  const subtle=globalThis.crypto.subtle;
+  const generateKey=subtle.generateKey;
+  subtle.generateKey=() => { throw new DOMException('Synthetic transient key generation failure','OperationError'); };
+  try { assert.equal(await crypto.supportsIdentityVerification(),true); }
+  finally { subtle.generateKey=generateKey; }
+});
 function account(result) {
   const { manifest, signature, recovery_cipher } = result.request;
   return { manifest, signature, hash: hash(manifest), recovery_cipher };

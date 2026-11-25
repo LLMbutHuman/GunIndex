@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Deterministische Ed25519-Prüfung beim Öffnen des Chats
+
+Ein WebKit-Lauf meldete beim zweiten Käufergerät den Status „nicht unterstützt“.
+Die Startprüfung verifiziert jetzt eine feste öffentliche Signatur aus RFC 8032.
+Die Erzeugung eines neuen Geräteschlüssels findet erst bei der Einrichtung statt.
+Bei einem fehlenden oder fehlerhaften WebCrypto-Verfahren bleibt der Chat
+gesperrt. Der Kryptografietest prüft den Nachweis mit einer simulierten
+vorübergehenden Störung der Schlüsselerzeugung.
+[Fehlerlauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705102235) ·
+[RFC 8032 Abschnitt 7.1](https://www.rfc-editor.org/rfc/rfc8032.html#section-7.1)
+
 ## Fehlende Übersetzungsschlüssel in Konto, Suche und Kategorien ergänzt
 
 Die Beschriftungen für Speichern, Abbrechen, Seitenwechsel, Status und

@@ -1,4 +1,4 @@
-import {initialize,prepareIdentityReset,recover,unlock,includeHistoricalVault,verifyBundle,encryptMessage,decryptMessage,encryptAttachment,decryptAttachment,randomId} from './e2ee-crypto.mjs';
+import {supportsIdentityVerification,initialize,prepareIdentityReset,recover,unlock,includeHistoricalVault,verifyBundle,encryptMessage,decryptMessage,encryptAttachment,decryptAttachment,randomId} from './e2ee-crypto.mjs';
 const root=document.querySelector('#secure-chat');
 if(root){
  const labels=JSON.parse(root.dataset.labels),text=key=>labels['e2ee.'+key]||labels['e2ee.error_default'];
@@ -185,7 +185,7 @@ if(root){
  function bind(id,fn){if(el(id))el(id).addEventListener('click',()=>task(fn));}
  async function start(){
   if(!isSecureContext||!crypto.subtle||!indexedDB)throw Error('unsupported');
-  try{await crypto.subtle.generateKey({name:'Ed25519'},false,['sign','verify']);}catch{throw Error('unsupported');}
+  if (!await supportsIdentityVerification()) throw Error('unsupported');
   db=await new Promise((resolve,reject)=>{const request=indexedDB.open('gunindex-e2ee-v1',1);request.onupgradeneeded=()=>request.result.createObjectStore('items');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
   local=await get('vault')||null;pins=await get('pins')||{};outbox=await get(outboxKey)||null;await refresh();
   bind('create',async()=>{const generation=epoch;const result=await initialize(user,el('device-name').value.trim(),el('passphrase').value);if(generation===epoch)await stage(result);});

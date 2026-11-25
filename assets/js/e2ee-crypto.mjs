@@ -71,6 +71,20 @@ function unurl64(value, length) {
   return result;
 }
 function random(size) { return crypto.getRandomValues(new Uint8Array(size)); }
+
+export async function supportsIdentityVerification() {
+  // Public RFC 8032 section 7.1 test vector, with an empty message.
+  const bytes = value => Uint8Array.from(value.match(/../g), pair => parseInt(pair, 16));
+  const publicKey = bytes('d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a');
+  const signature = bytes('e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b');
+  try {
+    const key = await crypto.subtle.importKey('raw',publicKey,{name:'Ed25519'},false,['verify']);
+    return await crypto.subtle.verify('Ed25519',key,signature,new Uint8Array());
+  } catch (error) {
+    if (error.name === 'NotSupportedError') return false;
+    throw error;
+  }
+}
 export function randomId() { return Array.from(random(16), byte => byte.toString(16).padStart(2, '0')).join(''); }
 async function hash(value) {
   return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', value)), byte => byte.toString(16).padStart(2, '0')).join('');
