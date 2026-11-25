@@ -50,13 +50,32 @@ async function downloadBytes(download) {
 async function label(page, name) {
   return page.locator('#secure-chat').evaluate((node, key) => JSON.parse(node.dataset.labels)['e2ee.' + key], name);
 }
+async function reportedStatus(page) {
+  return page.locator('#secure-chat').evaluate(node => {
+    const labels = JSON.parse(node.dataset.labels);
+    const actual = node.querySelector('#e2ee-status')?.textContent;
+    const known = ['locked','busy','ready','save_code','created','unsupported','error_default','error_trust','error_device','error_recovery','quota'];
+    return known.find(key => labels['e2ee.' + key] === actual) || 'other';
+  }, undefined, {timeout:1000}).catch(() => 'unavailable');
+}
 async function enabled(page, selector) {
-  await page.locator(selector).waitFor({ state: 'visible' });
-  await page.waitForFunction(value => { const node = document.querySelector(value); return node && !node.disabled; }, selector);
+  try {
+    await page.locator(selector).waitFor({ state: 'visible' });
+    // State checks do not depend on animation frames from the browser engine.
+    await page.waitForFunction(value => { const node = document.querySelector(value); return node && !node.disabled; }, selector, {polling:100});
+  } catch (error) {
+    if (error.name === 'TimeoutError') error.safeCheck = selector.slice(1) + ' unavailable chat status ' + await reportedStatus(page);
+    throw error;
+  }
 }
 async function status(page, key) {
   const expected = await label(page, key); invariant(typeof expected === 'string' && expected.length > 0, 'Missing translated status');
-  await page.waitForFunction(value => document.querySelector('#e2ee-status')?.textContent === value, expected);
+  try {
+    await page.waitForFunction(value => document.querySelector('#e2ee-status')?.textContent === value, expected, {polling:100});
+  } catch (error) {
+    if (error.name === 'TimeoutError') error.safeCheck = 'Expected chat status ' + key + ' observed ' + await reportedStatus(page);
+    throw error;
+  }
 }
 async function action(page, id, result) {
   await enabled(page, '#e2ee-' + id); await page.locator('#e2ee-' + id).click(); await status(page, result);

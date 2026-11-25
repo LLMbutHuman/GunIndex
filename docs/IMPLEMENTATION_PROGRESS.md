@@ -77,6 +77,12 @@ Dateien, Wiederherstellung und Gerätewiderruf. Die vollständige Linux-CI
 bestand mit beiden zusätzlichen Browser-Engines. Die Abnahme auf
 nativen Safari-/iOS-Geräten und eine unabhängige Sicherheitsprüfung stehen aus.
 [CI für Chromium, Firefox und WebKit](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
+Ein späterer Lauf traf einen WebKit-Timeout bei der Einrichtung des
+Käufergeräts. Die Testwartebedingungen fragen jetzt den DOM-Zustand in
+Zeitintervallen ab. Bei einem weiteren Timeout meldet der Test die betroffene
+Schaltfläche und einen festen Statuscode. Er protokolliert keine Nachrichten,
+Wiederherstellungscodes oder andere Browserinhalte.
+[Lauf mit sporadischem Timeout](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625052509)
 
 ## Mitgelieferte Rechtsentwürfe übernehmen
 
