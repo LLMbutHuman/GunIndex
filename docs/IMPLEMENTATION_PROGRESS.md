@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Gebote, Sofortkauf und Bewertung
+
+Gebote und Sofortkäufe zeigen eine Bestätigung einmalig für das
+angemeldete Konto und das betroffene Inserat. Fehlermeldungen und
+Abschlussstatus sind in acht Sprachen verfügbar. Nach einem Sofortkauf
+erreichen Verkäufer und Käufer die Bewertungsmaske direkt vom Angebot.
+Der HTTP-Test prüft das Speichern eines Gebots, einen blockierten
+Sofortkauf nach Geboten, einen erfolgreichen Sofortkauf und den zugehörigen
+Bewertungszugang. Lokal bestanden 13 PHP-Syntaxprüfungen und der Abgleich
+von 19 Schlüsseln in acht Sprachen.
+
 ## Suchfilter und Entfernungssortierung
 
 Die Suche und gespeicherte Suchaufträge erhalten gemeinsame lokalisierte
@@ -43,6 +54,8 @@ beschreiben aktivierbare Identitätsprüfung, E2EE und Altverlauf getrennt.
 Lokal bestanden zehn PHP-Syntaxprüfungen, JavaScript-Syntax, 40 Schlüssel
 und die Nachrechnung für Beispielprovision und Obergrenze. Der Browsertest
 prüft alle vier Abschnitte in acht Sprachen bei 390 Pixel Breite.
+Die Linux-Integration einschließlich der Mobilansichten und die
+Windows-Vorprüfung sind bestanden.
 [CI zu den Mobilansichten](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616262092)
 
 ## Händler- und Kampagnenprüfung
@@ -409,8 +422,8 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes Meldungen für Gebote und Sofortkauf sowie verbleibende
-Kundentexte mit den acht Katalogen abgleichen.
+Als Nächstes verbleibende Meldungen für Angebotsaktionen und
+Systemfehler mit den acht Katalogen abgleichen.
 Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und

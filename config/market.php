@@ -323,8 +323,8 @@ function market_assert_users_active(PDO $pdo, array $ids): void
     $q=$pdo->prepare('SELECT id,is_active FROM users WHERE id IN ('.implode(',',array_fill(0,count($ids),'?')).') ORDER BY id FOR SHARE');
     $q->execute($ids);
     $rows=$q->fetchAll();
-    if (count($rows)!==count($ids)) throw new MarketAccessException('Ein beteiligtes Konto ist nicht verfügbar.');
-    foreach ($rows as $row) if ((int)$row['is_active']!==1) throw new MarketAccessException('Ein beteiligtes Konto ist gesperrt.');
+    if (count($rows)!==count($ids)) throw new MarketAccessException(t('auction_actions.account_unavailable'));
+    foreach ($rows as $row) if ((int)$row['is_active']!==1) throw new MarketAccessException(t('auction_actions.account_unavailable'));
 }
 
 function market_category_locked_allowed(PDO $pdo, int $id): bool
@@ -346,10 +346,10 @@ function market_assert_auction(PDO $pdo, array $listing): void
 {
     if(!geo_country_locked_enabled($pdo,$listing['country_code']))throw new MarketAccessException(t('listing_validation.country_closed'));
     if (!market_category_locked_allowed($pdo,(int)$listing['category_id'])) {
-        throw new MarketAccessException('Diese Produktkategorie ist nicht verfügbar.');
+        throw new MarketAccessException(t('listing_validation.category_closed'));
     }
     if ($listing['type'] !== 'auction' || $listing['status'] !== 'active' || market_expired($listing)) {
-        throw new MarketConflictException('Diese Auktion nimmt keine Gebote mehr an.');
+        throw new MarketConflictException(t('auction_actions.closed'));
     }
 }
 
@@ -369,7 +369,7 @@ function market_visible_price(array $listing, array $leaders): int
     $start=(int)$listing['price_cents'];
     $stored=$listing['current_bid_cents'] === null ? $start : (int)$listing['current_bid_cents'];
     if ($stored > $top || $start > $top) {
-        throw new MarketConflictException('Die Auktion benötigt eine manuelle Prüfung.');
+        throw new MarketConflictException(t('auction_actions.conflict'));
     }
     $competitive=count($leaders)>1 ? min($top,(int)$leaders[1]['max_cents']+100) : $start;
     return max($start,$stored,$competitive);
@@ -378,7 +378,7 @@ function market_visible_price(array $listing, array $leaders): int
 function market_bid(PDO $pdo, int $listingId, int $userId, int $maximum): array
 {
     if ($maximum < 1 || $maximum > 9999999999) {
-        throw new InvalidArgumentException('Das Gebot liegt außerhalb des erlaubten Bereichs.');
+        throw new InvalidArgumentException(t('auction_actions.amount'));
     }
     try {
         $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
@@ -386,19 +386,19 @@ function market_bid(PDO $pdo, int $listingId, int $userId, int $maximum): array
         market_assert_auction($pdo,$listing);
         market_assert_users_active($pdo,[$userId,(int)$listing['seller_id']]);
         if ((int)$listing['seller_id'] === $userId) {
-            throw new MarketAccessException('Eigene Angebote dürfen nicht beboten werden.');
+            throw new MarketAccessException(t('auction_actions.own_bid'));
         }
         $q=$pdo->prepare('SELECT max_cents FROM market_proxy_bids WHERE listing_id=? AND user_id=?');
         $q->execute([$listingId,$userId]);
         $previous=$q->fetchColumn();
         if ($previous !== false && $maximum <= (int)$previous) {
-            throw new MarketConflictException('Ein Maximalgebot kann nur erhöht werden.');
+            throw new MarketConflictException(t('auction_actions.increase'));
         }
         $leaders=market_leaders($pdo,$listingId);
         $isLeader=$leaders && (int)$leaders[0]['user_id']===$userId;
         $minimum=$listing['current_bid_cents']===null ? (int)$listing['price_cents'] : (int)$listing['current_bid_cents']+100;
         if (!$isLeader && $maximum < $minimum) {
-            throw new MarketConflictException('Das Gebot erreicht den nächsten Gebotsschritt nicht.');
+            throw new MarketConflictException(t('auction_actions.step'));
         }
         $previousLeader=(int)($listing['highest_bidder_id']??0);
         $q=$pdo->prepare('INSERT INTO market_proxy_bids(listing_id,user_id,max_cents,created_at,updated_at) VALUES (?,?,?,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6)) ON DUPLICATE KEY UPDATE max_cents=VALUES(max_cents),updated_at=UTC_TIMESTAMP(6)');
@@ -430,8 +430,8 @@ function market_buy_now(PDO $pdo, int $listingId, int $userId): array
         $listing=market_lock_listing($pdo,$listingId);
         market_assert_auction($pdo,$listing);
         market_assert_users_active($pdo,[$userId,(int)$listing['seller_id']]);
-        if ((int)$listing['seller_id']===$userId) throw new MarketAccessException('Kein Sofortkauf eigener Angebote.');
-        if (market_has_bids($pdo,$listingId) || (int)$listing['buyout_cents']<1) throw new MarketConflictException('Ein Sofortkauf ist nicht mehr verfügbar.');
+        if ((int)$listing['seller_id']===$userId) throw new MarketAccessException(t('auction_actions.own_buyout'));
+        if (market_has_bids($pdo,$listingId) || (int)$listing['buyout_cents']<1) throw new MarketConflictException(t('auction_actions.buyout_unavailable'));
         $amount=(int)$listing['buyout_cents'];
         $q=$pdo->prepare("UPDATE market_listings SET status='sold',highest_bidder_id=?,current_bid_cents=?,updated_at=UTC_TIMESTAMP() WHERE id=?");
         $q->execute([$userId,$amount,$listingId]);

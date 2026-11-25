@@ -1107,14 +1107,37 @@ class MarketplaceHTTP(unittest.TestCase):
     def test_buyout_requires_csrf_and_is_unavailable_after_bids(self):
         seller = self.user(); buyer = self.user(); listing = self.seed_listing(seller, buyout_cents=3000)
         browser = buyer['browser']
-        self.assertEqual(405, browser.request('/marketplace/buyout-request.php?listing_id=' + str(listing))[0])
-        self.assertEqual(403, browser.request('/marketplace/buyout-request.php', {'listing_id': listing})[0])
-        self.assertEqual(303, self.bid(buyer, listing, '20.00')[0])
-        self.assertEqual(409, browser.request('/marketplace/buyout-request.php', {'listing_id': listing, 'csrf_token': browser.token()})[0])
+        auction = '/marketplace/view-auction.php?id=' + str(listing)
+        buyout = '/marketplace/buyout-request.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(auction), 'locale': 'en', 'market_country': 'DE', 'return_path': auction,
+        })[0])
+        self.assertNotIn('Your bid was accepted.', browser.request(auction + '&bid=leading')[2])
+        self.assertEqual(405, browser.request(buyout + '?listing_id=' + str(listing))[0])
+        self.assertEqual(403, browser.request(buyout, {'listing_id': listing})[0])
+        status, headers, _ = self.bid(buyer, listing, '20.00')
+        self.assertEqual(303, status)
+        self.assertIn('Your bid was accepted.', browser.request(headers['Location'])[2])
+        self.assertNotIn('Your bid was accepted.', browser.request(auction)[2])
+        status, _, body = browser.request(buyout, {'listing_id': listing, 'csrf_token': browser.token()})
+        self.assertEqual(409, status)
+        self.assertIn('Buy it now is no longer available.', body)
         fresh = self.seed_listing(seller, buyout_cents=3000)
-        self.assertEqual(303, browser.request('/marketplace/buyout-request.php', {'listing_id': fresh, 'csrf_token': browser.token()})[0])
+        status, headers, _ = browser.request(buyout, {'listing_id': fresh, 'csrf_token': browser.token()})
+        self.assertEqual(303, status)
         state = fixture('state', listing_id=fresh)
         self.assertEqual('sold', state['status']); self.assertEqual(3000, state['current_bid_cents'])
+        completed = headers['Location']
+        rating = '/user/rate-user.php?listing_id=' + str(fresh)
+        body = browser.request(completed)[2]
+        self.assertIn('Your purchase was recorded.', body)
+        self.assertIn(rating, body)
+        self.assertNotIn('Your purchase was recorded.', browser.request(completed)[2])
+        self.assertIn(rating, seller['browser'].request(completed)[2])
+        self.assertNotIn(rating, Browser().request(completed)[2])
+        self.assertEqual(200, browser.request(rating, {
+            'csrf_token': browser.token(rating), 'stars': '5', 'comment': 'Synthetic confirmed buyout rating.',
+        })[0])
 
     def test_invoice_owner_and_disabled_bank_transfer_cannot_be_bypassed(self):
         owner = self.user(); other = self.user(); invoice = fixture('invoice', username=owner['username'])['id']
