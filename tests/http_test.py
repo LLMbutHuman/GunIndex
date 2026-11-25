@@ -463,9 +463,12 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(303, admin.request('/user/language.php', {
             'csrf_token': admin.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
         })[0])
-        self.assertIn('Import drafts', admin.request(route)[2])
+        menu=admin.request(route)[2]
+        self.assertIn('Import drafts', menu)
+        self.assertIn('<option value="all">All available languages</option>',menu)
         self.assertEqual(403, admin.request(route, {'action': 'import_bundled'})[0])
         payload = {'csrf_token': admin.token(route), 'action': 'import_bundled'}
+        self.assertEqual(422,admin.request(route,{**payload,'language':'unsupported'})[0])
         self.assertEqual(303, admin.request(route, payload)[0])
         first = admin.request(route)[2]
         self.assertIn('New drafts: 20. Existing versions: 0.', first)

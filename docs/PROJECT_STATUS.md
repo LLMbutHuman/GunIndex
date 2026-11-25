@@ -12,12 +12,12 @@ Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
 fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
 [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
 
-Der Ubuntu-Installer prüft jetzt sieben länderspezifische PLZ-Quellen.
-Die Rechtsverwaltung importiert 20 deutsche Vorlagen als unveröffentlichte
-Entwürfe. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
+Der Ubuntu-Installer prüft jetzt acht länderspezifische PLZ-Quellen.
+Die Rechtsverwaltung enthält 20 Vorlagen in jeweils acht Sprachen und kann
+sie gesammelt als unveröffentlichte Entwürfe importieren. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
 bestanden. Native Tests auf Apple-Geräten, fachlich freigegebene Rechtstexte
 und die unabhängige Sicherheitsprüfung bleiben Teil der Abnahme.
-[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45628098335) ·
+[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702394866) ·
 [Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623239492) ·
 [E2EE-Browser](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
 

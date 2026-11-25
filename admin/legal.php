@@ -76,7 +76,9 @@ include __DIR__.'/../includes/header.php';?>
         <label class="field"><?=h(t('legal_admin.language'))?>
             <select name="language"><?php foreach (legal_bundled_draft_languages() as $code=>$name): ?>
                 <option value="<?=h($code)?>"><?=h($name)?></option>
-            <?php endforeach; ?></select>
+            <?php endforeach; ?>
+                <option value="all"><?=h(t('legal_admin.bundled_all_languages'))?></option>
+            </select>
         </label>
         <button class="button secondary" type="submit"><?=h(t('legal_admin.bundled_import'))?></button>
     </form>

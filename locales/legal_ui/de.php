@@ -65,4 +65,5 @@ return [
     'legal_admin.import_file_label' => 'JSON-Datei mit Entwürfen (maximal 5 MiB)',
     'legal_admin.import_invalid' => 'Wähle eine gültige JSON-Datei mit bis zu 250 Entwürfen in unterstützten Sprachen.',
     'legal_admin.import_duplicate_entry' => 'Die Datei enthält dieselbe Dokumentversion mehrfach.',
+    'legal_admin.bundled_all_languages' => 'Alle verfügbaren Sprachen',
 ];

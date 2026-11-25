@@ -76,7 +76,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
 | 3 | Gebühren, Korrekturen, Rechnungen | A | Centgenauer Durchlauf mit Verlängerung, Zuschlag, Teilkorrektur, verifizierter Zahlung und PDF im isolierten MySQL/HTTP geprüft. Die Belegübersicht bindet ursprüngliche und korrigierte Aufträge an die Auktion. Bestandsauktionen erhalten keine rückwirkenden Gebühren. Automatische Providerzahlungen werden separat abgenommen. [CI 44839394997](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839394997) |
 | 4 | Rechtsdokumentbindung | B | Registrierung, Checkout und ausdrückliche Pflichtzustimmung für Bestandskonten versioniert und in MySQL/HTTP geprüft. Fachliche Freigabe der tatsächlichen Dokumente und Sprachfassungen steht aus. [CI 44794702907](https://github.com/LLMbutHuman/GunIndex/actions/runs/44794702907) |
-| 5 | Vollständige Übersetzungen | C | Acht Sprachfassungen für die geprüften Module, einschließlich Kontoverwaltung, Händlern, Rechtsmasken und öffentlichen Informationsseiten. Fachliche Rechtsfassungen sowie der vollständige sprachliche Seiten- und Formatabgleich bleiben offen. [Mobiltest](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616262092) |
+| 5 | Vollständige Übersetzungen | C | Acht Sprachfassungen für geprüfte Oberflächen und alle 20 mitgelieferten Rechtsentwürfe. Fachlich freigegebene Betreiberfassungen, einzelne Vertragstexte im Checkout und der vollständige Sprach- und Formatabgleich aller Ansichten stehen aus. [Mobiltest](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616262092) |
 | 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |
 | 7 | Produktklassifizierung | A | Validierte Werte in Inserat, Produktseite, Wiedereinstellung und Kaufnachweis. Bestehende Inserate beginnen ohne erfundene Werte |
 | 8 | Autocomplete/Relevanz/Filter | A | Öffentliche Titelvorschläge, Relevanzsortierung und kombinierte Merkmals-, Preis-, Länder- und Umkreissuche in MySQL und Chromium geprüft |
@@ -136,6 +136,10 @@ Der nächste Installer-Lauf bestätigt zusätzlich 2.675 aggregierte tschechisch
 PLZ-Punkte, den Prager Umkreis, die Suche mit formatierten PLZ und den
 Quellenhinweis. Ein Update behält die sieben vorhandenen Länderimporte bei.
 [Ubuntu-Installer mit Tschechien](https://github.com/LLMbutHuman/GunIndex/actions/runs/45628098335)
+Für Belgien bestätigt der Installer 1.139 PLZ-Punkte aus den drei amtlichen
+BeST-Registern, den Brüsseler Umkreis und den Quellenhinweis. Die Prüfung
+der In-Place-Aktualisierung umfasst damit acht Länderimporte.
+[Ubuntu-Installer mit Belgien](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702394866)
 
 Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
 neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL

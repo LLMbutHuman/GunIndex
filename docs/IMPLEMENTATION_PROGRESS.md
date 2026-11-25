@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Alle 160 Rechtsentwürfe in einem Schritt einspielen
+
+Die 20 mitgelieferten Rechtsvorlagen liegen jetzt in allen acht Sprachen vor.
+Niederländisch, Polnisch, Tschechisch und Dänisch ergänzen die bereits
+vorhandenen Entwürfe. Der geschützte Sammelimport legt fehlende Fassungen in
+einer Transaktion an und erhält vorhandene Dokumente. Die lokale Prüfung
+bestätigte vollständige Manifestabdeckung, UTF-8, Abschnittsstruktur,
+Formularfelder und Pflichtfeldmarkierungen. Die MySQL-Regression lädt alle
+160 Entwürfe, prüft 20 je Sprache und wiederholt den Import ohne neue IDs.
+Die fachliche Freigabe der konkreten Betreiberfassungen steht aus.
+
 ## Mitgelieferte Rechtsfassungen auf Englisch, Französisch und Italienisch
 
 Je 20 vollständig übersetzte deutsche Vorlagen mit übereinstimmenden Abschnitten,
@@ -22,6 +33,7 @@ Sichtbarkeit der importierten Entwürfe ab.
 Lokal bestanden zehn PHP-Syntaxprüfungen und sieben PHP-Testgruppen mit
 Schlüssel- und Platzhalterprüfung für alle Sprachkataloge.
 [Paketformat und rechtliche Übergabe](LEGAL_HANDOFF.md)
+[Bestandener HTTP- und Browserlauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702883980)
 
 ## Belgische Postleitzahlen aus der CC-BY-Veröffentlichung von BOSA
 
@@ -33,6 +45,10 @@ Der Ubuntu-Test prüft die acht Länderimporte bei Neuinstallation und
 das Update sowie die Brüsseler Umkreissuche gegen tatsächlich vorhandene
 Koordinaten und den Quellenhinweis.
 [Quellen, Prüfsummen und Reproduktionsbefehl](POSTCODE_SOURCES.md)
+Neuinstallation, Update, Radius und Quellenanzeige bestanden auf Ubuntu 22.04.
+Der Marktplatz-Regressionslauf einschließlich Browserprüfungen war erfolgreich.
+[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702394866) ·
+[Regression](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702394731)
 
 ## Tägliche verschlüsselte Offsite-Kopie nach Einrichtung des SSH-Ziels
 

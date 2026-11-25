@@ -15,8 +15,9 @@ Die acht Oberflächensprachen sind kein Nachweis acht juristisch geprüfter Fass
 
 Die geschützte Rechtsverwaltung bietet **Entwürfe importieren**. Der
 Import legt fehlende Fassungen der gewählten Sprache als `draft-1.0` an.
-Die 20 Vorlagen liegen auf Deutsch, Englisch, Französisch und Italienisch vor.
-Die Sprachfassungen sind als ungeprüfte Entwürfe gekennzeichnet. Über
+Die 20 Vorlagen liegen in allen acht vorgesehenen Sprachen vor. **Alle verfügbaren
+Sprachen** übernimmt die 160 Fassungen gesammelt. Sie sind als ungeprüfte Entwürfe
+gekennzeichnet. Über
 **Als neue Version übernehmen** lassen sich Betreiberangaben und
 fachliche Änderungen als separate Fassung speichern. Die mitgelieferten
 Entwürfe behalten ihre Pflichtfelder und bleiben im Entwurfsstatus. Die

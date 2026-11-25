@@ -65,4 +65,5 @@ return [
     'legal_admin.import_file_label' => 'Draft JSON file (up to 5 MiB)',
     'legal_admin.import_invalid' => 'Choose a valid JSON file with up to 250 drafts in supported languages.',
     'legal_admin.import_duplicate_entry' => 'The file contains the same document version more than once.',
+    'legal_admin.bundled_all_languages' => 'All available languages',
 ];

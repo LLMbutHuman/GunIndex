@@ -55,7 +55,7 @@ gov_test('twenty_legal_drafts_present_and_unapproved',static function():void{
 gov_test('translated_bundles_preserve_structure_and_remain_drafts',static function()use($pdo,$admin):void{
     $original=legal_bundled_drafts('de');
     $languages=legal_bundled_draft_languages();
-    gov_check(isset($languages['en'],$languages['fr']));
+    gov_check(array_keys($languages)===array_keys(i18n_locales()));
     foreach (array_diff_key($languages,['de'=>true]) as $language=>$name) {
         $translated=legal_bundled_drafts($language);
         gov_check(array_keys($translated)===array_keys($original));
@@ -66,8 +66,11 @@ gov_test('translated_bundles_preserve_structure_and_remain_drafts',static functi
             gov_check(substr_count($body,'[REQUIRED:')===substr_count($sourceBody,'[Pflichtfeld:'));
         }
     }
-    gov_check(legal_import_bundled_drafts($pdo,$admin['id'],'en')===['created'=>20,'existing'=>0]);
-    gov_check(legal_import_bundled_drafts($pdo,$admin['id'],'en')===['created'=>0,'existing'=>20]);
+    $first=legal_import_bundled_drafts($pdo,$admin['id'],'all');
+    gov_check($first['created']+$first['existing']===160);
+    gov_check(legal_import_bundled_drafts($pdo,$admin['id'],'all')===['created'=>0,'existing'=>160]);
+    $counts=$pdo->query("SELECT language,COUNT(*) FROM market_legal_documents WHERE version='draft-1.0' AND status='draft' GROUP BY language")->fetchAll(PDO::FETCH_KEY_PAIR);
+    foreach ($languages as $language=>$name) gov_check((int)($counts[$language]??0)===20);
     $q=$pdo->query("SELECT id,body_text,status FROM market_legal_documents WHERE document_code='terms' AND language='en' AND version='draft-1.0'");
     $draft=$q->fetch();
     $translatedEnglish=legal_bundled_drafts('en')['terms'][1];

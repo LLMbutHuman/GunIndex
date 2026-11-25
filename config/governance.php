@@ -236,12 +236,19 @@ function legal_bundled_drafts(string $language): array
 function legal_import_bundled_drafts(PDO $pdo,int $actor,string $language='de'): array
 {
     governance_assert_actor($pdo,$actor,'legal.manage');
-    $drafts=legal_bundled_drafts($language);
+    $languages=$language==='all' ? array_keys(legal_bundled_draft_languages()) : [$language];
+    $drafts=[];
+    foreach ($languages as $selected) {
+        foreach (legal_bundled_drafts($selected) as $code=>[$title,$body]) {
+            $drafts[$code."\0draft-1.0\0".$selected]=[$selected,$code,$title,$body];
+        }
+    }
+    ksort($drafts,SORT_STRING);
     $created = 0;
     $pdo->beginTransaction();
     try {
-        foreach ($drafts as $code => [$title,$body]) {
-            if (legal_insert_draft($pdo,$actor,$code,'draft-1.0',$language,$title,$body,true) !== null) $created++;
+        foreach ($drafts as [$selected,$code,$title,$body]) {
+            if (legal_insert_draft($pdo,$actor,$code,'draft-1.0',$selected,$title,$body,true) !== null) $created++;
         }
         $pdo->commit();
         return ['created'=>$created,'existing'=>count($drafts)-$created];
