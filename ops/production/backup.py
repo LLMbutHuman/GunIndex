@@ -126,22 +126,29 @@ class Operations:
    return prefix.with_suffix('.json')
   finally:
    if running and not leave_stopped:self.run(['up','-d']+sorted(running))
- def restore(self,manifest,database,files_directory):
-  if not re.fullmatch(r'gunindex_restore_[a-z0-9_]{4,60}',database):raise RuntimeError('Restore target must be a NEW gunindex_restore_* schema.')
+ def verify_snapshot(self,manifest):
   manifest=Path(manifest).absolute()
   if manifest.is_symlink() or not manifest.is_file():raise RuntimeError('A regular snapshot manifest is required.')
+  if manifest.stat().st_size>20*1024**2:raise RuntimeError('Snapshot manifest is too large.')
   meta=json.loads(manifest.read_text())
-  if meta.get('format')!='gunindex-snapshot-1':raise RuntimeError('Unknown snapshot format.')
+  if not isinstance(meta,dict) or meta.get('format')!='gunindex-snapshot-1':raise RuntimeError('Unknown snapshot format.')
   signature=meta.pop('manifest_hmac',None)
   if not isinstance(signature,str) or not hmac.compare_digest(signature,self.manifest_signature(meta)):raise RuntimeError('Manifest authentication failed.')
   archives=[]
   for label in ('database','private'):
    name=meta[label+'_archive']
-   if not isinstance(name,str) or Path(name).name!=name or not name.endswith('.gib'):raise RuntimeError('Unsafe archive filename.')
+   if not isinstance(name,str) or not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*\.gib',name):raise RuntimeError('Unsafe archive filename.')
    archive=manifest.parent/name
-   if archive.is_symlink() or file_digest(archive)!=meta[label+'_archive_sha256']:raise RuntimeError('Archive digest mismatch.')
-   if self.decrypt_digest(archive)!=meta[label+'_plaintext_sha256']:raise RuntimeError('Plaintext digest mismatch.')
+   if archive.is_symlink() or not archive.is_file() or archive in archives or file_digest(archive)!=meta[label+'_archive_sha256']:raise RuntimeError('Archive digest mismatch.')
+   with archive.open('rb') as handle:
+    if handle.read(8)!=b'GIDXBK01':raise RuntimeError('Unknown encrypted archive format.')
    archives.append(archive)
+  return meta,archives
+ def restore(self,manifest,database,files_directory):
+  if not re.fullmatch(r'gunindex_restore_[a-z0-9_]{4,60}',database):raise RuntimeError('Restore target must be a NEW gunindex_restore_* schema.')
+  meta,archives=self.verify_snapshot(manifest)
+  for label,archive in zip(('database','private'),archives):
+   if self.decrypt_digest(archive)!=meta[label+'_plaintext_sha256']:raise RuntimeError('Plaintext digest mismatch.')
   target=Path(files_directory).resolve()
   if target.exists():raise RuntimeError('Private-file restore directory must not already exist.')
   if self.mysql("SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='"+database+"';").strip()!=b'0':raise RuntimeError('Restore target exists; no overwrite is supported.')
@@ -177,11 +184,15 @@ class Operations:
 if __name__=='__main__':
  parser=argparse.ArgumentParser();parser.add_argument('--directory',default='/srv/gunindex');sub=parser.add_subparsers(dest='action',required=True)
  backup=sub.add_parser('backup');backup.add_argument('--maintenance',action='store_true');backup.add_argument('--leave-stopped',action='store_true')
+ verify=sub.add_parser('verify');verify.add_argument('--manifest',required=True)
  restore=sub.add_parser('restore');restore.add_argument('--manifest',required=True);restore.add_argument('--database',required=True);restore.add_argument('--files-directory',required=True)
  args=parser.parse_args()
  try:
   ops=Operations(args.directory)
   if args.action=='backup':ops.backup(args.maintenance,args.leave_stopped)
+  elif args.action=='verify':
+   _,archives=ops.verify_snapshot(args.manifest)
+   for archive in archives:print(archive)
   else:ops.restore(args.manifest,args.database,args.files_directory)
  except (RuntimeError,ValueError,OSError,KeyError,tarfile.TarError):
   print('Operation stopped. No existing database was overwritten. Check private configuration and restricted service logs.',file=sys.stderr);raise SystemExit(1)

@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Rückleseprüfung für verschlüsselte Offsite-Sicherungen
+
+Das vorhandene SFTP-Werkzeug prüft die Manifest-Signatur und die verschlüsselten
+Archive lokal. Erst nach vollständigem Rücklesen und Prüfen veröffentlicht es das
+Snapshot-Verzeichnis auf dem per Hostschlüssel verifizierten Ziel. Der lokale
+Backup-Timer und der Restore aus bestehenden Manifests bleiben verwendbar.
+Die Ubuntu-CI prüft einen falschen Hostschlüssel, ein verändertes Manifest,
+die Übertragung per OpenSSH, Dateirechte, die erneute Übertragung mit gleichem
+Namen und den vollständigen Restore aus der zurückgeladenen Kopie. Die Shell-Syntax
+ist lokal geprüft. Das tatsächliche Betreiberziel samt separater Schlüsselverwahrung
+und Wiederanlaufprobe bleibt Teil der Inbetriebnahme.
+
 ## Mehrbyte-Zeichen in Inseraten, Entwürfen und CSV
 
 Die Grenzen für Titel, Ort und Beschreibung berücksichtigen UTF-8-Zeichen.

@@ -70,8 +70,9 @@ mysql_fixture -e "UPDATE geo_imports SET is_active=0 WHERE country_code='DE'"
 "${import_postcodes[@]}" --expected-sha256="$postal_digest"
 [[ "$(mysql_fixture -e "SELECT CONCAT(COUNT(*),':',SUM(is_active)) FROM geo_imports WHERE country_code='DE'")" == 1:0 ]]
 
+bash "$release/tests/production_offsite_test.sh" "$release" "$deployment" "${manifests[0]}"
 python3 "$release/ops/production/backup.py" --directory "$deployment" restore \
-  --manifest "${manifests[0]}" --database gunindex_restore_ci_archive --files-directory "$deployment/restored"
+  --manifest "$deployment/restored-source/${manifests[0]##*/}" --database gunindex_restore_ci_archive --files-directory "$deployment/restored"
 [[ "$(cat "$deployment/restored/private/recovery-probe.txt")" == synthetic-recovery ]]
 [[ -s "$deployment/ops-status/restore.verified" ]]
 "$compose" up -d --no-build php worker
@@ -100,4 +101,4 @@ expected={'auction','mail','discovery','business','privacy','paypal-refund','bit
 assert report['status']=='degraded' and report['warnings']==['mail_not_configured']
 assert set(report['workers'])==expected and all(worker['ready'] for worker in report['workers'].values())
 PY
-printf '%s\n' 'Verified production image, additive migration recovery, authenticated backup and restore, writable private storage and seven worker heartbeats.'
+printf '%s\n' 'Verified production image, additive migration recovery, authenticated backup, SFTP copy and restore, writable private storage and seven worker heartbeats.'

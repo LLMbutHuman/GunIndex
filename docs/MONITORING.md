@@ -54,11 +54,22 @@ einen zweiten vertrauenswürdigen Weg geprüften Hostschlüssel einsetzen. Erst 
 sudo bash /srv/gunindex/current/ops/offsite-backup.sh --manifest /srv/gunindex/backups/DEIN_SNAPSHOT.json --destination backup@dein-backup-host.tld --remote-directory /private/gunindex --identity /root/.ssh/backup_ed25519 --known-hosts /root/.ssh/backup_known_hosts --check-only
 ```
 
-Danach denselben Befehl ohne `--check-only` ausführen. SFTP verwendet Batchmodus und
-`StrictHostKeyChecking=yes`; unbekannte/geänderte Hostschlüssel werden abgewiesen.
-Die Dateien werden zunächst unter temporärem Namen übertragen und dann umbenannt.
-Der Archivschlüssel wird nicht übertragen. Diese Konfiguration wurde nicht mit einem
-realen Offsite-Server oder Kundendaten ausgeführt.
+Danach denselben Befehl ohne `--check-only` ausführen. Das Zielverzeichnis muss
+vorhanden und nur für den Sicherungsbenutzer zugänglich sein. Bei abweichendem
+SSH-Port `--port` setzen, bei abweichendem Installationspfad `--directory`.
+Vor der Übertragung prüft GunIndex lokal die Manifest-Signatur und die Prüfsummen
+der beiden verschlüsselten Archive. OpenSSH verwendet den angegebenen Hostschlüssel
+im Batchmodus mit `StrictHostKeyChecking=yes`.
+
+SFTP überträgt Manifest und Archive in ein privates Zwischenverzeichnis. GunIndex
+liest alle drei Dateien zurück und prüft Gleichheit und Signatur. Dafür muss unter
+`/tmp` freier Platz in Größe des Snapshots verfügbar sein. Nach bestandener Prüfung
+benennt das Skript das Zwischenverzeichnis in `DEIN_SNAPSHOT` um und gibt den Pfad
+zum Manifest aus. Eine bereits veröffentlichte Sicherung gleichen Namens wird
+abgewiesen. Nach einem Abbruch kann ein verborgenes Zwischenverzeichnis am Ziel
+übrig bleiben. Alte Snapshots aus früheren Übertragungen bleiben an ihrem bisherigen
+Pfad. Archivschlüssel und SSH-Schlüssel gehören in die getrennte Schlüsselverwahrung.
+[OpenSSH-SFTP-Handbuch](https://man.openbsd.org/sftp)
 
 Regelmäßig von der Offsite-Kopie in ein frisches Scratch-Schema/privates Verzeichnis
 wiederherstellen und Daten-/Schemametadaten vergleichen. Eine erfolgreiche Übertragung

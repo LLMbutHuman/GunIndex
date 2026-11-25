@@ -8,7 +8,7 @@ Die Testumgebung sichert ihre synthetische Datenbank vor ausstehenden Migratione
 
 Der Datenbanktest exportiert die tatsächliche synthetische MySQL-Datenbank, verschlüsselt/entschlüsselt sie und importiert in ein frisches zufälliges Scratch-Schema. Er vergleicht sämtliche geordneten Daten sowie Tabellen-, Spalten-, Zeichensatz-, Default-, Index- und Fremdschlüsselmetadaten. AUTO_INCREMENT wird ohne MySQL-Statistikcache gelesen. Der ursprüngliche vollständige Export muss unverändert bleiben. Keine bestehenden Datenbanken werden überschrieben oder gelöscht; Scratch-Schemata bleiben zur Kontrolle erhalten.
 
-Eine Wiederherstellung produktiver Daten, private Produktbilder, Offsite-Backups und Disaster-Recovery wurden damit noch nicht geprobt. Vor erneutem Öffnen eines restaurierten Diensts müssen alte Sessions unabhängig widerrufen werden; ein SQL-Restore entfernt keine PHP-Sessiondateien. Auch APP_KEY und Bildbestände benötigen eine getrennte sichere Sicherung.
+Vor erneutem Öffnen eines restaurierten Diensts müssen alte Sessions unabhängig widerrufen werden. Dafür müssen auch die gesicherten Sessiondateien berücksichtigt werden. Der Betreiber richtet die getrennte gesicherte Verwahrung von APP_KEY und Archivschlüssel ein und probt den Wiederanlauf mit allen benötigten Beständen auf der Zielinfrastruktur.
 
 ## Produktionswerkzeuge
 
@@ -20,10 +20,12 @@ Anwendung werden dabei nicht ersetzt. Der vollständige Produktions-Compose-Rest
 muss auf dem Zielserver gesondert ausgeführt werden. Nach der Abnahme sind die
 Dateirechte für die tatsächliche PHP-UID einzurichten und alte Sessions zu widerrufen.
 
-Befehle: [Ubuntu-Anleitung](UBUNTU_22_04.md). Offsite-Übertragung erfolgt über
-`ops/offsite-backup.sh` mit ausdrücklich konfiguriertem SSH-Ziel und unabhängig
-geprüftem Hostschlüssel. Keine privaten Schlüssel oder Klartextarchive übertragen.
-Der tatsächliche Offsite-Transfer wurde hier nicht ausgeführt.
+Die [Ubuntu-Anleitung](UBUNTU_22_04.md) enthält die Befehle für Sicherung und
+Restore. Der [Betriebsleitfaden](MONITORING.md) beschreibt die Offsite-Kopie
+über SFTP mit geprüftem Hostschlüssel und Rückleseprüfung. Das
+Produktions-CI-Skript verwendet dafür synthetische SQL- und Dateidaten und
+einen auf Loopback beschränkten OpenSSH-Dienst. Die Restoreprobe am tatsächlichen
+externen Betreiberziel gehört zur Betriebsabnahme.
 
 `tests/chat_migration_test.py` prüft zusätzlich die verifizierte verschlüsselte
 Sicherung vor der nachträglichen Nachrichtenverschlüsselung: Metadaten und
