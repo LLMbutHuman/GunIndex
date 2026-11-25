@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'The limit of 50 active searches has been reached.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'You can save up to 200 searches of each type.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Pause one of the 50 active searches first.',
+    'market_search.market_invalid' => 'Invalid country market.',
+    'market_search.listing_filter_invalid' => 'Invalid listing filter.',
+    'market_search.category_invalid' => 'Invalid category.',
+    'market_search.price_filter_invalid' => 'Invalid price filter.',
+    'market_search.location_invalid' => 'Invalid location filter.',
+    'market_search.distance_sort_requires_coordinates' => 'Sorting by distance requires a postcode with approved coordinates.',
 ];

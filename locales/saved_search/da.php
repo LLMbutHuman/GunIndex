@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'Grænsen på 50 aktive søgninger er nået.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'Du kan gemme op til 200 søgninger af hver type.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Sæt først én af de 50 aktive søgninger på pause.',
+    'market_search.market_invalid' => 'Ugyldigt nationalt marked.',
+    'market_search.listing_filter_invalid' => 'Ugyldigt annoncefilter.',
+    'market_search.category_invalid' => 'Ugyldig kategori.',
+    'market_search.price_filter_invalid' => 'Ugyldigt prisfilter.',
+    'market_search.location_invalid' => 'Ugyldigt placeringsfilter.',
+    'market_search.distance_sort_requires_coordinates' => 'Sortering efter afstand kræver et postnummer med godkendte koordinater.',
 ];

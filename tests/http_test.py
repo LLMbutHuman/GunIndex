@@ -278,6 +278,25 @@ class MarketplaceHTTP(unittest.TestCase):
         listing = fixture('find_listing', username=seller['username'], title=fields['title'])
         self.assertEqual(1, fixture('state', listing_id=listing['id'])['images'])
 
+    def test_market_search_localizes_invalid_category_and_missing_distance_origin(self):
+        browser = Browser()
+        route = '/marketplace/search.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        for query, expected in (
+            ('category_id=unrecognized', 'Invalid category.'),
+            ('sort=distance', 'Sorting by distance requires a postcode with approved coordinates.'),
+            ('radius_km=30', 'Distance search requires a reference postcode.'),
+        ):
+            status, _, body = browser.request(route + '?' + query)
+            self.assertEqual(422, status)
+            self.assertIn(expected, body)
+        status, _, body = browser.request(route + '?page[]=2')
+        self.assertEqual(400, status)
+        self.assertIn('Choose a valid page.', body)
+        self.assertEqual(200, browser.request(route + '?page=1')[0])
+
     def test_registration_requires_csrf_and_rejects_array_values(self):
         browser = Browser()
         self.assertEqual(403, browser.request('/auth/register.php', {'username': identity()})[0])

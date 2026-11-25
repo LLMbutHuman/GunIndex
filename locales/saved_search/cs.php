@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'Byl dosažen limit 50 aktivních vyhledávání.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'Můžete uložit až 200 vyhledávání každého typu.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Nejprve pozastavte jedno z 50 aktivních vyhledávání.',
+    'market_search.market_invalid' => 'Neplatný národní trh.',
+    'market_search.listing_filter_invalid' => 'Neplatný filtr inzerátů.',
+    'market_search.category_invalid' => 'Neplatná kategorie.',
+    'market_search.price_filter_invalid' => 'Neplatný filtr ceny.',
+    'market_search.location_invalid' => 'Neplatný filtr polohy.',
+    'market_search.distance_sort_requires_coordinates' => 'Řazení podle vzdálenosti vyžaduje PSČ se schválenými souřadnicemi.',
 ];

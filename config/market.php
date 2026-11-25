@@ -33,46 +33,46 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     $page=max(1,min(10000,$page));$perPage=max(1,min(48,$perPage));
     $categories=market_category_ids($pdo);
     $countryRaw=$filters['country_code']??null;
-    if($countryRaw!==null&&!is_string($countryRaw))throw new InvalidArgumentException('Ungültiger Ländermarkt.');
+    if($countryRaw!==null&&!is_string($countryRaw))throw new InvalidArgumentException(t('market_search.market_invalid'));
     $country=geo_country($countryRaw===''?null:$countryRaw);
     $scope=$filters['scope']??'country';
-    if(!is_string($scope)||!in_array($scope,['country','international'],true))throw new InvalidArgumentException('Ungültiger Suchbereich.');
+    if(!is_string($scope)||!in_array($scope,['country','international'],true))throw new InvalidArgumentException(t('Ungültiger Suchbereich.'));
     if(!$categories||($scope==='country'&&!geo_country_enabled($pdo,$country)))return ['items'=>[],'total'=>0,'page'=>$page,'per_page'=>$perPage,'country_code'=>$country,'scope'=>$scope];
     $where=market_public_where($categories);
     $parameters=$categories;
     if($scope==='country'){$where[]='l.country_code=?';$parameters[]=$country;}
     foreach(['listing_id','seller_id'] as $key){
         if(isset($filters[$key])&&$filters[$key]!==''){
-            $value=$filters[$key];if(!is_scalar($value)||!ctype_digit((string)$value)||(int)$value<1)throw new InvalidArgumentException('Ungültiger Angebotsfilter.');
+            $value=$filters[$key];if(!is_scalar($value)||!ctype_digit((string)$value)||(int)$value<1)throw new InvalidArgumentException(t('market_search.listing_filter_invalid'));
             $where[]='l.'.($key==='listing_id'?'id':'seller_id').'=?';$parameters[]=(int)$value;
         }
     }
     $query=$filters['q']??'';
-    if(!is_string($query)||strlen($query)>200)throw new InvalidArgumentException('Die Suchanfrage ist zu lang.');
+    if(!is_string($query)||strlen($query)>200)throw new InvalidArgumentException(t('Die Suchanfrage ist zu lang.'));
     [$textWhere,$textParameters,$ranking,$rankingParameters]=market_text_search($query);
     array_push($where,...$textWhere);
     array_push($parameters,...$textParameters);
     $category=$filters['category_id']??'';
-    if($category!==''&&$category!==null){if(!is_scalar($category)||!ctype_digit((string)$category))throw new InvalidArgumentException('Ungültige Kategorie.');$where[]='l.category_id=?';$parameters[]=(int)$category;}
+    if($category!==''&&$category!==null){if(!is_scalar($category)||!ctype_digit((string)$category))throw new InvalidArgumentException(t('market_search.category_invalid'));$where[]='l.category_id=?';$parameters[]=(int)$category;}
     $type=$filters['type']??'';
-    if($type!==''&&$type!==null){if(!is_string($type)||!in_array($type,['fixed','auction','negotiated'],true))throw new InvalidArgumentException('Ungültige Angebotsart.');$where[]='l.type=?';$parameters[]=$type;}
+    if($type!==''&&$type!==null){if(!is_string($type)||!in_array($type,['fixed','auction','negotiated'],true))throw new InvalidArgumentException(t('Ungültige Angebotsart.'));$where[]='l.type=?';$parameters[]=$type;}
     foreach(['min_price'=>'>=','max_price'=>'<='] as $key=>$operator){
         $value=$filters[$key]??'';
-        if($value!==''&&$value!==null){if(!is_string($value))throw new InvalidArgumentException('Ungültiger Preisfilter.');$where[]='COALESCE(l.current_bid_cents,l.price_cents) '.$operator.' ?';$parameters[]=money_parse($value);}
+        if($value!==''&&$value!==null){if(!is_string($value))throw new InvalidArgumentException(t('market_search.price_filter_invalid'));$where[]='COALESCE(l.current_bid_cents,l.price_cents) '.$operator.' ?';$parameters[]=money_parse($value);}
     }
-    $city=$filters['city']??'';if($city!==''){if(!is_string($city)||strlen($city)>100)throw new InvalidArgumentException('Ungültiger Standortfilter.');$where[]='l.city=?';$parameters[]=trim($city);}
+    $city=$filters['city']??'';if($city!==''){if(!is_string($city)||strlen($city)>100)throw new InvalidArgumentException(t('market_search.location_invalid'));$where[]='l.city=?';$parameters[]=trim($city);}
     $postal=$filters['zip']??'';$originCountryRaw=$filters['origin_country']??$country;
-    if(!is_string($postal)||!is_string($originCountryRaw))throw new InvalidArgumentException('Ungültiger Standortfilter.');
+    if(!is_string($postal)||!is_string($originCountryRaw))throw new InvalidArgumentException(t('market_search.location_invalid'));
     $originCountry=geo_country($originCountryRaw===''?$country:$originCountryRaw);
     $postal=trim($postal);
-    if($postal!==''&&!geo_validate_postcode($originCountry,$postal))throw new InvalidArgumentException('Die Postleitzahl passt nicht zum ausgewählten Land.');
+    if($postal!==''&&!geo_validate_postcode($originCountry,$postal))throw new InvalidArgumentException(t('Die Postleitzahl passt nicht zum ausgewählten Land.'));
     $radiusRaw=$filters['radius_km']??'';$radius=null;
     if($radiusRaw!==''&&$radiusRaw!==null){
-        if(!is_scalar($radiusRaw)||!preg_match('/\A[1-9][0-9]{0,3}\z/',(string)$radiusRaw)||(int)$radiusRaw>2000)throw new InvalidArgumentException('Der Suchradius muss zwischen 1 und 2000 km liegen.');
-        $radius=(int)$radiusRaw;if($postal==='')throw new InvalidArgumentException('Für die Entfernungssuche ist eine Bezugs-Postleitzahl erforderlich.');
+        if(!is_scalar($radiusRaw)||!preg_match('/\A[1-9][0-9]{0,3}\z/',(string)$radiusRaw)||(int)$radiusRaw>2000)throw new InvalidArgumentException(t('Der Suchradius muss zwischen 1 und 2000 km liegen.'));
+        $radius=(int)$radiusRaw;if($postal==='')throw new InvalidArgumentException(t('Für die Entfernungssuche ist eine Bezugs-Postleitzahl erforderlich.'));
     }
     $origin=$postal!==''?geo_postcode($pdo,$originCountry,$postal):null;
-    if($radius!==null&&$origin===null)throw new InvalidArgumentException('Für diese Postleitzahl liegen noch keine freigegebenen lokalen Koordinaten vor. Eine exakte PLZ-Suche ist weiterhin möglich.');
+    if($radius!==null&&$origin===null)throw new InvalidArgumentException(t('Für diese Postleitzahl liegen noch keine freigegebenen lokalen Koordinaten vor. Eine exakte PLZ-Suche ist weiterhin möglich.'));
     $geoJoin='';$distanceSelect='NULL';$selectParameters=[];
     if($origin!==null){
         $geoJoin=" LEFT JOIN geo_locations gp ON gp.country_code=l.country_code AND gp.postal_code=REPLACE(REPLACE(l.zip,' ',''),'-','') LEFT JOIN geo_imports gi ON gi.id=gp.import_id AND gi.license_reviewed=1 AND gi.is_active=1";
@@ -98,8 +98,8 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     $sort=$filters['sort']??'newest';
     $newest='COALESCE(l.bumped_at,l.created_at) DESC,l.id DESC';
     $orders=['newest'=>$newest,'relevance'=>($rankingParameters?'search_rank DESC,':'').$newest,'price_asc'=>'COALESCE(l.current_bid_cents,l.price_cents),l.id DESC','price_desc'=>'COALESCE(l.current_bid_cents,l.price_cents) DESC,l.id DESC','ending'=>'l.ends_at IS NULL,l.ends_at,l.id','distance'=>'distance_km IS NULL,distance_km,l.id DESC'];
-    if(!is_string($sort)||!isset($orders[$sort]))throw new InvalidArgumentException('Ungültige Sortierung.');
-    if($sort==='distance'&&$origin===null)throw new InvalidArgumentException('Für die Entfernungssortierung ist eine Postleitzahl mit freigegebenen Koordinaten erforderlich.');
+    if(!is_string($sort)||!isset($orders[$sort]))throw new InvalidArgumentException(t('Ungültige Sortierung.'));
+    if($sort==='distance'&&$origin===null)throw new InvalidArgumentException(t('market_search.distance_sort_requires_coordinates'));
     $condition=implode(' AND ',$where);
     $count=$pdo->prepare('SELECT COUNT(*) FROM market_listings l'.$geoJoin.' WHERE '.$condition);$count->execute($parameters);$total=(int)$count->fetchColumn();
     $rankSelect=$sort==='relevance'&&$rankingParameters?',('.$ranking.') AS search_rank':'';

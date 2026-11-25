@@ -4,7 +4,7 @@ require_once __DIR__.'/../config/bootstrap.php';
 require_once __DIR__.'/../includes/classification-fields.php';
 $filters=[];
 foreach(['q','category_id','type','min_price','max_price','sort','country_code','scope','zip','origin_country','radius_km'] as $key){
-    if(isset($_GET[$key])&&!is_string($_GET[$key]))abort_request(400,t('Ungültiger Suchfilter.'));
+    if(isset($_GET[$key])&&!is_string($_GET[$key]))abort_request(400,t('classification.search_invalid'));
     $filters[$key]=isset($_GET[$key])?trim($_GET[$key]):'';
 }
 $filters['q']=mb_strcut($filters['q'],0,200,'UTF-8');
@@ -12,8 +12,9 @@ if($filters['country_code']==='')$filters['country_code']=geo_country();
 if($filters['scope']==='')$filters['scope']='country';
 if($filters['origin_country']==='')$filters['origin_country']=$filters['country_code'];
 if($filters['sort']==='')$filters['sort']='relevance';
-$page=isset($_GET['page'])&&is_string($_GET['page'])?filter_var($_GET['page'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>10000]]):1;
-if(!$page)abort_request(400,t('Ungültige Ergebnisseite.'));
+$pageInput=$_GET['page']??'1';
+$page=is_string($pageInput)?filter_var($pageInput,FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>10000]]):false;
+if(!$page)abort_request(400,t('dashboard.watchlist_page_invalid'));
 $categories=catalog_categories($pdo);$countries=geo_active_countries($pdo);$error='';
 foreach(['attributes','attribute_min','attribute_max'] as $key){
     if(isset($_GET[$key])&&!is_array($_GET[$key]))abort_request(400,t('classification.invalid'));

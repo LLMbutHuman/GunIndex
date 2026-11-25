@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Suchfilter und Entfernungssortierung
+
+Die Suche und gespeicherte Suchaufträge erhalten gemeinsame lokalisierte
+Fehler für Ländermarkt, Kategorien, Preis, Standort und Sortierung.
+Ungültige Seitennummern werden mit HTTP 400 abgewiesen. Entfernungen
+benötigen weiterhin Postleitzahlen mit freigegebenen Koordinaten.
+Lokal bestanden zehn PHP-Syntaxprüfungen, 14 Suchgruppen und sieben
+Geogruppen. Der HTTP-Fall prüft englische Fehlermeldungen und Seitentypen.
+
 ## Inseratsformular und Upload-Validierung
 
 Erstellung, Bearbeitung und CSV-Import nutzen die lokalisierten
@@ -9,6 +18,7 @@ Der französische HTTP-Fall prüft korrekt abgelehnte Eingaben, ein
 ungültiges Bild und anschließend einen gültigen Upload. Lokal bestanden
 14 PHP-Syntaxprüfungen, 21 Schlüssel in acht Sprachen und der Unit-Test
 für Inseratentwürfe.
+[CI für französische Inserats- und Upload-Prüfung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45617401022)
 
 ## Händler-Dashboard und CSV
 
@@ -399,7 +409,7 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes Meldungen für Suche, Gebote und Sofortkauf sowie verbleibende
+Als Nächstes Meldungen für Gebote und Sofortkauf sowie verbleibende
 Kundentexte mit den acht Katalogen abgleichen.
 Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.

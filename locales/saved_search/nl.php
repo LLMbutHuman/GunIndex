@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'De limiet van 50 actieve zoekopdrachten is bereikt.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'Je kunt maximaal 200 zoekopdrachten per soort opslaan.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Pauzeer eerst een van de 50 actieve zoekopdrachten.',
+    'market_search.market_invalid' => 'Ongeldige landelijke markt.',
+    'market_search.listing_filter_invalid' => 'Ongeldig advertentiefilter.',
+    'market_search.category_invalid' => 'Ongeldige categorie.',
+    'market_search.price_filter_invalid' => 'Ongeldig prijsfilter.',
+    'market_search.location_invalid' => 'Ongeldig locatiefilter.',
+    'market_search.distance_sort_requires_coordinates' => 'Sorteren op afstand vereist een postcode met goedgekeurde coördinaten.',
 ];

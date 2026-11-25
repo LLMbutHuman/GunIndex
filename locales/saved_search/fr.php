@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'La limite de 50 recherches actives est atteinte.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'Vous pouvez enregistrer jusqu’à 200 recherches de chaque type.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Mettez d’abord en pause l’une des 50 recherches actives.',
+    'market_search.market_invalid' => 'Marché national non valide.',
+    'market_search.listing_filter_invalid' => 'Filtre d’annonce non valide.',
+    'market_search.category_invalid' => 'Catégorie non valide.',
+    'market_search.price_filter_invalid' => 'Filtre de prix non valide.',
+    'market_search.location_invalid' => 'Filtre de localisation non valide.',
+    'market_search.distance_sort_requires_coordinates' => 'Le tri par distance nécessite un code postal avec des coordonnées approuvées.',
 ];

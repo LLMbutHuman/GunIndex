@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'Das Limit von 50 aktiven Suchaufträgen ist erreicht.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.',
+    'market_search.market_invalid' => 'Ungültiger Ländermarkt.',
+    'market_search.listing_filter_invalid' => 'Ungültiger Angebotsfilter.',
+    'market_search.category_invalid' => 'Ungültige Kategorie.',
+    'market_search.price_filter_invalid' => 'Ungültiger Preisfilter.',
+    'market_search.location_invalid' => 'Ungültiger Standortfilter.',
+    'market_search.distance_sort_requires_coordinates' => 'Für die Entfernungssortierung ist eine Postleitzahl mit freigegebenen Koordinaten erforderlich.',
 ];

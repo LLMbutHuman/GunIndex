@@ -56,4 +56,10 @@ return [
     'Das Limit von 50 aktiven Suchaufträgen ist erreicht.' => 'Osiągnięto limit 50 aktywnych wyszukiwań.',
     'Maximal 200 gespeicherte Suchaufträge je Art sind möglich.' => 'Możesz zapisać do 200 wyszukiwań każdego typu.',
     'Bitte zuerst einen der 50 aktiven Suchaufträge pausieren.' => 'Najpierw wstrzymaj jedno z 50 aktywnych wyszukiwań.',
+    'market_search.market_invalid' => 'Nieprawidłowy rynek krajowy.',
+    'market_search.listing_filter_invalid' => 'Nieprawidłowy filtr ogłoszeń.',
+    'market_search.category_invalid' => 'Nieprawidłowa kategoria.',
+    'market_search.price_filter_invalid' => 'Nieprawidłowy filtr cen.',
+    'market_search.location_invalid' => 'Nieprawidłowy filtr lokalizacji.',
+    'market_search.distance_sort_requires_coordinates' => 'Sortowanie według odległości wymaga kodu pocztowego z zatwierdzonymi współrzędnymi.',
 ];
