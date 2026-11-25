@@ -38,6 +38,13 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
                 'CC0 1.0'=>'https://creativecommons.org/publicdomain/zero/1.0/',
             ],
         ],
+        'CZ' => [
+            'sha256'=>'b882ad73d8a0ee7a1be49f95630fc7156ea3ffb8ab57f3245314d703dca1d59a',
+            'links'=>[
+                'ČÚZK – RÚIAN (2026-10-31)'=>'https://geoportal.gov.cz/php/micka/record/basic/CZ-00025712-CUZK_SERIES-MD_RUIAN-CSV-ADR-ST',
+                'CC BY 4.0'=>'https://creativecommons.org/licenses/by/4.0/',
+            ],
+        ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
     if ($matched === []) return [];

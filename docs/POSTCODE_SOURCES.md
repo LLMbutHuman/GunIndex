@@ -13,8 +13,45 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
 Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
-Der Installer startet den Import für DE, FR, AT, CH, LI und LU nur bei fehlender
+Der Installer startet den Import für DE, FR, AT, CH, LI, LU und CZ nur bei fehlender
 Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
+
+## Tschechien
+
+`ZIP/PLZ-CZ.csv` enthält 2.675 von 2.677 PLZ mit Koordinaten im geprüften
+RÚIAN-Monatsstand vom 31. Oktober 2026. Von 3.023.585 Zeilen fehlen bei 904
+die Postleitzahl oder Koordinaten. ČÚZK veröffentlicht die Daten unter CC BY 4.0.
+GunIndex mittelt die Koordinaten je PLZ in S-JTSK und zeigt die häufigste
+Gemeinde. Bei Gleichstand entscheidet die lexikografische Reihenfolge der
+UTF-8-Werte. Für zwei PLZ mit weniger als drei verschiedenen Punkten bleibt
+die exakte Suche verfügbar. Nur die aggregierten Punkte werden ausgeliefert.
+[Amtlicher Datenkatalog](https://geoportal.gov.cz/php/micka/record/basic/CZ-00025712-CUZK_SERIES-MD_RUIAN-CSV-ADR-ST) ·
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+Der Monatsdownload enthält Windows-1250-CSV je Gemeinde. Die Aufbereitung
+wandelt die positiven West-/Südwerte in die Ost-/Nordachsen von EPSG:5514 um
+und projiziert die Näherungen mit Proj4js und EPSG:1623 nach WGS 84. Die
+Koordinaten dienen der Umkreissuche. Abweichungen von einzelnen Zustellorten
+innerhalb derselben PLZ sind möglich.
+[ČÚZK-Downloads](https://atom.cuzk.gov.cz/) · [Proj4js](https://proj4js.org/) ·
+[EPSG-Umrechnung mit Geltungsbereich Tschechien](https://epsg.io/1623)
+
+Die SHA-256 der amtlichen ZIP-Datei ist im Quellenmanifest festgehalten.
+Für eine neue Ausgabe den Monatsstand über den amtlichen Feed wählen und die
+Änderungen an Format, Lizenz und Abdeckung prüfen. Die Konvertierung braucht PHP
+mit ZIP und iconv sowie Node.js mit der geprüften Datei `package/dist/proj4.js`
+aus `proj4@2.23.0`. Node führt die Bibliothek erst nach Prüfung der gepinnten
+Dateisumme aus. Der Installer braucht die Umrechnungsbibliothek beim Betrieb
+des Marktplatzes nicht.
+
+```sh
+npm pack proj4@2.23.0 --ignore-scripts
+tar -xf proj4-2.23.0.tgz package/dist/proj4.js
+php ops/prepare-cz-postcodes.php --file=20261031_OB_ADR_csv.zip --output=cz-aggregates.json \
+  --expected-source-sha256=56dc1392033cc6ab21e7f2bafc553c2837d49e62049a60a0f238a0ba83c27877
+node ops/project-cz-postcodes.mjs cz-aggregates.json package/dist/proj4.js PLZ-CZ.csv
+node ops/validate-postcodes.mjs --country=CZ --file=PLZ-CZ.csv
+```
 
 ## Luxemburg
 

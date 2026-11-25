@@ -157,6 +157,29 @@
       "sha256": "f3d93cab0264847181bd1d8bb58f1e6d26179e54ad05ec3b3b6f33ec5219a5df",
       "constraints": ["Mean of published WGS84 address points per postcode", "At least three distinct source coordinates per postcode", "No address rows are bundled; omitted codes retain exact postcode search"],
       "status": "bundled_seed_locally_validated"
+    },
+    {
+      "id": "cuzk-ruian-czechia",
+      "countries": ["CZ"],
+      "publisher": "Český úřad zeměměřický a katastrální (ČÚZK)",
+      "path": "ZIP/PLZ-CZ.csv",
+      "source_url": "https://geoportal.gov.cz/php/micka/record/basic/CZ-00025712-CUZK_SERIES-MD_RUIAN-CSV-ADR-ST",
+      "feed_url": "https://atom.cuzk.gov.cz/get.ashx?theme=RUIAN-CSV-ADR-ST",
+      "export_url": "https://vdp.cuzk.gov.cz/vymenny_format/csv/20261031_OB_ADR_csv.zip",
+      "dataset_date": "2026-10-31",
+      "dataset_date_evidence": "Date in the national monthly distribution selected from the official Atom service",
+      "source_sha256": "56dc1392033cc6ab21e7f2bafc553c2837d49e62049a60a0f238a0ba83c27877",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "source_records": 3023585,
+      "source_rows_without_complete_coordinates_or_postcode": 904,
+      "source_unique_postcodes_with_coordinates": 2677,
+      "validated_unique_postcodes": 2675,
+      "bytes": 94487,
+      "sha256": "b882ad73d8a0ee7a1be49f95630fc7156ea3ffb8ab57f3245314d703dca1d59a",
+      "constraints": ["Means of S-JTSK address points grouped by postcode", "Only aggregates with at least three distinct points are bundled", "Project using proj4 2.23.0, EPSG:5514 through EPSG:1623 to WGS 84", "Approximate postcode locations; no individual address rows"],
+      "status": "bundled_seed_locally_validated"
     }
   ]
 }

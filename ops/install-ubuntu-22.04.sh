@@ -242,5 +242,9 @@ seed_postcodes PLZ-LU.csv --country=LU \
  --expected-sha256=f3d93cab0264847181bd1d8bb58f1e6d26179e54ad05ec3b3b6f33ec5219a5df \
  --source='Administration du cadastre et de la topographie, BD-Adresses, 2026-11-23 (Luxembourg)' \
  --license-note='CC0 1.0. Aggregated WGS84 points; at least three distinct coordinates per postcode. https://data.public.lu/fr/datasets/adresses-georeferencees-bd-adresses/'
+seed_postcodes PLZ-CZ.csv --country=CZ \
+ --expected-sha256=b882ad73d8a0ee7a1be49f95630fc7156ea3ffb8ab57f3245314d703dca1d59a \
+ --source='ČÚZK RÚIAN address points, effective 2026-10-31 (Czechia)' \
+ --license-note='CC BY 4.0. Postcode means transformed from S-JTSK to WGS 84. Source: https://geoportal.gov.cz/php/micka/record/basic/CZ-00025712-CUZK_SERIES-MD_RUIAN-CSV-ADR-ST'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

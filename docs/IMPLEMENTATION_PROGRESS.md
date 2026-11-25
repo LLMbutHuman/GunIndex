@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Tschechische Postleitzahlen aus dem amtlichen RÚIAN-Register
+
+Aufbereitung des November-Exports mit Datenstand 31. Oktober 2026.
+2.675 PLZ-Koordinaten aus 3.023.585 Adresszeilen, jeweils aggregiert und
+nach WGS 84 umgerechnet. Zwei PLZ mit weniger als drei unterschiedlichen
+Punkten behalten die exakte Suche. Die Originaldaten und die nur bei der
+Aufbereitung verwendete Proj4js-Bibliothek bleiben außerhalb des Repos.
+Node und der PHP-Importer prüften 2.675 eindeutige Punkte und die SHA-256.
+Die Ubuntu-CI prüft den Erstimport, unveränderte Importanzahl nach Update,
+die Prager Umkreissuche, Ländereingrenzung und den sichtbaren Quellenhinweis.
+[Datenquelle und Wiederholungsbefehle](POSTCODE_SOURCES.md)
+
 ## Sprachabdeckung in der geschützten Rechtsverwaltung
 
 Die Rechtsverwaltung zeigt für 20 Dokumentcodes in acht Sprachen fehlende
