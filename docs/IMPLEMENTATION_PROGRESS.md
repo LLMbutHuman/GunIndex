@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Öffentliche Verkäufer- und Händlerprofile in acht Sprachen
+
+Profilangaben, Bewertungstexte, Händlerhinweise, Navigation und Fehlerseiten
+verwenden die gewählte Sprache. Benutzernamen, Firmenangaben und Rezensionen
+erscheinen in der eingegebenen Fassung. Lokal bestanden neun PHP-Syntaxprüfungen,
+die Prüfung von 13 Schlüsseln samt Platzhaltern in acht Sprachen und die
+JavaScript-Syntaxprüfung. Der Browserfall prüft veröffentlichte Händlerprofile
+auf 390 Pixel Breite, die Sprachwahl und die Fehlerantworten.
+
 ## Rückleseprüfung für verschlüsselte Offsite-Sicherungen
 
 Das vorhandene SFTP-Werkzeug prüft die Manifest-Signatur und die verschlüsselten
@@ -11,6 +20,9 @@ die Übertragung per OpenSSH, Dateirechte, die erneute Übertragung mit gleichem
 Namen und den vollständigen Restore aus der zurückgeladenen Kopie. Die Shell-Syntax
 ist lokal geprüft. Das tatsächliche Betreiberziel samt separater Schlüsselverwahrung
 und Wiederanlaufprobe bleibt Teil der Inbetriebnahme.
+Der erste CI-Lauf wies den Testpfad vor dem Transfer ab, weil der generierte
+Verzeichnisname einen Punkt enthielt. Der Test verwendet nun einen gültigen
+Zielpfad. [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625052567)
 
 ## Mehrbyte-Zeichen in Inseraten, Entwürfen und CSV
 
@@ -27,9 +39,9 @@ Die CI führt die vorhandene E2EE-Regressionssuite zusätzlich zwischen
 Chromium und Firefox sowie zwischen Chromium und WebKit aus. Die beiden
 Läufe verwenden getrennte synthetische Konten und laufen nacheinander.
 Geprüft werden unter anderem Schlüsselaustausch, Entschlüsselung von
-Dateien, Wiederherstellung und Gerätewiderruf. Lokal wurde die
-JavaScript-Syntax geprüft. Für die Ergebnisse außerhalb von Chromium
-ist der Linux-Lauf maßgeblich.
+Dateien, Wiederherstellung und Gerätewiderruf. Die vollständige Linux-CI
+bestand mit beiden zusätzlichen Browser-Engines. Die Abnahme auf
+nativen Safari-/iOS-Geräten und eine unabhängige Sicherheitsprüfung stehen aus.
 [CI für Chromium, Firefox und WebKit](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
 
 ## Mitgelieferte Rechtsentwürfe übernehmen
@@ -42,7 +54,8 @@ Die Oberfläche steht in acht Sprachen zur Verfügung. Der HTTP-Test
 prüft MFA-Rollen, CSRF, Erstimport, Wiederholung, unveränderte
 Versions-ID und Ablehnung der Originalvorlage bei der Freigabe.
 Lokal bestanden zehn PHP-Syntaxprüfungen, die Prüfung aller 20
-Quelldateien und sechs Oberflächenschlüssel in acht Sprachen.
+Quelldateien und sechs Oberflächenschlüssel in acht Sprachen. Beide CI-Jobs
+einschließlich isolierter MySQL- und HTTP-Tests bestanden.
 [CI für Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623239492)
 
 ## Luxemburger Postleitzahlen

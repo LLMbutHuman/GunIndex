@@ -13,7 +13,9 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
   Mehrgeräten, Geräte-Recovery/Widerruf, verschlüsselten Dateien, Quoten und Export
   in `7ba5dfd`, CI 43648359381: zwölf echte Kryptografiegruppen, 15 Servergruppen
   und 19 Chromium-Browserfälle einschließlich acht mobiler Sprachen bestanden.
-  **B:** unabhängige Sicherheits- und Zielserverabnahme sowie weitere Browser.
+  **A:** Chromium mit Firefox und Chromium mit WebKit bestanden in Linux-CI.
+  [Browser-Engine-Tests](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
+  **B:** unabhängige Sicherheits- und Zielserverabnahme sowie native Safari-/iOS-Tests.
   **A:** Austausch einer kompromittierten Kontoautorität mit frischer MFA,
   neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung bestätigt.
   [E2EE-Regression](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)

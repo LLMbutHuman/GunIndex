@@ -110,6 +110,35 @@ async function login(page, user, admin = false) {
     assert.equal((await guest.request.get(origin + nextLogo)).status(),200);
     assert.equal(await guest.locator('main section img').getAttribute('src'), nextLogo);
 
+    phase = 'localized_mobile_public_profile';
+    await guest.setViewportSize({width:390,height:844});
+    const profileCopy = {
+      de:['Aktuelle Angebote','Bewertungen','Gewerblicher Anbieter','Dieses Profil ist nicht verfügbar.'],
+      en:['Current listings','Reviews','Business seller','This profile is unavailable.'],
+      fr:['Annonces actuelles','Avis','Vendeur professionnel','Ce profil est indisponible.'],
+      nl:['Actuele advertenties','Beoordelingen','Zakelijke verkoper','Dit profiel is niet beschikbaar.'],
+      pl:['Aktualne ogłoszenia','Opinie','Sprzedawca profesjonalny','Ten profil jest niedostępny.'],
+      cs:['Aktuální inzeráty','Hodnocení','Firemní prodejce','Tento profil není dostupný.'],
+      da:['Aktuelle annoncer','Anmeldelser','Erhvervssælger','Denne profil er ikke tilgængelig.'],
+      it:['Annunci attuali','Recensioni','Venditore professionale','Questo profilo non è disponibile.'],
+    };
+    for (const [locale,[listings,reviews,dealer,missing]] of Object.entries(profileCopy)) {
+      await guest.locator('.market-switcher summary').click();
+      const switcher = guest.locator('form[action="/user/language.php"]');
+      await switcher.locator('[name=locale]').selectOption(locale);
+      await Promise.all([guest.waitForNavigation(),switcher.locator('button').click()]);
+      assert.equal(await guest.locator('html').getAttribute('lang'),locale);
+      for (const heading of [listings,reviews,'Synthetic Profile Image Dealer']) {
+        assert(await guest.getByRole('heading',{name:heading,exact:true}).isVisible());
+      }
+      assert(await guest.getByText(dealer,{exact:true}).isVisible());
+      assert(await guest.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`Profile overflow for ${locale}`);
+      const denied = await guest.request.get(origin + '/marketplace/profile.php?user_id=unavailable');
+      assert.equal(denied.status(),404);
+      assert((await denied.text()).includes(missing));
+      assert.equal((await guest.request.get(publicProfile + '&page=invalid')).status(),422);
+    }
+
     phase = 'export_and_remove';
     await editor.goto(origin + '/user/privacy.php');
     const exportToken = await editor.locator('form:has(input[value=export]) [name=csrf_token]').inputValue();
@@ -125,6 +154,6 @@ async function login(page, user, admin = false) {
     }
     await guest.goto(publicProfile);
     assert.equal(await guest.getByRole('heading',{name:'Synthetic Profile Image Dealer'}).count(),1);
-    console.log('Profile images browser checks passed: recoding, upload limits, CSRF, moderation, export and removal.');
+    console.log('Profile browser checks passed: images, moderation, export, removal and eight mobile locales.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(`Profile images browser failure (${phase}): ${error.message}`); process.exitCode = 1; });
