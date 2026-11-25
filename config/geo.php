@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 function geo_postcode_attributions(PDO $pdo, array $countries): array
 {
+    $swisstopo = [
+        '©swisstopo (2026-11-01)'=>'https://www.swisstopo.admin.ch/en/official-directory-of-towns-and-cities',
+        'swisstopo OGD'=>'https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices',
+    ];
     $sources = [
         'AT' => [
             'sha256'=>'87109d717f9fdc9aba73d928ed7679b1a3efe563cd0229415cbfb1ab9b5ec29d',
@@ -18,6 +22,14 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
                 'La Poste – Base officielle des codes postaux (2026-11-08)'=>'https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux',
                 'Licence Ouverte 2.0'=>'https://www.data.gouv.fr/pages/legal/licences/etalab-2-0',
             ],
+        ],
+        'CH' => [
+            'sha256'=>'44a429892ba41991192d43746ef5f6863638b3f586e0ce77fb338ea221ac5e41',
+            'links'=>$swisstopo,
+        ],
+        'LI' => [
+            'sha256'=>'000921546ad2897cd557eb7cb38fbed29cc5aea7fd0370404ed771f6736703ed',
+            'links'=>$swisstopo,
         ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));

@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Postleitzahlen für die Schweiz und Liechtenstein
+
+Das amtliche swisstopo-Verzeichnis vom 1. November 2026 liefert nach
+Aufbereitung 3.177 Schweizer und 13 liechtensteinische PLZ-Punkte.
+Der Installer übernimmt beide Dateien beim ersten Import des Landes.
+Die Suche nennt ©swisstopo und die OGD-Nutzungsbedingungen. Lokal
+bestanden beide reproduzierten Hashes, PHP-Dry-Runs, Node-Validatoren,
+fünf PHP-Syntaxprüfungen und die Shell-Syntax. Der Ubuntu-Test prüft
+zusätzlich Import, Update und die tatsächliche Umkreissuche um Vaduz.
+[Datensatz und Methode](POSTCODE_SOURCES.md)
+
 ## Österreichische Postleitzahlen
 
 Der Installer importiert 2.200 österreichische Postleitzahlpunkte aus
@@ -11,6 +22,8 @@ Lokal bestanden 15 PHP-Syntaxprüfungen, die Shell-Syntax, der erneute
 Quellenlauf, die Ablehnung eines falschen Hashs, der PHP-Dry-Run und die
 Node-Prüfung. Der Installer-Test prüft Import, Update, Quellenhinweise und
 den Radius um Salzburg mit tatsächlichen Daten.
+Der Ubuntu-Installer-Test hat diese Prüfungen bestanden.
+[Österreich im Ubuntu-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/45620921097)
 [Datensatz und Methode](POSTCODE_SOURCES.md)
 
 ## Lokalisierte Systemfehler und Zugriffsverweigerung

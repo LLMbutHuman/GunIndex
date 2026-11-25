@@ -2,7 +2,7 @@
   "schema_version": 1,
   "reviewed_on": "2026-11-25",
   "automatic_import_enabled": true,
-  "automatic_import_policy": "Ubuntu installer seeds pinned DE, FR and AT files only for countries with no import history.",
+  "automatic_import_policy": "Ubuntu installer seeds pinned DE, FR, AT, CH and LI files only for countries with no import history.",
   "sources": [
     {
       "id": "operator-de-legacy",
@@ -52,12 +52,18 @@
       "license": "swisstopo OGD terms",
       "license_url": "https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices",
       "attribution": "©swisstopo",
-      "format": "WGS84 CSV available; other formats use LV95",
+      "format": "UTF-8 WGS84 semicolon CSV with PLZ4, ZIP_ID, municipality, address share, longitude and latitude",
+      "asset_url": "https://data.geo.admin.ch/ch.swisstopo-vd.ortschaftenverzeichnis_plz/ortschaftenverzeichnis_plz/ortschaftenverzeichnis_plz_4326.csv.zip",
       "update_frequency": "Monthly, first day of month, according to publisher",
-      "dataset_date": null,
-      "sha256": null,
-      "constraints": ["Building-address locality codes; administrative/company/postbox codes excluded", "Multiple localities can share four-digit postcode"],
-      "status": "researched_not_downloaded_not_imported"
+      "dataset_date": "2026-11-01",
+      "dataset_date_evidence": "Official STAC asset metadata",
+      "source_sha256": "5c744e0f0d6be63cef7b367fa0e9a6007f3b51d6db6460875dc4326b74fba0ee",
+      "prepared_outputs": {
+        "CH": {"path":"ZIP/PLZ-CH.csv","sha256":"44a429892ba41991192d43746ef5f6863638b3f586e0ce77fb338ea221ac5e41","bytes":117295,"validated_unique_postcodes":3177},
+        "LI": {"path":"ZIP/PLZ-LI.csv","sha256":"000921546ad2897cd557eb7cb38fbed29cc5aea7fd0370404ed771f6736703ed","bytes":498,"validated_unique_postcodes":13}
+      },
+      "constraints": ["Building-address locality codes; administrative/company/postbox codes excluded", "The municipality with highest address share represents each ZIP6; ZIP6 points are then averaged by PLZ4", "Swiss canton and blank cantonal field for Liechtenstein identify the source country"],
+      "status": "bundled_seeds_locally_validated"
     },
     {
       "id": "gisco-postal-points",

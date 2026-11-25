@@ -230,5 +230,13 @@ seed_postcodes PLZ-AT.csv --country=AT \
  --expected-sha256=87109d717f9fdc9aba73d928ed7679b1a3efe563cd0229415cbfb1ab9b5ec29d \
  --source='GeoNames 2026-11-25; RTR-GmbH 2026-11-04 (Austria)' \
  --license-note='CC BY 4.0. Derived from GeoNames points filtered by the RTR postal register. Sources: https://www.geonames.org/ and https://www.data.gv.at/datasets/f76ed887-00d6-450f-a158-9f8b1cbbeebf'
+seed_postcodes PLZ-CH.csv --country=CH \
+ --expected-sha256=44a429892ba41991192d43746ef5f6863638b3f586e0ce77fb338ea221ac5e41 \
+ --source='Federal Office of Topography swisstopo, official directory of towns and cities, 2026-11-01 (Switzerland)' \
+ --license-note='swisstopo OGD. Derived from each PLZ6 address density point. https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices'
+seed_postcodes PLZ-LI.csv --country=LI \
+ --expected-sha256=000921546ad2897cd557eb7cb38fbed29cc5aea7fd0370404ed771f6736703ed \
+ --source='Federal Office of Topography swisstopo, official directory of towns and cities, 2026-11-01 (Liechtenstein)' \
+ --license-note='swisstopo OGD. Derived from each PLZ6 address density point. https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

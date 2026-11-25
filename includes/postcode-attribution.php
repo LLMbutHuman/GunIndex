@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-foreach (geo_postcode_attributions($pdo, $postcodeSourceCountries) as $postcodeLinks):
+foreach (array_unique(geo_postcode_attributions($pdo, $postcodeSourceCountries), SORT_REGULAR) as $postcodeLinks):
     $postcodeAnchors = [];
     foreach ($postcodeLinks as $sourceName => $sourceUrl) {
         $postcodeAnchors[] = '<a href="'.h($sourceUrl).'">'.h($sourceName).'</a>';

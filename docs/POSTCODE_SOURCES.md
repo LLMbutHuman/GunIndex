@@ -13,8 +13,38 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
 Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
-Der Installer startet den Import für DE, FR und AT nur bei fehlender
+Der Installer startet den Import für DE, FR, AT, CH und LI nur bei fehlender
 Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
+
+## Schweiz und Liechtenstein
+
+Das amtliche Ortschaftenverzeichnis von swisstopo liefert
+`ZIP/PLZ-CH.csv` mit 3.177 und `ZIP/PLZ-LI.csv` mit 13 gültigen
+vierstelligen Postleitzahlpunkten aus dem WGS84-CSV zum 1. November 2026.
+Postfach- und reine Verwaltungscodes liegen außerhalb des amtlichen
+Datensatzes. Die veröffentlichten OGD-Bedingungen erlauben Bearbeitung
+und Weitergabe mit Quellenangabe. Die Website nennt ©swisstopo.
+[Amtliches Verzeichnis](https://www.swisstopo.admin.ch/en/official-directory-of-towns-and-cities)
+· [OGD-Nutzungsbedingungen](https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices)
+
+Die Aufbereitung übernimmt pro `ZIP_ID` den Punkt der Gemeinde mit
+dem höchsten Adressenanteil. Gleichstände werden deterministisch
+aufgelöst. Die ZIP6-Punkte werden nach vierstelliger Postleitzahl
+gemittelt und die häufigste Ortsbezeichnung übernommen. Schweizer
+Kantonskürzel und das leere Kantonsfeld für Liechtenstein trennen
+beide Länder. Die Punkte eignen sich für ungefähre Luftlinien.
+[Beschreibung der CSV-Felder](https://www.swisstopo.admin.ch/en/official-directory-of-towns-and-cities-update-20260101)
+
+swisstopo veröffentlicht monatlich einen neuen Datensatz. Die
+verwendete Ausgabedatei und das Quellarchiv haben eigene feste Hashes.
+Mit PHP CLI und ZIP-Erweiterung wird aus dem gehashten WGS84-Archiv
+erneut je ein CSV für `--country=CH` und `--country=LI` erzeugt.
+[Datei, Stand und SHA-256](postcode-sources.json)
+
+```sh
+php ops/prepare-swisstopo-postcodes.php --country=CH --file=ortschaftenverzeichnis_plz_4326.csv.zip \
+  --expected-source-sha256=5c744e0f0d6be63cef7b367fa0e9a6007f3b51d6db6460875dc4326b74fba0ee --output=PLZ-CH.csv
+```
 
 ## Österreich
 

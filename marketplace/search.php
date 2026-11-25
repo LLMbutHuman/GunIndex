@@ -22,7 +22,7 @@ foreach(['attributes','attribute_min','attribute_max'] as $key){
 }
 $attributeCategory=(int)$filters['category_id'];
 try{$results=market_search($pdo,$filters,(int)$page,24);}catch(InvalidArgumentException $e){http_response_code(422);$error=t($e->getMessage());$results=['items'=>[],'total'=>0];}
-$postcodeSourceCountries = $filters['scope'] === 'international' ? ['AT','FR'] : [$filters['country_code'],$filters['origin_country']];
+$postcodeSourceCountries = $filters['scope'] === 'international' ? array_keys($countries) : [$filters['country_code'],$filters['origin_country']];
 $pageTitle=$filters['q']?t('Suche: {query}',['query'=>$filters['q']]):t('Entdecken');
 include __DIR__.'/../includes/header.php';
 ?>
