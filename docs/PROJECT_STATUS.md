@@ -1,6 +1,6 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
-## Nachgewiesener Stand vom 21. November 2026
+## Nachgewiesener Stand vom 25. November 2026
 
 Von den 26 nummerierten Anforderungen sind **17 technisch implementiert
 und geprüft, 7 technisch umgesetzt mit externer Abnahme und 2 technisch offen
@@ -11,6 +11,15 @@ weitere Länderquellen und die
 Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
 fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
 [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
+
+Der Ubuntu-Installer prüft jetzt sechs länderspezifische PLZ-Quellen.
+Die Rechtsverwaltung importiert 20 deutsche Vorlagen als unveröffentlichte
+Entwürfe. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
+bestanden. Native Tests auf Apple-Geräten, fachlich freigegebene Rechtstexte
+und die unabhängige Sicherheitsprüfung bleiben Teil der Abnahme.
+[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45622583277) ·
+[Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623239492) ·
+[E2EE-Browser](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
 
 Neu nachgewiesen sind Gebühren und Belege je Auktion, Wiedereröffnung nach
 simulierter neuntägiger Wartung, der deutsche PLZ-Import, die sichere Ersetzung
@@ -23,7 +32,7 @@ Prozent- und Stundenschätzungen unten stammen aus der Bestandsaufnahme vom
 4. November. Der aktuelle Wiederaufnahmepunkt steht im Fortschrittsprotokoll.
 [Implementierungsfortschritt](IMPLEMENTATION_PROGRESS.md)
 
-**Fortschreibung 14. November – Chat:** Echte clientseitige OpenPGP-Verschlüsselung,
+**Historischer Stand 14. November – Chat:** Echte clientseitige OpenPGP-Verschlüsselung,
 getrennte Geräteschlüssel, Fingerabdruckprüfung, Mehrgerätebetrieb, Widerruf,
 Gerätewiederherstellung und verschlüsselte Dateianhänge sind inzwischen implementiert.
 `7ba5dfd`, [CI 43648359381](https://github.com/LLMbutHuman/GunIndex/actions/runs/43648359381):

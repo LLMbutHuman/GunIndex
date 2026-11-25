@@ -18,20 +18,20 @@ function manual_terms(int $quantity,bool $additionalMethod=false):string {
 }
 function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string $requestKey,?int $campaignId=null,array $consent=[]):int {
  if(($reason=direct_payment_reason($pdo))!==null)throw new PaymentUnavailable($reason);
- if(!in_array($service,['bump_single','bump_pack','category_top','home_top','banner_monthly'],true)||!preg_match('/\A[a-f0-9]{64}\z/',$requestKey))throw new InvalidArgumentException('Ungültige Bestellung.');
- $listing=market_find($pdo,$listingId,false);if(!$listing||(int)$listing['seller_id']!==$userId||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict('Nur eigene aktive Angebote können beworben werden.');
+ if(!in_array($service,['bump_single','bump_pack','category_top','home_top','banner_monthly'],true)||!preg_match('/\A[a-f0-9]{64}\z/',$requestKey))throw new InvalidArgumentException(t('billing_customer.invalid_order'));
+ $listing=market_find($pdo,$listingId,false);if(!$listing||(int)$listing['seller_id']!==$userId||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict(t('billing_customer.own_active_listing'));
  $promotion=in_array($service,['category_top','home_top','banner_monthly'],true);
- if($promotion&&(!function_exists('business_reserve_order')||($businessReason=business_reason($pdo))!==null))throw new PaymentUnavailable($businessReason??'Die Platzierungsverwaltung ist noch nicht verfügbar.');
- $quote=fees_quote($service,null,$pdo);if($quote['gross_cents']<1)throw new PaymentConflict('Für kostenlose Guthaben ist dieser Zahlungsweg nicht vorgesehen.');
+ if($promotion&&(!function_exists('business_reserve_order')||($businessReason=business_reason($pdo))!==null))throw new PaymentUnavailable($businessReason??t('billing_customer.placement_unavailable'));
+ $quote=fees_quote($service,null,$pdo);if($quote['gross_cents']<1)throw new PaymentConflict(t('billing_customer.free_credits'));
  $quantity=$service==='bump_pack'?3:1;$terms=$promotion?business_terms($pdo,$service,$listing):manual_terms($quantity,bank_gate($pdo)===null||bitcoin_gate($pdo,null,true)===null);
  $tax=fees_tax_split($quote['gross_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),true);
  $pdo->beginTransaction();
  try{
   maintenance_assert_market_available($pdo);
-  $q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new PaymentConflict('Konto nicht verfügbar.');
+  $q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new PaymentConflict(t('billing_customer.account_missing'));
   $q=$pdo->prepare('SELECT invoice_id FROM market_manual_orders WHERE request_key=? AND user_id=?');$q->execute([$requestKey,$userId]);$previous=$q->fetchColumn();if($previous){$pdo->commit();return(int)$previous;}
   $contractDocuments=consent_check($pdo,'checkout',$consent,i18n_locale());
-  $q=$pdo->prepare('SELECT COUNT(*) FROM market_manual_orders WHERE user_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 HOUR');$q->execute([$userId]);if((int)$q->fetchColumn()>=10)throw new PaymentConflict('Bitte später erneut bestellen. Das Stundenlimit ist erreicht.');
+  $q=$pdo->prepare('SELECT COUNT(*) FROM market_manual_orders WHERE user_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 HOUR');$q->execute([$userId]);if((int)$q->fetchColumn()>=10)throw new PaymentConflict(t('billing_customer.hourly_limit'));
   $reference='GI-'.strtoupper(bin2hex(random_bytes(10)));
   $q=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,?,?,?,'issued')");$q->execute([$userId,$reference,$service,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
   $q=$pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,request_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
@@ -107,15 +107,15 @@ function manual_fulfill(PDO $pdo,array $invoice): void {
  business_fulfill_manual($pdo,(int)$invoice['id']);
 }
 function manual_bump(PDO $pdo,int $userId,int $listingId,bool $immediateStart=false):void {
- if(!$immediateStart)throw new PaymentConflict('Bitte den sofortigen Beginn dieses einzelnen Bumps ausdrücklich verlangen.');
+ if(!$immediateStart)throw new PaymentConflict(t('billing_customer.start_required'));
  $pdo->beginTransaction();
  try{
   maintenance_assert_market_available($pdo);
   $listing=market_lock_listing($pdo,$listingId);
-  if((int)$listing['seller_id']!==$userId||$listing['status']!=='active'||!catalog_category_allowed($pdo,(int)$listing['category_id'])||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict('Dieses Angebot kann nicht hervorgehoben werden.');
-  $q=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');$q->execute([$userId]);if((int)$q->fetchColumn()!==1)throw new PaymentConflict('Konto nicht aktiv.');
-  if($listing['bumped_at']!==null&&strtotime($listing['bumped_at'].' UTC')>time()-259200)throw new PaymentConflict('Der nächste Bump ist erst nach 72 Stunden möglich.');
-  $q=$pdo->prepare('SELECT c.id FROM market_bump_credits c JOIN market_invoices i ON i.id=c.invoice_id WHERE c.user_id=? AND c.remaining>0 AND i.status=\'paid\' ORDER BY c.id LIMIT 1 FOR UPDATE');$q->execute([$userId]);$credit=$q->fetchColumn();if(!$credit)throw new PaymentConflict('Kein bezahltes Bump-Guthaben vorhanden.');
+  if((int)$listing['seller_id']!==$userId||$listing['status']!=='active'||!catalog_category_allowed($pdo,(int)$listing['category_id'])||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict(t('billing_customer.boost_unavailable'));
+  $q=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');$q->execute([$userId]);if((int)$q->fetchColumn()!==1)throw new PaymentConflict(t('billing_customer.account_inactive'));
+  if($listing['bumped_at']!==null&&strtotime($listing['bumped_at'].' UTC')>time()-259200)throw new PaymentConflict(t('billing_customer.boost_cooldown'));
+  $q=$pdo->prepare('SELECT c.id FROM market_bump_credits c JOIN market_invoices i ON i.id=c.invoice_id WHERE c.user_id=? AND c.remaining>0 AND i.status=\'paid\' ORDER BY c.id LIMIT 1 FOR UPDATE');$q->execute([$userId]);$credit=$q->fetchColumn();if(!$credit)throw new PaymentConflict(t('billing_customer.credits_missing'));
   $pdo->prepare('UPDATE market_bump_credits SET remaining=remaining-1 WHERE id=? AND remaining>0')->execute([$credit]);
   $pdo->prepare('UPDATE market_listings SET bumped_at=UTC_TIMESTAMP() WHERE id=?')->execute([$listingId]);
   $pdo->prepare('INSERT INTO market_bump_events(credit_id,listing_id,user_id) VALUES (?,?,?)')->execute([$credit,$listingId,$userId]);

@@ -78,6 +78,18 @@ class ManualHTTP(unittest.TestCase):
  def test_manual_order_cannot_enter_automatic_capture(self):
   self.enabled();owner=self.user();invoice,_,_=self.order(owner)
   self.assertFalse(fixture('automatic_guard',username=owner['username'],invoice_id=invoice)['allowed'])
+ def test_checkout_validation_uses_selected_language(self):
+  self.enabled();seller=self.user();browser=seller['browser'];url='/user/billing.php'
+  listing=self.seed_listing(seller);foreign_listing=self.seed_listing(self.user())
+  self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(url),locale='fr',market_country='DE',return_path=url))[0])
+  body=browser.request(url)[2]
+  key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
+  fields=dict(csrf_token=browser.token(url),action='order',order_key=key,listing_id=foreign_listing,service='bump_single',accept_terms='1')
+  status,_,body=browser.request(url,fields)
+  self.assertEqual(422,status);self.assertIn('Vous ne pouvez promouvoir que vos propres annonces actives.',body)
+  status,_,body=browser.request(url,dict(csrf_token=browser.token(url),action='bump',listing_id=listing,immediate_start='1'))
+  self.assertEqual(422,status);self.assertIn('Aucun crédit payé de mise en avant n’est disponible.',body)
+  self.assertEqual(0,int(fixture('bump_state',listing_id=listing)['bumps']))
  def test_admin_registration_switch_is_enforced(self):
   admin=self.user(admin=True);original=self.settings(admin);self.addCleanup(self.restore_settings,admin,original)
   values=dict(original,registration_enabled='0');self.assertEqual(200,admin['browser'].request('/admin/settings.php',values)[0])

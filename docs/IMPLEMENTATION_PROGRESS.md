@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Lokalisierte Prüfmeldungen für Bestellungen und Inserat-Hervorhebungen
+
+Elf serverseitige Fehlermeldungen verwenden die ausgewählte Sprache. Dazu
+gehören Einreichungen zu fremden Inseraten, fehlendes Guthaben, die
+72-Stunden-Frist und die ausdrückliche Anforderung zum sofortigen Start.
+Der isolierte HTTP-Test prüft zwei französische Ablehnungen und bestätigt,
+dass der abgelehnte Vorgang keine Hervorhebung auslöst. Vertragsfassungen
+und Zahlungsfreigaben wurden bei dieser Änderung nicht bearbeitet.
+
 ## Öffentliche Verkäufer- und Händlerprofile in acht Sprachen
 
 Profilangaben, Bewertungstexte, Händlerhinweise, Navigation und Fehlerseiten
