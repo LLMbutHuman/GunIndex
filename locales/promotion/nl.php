@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Uitgeschakeld',
     'promotion.status_published' => 'Gepubliceerd',
     'promotion.status_other' => 'In behandeling',
+    'promotion.start_declaration' => 'Ik verzoek uitdrukkelijk om deze afzonderlijke plaatsing direct te starten, ook vóór het einde van een eventuele herroepingstermijn. Wettelijke rechten blijven gelden voor zover van toepassing.',
 ];

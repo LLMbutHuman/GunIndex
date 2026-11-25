@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Account inattivo.',
     'billing_customer.boost_cooldown' => 'Puoi mettere di nuovo in evidenza l’annuncio dopo 72 ore.',
     'billing_customer.credits_missing' => 'Non sono disponibili crediti a pagamento per mettere in evidenza l’annuncio.',
+    'billing_customer.start_declaration' => 'Chiedo espressamente l’esecuzione immediata di questo singolo rilancio di visibilità, anche prima della scadenza di un eventuale periodo di recesso. Restano fermi i diritti di legge per le prestazioni che non sono state ancora eseguite per intero. Il diritto di recesso si estingue solo nei limiti previsti dalla legge.',
 ];

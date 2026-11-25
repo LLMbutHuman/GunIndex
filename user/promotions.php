@@ -17,7 +17,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
             $id=manual_order($pdo,(int)$user['id'],(int)$listing,$service,$key,$campaign!==''?(int)$campaign:null,$_POST);
             $_SESSION['promotion_order_key']=bin2hex(random_bytes(32));redirect('/user/billing.php?order='.$id);
         }elseif($action==='start'){
-            business_start_booking($pdo,(int)$user['id'],(int)post_string('booking_id',20),post_string('immediate_start')==='1');$success=t('promotion.started');
+            business_start_booking($pdo,(int)$user['id'],(int)post_string('booking_id',20),post_string('immediate_start')==='1',$_POST);$success=t('promotion.started');
         }else throw new InvalidArgumentException(t('finance_customer.invalid_action'));
     }catch(InvalidArgumentException|DomainException|PaymentConflict|PaymentUnavailable|MarketAccessException|MarketConflictException $exception){http_response_code(422);$error=$exception->getMessage();}
     catch(Throwable){http_response_code(503);$error=t('promotion.retry');}
@@ -48,7 +48,7 @@ include __DIR__.'/../includes/header.php';
 <?php foreach($bookings as $booking):?><article class="panel"><p class="eyebrow"><?=h($booking['country_code'].' · '.payments_service_label($booking['scope']))?></p><h3><?=h($booking['title'])?></h3><p><?=h(business_state_label($booking['status']))?> · <?=h(money_eur((int)$booking['gross_cents']))?></p>
 <?php if($booking['status']==='awaiting_start'):?><p><?=h(t('promotion.start_deadline',['time'=>$booking['reserved_until']]))?></p><?php elseif($booking['status']==='reserved'):?><p><?=h(t('billing_customer.reserved_until'))?> <?=h($booking['reserved_until'])?> UTC</p><?php elseif($booking['ends_at']):?><p><?=h(t('promotion.end_time',['time'=>$booking['ends_at']]))?></p><?php endif;?>
 <a href="/user/billing.php?order=<?=(int)$booking['invoice_id']?>"><?=h(t('billing_customer.order_title',['reference'=>$booking['invoice_number']]))?></a>
-<?php if($booking['status']==='awaiting_start'):?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="start"><input type="hidden" name="booking_id" value="<?=(int)$booking['id']?>"><label lang="de"><input type="checkbox" name="immediate_start" value="1" required> Ich verlange ausdrücklich den sofortigen Beginn dieser einzelnen Platzierung, auch vor Ablauf einer Widerrufsfrist. Gesetzliche Rechte bleiben im jeweils anwendbaren Umfang bestehen.</label><button class="button" type="submit"><?=h(business_label('Bezahlte Platzierung jetzt starten'))?></button></form><?php endif;?>
+<?php if($booking['status']==='awaiting_start'):?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="start"><input type="hidden" name="booking_id" value="<?=(int)$booking['id']?>"><?php consent_start_fields('promotion');?><button class="button" type="submit"><?=h(business_label('Bezahlte Platzierung jetzt starten'))?></button></form><?php endif;?>
 <?php if($booking['status']==='paid_unfulfilled'):?><p class="notice"><?=h(t('promotion.unfulfilled'))?></p><?php endif;?></article><?php endforeach;?>
 <nav class="pagination" aria-label="<?=h(t('promotion.booking_pages'))?>"><?php if($page>1):?><a href="?page=<?=$page-1?>"><?=h(t('Zurück'))?></a><?php endif;?><span><?=h(t('promotion.page',['page'=>$page,'total'=>max(1,(int)ceil($total/25))]))?></span><?php if($page*25<$total):?><a href="?page=<?=$page+1?>"><?=h(t('Weiter'))?></a><?php endif;?></nav><?php endif;?></section></main>
 <?php include __DIR__.'/../includes/footer.php';?>

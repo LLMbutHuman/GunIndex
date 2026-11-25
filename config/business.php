@@ -245,7 +245,7 @@ function business_resume_promotions(PDO $pdo, string $pausedAt, string $resumedA
     return ['promotions_extended'=>$active,'paid_start_deadlines_extended'=>$q->rowCount()];
 }
 
-function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $immediate): void
+function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $immediate, array $consent=[]): void
 {
     if (!$immediate) throw new InvalidArgumentException(t('promotion.start_confirm'));
     $q = $pdo->prepare('SELECT invoice_id FROM market_premium_bookings WHERE id=? AND user_id=?'); $q->execute([$bookingId,$userId]); $invoiceId = $q->fetchColumn();
@@ -265,9 +265,10 @@ function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $imm
             $q = $pdo->prepare("SELECT c.id FROM market_campaigns c JOIN market_dealer_profiles p ON p.user_id=c.user_id WHERE c.id=? AND c.status='approved' AND p.status='published' FOR SHARE"); $q->execute([$booking['campaign_id']]); if (!$q->fetchColumn()) throw new DomainException(t('promotion.banner_review'));
         }
         if (business_inventory_busy($pdo,(int)$booking['inventory_id'],(int)$booking['id'])) throw new DomainException(t('promotion.fully_booked'));
+        $declaration=consent_start_check('promotion',$consent);
         $start = gmdate('Y-m-d H:i:s'); $end = business_end_time($start,$booking['scope']);
         $pdo->prepare("UPDATE market_premium_bookings SET status='active',starts_at=?,ends_at=?,immediate_start_at=UTC_TIMESTAMP() WHERE id=?")->execute([$start,$end,$booking['id']]);
-        audit_log($pdo,$userId,'booking.started',$bookingId,['scope'=>$booking['scope'],'country'=>$booking['country_code'],'explicit_start'=>true,'ends_at'=>$end]); $pdo->commit();
+        audit_log($pdo,$userId,'booking.started',$bookingId,['scope'=>$booking['scope'],'country'=>$booking['country_code'],'explicit_start'=>true,'ends_at'=>$end]+$declaration); $pdo->commit();
     } catch (Throwable $error) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $error; }
 }
 

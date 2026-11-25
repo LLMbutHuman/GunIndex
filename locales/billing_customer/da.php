@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Kontoen er inaktiv.',
     'billing_customer.boost_cooldown' => 'Du kan fremhæve denne annonce igen efter 72 timer.',
     'billing_customer.credits_missing' => 'Der er ingen betalte kreditter til fremhævning.',
+    'billing_customer.start_declaration' => 'Jeg anmoder udtrykkeligt om, at denne enkelte fremhævning udføres straks, også inden en eventuel fortrydelsesfrist udløber. Lovbestemte rettigheder for ydelser, der endnu ikke er leveret fuldt ud, bevares. Fortrydelsesretten ophører kun i det omfang, loven fastsætter.',
 ];

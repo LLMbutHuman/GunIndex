@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Disabled',
     'promotion.status_published' => 'Published',
     'promotion.status_other' => 'In progress',
+    'promotion.start_declaration' => 'I expressly request the immediate start of this individual placement, including before the end of any withdrawal period. Statutory rights remain in effect to the extent applicable.',
 ];

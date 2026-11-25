@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Deaktiveret',
     'promotion.status_published' => 'Offentliggjort',
     'promotion.status_other' => 'Under behandling',
+    'promotion.start_declaration' => 'Jeg anmoder udtrykkeligt om, at denne enkelte placering starter straks, også inden en eventuel fortrydelsesfrist udløber. Lovbestemte rettigheder bevares i det omfang, de finder anvendelse.',
 ];

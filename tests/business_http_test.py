@@ -2,7 +2,7 @@
 """Dealer/profile/banner/CSV HTTP checks on synthetic isolated identities only."""
 import csv,io,json,re,secrets,subprocess,unittest,urllib.parse
 import http_test as cases
-from http_test import Browser,fixture,png,title
+from http_test import Browser,fixture,png,title,service_start_fields
 
 READ=r'''
 if(PHP_SAPI!=='cli'||getenv('DB_DATABASE')!=='gunindex_rebuild_test')exit(2);
@@ -111,7 +111,13 @@ class BusinessHTTP(unittest.TestCase):
   result=browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='order',order_key=key,service='banner_monthly',listing_id=listing,campaign_id=campaign['id'],accept_terms='1'));self.assertEqual(303,result[0]);booking=read(user,'bookings')[0]
   self.assertEqual(404,Browser().request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE')[0])
   cents=int(booking['gross_cents']);approval=dict(csrf_token=admin['browser'].token('/admin/settings.php'),invoice_id=booking['invoice_id'],transaction_id='SYNTHETIC'+secrets.token_hex(8).upper(),reference=booking['reference'],received_amount=f'{cents//100}.{cents%100:02}',decision='approve',reason='Synthetic direct account verification',review_confirmed='1')
-  self.assertEqual(200,admin['browser'].request('/admin/payments.php',approval)[0]);self.assertEqual(200,browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='start',booking_id=booking['id'],immediate_start='1'))[0])
+  self.assertEqual(200,admin['browser'].request('/admin/payments.php',approval)[0])
+  promotion='/user/promotions.php'
+  self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(promotion),return_path=promotion,locale='en',market_country='DE'))[0])
+  body=browser.request(promotion)[2];self.assertIn('I expressly request the immediate start of this individual placement',body)
+  start=dict(csrf_token=browser.token(promotion),action='start',booking_id=booking['id'],immediate_start='1',**service_start_fields(body))
+  self.assertEqual(422,browser.request(promotion,{**start,'start_hash':'0'*64})[0])
+  self.assertEqual(200,browser.request(promotion,start)[0])
   url='/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE';visitor=Browser();self.assertEqual(200,visitor.request(url,binary=True)[0]);self.assertEqual(200,visitor.request(url,binary=True)[0]);self.assertEqual(404,visitor.request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=AT')[0]);click=visitor.request('/marketplace/banner-click.php?id='+str(campaign['id'])+'&country=DE');self.assertEqual(303,click[0]);self.assertEqual('https://shop.example.org/outdoor',click[1]['Location']);counts=read(user,'stats');self.assertEqual(1,int(counts['impressions']));self.assertEqual(1,int(counts['clicks']))
   moderation['csrf_token']=admin['browser'].token('/admin/settings.php');moderation['status']='disabled';self.assertEqual(303,admin['browser'].request('/admin/campaigns.php',moderation)[0]);self.assertEqual(404,visitor.request(url)[0])
  def test_disguised_script_is_not_a_banner(self):

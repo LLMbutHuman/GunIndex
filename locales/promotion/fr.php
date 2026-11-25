@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Désactivé',
     'promotion.status_published' => 'Publié',
     'promotion.status_other' => 'En cours',
+    'promotion.start_declaration' => 'Je demande expressément le début immédiat de cet emplacement individuel, y compris avant l’expiration de tout délai de rétractation. Les droits légaux restent applicables dans la mesure prévue.',
 ];

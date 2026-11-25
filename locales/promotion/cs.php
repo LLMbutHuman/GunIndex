@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Deaktivováno',
     'promotion.status_published' => 'Zveřejněno',
     'promotion.status_other' => 'Zpracovává se',
+    'promotion.start_declaration' => 'Výslovně žádám o okamžité zahájení tohoto jednotlivého umístění, a to i před uplynutím případné lhůty k odstoupení. Zákonná práva zůstávají zachována v příslušném rozsahu.',
 ];

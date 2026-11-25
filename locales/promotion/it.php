@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Disattivato',
     'promotion.status_published' => 'Pubblicato',
     'promotion.status_other' => 'In corso',
+    'promotion.start_declaration' => 'Chiedo espressamente l’avvio immediato di questo singolo posizionamento, anche prima della scadenza di un eventuale periodo di recesso. I diritti di legge restano fermi nella misura applicabile.',
 ];

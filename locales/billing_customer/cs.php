@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Účet není aktivní.',
     'billing_customer.boost_cooldown' => 'Tento inzerát můžete znovu zvýraznit po 72 hodinách.',
     'billing_customer.credits_missing' => 'Nejsou k dispozici žádné zaplacené kredity na zvýraznění inzerátu.',
+    'billing_customer.start_declaration' => 'Výslovně žádám o okamžité jednorázové zvýraznění tohoto inzerátu, a to i před uplynutím případné lhůty k odstoupení. Zákonná práva u dosud zcela neposkytnutých služeb zůstávají zachována. Právo na odstoupení zaniká pouze v rozsahu stanoveném zákonem.',
 ];

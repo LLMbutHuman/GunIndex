@@ -25,4 +25,18 @@ consent_test('changed_requirement_set_rejected',static fn()=>consent_reject(fn()
 consent_test('tampered_document_body_rejected',static function()use($doc):void{$doc['body_text'].='tampered';consent_reject(fn()=>consent_integrity($doc));});
 consent_test('rendered_document_is_exact_escaped_and_unchecked',static function()use($doc):void{ob_start();consent_form([$doc],'de');$html=ob_get_clean();consent_assert(str_contains($html,'version_id=42')&&str_contains($html,'&lt;script&gt;')&&!str_contains($html,' checked')&&str_contains($html,'name="legal_confirm"'));});
 consent_test('all_eight_interfaces_include_localized_consent',static function()use($doc):void{foreach(i18n_locales() as $locale=>$_){$_SESSION['locale']=$locale;ob_start();consent_form([$doc],$locale);$html=ob_get_clean();consent_assert(!str_contains($html,'consent.')&&str_contains($html,'value="'.$locale.'"'));}unset($_SESSION['locale']);});
+consent_test('paid_start_binds_service_language_and_exact_displayed_notice',static function():void {
+ foreach(i18n_locales() as $locale=>$_) {
+  $_SESSION['locale']=$locale;
+  $notice=consent_start_notice('bump');
+  $input=['start_language'=>$locale,'start_hash'=>$notice['consent_hash']];
+  consent_assert(consent_start_check('bump',$input)===$notice);
+  consent_assert(str_starts_with($notice['consent_version'],'bump-start-')&&!str_contains($notice['consent_text'],'billing_customer.'));
+  consent_reject(static fn()=>consent_start_check('promotion',$input));
+  consent_reject(static fn()=>consent_start_check('bump',[...$input,'start_hash'=>str_repeat('0',64)]));
+  $_SESSION['locale']=$locale==='de'?'en':'de';
+  consent_reject(static fn()=>consent_start_check('bump',$input));
+ }
+ unset($_SESSION['locale']);
+});
 echo 'Consent checks passed: '.$passed."\n";

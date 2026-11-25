@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Bestätigung für den Sofortbeginn in acht Sprachen
+
+Bei einer bezahlten Inserat-Hervorhebung oder Werbeplatzierung steht die
+ausdrückliche Erklärung in der gewählten Sprache direkt neben dem Kästchen.
+Die Ausführung prüft den übermittelten Sprach- und Versionshash und speichert
+den exakten Text gemeinsam mit der Buchung im Auditprotokoll. Eine geänderte
+Fassung verlangt erneutes Laden. Die Rechtsprüfung der Sprachfassungen bleibt
+Teil der Betreiberfreigabe. HTTP-Tests prüfen fehlende oder abweichende Nachweise,
+den erfolgreichen Start mit der angezeigten Fassung und den gespeicherten Hash.
+
 ## Deterministische Ed25519-Prüfung beim Öffnen des Chats
 
 Ein WebKit-Lauf meldete beim zweiten Käufergerät den Status „nicht unterstützt“.

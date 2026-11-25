@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Wyłączono',
     'promotion.status_published' => 'Opublikowano',
     'promotion.status_other' => 'W trakcie',
+    'promotion.start_declaration' => 'Wyraźnie żądam natychmiastowego rozpoczęcia tej pojedynczej emisji, również przed upływem ewentualnego terminu odstąpienia. Ustawowe prawa pozostają w mocy w odpowiednim zakresie.',
 ];

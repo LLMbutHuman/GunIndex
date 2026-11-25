@@ -130,6 +130,8 @@ try {
         $q=$pdo->prepare('SELECT i.id,i.status,i.gross_cents,o.reference,o.recipient,o.quantity,o.customer_claimed_at,(SELECT COALESCE(SUM(remaining),0) FROM market_bump_credits c WHERE c.invoice_id=i.id) AS credits,(SELECT COUNT(*) FROM market_payment_attempts a WHERE a.invoice_id=i.id AND status=\'manual_verified\') AS approvals FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? AND i.user_id=?');$q->execute([$id,$user['id']]);$out=$q->fetch();if(!$out)throw new InvalidArgumentException();
     } elseif ($operation === 'bump_state') {
         $listing=fixture_listing($pdo,$request['listing_id']??null);$q=$pdo->prepare('SELECT COUNT(*) FROM market_bump_events WHERE listing_id=?');$q->execute([$listing['id']]);$out=['created_at'=>$listing['created_at'],'ends_at'=>$listing['ends_at'],'bumped_at'=>$listing['bumped_at'],'current_bid_cents'=>$listing['current_bid_cents'],'bumps'=>(int)$q->fetchColumn()];
+        $q=$pdo->prepare("SELECT details FROM admin_logs WHERE action_type='listing.bumped' AND target_id=? ORDER BY id DESC LIMIT 1");$q->execute([$listing['id']]);$raw=$q->fetchColumn();
+        $out['consent']=is_string($raw)?json_decode($raw,true,8,JSON_THROW_ON_ERROR):null;
     } elseif ($operation === 'invoice') {
         $user = fixture_user($pdo, $request['username'] ?? null);
         $q = $pdo->prepare("INSERT INTO market_invoices(user_id,service_code,fee_version,gross_cents,status) VALUES (?,'bump_single','test-1.0',199,'draft')"); $q->execute([$user['id']]);

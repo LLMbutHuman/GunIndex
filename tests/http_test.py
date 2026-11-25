@@ -144,6 +144,11 @@ def multipart(fields, files, *, file_field='images[]'):
     return b''.join(pieces), 'multipart/form-data; boundary=' + boundary
 
 
+def service_start_fields(body):
+    return {key: re.search(r'name="' + key + r'" value="([a-z0-9]+)"',body).group(1)
+            for key in ('start_language','start_hash')}
+
+
 class MarketplaceHTTP(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

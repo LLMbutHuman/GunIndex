@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Konto nieaktywne.',
     'billing_customer.boost_cooldown' => 'To ogłoszenie można ponownie podbić po 72 godzinach.',
     'billing_customer.credits_missing' => 'Brak opłaconych kredytów na podbicie ogłoszenia.',
+    'billing_customer.start_declaration' => 'Wyraźnie żądam natychmiastowego wykonania tego pojedynczego podbicia, również przed upływem ewentualnego terminu odstąpienia. Ustawowe prawa dotyczące usług, które nie zostały w pełni wykonane, pozostają w mocy. Prawo odstąpienia wygasa wyłącznie w zakresie przewidzianym przez prawo.',
 ];

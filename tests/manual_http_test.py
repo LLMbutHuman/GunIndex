@@ -2,7 +2,7 @@
 """Manual payment and private communication regressions; no PayPal requests."""
 import re,secrets,unittest
 import http_test as cases
-from http_test import Browser,fixture
+from http_test import Browser,fixture,service_start_fields
 
 class ManualHTTP(unittest.TestCase):
  user=cases.MarketplaceHTTP.user
@@ -71,9 +71,14 @@ class ManualHTTP(unittest.TestCase):
   before=fixture('bump_state',listing_id=listing)
   fields=dict(csrf_token=browser.token('/user/billing.php'),action='bump',listing_id=listing,immediate_start='1')
   self.assertEqual(422,browser.request('/user/billing.php',fields)[0])
-  self.assertEqual(200,self.approve(admin,state)[0][0]);missing=dict(fields);missing.pop('immediate_start');self.assertEqual(422,browser.request('/user/billing.php',missing)[0]);self.assertEqual(200,browser.request('/user/billing.php',fields)[0])
+  self.assertEqual(200,self.approve(admin,state)[0][0]);missing=dict(fields);missing.pop('immediate_start');self.assertEqual(422,browser.request('/user/billing.php',missing)[0])
+  self.assertEqual(422,browser.request('/user/billing.php',fields)[0])
+  fields.update(service_start_fields(browser.request('/user/billing.php')[2]))
+  self.assertEqual(422,browser.request('/user/billing.php',{**fields,'start_language':'fr'})[0])
+  self.assertEqual(200,browser.request('/user/billing.php',fields)[0])
   self.assertEqual(422,browser.request('/user/billing.php',fields)[0])
   after=fixture('bump_state',listing_id=listing);self.assertEqual(1,after['bumps']);self.assertEqual(before['created_at'],after['created_at']);self.assertEqual(before['ends_at'],after['ends_at']);self.assertEqual(before['current_bid_cents'],after['current_bid_cents'])
+  self.assertEqual('de',after['consent']['consent_language']);self.assertEqual(fields['start_hash'],after['consent']['consent_hash'])
   self.assertEqual(2,int(fixture('manual_state',username=user['username'],invoice_id=invoice)['credits']))
  def test_manual_order_cannot_enter_automatic_capture(self):
   self.enabled();owner=self.user();invoice,_,_=self.order(owner)

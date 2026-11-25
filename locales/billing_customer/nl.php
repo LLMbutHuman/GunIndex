@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Account inactief.',
     'billing_customer.boost_cooldown' => 'Je kunt deze advertentie na 72 uur opnieuw hoger plaatsen.',
     'billing_customer.credits_missing' => 'Er is geen betaald tegoed beschikbaar voor het hoger plaatsen van advertenties.',
+    'billing_customer.start_declaration' => 'Ik verzoek uitdrukkelijk om deze afzonderlijke verhoging direct uit te voeren, ook vóór het einde van een eventuele herroepingstermijn. Wettelijke rechten voor nog niet volledig geleverde diensten blijven gelden. Het herroepingsrecht vervalt alleen voor zover de wet dat bepaalt.',
 ];

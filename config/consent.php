@@ -57,6 +57,37 @@ function consent_check(PDO $pdo,string $scope,array $input,string $locale): arra
     consent_validate_submission($documents,$input,$locale);return $documents;
 }
 
+/** Record the localized declaration shown for one paid service activation. */
+function consent_start_notice(string $service): array
+{
+    [$version,$key]=match($service){
+        'bump'=>['bump-start-1.1','billing_customer.start_declaration'],
+        'promotion'=>['promotion-start-1.0','promotion.start_declaration'],
+    };
+    $text=t($key);
+    $language=i18n_locale();
+    return ['consent_version'=>$version,'consent_language'=>$language,'consent_text'=>$text,
+        'consent_hash'=>hash('sha256',$version."\n".$language."\n".$text)];
+}
+
+function consent_start_fields(string $service): void
+{
+    $notice=consent_start_notice($service);
+    echo '<input type="hidden" name="start_language" value="'.h($notice['consent_language']).'">'
+        .'<input type="hidden" name="start_hash" value="'.h($notice['consent_hash']).'">'
+        .'<label><input type="checkbox" name="immediate_start" value="1" required> '.h($notice['consent_text']).'</label>';
+}
+
+function consent_start_check(string $service,array $input): array
+{
+    $notice=consent_start_notice($service);
+    $hash=$input['start_hash']??null;
+    if (($input['start_language']??null)!==$notice['consent_language'] || !is_string($hash) || !hash_equals($notice['consent_hash'],$hash)) {
+        throw new InvalidArgumentException(t('consent.changed'));
+    }
+    return $notice;
+}
+
 /** The enclosing transaction commits the receipt together with account/order creation. */
 function consent_record(PDO $pdo,int $userId,string $scope,?int $invoiceId,array $documents,?string $acceptanceType=null): void
 {

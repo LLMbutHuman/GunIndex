@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Konto nicht aktiv.',
     'billing_customer.boost_cooldown' => 'Der nächste Bump ist erst nach 72 Stunden möglich.',
     'billing_customer.credits_missing' => 'Kein bezahltes Bump-Guthaben vorhanden.',
+    'billing_customer.start_declaration' => 'Ich verlange ausdrücklich, dass dieser einzelne Bump sofort ausgeführt wird, auch vor Ablauf einer Widerrufsfrist. Gesetzliche Rechte für noch nicht vollständig erbrachte Leistungen bleiben bestehen. Das Recht auf Widerruf entfällt dadurch nur im gesetzlich vorgesehenen Umfang.',
 ];

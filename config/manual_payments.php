@@ -106,7 +106,7 @@ function manual_fulfill(PDO $pdo,array $invoice): void {
  if(!function_exists('business_fulfill_manual'))throw new PaymentConflict('Die gebuchte Leistung ist nicht zur Freigabe verfügbar.');
  business_fulfill_manual($pdo,(int)$invoice['id']);
 }
-function manual_bump(PDO $pdo,int $userId,int $listingId,bool $immediateStart=false):void {
+function manual_bump(PDO $pdo,int $userId,int $listingId,bool $immediateStart=false,array $consent=[]):void {
  if(!$immediateStart)throw new PaymentConflict(t('billing_customer.start_required'));
  $pdo->beginTransaction();
  try{
@@ -116,9 +116,10 @@ function manual_bump(PDO $pdo,int $userId,int $listingId,bool $immediateStart=fa
   $q=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');$q->execute([$userId]);if((int)$q->fetchColumn()!==1)throw new PaymentConflict(t('billing_customer.account_inactive'));
   if($listing['bumped_at']!==null&&strtotime($listing['bumped_at'].' UTC')>time()-259200)throw new PaymentConflict(t('billing_customer.boost_cooldown'));
   $q=$pdo->prepare('SELECT c.id FROM market_bump_credits c JOIN market_invoices i ON i.id=c.invoice_id WHERE c.user_id=? AND c.remaining>0 AND i.status=\'paid\' ORDER BY c.id LIMIT 1 FOR UPDATE');$q->execute([$userId]);$credit=$q->fetchColumn();if(!$credit)throw new PaymentConflict(t('billing_customer.credits_missing'));
+  $declaration=consent_start_check('bump',$consent);
   $pdo->prepare('UPDATE market_bump_credits SET remaining=remaining-1 WHERE id=? AND remaining>0')->execute([$credit]);
   $pdo->prepare('UPDATE market_listings SET bumped_at=UTC_TIMESTAMP() WHERE id=?')->execute([$listingId]);
   $pdo->prepare('INSERT INTO market_bump_events(credit_id,listing_id,user_id) VALUES (?,?,?)')->execute([$credit,$listingId,$userId]);
-  audit_log($pdo,$userId,'listing.bumped',$listingId,['credit_id'=>(int)$credit,'immediate_start_requested'=>true,'consent_version'=>'bump-start-1.0']);$pdo->commit();
+  audit_log($pdo,$userId,'listing.bumped',$listingId,['credit_id'=>(int)$credit,'immediate_start_requested'=>true]+$declaration);$pdo->commit();
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }

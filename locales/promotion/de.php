@@ -50,4 +50,5 @@ return [
     'promotion.status_disabled' => 'Deaktiviert',
     'promotion.status_published' => 'Veröffentlicht',
     'promotion.status_other' => 'In Bearbeitung',
+    'promotion.start_declaration' => 'Ich verlange ausdrücklich den sofortigen Beginn dieser einzelnen Platzierung, auch vor Ablauf einer Widerrufsfrist. Gesetzliche Rechte bleiben im jeweils anwendbaren Umfang bestehen.',
 ];

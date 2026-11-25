@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Account inactive.',
     'billing_customer.boost_cooldown' => 'You can boost this listing again after 72 hours.',
     'billing_customer.credits_missing' => 'No paid boost credits are available.',
+    'billing_customer.start_declaration' => 'I expressly request immediate delivery of this individual boost, including before the end of any withdrawal period. Statutory rights for services that have not been fully delivered remain in effect. The right of withdrawal ends only to the extent provided by law.',
 ];

@@ -56,4 +56,5 @@ return [
     'billing_customer.account_inactive' => 'Compte inactif.',
     'billing_customer.boost_cooldown' => 'Vous pourrez de nouveau mettre cette annonce en avant après 72 heures.',
     'billing_customer.credits_missing' => 'Aucun crédit payé de mise en avant n’est disponible.',
+    'billing_customer.start_declaration' => 'Je demande expressément l’exécution immédiate de cette mise en avant individuelle, y compris avant l’expiration de tout délai de rétractation. Les droits légaux liés aux prestations qui n’ont pas été intégralement fournies restent applicables. Le droit de rétractation ne s’éteint que dans les limites prévues par la loi.',
 ];
