@@ -20,8 +20,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 $categories=catalog_categories($pdo,true);
 include __DIR__.'/../includes/header.php';
 ?>
-<main class="page"><div class="page-heading"><p class="eyebrow">Etwas Neues beginnt</p><h1>Dein nächstes Angebot.</h1><p class="muted">Beschreibe deinen Artikel, ergänze Bilder und entscheide dich für Festpreis oder Auktion.</p></div>
+<main class="page"><div class="page-heading"><h1><?=h($pageTitle)?></h1><p class="muted"><?=h(t('listing_validation.editor_help'))?></p></div>
 <?php if ($error!==''): ?><div class="notice notice-error" role="alert"><?= h($error) ?></div><?php endif; ?>
-<?php if (!$categories): ?><div class="notice">Aktuell ist keine Kategorie verfügbar. Bitte später erneut versuchen.</div><?php else: include __DIR__.'/../includes/market-form.php'; endif; ?>
+<?php if (!$categories): ?><div class="notice"><?=h(t('listing_validation.no_categories'))?></div><?php else: include __DIR__.'/../includes/market-form.php'; endif; ?>
 </main>
 <?php include __DIR__.'/../includes/footer.php'; ?>

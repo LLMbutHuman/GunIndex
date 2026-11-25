@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Décrivez votre article, ajoutez des images et choisissez un prix fixe, un prix négociable ou une enchère.',
+    'listing_validation.no_categories' => 'Aucune catégorie n’est disponible actuellement. Réessayez plus tard.',
+    'listing_validation.description_help' => 'Décrivez l’état, les éléments inclus et les traces d’usure.',
+    'listing_validation.country_closed' => 'Ce marché national est actuellement indisponible.',
+    'listing_validation.text_length' => 'Titre : 5 à 150 caractères. Description : 20 à 20 000 caractères.',
+    'listing_validation.product_denied' => 'Ce produit est exclu de la place de marché généraliste.',
+    'listing_validation.category' => 'Choisissez une catégorie générale active.',
+    'listing_validation.kind' => 'Type d’annonce ou mode de publication non valide.',
+    'listing_validation.postal_city' => 'Saisissez un code postal valide pour le pays et une localité.',
+    'listing_validation.condition' => 'Choisissez l’état de l’article.',
+    'listing_validation.positive_price' => 'Le prix doit être d’au moins 0,01 €.',
+    'listing_validation.buyout_min' => 'Le prix d’achat immédiat doit être au moins égal au prix de départ.',
+    'listing_validation.auction_days' => 'L’enchère doit durer de 1 à 14 jours.',
+    'listing_validation.rules' => 'Confirmez explicitement les règles générales relatives aux produits.',
+    'listing_validation.category_closed' => 'Cette catégorie n’est plus disponible.',
+    'listing_validation.own' => 'Vous pouvez modifier uniquement vos annonces.',
+    'listing_validation.uneditable' => 'Cette annonce ne peut plus être modifiée.',
+    'listing_validation.image_structure' => 'Données de téléversement d’image non valides.',
+    'listing_validation.image_incomplete' => 'Téléversez une image complète de 5 Mio maximum.',
+    'listing_validation.image_count' => 'Ajoutez jusqu’à cinq images par annonce.',
+    'listing_validation.image_format' => 'Téléversez un JPEG, PNG ou WebP de 20 mégapixels et 8 000 pixels par côté au maximum.',
+];

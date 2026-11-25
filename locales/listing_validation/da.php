@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Beskriv varen, tilføj billeder og vælg fast pris, pris til forhandling eller auktion.',
+    'listing_validation.no_categories' => 'Der er ingen tilgængelige kategorier lige nu. Prøv igen senere.',
+    'listing_validation.description_help' => 'Beskriv varens stand, hvad der medfølger, og eventuelle brugsspor.',
+    'listing_validation.country_closed' => 'Dette nationale marked er ikke tilgængeligt i øjeblikket.',
+    'listing_validation.text_length' => 'Titel: 5–150 tegn. Beskrivelse: 20–20.000 tegn.',
+    'listing_validation.product_denied' => 'Dette produkt er udelukket fra den almindelige markedsplads.',
+    'listing_validation.category' => 'Vælg en aktiv almindelig kategori.',
+    'listing_validation.kind' => 'Ugyldig annoncetype eller udgivelsesform.',
+    'listing_validation.postal_city' => 'Indtast et gyldigt postnummer for landet og en by.',
+    'listing_validation.condition' => 'Vælg varens stand.',
+    'listing_validation.positive_price' => 'Prisen skal være mindst 0,01 EUR.',
+    'listing_validation.buyout_min' => 'Køb nu-prisen skal mindst svare til startprisen.',
+    'listing_validation.auction_days' => 'Auktionen skal vare mellem 1 og 14 dage.',
+    'listing_validation.rules' => 'Bekræft udtrykkeligt de almindelige produktregler.',
+    'listing_validation.category_closed' => 'Denne kategori er ikke længere tilgængelig.',
+    'listing_validation.own' => 'Du kan kun redigere dine egne annoncer.',
+    'listing_validation.uneditable' => 'Denne annonce kan ikke længere redigeres.',
+    'listing_validation.image_structure' => 'Ugyldige data for billedupload.',
+    'listing_validation.image_incomplete' => 'Upload et komplet billede på højst 5 MiB.',
+    'listing_validation.image_count' => 'Tilføj højst fem produktbilleder pr. annonce.',
+    'listing_validation.image_format' => 'Upload JPEG, PNG eller WebP på højst 20 megapixel og 8.000 pixel pr. side.',
+];

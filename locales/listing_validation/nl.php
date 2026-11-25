@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Beschrijf je artikel, voeg afbeeldingen toe en kies een vaste prijs, een onderhandelbare prijs of een veiling.',
+    'listing_validation.no_categories' => 'Er zijn momenteel geen categorieën beschikbaar. Probeer het later opnieuw.',
+    'listing_validation.description_help' => 'Beschrijf de staat, wat is inbegrepen en eventuele gebruikssporen.',
+    'listing_validation.country_closed' => 'Deze landelijke markt is momenteel niet beschikbaar.',
+    'listing_validation.text_length' => 'Titel: 5–150 tekens. Beschrijving: 20–20.000 tekens.',
+    'listing_validation.product_denied' => 'Dit product is uitgesloten van de algemene marktplaats.',
+    'listing_validation.category' => 'Kies een actieve algemene categorie.',
+    'listing_validation.kind' => 'Ongeldig advertentietype of ongeldige publicatieoptie.',
+    'listing_validation.postal_city' => 'Voer een geldige postcode voor het land en een plaats in.',
+    'listing_validation.condition' => 'Kies de staat van het artikel.',
+    'listing_validation.positive_price' => 'De prijs moet minstens € 0,01 zijn.',
+    'listing_validation.buyout_min' => 'De direct-kopenprijs moet minstens gelijk zijn aan de startprijs.',
+    'listing_validation.auction_days' => 'De veiling moet tussen 1 en 14 dagen duren.',
+    'listing_validation.rules' => 'Bevestig de algemene productregels uitdrukkelijk.',
+    'listing_validation.category_closed' => 'Deze categorie is niet meer beschikbaar.',
+    'listing_validation.own' => 'Je kunt alleen eigen advertenties bewerken.',
+    'listing_validation.uneditable' => 'Deze advertentie kan niet meer worden bewerkt.',
+    'listing_validation.image_structure' => 'Ongeldige uploadgegevens voor de afbeelding.',
+    'listing_validation.image_incomplete' => 'Upload een volledige afbeelding van maximaal 5 MiB.',
+    'listing_validation.image_count' => 'Voeg maximaal vijf productafbeeldingen per advertentie toe.',
+    'listing_validation.image_format' => 'Upload een JPEG-, PNG- of WebP-afbeelding van maximaal 20 megapixel en 8.000 pixels per zijde.',
+];

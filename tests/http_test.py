@@ -251,6 +251,33 @@ class MarketplaceHTTP(unittest.TestCase):
         for path in ('/admin/index.php', '/admin/settings.php', '/admin/categories.php'):
             self.assertEqual(403, member['browser'].request(path)[0])
 
+    def test_listing_publisher_localizes_category_price_and_image_failures(self):
+        seller = self.user()
+        browser = seller['browser']
+        route = '/user/create-listing.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(route), 'locale': 'fr', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        fields = self.fields(seller)
+        for change, expected in (
+            ({'category_id': '0'}, 'Choisissez une catégorie générale active.'),
+            ({'price': '0.00'}, 'Le prix doit être d’au moins 0,01 €.'),
+        ):
+            status, _, body = browser.request(route, fields | change)
+            self.assertEqual(422, status)
+            self.assertIn('<h1>Créer une annonce</h1>', body)
+            self.assertIn(expected, body)
+            self.assertIn(fields['title'], body)
+        data, content_type = multipart(fields, [('fixture.png', 'image/png', b'not an image')])
+        status, _, body = browser.request(route, raw=data, content_type=content_type)
+        self.assertEqual(422, status)
+        self.assertIn('Téléversez un JPEG, PNG ou WebP', body)
+        self.assertIsNone(fixture('find_listing', username=seller['username'], title=fields['title'])['id'])
+        data, content_type = multipart(fields, [('fixture.png', 'image/png', png())])
+        self.assertEqual(303, browser.request(route, raw=data, content_type=content_type)[0])
+        listing = fixture('find_listing', username=seller['username'], title=fields['title'])
+        self.assertEqual(1, fixture('state', listing_id=listing['id'])['images'])
+
     def test_registration_requires_csrf_and_rejects_array_values(self):
         browser = Browser()
         self.assertEqual(403, browser.request('/auth/register.php', {'username': identity()})[0])

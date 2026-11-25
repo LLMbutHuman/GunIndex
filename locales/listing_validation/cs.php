@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Popište zboží, přidejte snímky a vyberte pevnou cenu, cenu k jednání nebo aukci.',
+    'listing_validation.no_categories' => 'Momentálně nejsou dostupné žádné kategorie. Zkuste to později.',
+    'listing_validation.description_help' => 'Popište stav, obsah nabídky a známky opotřebení.',
+    'listing_validation.country_closed' => 'Tento národní trh momentálně není dostupný.',
+    'listing_validation.text_length' => 'Název: 5–150 znaků. Popis: 20–20 000 znaků.',
+    'listing_validation.product_denied' => 'Tento výrobek je vyloučen ze všeobecného tržiště.',
+    'listing_validation.category' => 'Vyberte aktivní obecnou kategorii.',
+    'listing_validation.kind' => 'Neplatný typ inzerátu nebo režim zveřejnění.',
+    'listing_validation.postal_city' => 'Zadejte platné PSČ pro zemi a obec.',
+    'listing_validation.condition' => 'Vyberte stav zboží.',
+    'listing_validation.positive_price' => 'Cena musí být alespoň 0,01 EUR.',
+    'listing_validation.buyout_min' => 'Cena při okamžitém nákupu musí být alespoň rovna vyvolávací ceně.',
+    'listing_validation.auction_days' => 'Aukce musí trvat 1 až 14 dní.',
+    'listing_validation.rules' => 'Výslovně potvrďte obecná pravidla pro zboží.',
+    'listing_validation.category_closed' => 'Tato kategorie již není dostupná.',
+    'listing_validation.own' => 'Můžete upravovat pouze vlastní inzeráty.',
+    'listing_validation.uneditable' => 'Tento inzerát již nelze upravit.',
+    'listing_validation.image_structure' => 'Neplatná data nahrávaného snímku.',
+    'listing_validation.image_incomplete' => 'Nahrajte úplný snímek do 5 MiB.',
+    'listing_validation.image_count' => 'K inzerátu přidejte nejvýše pět snímků zboží.',
+    'listing_validation.image_format' => 'Nahrajte JPEG, PNG nebo WebP do 20 megapixelů a 8 000 pixelů na stranu.',
+];

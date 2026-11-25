@@ -52,15 +52,15 @@ function market_resize_image(GdImage $original, int $width, int $height, int $bo
 function market_prepare_images(array $files, int $existing = 0): array
 {
     if ($files===[]) return [];
-    if (!isset($files['name'],$files['tmp_name'],$files['error'],$files['size']) || !is_array($files['name']) || !is_array($files['tmp_name']) || !is_array($files['error']) || !is_array($files['size'])) throw new InvalidArgumentException('Ungültige Bildupload-Struktur.');
+    if (!isset($files['name'],$files['tmp_name'],$files['error'],$files['size']) || !is_array($files['name']) || !is_array($files['tmp_name']) || !is_array($files['error']) || !is_array($files['size'])) throw new InvalidArgumentException(t('listing_validation.image_structure'));
     $active=[];
     foreach ($files['error'] as $index=>$error) {
-        if (!is_int($error)) throw new InvalidArgumentException('Ungültiger Bildupload.');
+        if (!is_int($error)) throw new InvalidArgumentException(t('listing_validation.image_structure'));
         if ($error===UPLOAD_ERR_NO_FILE) continue;
-        if ($error!==UPLOAD_ERR_OK) throw new InvalidArgumentException('Ein Bild wurde nicht vollständig hochgeladen. Maximal 5 MiB pro Bild.');
+        if ($error!==UPLOAD_ERR_OK) throw new InvalidArgumentException(t('listing_validation.image_incomplete'));
         $active[]=$index;
     }
-    if (count($active)+$existing>5) throw new InvalidArgumentException('Maximal fünf Produktbilder pro Angebot.');
+    if (count($active)+$existing>5) throw new InvalidArgumentException(t('listing_validation.image_count'));
     if ($active===[]) return [];
     if (!extension_loaded('gd') || !function_exists('imagewebp')) throw new RuntimeException('Bildverarbeitung ist nicht verfügbar.');
     $directory=market_image_directory();
@@ -69,13 +69,13 @@ function market_prepare_images(array $files, int $existing = 0): array
         foreach ($active as $index) {
             $temporary=$files['tmp_name'][$index] ?? null;
             $size=$files['size'][$index] ?? null;
-            if (!is_string($temporary) || !is_int($size) || $size<1 || $size>5*1024*1024 || !is_uploaded_file($temporary) || filesize($temporary)!==$size) throw new InvalidArgumentException('Nur vollständige HTTP-Bilder bis 5 MiB sind erlaubt.');
+            if (!is_string($temporary) || !is_int($size) || $size<1 || $size>5*1024*1024 || !is_uploaded_file($temporary) || filesize($temporary)!==$size) throw new InvalidArgumentException(t('listing_validation.image_incomplete'));
             $mime=(new finfo(FILEINFO_MIME_TYPE))->file($temporary);
             $decoders=['image/jpeg'=>'imagecreatefromjpeg','image/png'=>'imagecreatefrompng','image/webp'=>'imagecreatefromwebp'];
             $info=@getimagesize($temporary);
-            if (!is_string($mime) || !isset($decoders[$mime]) || !$info || ($info['mime'] ?? '')!==$mime || $info[0]<1 || $info[1]<1 || $info[0]>8000 || $info[1]>8000 || $info[0]*$info[1]>20000000) throw new InvalidArgumentException('Bitte JPEG, PNG oder WebP mit maximal 20 Megapixeln und 8.000 Pixeln Seitenlänge hochladen.');
+            if (!is_string($mime) || !isset($decoders[$mime]) || !$info || ($info['mime'] ?? '')!==$mime || $info[0]<1 || $info[1]<1 || $info[0]>8000 || $info[1]>8000 || $info[0]*$info[1]>20000000) throw new InvalidArgumentException(t('listing_validation.image_format'));
             $original=@($decoders[$mime])($temporary);
-            if (!$original instanceof GdImage) throw new InvalidArgumentException('Das Bild konnte nicht vollständig gelesen werden.');
+            if (!$original instanceof GdImage) throw new InvalidArgumentException(t('identity.invalid_image'));
             $key=bin2hex(random_bytes(24));
             $largePath=$directory.'/'.$key.'.webp';
             $thumbPath=$directory.'/'.$key.'-thumb.webp';

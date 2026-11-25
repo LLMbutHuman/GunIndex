@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Opisz przedmiot, dodaj zdjęcia i wybierz stałą cenę, cenę do negocjacji lub aukcję.',
+    'listing_validation.no_categories' => 'Obecnie brak dostępnych kategorii. Spróbuj ponownie później.',
+    'listing_validation.description_help' => 'Opisz stan, zawartość oferty i ślady użytkowania.',
+    'listing_validation.country_closed' => 'Ten rynek krajowy jest obecnie niedostępny.',
+    'listing_validation.text_length' => 'Tytuł: 5–150 znaków. Opis: 20–20 000 znaków.',
+    'listing_validation.product_denied' => 'Ten produkt jest wyłączony z ogólnego rynku.',
+    'listing_validation.category' => 'Wybierz aktywną kategorię ogólną.',
+    'listing_validation.kind' => 'Nieprawidłowy typ ogłoszenia lub tryb publikacji.',
+    'listing_validation.postal_city' => 'Podaj prawidłowy kod pocztowy dla kraju i miejscowość.',
+    'listing_validation.condition' => 'Wybierz stan przedmiotu.',
+    'listing_validation.positive_price' => 'Cena musi wynosić co najmniej 0,01 EUR.',
+    'listing_validation.buyout_min' => 'Cena „Kup teraz” musi być co najmniej równa cenie początkowej.',
+    'listing_validation.auction_days' => 'Aukcja musi trwać od 1 do 14 dni.',
+    'listing_validation.rules' => 'Potwierdź wyraźnie ogólne zasady dotyczące produktów.',
+    'listing_validation.category_closed' => 'Ta kategoria jest już niedostępna.',
+    'listing_validation.own' => 'Możesz edytować tylko własne ogłoszenia.',
+    'listing_validation.uneditable' => 'Tego ogłoszenia nie można już edytować.',
+    'listing_validation.image_structure' => 'Nieprawidłowe dane przesłanego obrazu.',
+    'listing_validation.image_incomplete' => 'Prześlij pełny obraz o rozmiarze do 5 MiB.',
+    'listing_validation.image_count' => 'Dodaj maksymalnie pięć zdjęć produktu do ogłoszenia.',
+    'listing_validation.image_format' => 'Prześlij JPEG, PNG lub WebP do 20 megapikseli i 8000 pikseli na bok.',
+];

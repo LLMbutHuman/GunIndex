@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Descrivi l’articolo, aggiungi le immagini e scegli un prezzo fisso, un prezzo trattabile o un’asta.',
+    'listing_validation.no_categories' => 'Al momento non ci sono categorie disponibili. Riprova più tardi.',
+    'listing_validation.description_help' => 'Descrivi condizioni, contenuto dell’offerta e segni di usura.',
+    'listing_validation.country_closed' => 'Questo mercato nazionale non è disponibile al momento.',
+    'listing_validation.text_length' => 'Titolo: 5–150 caratteri. Descrizione: 20–20.000 caratteri.',
+    'listing_validation.product_denied' => 'Questo prodotto è escluso dal mercato generalista.',
+    'listing_validation.category' => 'Seleziona una categoria generale attiva.',
+    'listing_validation.kind' => 'Tipo di annuncio o opzione di pubblicazione non validi.',
+    'listing_validation.postal_city' => 'Inserisci un codice postale valido per il Paese e una località.',
+    'listing_validation.condition' => 'Seleziona le condizioni dell’articolo.',
+    'listing_validation.positive_price' => 'Il prezzo deve essere di almeno 0,01 €.',
+    'listing_validation.buyout_min' => 'Il prezzo Compra subito deve essere almeno pari al prezzo iniziale.',
+    'listing_validation.auction_days' => 'L’asta deve durare da 1 a 14 giorni.',
+    'listing_validation.rules' => 'Conferma esplicitamente le regole generali sui prodotti.',
+    'listing_validation.category_closed' => 'Questa categoria non è più disponibile.',
+    'listing_validation.own' => 'Puoi modificare solo i tuoi annunci.',
+    'listing_validation.uneditable' => 'Questo annuncio non può più essere modificato.',
+    'listing_validation.image_structure' => 'Dati di caricamento dell’immagine non validi.',
+    'listing_validation.image_incomplete' => 'Carica un’immagine completa fino a 5 MiB.',
+    'listing_validation.image_count' => 'Aggiungi fino a cinque immagini prodotto per annuncio.',
+    'listing_validation.image_format' => 'Carica un’immagine JPEG, PNG o WebP fino a 20 megapixel e 8.000 pixel per lato.',
+];

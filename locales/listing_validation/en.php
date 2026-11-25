@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Describe your item, add images and choose a fixed price, a negotiable price or an auction.',
+    'listing_validation.no_categories' => 'No categories are currently available. Try again later.',
+    'listing_validation.description_help' => 'Describe the condition, what is included and any signs of wear.',
+    'listing_validation.country_closed' => 'This country market is currently unavailable.',
+    'listing_validation.text_length' => 'Title: 5–150 characters. Description: 20–20,000 characters.',
+    'listing_validation.product_denied' => 'This product is excluded from the general marketplace.',
+    'listing_validation.category' => 'Choose an active general category.',
+    'listing_validation.kind' => 'Invalid listing type or publication option.',
+    'listing_validation.postal_city' => 'Enter a valid postcode for the country and a town or city.',
+    'listing_validation.condition' => 'Choose the item condition.',
+    'listing_validation.positive_price' => 'The price must be at least €0.01.',
+    'listing_validation.buyout_min' => 'The Buy it now price must be at least the starting price.',
+    'listing_validation.auction_days' => 'The auction must last between 1 and 14 days.',
+    'listing_validation.rules' => 'Explicitly confirm the general product rules.',
+    'listing_validation.category_closed' => 'This category is no longer available.',
+    'listing_validation.own' => 'You can only edit your own listings.',
+    'listing_validation.uneditable' => 'This listing can no longer be edited.',
+    'listing_validation.image_structure' => 'Invalid image upload data.',
+    'listing_validation.image_incomplete' => 'Upload a complete image up to 5 MiB.',
+    'listing_validation.image_count' => 'Upload up to five product images per listing.',
+    'listing_validation.image_format' => 'Upload a JPEG, PNG or WebP image with up to 20 megapixels and 8,000 pixels per side.',
+];

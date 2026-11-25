@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+return [
+    'listing_validation.editor_help' => 'Beschreibe deinen Artikel, füge Bilder hinzu und wähle Festpreis, Verhandlungsbasis oder Auktion.',
+    'listing_validation.no_categories' => 'Aktuell ist keine Kategorie verfügbar. Bitte später erneut versuchen.',
+    'listing_validation.description_help' => 'Beschreibe Zustand, Lieferumfang und Gebrauchsspuren.',
+    'listing_validation.country_closed' => 'Dieser Ländermarkt ist derzeit nicht verfügbar.',
+    'listing_validation.text_length' => 'Titel: 5–150 Zeichen. Beschreibung: 20–20.000 Zeichen.',
+    'listing_validation.product_denied' => 'Dieses Produkt ist auf dem allgemeinen Marktplatz nicht zugelassen.',
+    'listing_validation.category' => 'Bitte eine aktive allgemeine Kategorie auswählen.',
+    'listing_validation.kind' => 'Ungültige Angebotsart oder Veröffentlichungsform.',
+    'listing_validation.postal_city' => 'Bitte eine gültige Postleitzahl für das Land und einen Ort angeben.',
+    'listing_validation.condition' => 'Bitte den Artikelzustand auswählen.',
+    'listing_validation.positive_price' => 'Der Preis muss mindestens 0,01 € betragen.',
+    'listing_validation.buyout_min' => 'Der Sofortkaufpreis darf nicht unter dem Startpreis liegen.',
+    'listing_validation.auction_days' => 'Die Auktionsdauer muss 1 bis 14 Tage betragen.',
+    'listing_validation.rules' => 'Bitte die allgemeinen Produktregeln ausdrücklich bestätigen.',
+    'listing_validation.category_closed' => 'Diese Kategorie ist nicht mehr verfügbar.',
+    'listing_validation.own' => 'Nur eigene Angebote können bearbeitet werden.',
+    'listing_validation.uneditable' => 'Dieses Angebot kann nicht mehr bearbeitet werden.',
+    'listing_validation.image_structure' => 'Ungültige Bildupload-Daten.',
+    'listing_validation.image_incomplete' => 'Lade ein vollständiges Bild bis 5 MiB hoch.',
+    'listing_validation.image_count' => 'Maximal fünf Produktbilder pro Angebot.',
+    'listing_validation.image_format' => 'Lade ein JPEG-, PNG- oder WebP-Bild mit höchstens 20 Megapixeln und 8.000 Pixeln je Seite hoch.',
+];

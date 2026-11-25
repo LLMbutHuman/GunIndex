@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Inseratsformular und Upload-Validierung
+
+Erstellung, Bearbeitung und CSV-Import nutzen die lokalisierten
+Formularmeldungen für Kategorie, Preis, Angebotsart und weitere
+Eingaben. Bildvalidierung und Upload-Grenzen verwenden dieselbe Sprache.
+Der französische HTTP-Fall prüft korrekt abgelehnte Eingaben, ein
+ungültiges Bild und anschließend einen gültigen Upload. Lokal bestanden
+14 PHP-Syntaxprüfungen, 21 Schlüssel in acht Sprachen und der Unit-Test
+für Inseratentwürfe.
+
 ## Händler-Dashboard und CSV
 
 Händlerprofil, Werbung, Sammelaktionen, CSV-Hilfe und die eigenen
@@ -11,6 +21,7 @@ Der HTTP-Test prüft die englische Oberfläche, Landvalidierung sowie
 einen Import mit gültiger Zeile, exakter Dublette und Fehler.
 Lokal bestanden elf PHP-Syntaxprüfungen und die Prüfung von 81 Schlüsseln
 in acht Sprachkatalogen.
+[CI für Dashboard und CSV](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616862936)
 
 ## Öffentliche Plattforminformationen
 
@@ -388,8 +399,8 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes die gemeinsamen Formular- und Validierungsmeldungen für
-Inserate, Preise und Bild-Uploads mit den acht Katalogen abgleichen.
+Als Nächstes Meldungen für Suche, Gebote und Sofortkauf sowie verbleibende
+Kundentexte mit den acht Katalogen abgleichen.
 Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
