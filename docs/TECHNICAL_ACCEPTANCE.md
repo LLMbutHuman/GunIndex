@@ -1,4 +1,4 @@
-# Technischer Abnahmestand – 2026-11-20
+# Technischer Abnahmestand – 2026-11-25
 
 Gesamtplattform **nicht fertig und nicht produktiv abgenommen**.
 Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
@@ -14,7 +14,9 @@ Allgemeiner Warenmarktplatz; keine Aktivierung historischer Spezialkategorien.
   in `7ba5dfd`, CI 43648359381: zwölf echte Kryptografiegruppen, 15 Servergruppen
   und 19 Chromium-Browserfälle einschließlich acht mobiler Sprachen bestanden.
   **B:** unabhängige Sicherheits- und Zielserverabnahme sowie weitere Browser.
-  **C:** Austausch kompromittierter Kontoautorität noch nicht implementiert.
+  **A:** Austausch einer kompromittierten Kontoautorität mit frischer MFA,
+  neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung bestätigt.
+  [E2EE-Regression](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)
   Kein Forward-Secrecy-Versprechen; Produktionsgate standardmäßig aus.
 
 - **A:** Auktions-Gebührenverträge, Einstell-/Erfolgsforderungen, Zuschlagsbindung,
@@ -72,7 +74,7 @@ keine Grundlagen vorhanden sind. Korrekte bestehende Implementierungen bleiben e
 | 2 | Auktions-Erfolgsprovision | A | Zuschlag/Sofortkauf samt Buchung und Wiederholungsschutz geprüft; Providerabnahme extern |
 | 3 | Gebühren, Korrekturen, Rechnungen | A | Centgenauer Durchlauf mit Verlängerung, Zuschlag, Teilkorrektur, verifizierter Zahlung und PDF im isolierten MySQL/HTTP geprüft. Die Belegübersicht bindet ursprüngliche und korrigierte Aufträge an die Auktion. Bestandsauktionen erhalten keine rückwirkenden Gebühren. Automatische Providerzahlungen werden separat abgenommen. [CI 44839394997](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839394997) |
 | 4 | Rechtsdokumentbindung | B | Registrierung, Checkout und ausdrückliche Pflichtzustimmung für Bestandskonten versioniert und in MySQL/HTTP geprüft. Fachliche Freigabe der tatsächlichen Dokumente und Sprachfassungen steht aus. [CI 44794702907](https://github.com/LLMbutHuman/GunIndex/actions/runs/44794702907) |
-| 5 | Vollständige Übersetzungen | C | Altseiten, Validierungen, Finanz-/Kontobereiche und ungeprüfte Rechtsfassungen |
+| 5 | Vollständige Übersetzungen | C | Acht Sprachfassungen für die geprüften Module, einschließlich Kontoverwaltung, Händlern, Rechtsmasken und öffentlichen Informationsseiten. Fachliche Rechtsfassungen sowie der vollständige sprachliche Seiten- und Formatabgleich bleiben offen. [Mobiltest](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616262092) |
 | 6 | Kategorieattribute | A | Kategoriespezifische Text-, Zahlen-, Auswahl- und Ja/Nein-Felder, MFA-Verwaltung, Pflichtfelder und Deaktivierung geprüft |
 | 7 | Produktklassifizierung | A | Validierte Werte in Inserat, Produktseite, Wiedereinstellung und Kaufnachweis. Bestehende Inserate beginnen ohne erfundene Werte |
 | 8 | Autocomplete/Relevanz/Filter | A | Öffentliche Titelvorschläge, Relevanzsortierung und kombinierte Merkmals-, Preis-, Länder- und Umkreissuche in MySQL und Chromium geprüft |
@@ -116,6 +118,11 @@ und unveränderte Schlüssel, Konten und private Testdaten beim Update.
 [Ubuntu-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/44957109960)
 Der zusätzliche La-Poste-Import bestand samt Herkunftshinweis im Suchablauf.
 [PLZ-CI](https://github.com/LLMbutHuman/GunIndex/actions/runs/44956675099)
+Der Installationslauf mit sechs fest versionierten Länderdateien bestätigt
+zusätzlich 2.200 österreichische, 3.177 Schweizer, 13 liechtensteinische
+und 4.068 Luxemburger PLZ-Punkte. Die Tests prüfen echte Umkreissuchen,
+Attribution und Ländertrennung.
+[Ubuntu-Installer mit sechs Länderdateien](https://github.com/LLMbutHuman/GunIndex/actions/runs/45622583277)
 
 Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
 neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL

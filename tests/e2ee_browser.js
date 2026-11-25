@@ -6,6 +6,7 @@ const { execFileSync } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
 const { playwright, launchOptions } = require('./browser_tools');
 const origin = 'http://127.0.0.1:8081';
+const peerEngine = process.env.GUNINDEX_E2EE_PEER_BROWSER || 'chromium';
 const locales = ['de', 'en', 'fr', 'nl', 'pl', 'cs', 'da', 'it'];
 const token = randomBytes(12).toString('hex');
 const password = 'Synthetic private device phrase ' + token;
@@ -357,10 +358,12 @@ async function storageIsPrivate(page) {
 
 (async () => {
   invariant(process.platform !== 'win32', 'Run browser/database tests in the isolated Linux environment');
-  let data, browser, staleSeller;
+  invariant(['chromium', 'firefox', 'webkit'].includes(peerEngine), 'Unsupported E2EE peer browser');
+  let data, browser, peerBrowser, staleSeller;
   try {
     data = fixture('setup'); browser = await playwright.chromium.launch(launchOptions());
-    const sellerContext = await context(browser), buyerContext = await context(browser);
+    peerBrowser = peerEngine === 'chromium' ? browser : await playwright[peerEngine].launch({ headless: true });
+    const sellerContext = await context(browser), buyerContext = await context(peerBrowser);
     const chat = (peer) => '/user/secure-chat.php?listing_id=' + data.listing_id + '&user_id=' + peer;
     phase = 'create_seller_identity';
     const seller = await login(sellerContext, data.users.seller, '/user/secure-chat.php');
@@ -389,7 +392,7 @@ async function storageIsPrivate(page) {
     await lockDuringHeldRefresh(seller);
 
     phase = 'second_buyer_device_recovers_history';
-    const secondContext = await context(browser);
+    const secondContext = await context(peerBrowser);
     const second = await login(secondContext, data.users.buyer, chat(data.users.seller.id));
     invariant(await second.locator('#e2ee-unlock').isHidden(), 'New device must have no local vault');
     await second.locator('#e2ee-recovery summary').click();
@@ -444,7 +447,7 @@ async function storageIsPrivate(page) {
     assert.equal(attempted.status(), 403); await legacyPage.close(); checks.push('legacy_send_remains_blocked_after_enrollment');
 
     phase = 'outsider_denied';
-    const strangerContext = await context(browser);
+    const strangerContext = await context(peerBrowser);
     const stranger = await login(strangerContext, data.users.outsider, '/user/secure-chat.php');
     const forbiddenPage = await strangerContext.request.get(origin + chat(data.users.buyer.id)); assert.equal(forbiddenPage.status(), 403);
     const forbiddenHistory = await strangerContext.request.get(origin + '/user/e2ee-api.php?action=history&listing_id=' + data.listing_id + '&peer_id=' + data.users.buyer.id); assert.equal(forbiddenHistory.status(), 403);
@@ -462,7 +465,7 @@ async function storageIsPrivate(page) {
     }
 
     phase = 'compromised_identity_reset_and_peer_reverification';
-    const thirdContext = await context(browser);
+    const thirdContext = await context(peerBrowser);
     const third = await login(thirdContext, data.users.buyer, chat(data.users.seller.id));
     const { factor } = fixture('reset_factor', { fixture: data.fixture });
     await language(second, 'de');
@@ -514,9 +517,13 @@ async function storageIsPrivate(page) {
     for (const bytes of wire) privateFree(bytes);
     assert.equal(pageErrors.length, 0); assert.equal(external.length, 0);
     checks.push('no_private_plaintext_in_http_browser_storage_server_rows_or_attachment_files');
-    return { result: 'PASS', checks, js_errors: 0, external_requests: 0, scope: 'Synthetic Chromium UI with real browser OpenPGP; no production or independent cryptographic approval' };
+    return { result: 'PASS', engines: { seller: 'chromium', buyer: peerEngine }, checks, js_errors: 0, external_requests: 0, scope: 'Synthetic local browser UI with real browser OpenPGP' };
   } finally {
-    try { if (staleSeller) await staleSeller.dispose(); if (browser) await browser.close(); }
+    try {
+      if (staleSeller) await staleSeller.dispose();
+      if (peerBrowser && peerBrowser !== browser) await peerBrowser.close();
+      if (browser) await browser.close();
+    }
     finally { if (data) fixture('restore', { fixture: data.fixture }); }
   }
 })().then(result => console.log(JSON.stringify(result))).catch(error => {

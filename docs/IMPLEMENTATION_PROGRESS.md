@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Verschlüsselter Chat zwischen Browser-Engines
+
+Die CI führt die vorhandene E2EE-Regressionssuite zusätzlich zwischen
+Chromium und Firefox sowie zwischen Chromium und WebKit aus. Die beiden
+Läufe verwenden getrennte synthetische Konten und laufen nacheinander.
+Geprüft werden unter anderem Schlüsselaustausch, Entschlüsselung von
+Dateien, Wiederherstellung und Gerätewiderruf. Lokal wurde die
+JavaScript-Syntax geprüft. Für die Ergebnisse außerhalb von Chromium
+ist der Linux-Lauf maßgeblich.
+
 ## Mitgelieferte Rechtsentwürfe übernehmen
 
 Die geschützte Rechtsverwaltung importiert die 20 mitgelieferten
@@ -11,6 +21,7 @@ prüft MFA-Rollen, CSRF, Erstimport, Wiederholung, unveränderte
 Versions-ID und Ablehnung der Originalvorlage bei der Freigabe.
 Lokal bestanden zehn PHP-Syntaxprüfungen, die Prüfung aller 20
 Quelldateien und sechs Oberflächenschlüssel in acht Sprachen.
+[CI für Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623239492)
 
 ## Luxemburger Postleitzahlen
 
@@ -22,6 +33,8 @@ Der amtliche Download-Hash, die reproduzierte Ausgabe, PHP-Dry-Run,
 Node-Validator und die Shell-Syntax sind lokal geprüft. Der Ubuntu-Test
 prüft zusätzlich den Import, die Umkreissuche und gleiche Codes in
 unterschiedlichen Ländern.
+Der Ubuntu-Installer-Test und die Produktionsimage-Probe sind bestanden.
+[Luxemburg im Ubuntu-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/45622583277)
 [Datensatz und Methode](POSTCODE_SOURCES.md)
 
 ## Postleitzahlen für die Schweiz und Liechtenstein
