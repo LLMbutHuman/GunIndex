@@ -6,7 +6,7 @@ umask 077
 release="$1"
 deployment="$2"
 manifest="$3"
-fixture="$(mktemp -d "$RUNNER_TEMP/gunindex-sftp.XXXXXXXXXX")"
+fixture="$(mktemp -d "$RUNNER_TEMP/gunindex-sftp-XXXXXXXXXX")"
 trap 'if [[ -s "$fixture/sshd.pid" ]]; then sudo kill "$(cat "$fixture/sshd.pid")" || true; fi' EXIT
 
 mkdir -- "$fixture/remote"
