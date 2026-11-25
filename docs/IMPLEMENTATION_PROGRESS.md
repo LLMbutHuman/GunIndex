@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Lokalisierte Systemfehler und Zugriffsverweigerung
+
+Die Anwendung zeigt ihre Fehlerseiten für zu große Anfragen,
+unvollständige Einrichtung, vorübergehend unerreichbare Datenbank und
+interne Fehler in der gewählten Sprache. Die Seiten werden nicht
+gecacht. Die HTTP-Antwort enthält ausschließlich die öffentliche
+Meldung. Das PHP-Protokoll enthält die Fehlerklasse und Fundstelle.
+Mitarbeitermasken zeigen
+Berechtigungs- und MFA-Fehler in acht Sprachen. Lokal bestanden elf
+PHP-Syntaxprüfungen, der Katalogabgleich und vier gerenderte Fehlerseiten.
+
 ## Inseratsänderungen im Konto
 
 Erstellen, Bearbeiten, Pausieren und Archivieren setzen eine einmalige
@@ -41,6 +52,7 @@ Der französische HTTP-Fall prüft korrekt abgelehnte Eingaben, ein
 ungültiges Bild und anschließend einen gültigen Upload. Lokal bestanden
 14 PHP-Syntaxprüfungen, 21 Schlüssel in acht Sprachen und der Unit-Test
 für Inseratentwürfe.
+Die vollständige GitHub-Regression ist bestanden.
 [CI für französische Inserats- und Upload-Prüfung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45617401022)
 
 ## Händler-Dashboard und CSV
@@ -435,8 +447,11 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes verbleibende systemweite Zugriffs-, Ausnahme- und
-Uploadgrößenmeldungen mit den acht Katalogen abgleichen.
+Als Nächstes die fachlichen Rechtsfassungen und die weiterhin offenen
+technischen Abnahmepunkte aus `TECHNICAL_ACCEPTANCE.md` abgleichen.
+Die Rechtsfassungen benötigen vor Veröffentlichung die Betreiberangaben
+und Prüfung. Fehler durch vorgelagerte Infrastruktur benötigen eine
+Zielsystemabnahme.
 Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und

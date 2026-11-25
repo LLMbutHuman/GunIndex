@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Je account is gedeactiveerd. De beheerder beoordeelt je verwijderingsverzoek.',
     'account.logout_prompt' => 'Afmelden?',
     'account.logout_back' => 'Terug naar je account',
+    'account.system_failure' => 'Het verzoek kon niet worden afgerond.',
+    'account.system_setup' => 'De installatie is nog niet voltooid.',
+    'account.system_database' => 'De database is tijdelijk onbereikbaar.',
+    'account.system_request_size' => 'Het verzoek is te groot.',
+    'account.system_smaller_files' => 'Selecteer minder of kleinere bestanden.',
+    'account.system_retry' => 'Probeer het later opnieuw.',
 ];

@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Il tuo account è stato disattivato. Il gestore esaminerà la richiesta di cancellazione.',
     'account.logout_prompt' => 'Disconnettersi?',
     'account.logout_back' => 'Torna al tuo account',
+    'account.system_failure' => 'Impossibile completare la richiesta.',
+    'account.system_setup' => 'La configurazione è incompleta.',
+    'account.system_database' => 'Il database è temporaneamente non disponibile.',
+    'account.system_request_size' => 'La richiesta è troppo grande.',
+    'account.system_smaller_files' => 'Seleziona meno file o file più piccoli.',
+    'account.system_retry' => 'Riprova più tardi.',
 ];

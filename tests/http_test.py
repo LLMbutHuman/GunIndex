@@ -251,6 +251,30 @@ class MarketplaceHTTP(unittest.TestCase):
         for path in ('/admin/index.php', '/admin/settings.php', '/admin/categories.php'):
             self.assertEqual(403, member['browser'].request(path)[0])
 
+    def test_request_size_errors_and_staff_denials_use_the_session_language(self):
+        login = '/auth/login.php'
+        browser = Browser()
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(login), 'locale': 'en', 'market_country': 'DE', 'return_path': login,
+        })[0])
+        status, headers, body = browser.request(login, raw=b' ' * (28 * 1024 * 1024 + 1),
+                                                content_type='application/octet-stream')
+        self.assertEqual(413, status)
+        self.assertIn('no-store', headers['Cache-Control'])
+        self.assertIn('lang="en"', body)
+        self.assertIn('Request too large.', body)
+        self.assertNotIn('post_max_size', body)
+        member = self.user()
+        browser = member['browser']
+        profile = '/user/profile.php'
+        self.assertEqual(303, browser.request('/user/language.php', {
+            'csrf_token': browser.token(profile), 'locale': 'en', 'market_country': 'DE', 'return_path': profile,
+        })[0])
+        for route in ('/admin/index.php', '/admin/settings.php'):
+            status, _, body = browser.request(route)
+            self.assertEqual(403, status)
+            self.assertIn('You do not have the required permission.', body)
+
     def test_listing_publisher_localizes_category_price_and_image_failures(self):
         seller = self.user()
         browser = seller['browser']

@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Your account was deactivated. The operator will review your deletion request.',
     'account.logout_prompt' => 'Sign out?',
     'account.logout_back' => 'Back to your account',
+    'account.system_failure' => 'The request could not be completed.',
+    'account.system_setup' => 'Setup is incomplete.',
+    'account.system_database' => 'The database is temporarily unavailable.',
+    'account.system_request_size' => 'Request too large.',
+    'account.system_smaller_files' => 'Select fewer or smaller files.',
+    'account.system_retry' => 'Try again later.',
 ];

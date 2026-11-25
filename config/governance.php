@@ -35,16 +35,16 @@ function rbac_requires_mfa(PDO $pdo,int $userId): bool { return rbac_permissions
 function require_permission(PDO $pdo,string $permission): array
 {
     $user=require_login($pdo);
-    if(!rbac_has_permission($pdo,(int)$user['id'],$permission))abort_request(403,'Für diesen Bereich fehlt die erforderliche Berechtigung.');
-    if(empty($user['mfa_secret'])||($_SESSION['admin_mfa_user_id']??null)!==(int)$user['id'])abort_request(403,'Dieser Bereich erfordert eine Anmeldung mit zweitem Faktor.');
+    if(!rbac_has_permission($pdo,(int)$user['id'],$permission))abort_request(403,t('admin_roles.error_permission'));
+    if(empty($user['mfa_secret'])||($_SESSION['admin_mfa_user_id']??null)!==(int)$user['id'])abort_request(403,t('admin_roles.error_current_mfa'));
     return $user;
 }
 
 function require_staff(PDO $pdo): array
 {
     $user=require_login($pdo);
-    if(!rbac_has_permission($pdo,(int)$user['id'],'dashboard.read'))abort_request(403,'Dieser Bereich ist für berechtigtes Personal vorgesehen.');
-    if(empty($user['mfa_secret'])||($_SESSION['admin_mfa_user_id']??null)!==(int)$user['id'])abort_request(403,'Dieser Bereich erfordert eine Anmeldung mit zweitem Faktor.');
+    if(!rbac_has_permission($pdo,(int)$user['id'],'dashboard.read'))abort_request(403,t('admin_roles.error_permission'));
+    if(empty($user['mfa_secret'])||($_SESSION['admin_mfa_user_id']??null)!==(int)$user['id'])abort_request(403,t('admin_roles.error_current_mfa'));
     return $user;
 }
 

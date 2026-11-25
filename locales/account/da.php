@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Din konto er deaktiveret. Operatøren behandler din anmodning om sletning.',
     'account.logout_prompt' => 'Log ud?',
     'account.logout_back' => 'Tilbage til din konto',
+    'account.system_failure' => 'Anmodningen kunne ikke gennemføres.',
+    'account.system_setup' => 'Opsætningen er ikke fuldført.',
+    'account.system_database' => 'Databasen er midlertidigt utilgængelig.',
+    'account.system_request_size' => 'Anmodningen er for stor.',
+    'account.system_smaller_files' => 'Vælg færre eller mindre filer.',
+    'account.system_retry' => 'Prøv igen senere.',
 ];

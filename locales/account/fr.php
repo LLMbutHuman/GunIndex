@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Votre compte a été désactivé. L’exploitant examinera votre demande de suppression.',
     'account.logout_prompt' => 'Se déconnecter ?',
     'account.logout_back' => 'Retour à votre compte',
+    'account.system_failure' => 'La demande n’a pas pu aboutir.',
+    'account.system_setup' => 'La configuration est incomplète.',
+    'account.system_database' => 'La base de données est temporairement indisponible.',
+    'account.system_request_size' => 'Requête trop volumineuse.',
+    'account.system_smaller_files' => 'Sélectionnez moins de fichiers ou des fichiers plus petits.',
+    'account.system_retry' => 'Réessayez plus tard.',
 ];

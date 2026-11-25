@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Twoje konto zostało dezaktywowane. Operator rozpatrzy wniosek o usunięcie.',
     'account.logout_prompt' => 'Wylogować się?',
     'account.logout_back' => 'Wróć do konta',
+    'account.system_failure' => 'Nie udało się ukończyć żądania.',
+    'account.system_setup' => 'Konfiguracja jest niekompletna.',
+    'account.system_database' => 'Baza danych jest tymczasowo niedostępna.',
+    'account.system_request_size' => 'Żądanie jest zbyt duże.',
+    'account.system_smaller_files' => 'Wybierz mniej plików lub mniejsze pliki.',
+    'account.system_retry' => 'Spróbuj ponownie później.',
 ];

@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Dein Konto wurde deaktiviert. Der Betreiber prüft deinen Löschantrag.',
     'account.logout_prompt' => 'Abmelden?',
     'account.logout_back' => 'Zurück zum Konto',
+    'account.system_failure' => 'Die Anfrage konnte nicht abgeschlossen werden.',
+    'account.system_setup' => 'Die Anwendung ist noch nicht eingerichtet.',
+    'account.system_database' => 'Die Datenbank ist vorübergehend nicht erreichbar.',
+    'account.system_request_size' => 'Die Anfrage ist zu groß.',
+    'account.system_smaller_files' => 'Wähle weniger oder kleinere Dateien aus.',
+    'account.system_retry' => 'Versuche es später erneut.',
 ];

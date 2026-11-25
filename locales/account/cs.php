@@ -117,4 +117,10 @@ return [
     'account.privacy_deletion_received' => 'Váš účet byl deaktivován. Provozovatel posoudí žádost o výmaz.',
     'account.logout_prompt' => 'Odhlásit se?',
     'account.logout_back' => 'Zpět k účtu',
+    'account.system_failure' => 'Požadavek se nepodařilo dokončit.',
+    'account.system_setup' => 'Nastavení není dokončeno.',
+    'account.system_database' => 'Databáze je dočasně nedostupná.',
+    'account.system_request_size' => 'Požadavek je příliš velký.',
+    'account.system_smaller_files' => 'Vyberte méně souborů nebo menší soubory.',
+    'account.system_retry' => 'Zkuste to později.',
 ];
