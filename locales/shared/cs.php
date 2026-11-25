@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Dobré věci si zaslouží\ndalší příběh.",
     'shared.footer_give'=>'Pošli něco dál',
     'shared.footer_scope'=>'Pro běžné zboží. S jasnými pravidly.',
+    'Speichern' => 'Uložit',
+    'Abbrechen' => 'Zrušit',
+    'Ergebnisseiten' => 'Stránky výsledků',
+    'Status' => 'Stav',
+    'Bearbeiten' => 'Upravit',
 ];

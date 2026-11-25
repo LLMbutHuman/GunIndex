@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Mooie dingen verdienen\neen nieuw verhaal.",
     'shared.footer_give'=>'Geef iets door',
     'shared.footer_scope'=>'Voor algemene goederen. Met duidelijke regels.',
+    'Speichern' => 'Opslaan',
+    'Abbrechen' => 'Annuleren',
+    'Ergebnisseiten' => 'Resultaatpagina’s',
+    'Status' => 'Status',
+    'Bearbeiten' => 'Bewerken',
 ];

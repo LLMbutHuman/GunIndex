@@ -19,6 +19,27 @@ geo_test('eight_local_dictionaries_and_safe_fallback',static function():void {ge
 geo_test('locale_key_and_placeholder_parity',static function():void {
  $base=i18n_dictionary('de');foreach(i18n_locales() as $locale=>$label){$dictionary=i18n_dictionary($locale);geo_check(array_keys($base)===array_keys($dictionary));foreach($base as $key=>$text){geo_check(is_string($dictionary[$key])&&preg_match('//u',$dictionary[$key])===1);preg_match_all('/\{[a-z_]+\}/',$text,$expected);preg_match_all('/\{[a-z_]+\}/',$dictionary[$key],$actual);sort($expected[0]);sort($actual[0]);geo_check($expected[0]===$actual[0]);}}
 });
+geo_test('literal_application_translation_keys_exist',static function():void {
+ $dictionary=i18n_dictionary('de');
+ foreach (['auth','user','marketplace','admin','includes','actions','config'] as $directory) {
+  foreach (glob(__DIR__.'/../'.$directory.'/*.php') as $file) {
+   $tokens=array_values(array_filter(token_get_all(file_get_contents($file)),
+    static fn(mixed $token):bool=>!is_array($token)||!in_array($token[0],[T_WHITESPACE,T_COMMENT,T_DOC_COMMENT],true)));
+   $last=count($tokens)-3;
+   for ($index=0;$index<$last;$index++) {
+    $function=$tokens[$index];
+    $literal=$tokens[$index+2];
+    if (!is_array($function)||$function[0]!==T_STRING||$function[1]!=='t'||$tokens[$index+1]!=='('
+     ||!is_array($literal)||$literal[0]!==T_CONSTANT_ENCAPSED_STRING||!in_array($tokens[$index+3],[',',')'],true)) continue;
+    $key=substr($literal[1],1,-1);
+    if (!array_key_exists($key,$dictionary)) {
+     fwrite(STDERR,'Missing translation in '.$directory.'/'.basename($file).':'.$literal[2].PHP_EOL);
+     geo_check(false);
+    }
+   }
+  }
+ }
+});
 
 if(in_array('--database',$argv,true)){
  if(getenv('DB_DATABASE')!=='gunindex_rebuild_test'){fwrite(STDERR,"Database checks require the isolated synthetic schema.\n");exit(2);}

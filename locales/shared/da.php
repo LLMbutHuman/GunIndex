@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Gode ting fortjener\nen ny historie.",
     'shared.footer_give'=>'Giv noget videre',
     'shared.footer_scope'=>'Til almindelige varer. Med klare regler.',
+    'Speichern' => 'Gem',
+    'Abbrechen' => 'Annuller',
+    'Ergebnisseiten' => 'Resultatsider',
+    'Status' => 'Status',
+    'Bearbeiten' => 'Rediger',
 ];

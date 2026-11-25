@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Les belles choses méritent\nune nouvelle histoire.",
     'shared.footer_give'=>'Transmettre un objet',
     'shared.footer_scope'=>'Des biens courants. Des règles claires.',
+    'Speichern' => 'Enregistrer',
+    'Abbrechen' => 'Annuler',
+    'Ergebnisseiten' => 'Pages de résultats',
+    'Status' => 'État',
+    'Bearbeiten' => 'Modifier',
 ];

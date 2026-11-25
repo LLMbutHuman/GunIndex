@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Le cose belle meritano\nuna nuova storia.",
     'shared.footer_give'=>'Dai nuova vita a un oggetto',
     'shared.footer_scope'=>'Per beni di uso comune. Con regole chiare.',
+    'Speichern' => 'Salva',
+    'Abbrechen' => 'Annulla',
+    'Ergebnisseiten' => 'Pagine dei risultati',
+    'Status' => 'Stato',
+    'Bearbeiten' => 'Modifica',
 ];

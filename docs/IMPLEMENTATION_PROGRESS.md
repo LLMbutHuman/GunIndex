@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Fehlende Übersetzungsschlüssel in Konto, Suche und Kategorien ergänzt
+
+Die Beschriftungen für Speichern, Abbrechen, Seitenwechsel, Status und
+Bearbeiten werden in allen acht Sprachkatalogen aufgelöst. Ein Test prüft die
+fest eingetragenen Aufrufe von `t()` in den PHP-Anwendungsmodulen und meldet
+fehlende Katalogschlüssel mit Datei und Zeile. Dynamisch zusammengesetzte
+Schlüssel und frei eingebettete Texte erfordern weiterhin funktionsbezogene
+Sprachtests.
+
 ## Rechtsentwürfe zur Bearbeitung als JSON herunterladen
 
 Die Rechtsverwaltung exportiert die 160 mitgelieferten Vorlagen mit Sprache,

@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Dobre rzeczy zasługują\nna kolejną historię.",
     'shared.footer_give'=>'Przekaż coś dalej',
     'shared.footer_scope'=>'Zwykłe towary. Jasne zasady.',
+    'Speichern' => 'Zapisz',
+    'Abbrechen' => 'Anuluj',
+    'Ergebnisseiten' => 'Strony wyników',
+    'Status' => 'Stan',
+    'Bearbeiten' => 'Edytuj',
 ];

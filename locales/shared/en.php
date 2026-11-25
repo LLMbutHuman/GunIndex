@@ -6,4 +6,9 @@ return [
     'shared.footer_title'=>"Good things deserve\na new chapter.",
     'shared.footer_give'=>'Pass something on',
     'shared.footer_scope'=>'For general goods. With clear rules.',
+    'Speichern' => 'Save',
+    'Abbrechen' => 'Cancel',
+    'Ergebnisseiten' => 'Result pages',
+    'Status' => 'Status',
+    'Bearbeiten' => 'Edit',
 ];
