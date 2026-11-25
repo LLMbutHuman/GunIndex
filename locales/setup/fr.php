@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Les sept processus doivent avoir signalé un succès récent. Un échec simultané ou ultérieur déclenche une alerte.',
     'setup.workers.next' => 'Vérifier les conteneurs des workers et les journaux privés ; exécuter ops/health.php sur le système cible.',
     'setup.backups.title' => 'Sauvegarde et restauration',
-    'setup.backups.detail' => 'Sauvegarde locale vérifiée : {backup}. Restauration vers une cible séparée vérifiée : {restore}. Vérifiez la copie hors site et le stockage séparé des clés.',
+    'setup.backups.detail' => 'Sauvegarde locale vérifiée : {backup}. Restauration vers une cible séparée vérifiée : {restore}. Copie hors site relue et vérifiée : {offsite}. Conservez les clés séparément.',
     'setup.backups.next' => 'Créer une sauvegarde chiffrée, la restaurer réellement dans un environnement isolé et vérifier une copie hors site avec des clés conservées séparément.',
     'setup.monitoring.title' => 'Surveillance',
     'setup.monitoring.detail' => 'L’activité des workers est visible ; la réception des alertes et la disponibilité externe ne sont pas testées ici.',

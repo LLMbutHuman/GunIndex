@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Alle sieben Worker benötigen einen aktuellen Erfolgs-Heartbeat. Ein gleichzeitiger oder neuerer Fehler führt zu einer Warnung.',
     'setup.workers.next' => 'Worker-Container und private Protokolle prüfen; ops/health.php auf dem Zielsystem ausführen.',
     'setup.backups.title' => 'Backup und Wiederherstellung',
-    'setup.backups.detail' => 'Lokale Sicherung geprüft: {backup}. Wiederherstellung in einem getrennten Ziel geprüft: {restore}. Externe Kopie und getrennte Schlüsselverwahrung vor Ort prüfen.',
+    'setup.backups.detail' => 'Lokale Sicherung geprüft: {backup}. Wiederherstellung in einem getrennten Ziel geprüft: {restore}. Externe Kopie zurückgelesen und geprüft: {offsite}. Schlüssel separat verwahren.',
     'setup.backups.next' => 'Verschlüsseltes Backup erzeugen, isoliert tatsächlich wiederherstellen und Offsite-Kopie samt getrennten Schlüsseln nachweisen.',
     'setup.monitoring.title' => 'Monitoring',
     'setup.monitoring.detail' => 'Worker-Aktivität ist sichtbar; Alarmzustellung und externe Erreichbarkeit werden hier nicht getestet.',

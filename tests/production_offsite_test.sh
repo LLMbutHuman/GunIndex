@@ -73,3 +73,27 @@ mkdir -- "$deployment/restored-source"
  done
 } | sftp -F /dev/null -oBatchMode=yes -oStrictHostKeyChecking=yes -oUserKnownHostsFile="$fixture/known_hosts" \
  -i "$fixture/client" -P "$port" -b - "$(id -un)@127.0.0.1"
+
+config="$deployment/config/offsite-backup.json"
+python3 - "$config" "$fixture" "$port" "$(id -un)" <<'PY'
+import json, sys
+from pathlib import Path
+
+path, fixture, port, user = sys.argv[1:]
+Path(path).write_text(json.dumps({'destination': user + '@127.0.0.1', 'remote_directory': fixture + '/remote',
+    'port': int(port), 'identity': fixture + '/client', 'known_hosts': fixture + '/known_hosts'}))
+PY
+chmod 0600 "$config"
+[[ ! -e "$deployment/ops-status/offsite.verified" ]]
+backup_command=(python3 "$release/ops/production/backup.py" --directory "$deployment" backup --maintenance)
+"${backup_command[@]}"
+[[ -s "$deployment/ops-status/offsite.verified" ]]
+[[ "$(find "$fixture/remote" -mindepth 1 -maxdepth 1 -type d | wc -l)" == 2 ]]
+verified="$(cat "$deployment/ops-status/offsite.verified")"
+chmod 0644 "$config"
+if "${backup_command[@]}"; then
+ printf '%s\n' 'Backup accepted a readable offsite configuration.' >&2; exit 1
+fi
+[[ "$(cat "$deployment/ops-status/offsite.verified")" == "$verified" ]]
+[[ "$(find "$fixture/remote" -mindepth 1 -maxdepth 1 -type d | wc -l)" == 2 ]]
+[[ "$(find "$deployment/backups" -maxdepth 1 -name '*.json' | wc -l)" == 4 ]]

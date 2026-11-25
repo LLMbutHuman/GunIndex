@@ -95,6 +95,7 @@ function setup_collect(PDO $pdo, int $actor): array
     $now = time();
     $facts['backup_verified_at'] = setup_verified_operation('/run/gunindex-ops/backup.verified', $now);
     $facts['restore_verified_at'] = setup_verified_operation('/run/gunindex-ops/restore.verified', $now);
+    $facts['offsite_verified_at'] = setup_verified_operation('/run/gunindex-ops/offsite.verified', $now);
     foreach (worker_heartbeat_limits() as $worker=>$maximum) {
         $base = '/var/lib/gunindex/heartbeats/'.$worker;
         $facts['workers'][$worker] = worker_heartbeat_status(worker_read_heartbeat($base.'.ok'), worker_read_heartbeat($base.'.failed'), $now, $maximum)['ready'];
@@ -154,8 +155,9 @@ function setup_steps(array $facts): array
     $add('workers', $workerReady?'tested':'error');
     $backup = $facts['backup_verified_at'] ?? null;
     $restore = $facts['restore_verified_at'] ?? null;
+    $offsite = $facts['offsite_verified_at'] ?? null;
     $add('backups', $backup !== null && $restore !== null ? 'tested' : ($backup !== null ? 'configured' : 'external'),
-        ['backup'=>$backup ?? t('setup.unknown'), 'restore'=>$restore ?? t('setup.unknown')]);
+        ['backup'=>$backup ?? t('setup.unknown'), 'restore'=>$restore ?? t('setup.unknown'), 'offsite'=>$offsite ?? t('setup.unknown')]);
     $add('monitoring', 'external');
     $add('tests', 'external');
     $add('acceptance', $yes('database')&&empty($facts['query_errors'])?'external':'error', ['reachable'=>t($yes('database')?'setup.yes':'setup.no')]);

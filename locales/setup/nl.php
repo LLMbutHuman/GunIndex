@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Alle zeven processen moeten recent succes hebben gemeld. Een gelijktijdige of latere fout leidt tot een waarschuwing.',
     'setup.workers.next' => 'Controleer workercontainers en privélogboeken; voer ops/health.php uit op het doelsysteem.',
     'setup.backups.title' => 'Back-up en herstel',
-    'setup.backups.detail' => 'Lokale back-up gecontroleerd: {backup}. Herstel naar een afzonderlijk doel gecontroleerd: {restore}. Controleer de externe kopie en de afzonderlijke opslag van sleutels.',
+    'setup.backups.detail' => 'Lokale back-up gecontroleerd: {backup}. Herstel naar een afzonderlijk doel gecontroleerd: {restore}. Externe kopie teruggelezen en gecontroleerd: {offsite}. Bewaar de sleutels afzonderlijk.',
     'setup.backups.next' => 'Maak een versleutelde back-up, herstel deze daadwerkelijk in een geïsoleerde omgeving en verifieer een externe kopie met apart opgeslagen sleutels.',
     'setup.monitoring.title' => 'Bewaking',
     'setup.monitoring.detail' => 'Workeractiviteit is zichtbaar; alarmering en externe bereikbaarheid worden hier niet getest.',

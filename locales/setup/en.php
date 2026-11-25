@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'All seven workers need a recent success heartbeat. A failure at the same time or later raises a warning.',
     'setup.workers.next' => 'Check worker containers and private logs; run ops/health.php on the target system.',
     'setup.backups.title' => 'Backup and recovery',
-    'setup.backups.detail' => 'Local backup verified: {backup}. Restore into a separate target verified: {restore}. Verify the offsite copy and separate key storage on the deployment.',
+    'setup.backups.detail' => 'Local backup verified: {backup}. Restore into a separate target verified: {restore}. Offsite copy read back and verified: {offsite}. Store recovery keys separately.',
     'setup.backups.next' => 'Create an encrypted backup, actually restore it in isolation, and verify an offsite copy with separately stored keys.',
     'setup.monitoring.title' => 'Monitoring',
     'setup.monitoring.detail' => 'Worker activity is visible; alert delivery and external availability are not tested here.',

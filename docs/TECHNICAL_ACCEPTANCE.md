@@ -132,6 +132,10 @@ zusätzlich 2.200 österreichische, 3.177 Schweizer, 13 liechtensteinische
 und 4.068 Luxemburger PLZ-Punkte. Die Tests prüfen echte Umkreissuchen,
 Attribution und Ländertrennung.
 [Ubuntu-Installer mit sechs Länderdateien](https://github.com/LLMbutHuman/GunIndex/actions/runs/45622583277)
+Der nächste Installer-Lauf bestätigt zusätzlich 2.675 aggregierte tschechische
+PLZ-Punkte, den Prager Umkreis, die Suche mit formatierten PLZ und den
+Quellenhinweis. Ein Update behält die sieben vorhandenen Länderimporte bei.
+[Ubuntu-Installer mit Tschechien](https://github.com/LLMbutHuman/GunIndex/actions/runs/45628098335)
 
 Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
 neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL

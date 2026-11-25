@@ -101,6 +101,9 @@ $tests = [
             $facts['restore_verified_at'] = $backup;
             $step = setup_step($facts, 'backups');
             setup_assert($step['status'] === 'tested' && str_contains($step['detail'], $backup), 'Verified recovery was not shown.');
+            $offsite = gmdate('c', $now-60);
+            $facts['offsite_verified_at'] = $offsite;
+            setup_assert(str_contains(setup_step($facts, 'backups')['detail'], $offsite), 'Verified SFTP copy was not shown separately.');
         } finally { unlink($file); }
     },
     'configured_payments_do_not_imply_provider_acceptance' => static function (): void {

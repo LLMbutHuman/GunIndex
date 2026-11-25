@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Tägliche verschlüsselte Offsite-Kopie nach Einrichtung des SSH-Ziels
+
+Der Backup-Dienst übernimmt das optionale Ziel aus einer nur für seinen
+Dienstbenutzer les- und schreibbaren JSON-Datei. Er sendet erst nach dem
+lokal verifizierten Snapshot und Wiederanlauf der Schreiber. Ein Remote- oder
+Konfigurationsfehler lässt die lokale Sicherung verfügbar und beendet den
+Dienst mit Fehlerstatus. Der geschützte Setup-Assistent zeigt den letzten
+erfolgreichen Rücklesetest in acht Sprachen. Die isolierte Ubuntu-CI prüft den
+automatisierten Pfad, die Ablehnung einer zu weit lesbaren Konfiguration und
+die unveränderte lokale Wiederherstellung.
+[Einrichtung](MONITORING.md)
+
 ## Tschechische Postleitzahlen aus dem amtlichen RÚIAN-Register
 
 Aufbereitung des November-Exports mit Datenstand 31. Oktober 2026.
@@ -11,6 +23,8 @@ Node und der PHP-Importer prüften 2.675 eindeutige Punkte und die SHA-256.
 Die Ubuntu-CI prüft den Erstimport, unveränderte Importanzahl nach Update,
 die Prager Umkreissuche, Ländereingrenzung und den sichtbaren Quellenhinweis.
 [Datenquelle und Wiederholungsbefehle](POSTCODE_SOURCES.md)
+Beide Linux-Jobs bestanden einschließlich des Installers auf Ubuntu 22.04.
+[Installation und Radiusprüfung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45628098335)
 
 ## Sprachabdeckung in der geschützten Rechtsverwaltung
 
@@ -21,6 +35,7 @@ jeweiligen geprüften Status und die Versionsnummer. Lokal bestanden zehn
 PHP-Syntaxprüfungen und die Prüfung der vier neuen Texte in allen Sprachen.
 Der integrierte MySQL-/HTTP-Test erfasst den Ablauf anhand eines synthetischen
 französischen Entwurfs bis zur Freigabe mit künftigem Gültigkeitsdatum.
+[Bestandene Rechtsverwaltung-CI](https://github.com/LLMbutHuman/GunIndex/actions/runs/45626725294)
 
 ## Lokalisierte Prüfmeldungen für Bestellungen und Inserat-Hervorhebungen
 
@@ -30,6 +45,7 @@ gehören Einreichungen zu fremden Inseraten, fehlendes Guthaben, die
 Der isolierte HTTP-Test prüft zwei französische Ablehnungen und bestätigt,
 dass der abgelehnte Vorgang keine Hervorhebung auslöst. Vertragsfassungen
 und Zahlungsfreigaben wurden bei dieser Änderung nicht bearbeitet.
+[Bestandene Checkout-CI](https://github.com/LLMbutHuman/GunIndex/actions/runs/45626282346)
 
 ## Öffentliche Verkäufer- und Händlerprofile in acht Sprachen
 
@@ -39,6 +55,7 @@ erscheinen in der eingegebenen Fassung. Lokal bestanden neun PHP-Syntaxprüfunge
 die Prüfung von 13 Schlüsseln samt Platzhaltern in acht Sprachen und die
 JavaScript-Syntaxprüfung. Der Browserfall prüft veröffentlichte Händlerprofile
 auf 390 Pixel Breite, die Sprachwahl und die Fehlerantworten.
+[Bestandene Profil-CI](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625789822)
 
 ## Rückleseprüfung für verschlüsselte Offsite-Sicherungen
 
@@ -83,6 +100,8 @@ Zeitintervallen ab. Bei einem weiteren Timeout meldet der Test die betroffene
 Schaltfläche und einen festen Statuscode. Er protokolliert keine Nachrichten,
 Wiederherstellungscodes oder andere Browserinhalte.
 [Lauf mit sporadischem Timeout](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625052509)
+Der erneute vollständige Lauf mit diesen Wartebedingungen bestand.
+[Erneuter Chat-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45628285234)
 
 ## Mitgelieferte Rechtsentwürfe übernehmen
 

@@ -86,7 +86,7 @@ for ((attempt=0;attempt<45;attempt++)); do
 done
 [[ "$ready" == 1 ]]
 "$compose" exec -T php php ops/health.php --core-only
-"$compose" exec -T php php -r 'require "config/setup.php"; exit(setup_verified_operation("/run/gunindex-ops/backup.verified",time()) && setup_verified_operation("/run/gunindex-ops/restore.verified",time()) && !is_writable("/run/gunindex-ops") ? 0 : 1);'
+"$compose" exec -T php php -r 'require "config/setup.php"; exit(setup_verified_operation("/run/gunindex-ops/backup.verified",time()) && setup_verified_operation("/run/gunindex-ops/restore.verified",time()) && setup_verified_operation("/run/gunindex-ops/offsite.verified",time()) && !is_writable("/run/gunindex-ops") ? 0 : 1);'
 bash "$release/ops/production/check-readiness.sh" "$compose"
 "$compose" exec -T -e GUNINDEX_CI_FIXTURE=mail-health php php tests/production_mail_health_test.php
 health_status=0

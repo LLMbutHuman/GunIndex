@@ -4,7 +4,7 @@
 No plaintext SQL is saved. Backup key is mounted only into an ops container.
 Never overwrites a database or switches the application to a restored schema.
 """
-import argparse,contextlib,datetime,hashlib,hmac,json,os,re,secrets,subprocess,sys,tarfile,tempfile,time
+import argparse,contextlib,datetime,hashlib,hmac,json,os,re,secrets,stat,subprocess,sys,tarfile,tempfile,time
 from pathlib import Path
 
 def file_digest(path):
@@ -126,6 +126,30 @@ class Operations:
    return prefix.with_suffix('.json')
   finally:
    if running and not leave_stopped:self.run(['up','-d']+sorted(running))
+ def replicate_if_configured(self,manifest):
+  path=self.base/'config'/'offsite-backup.json'
+  try:
+   descriptor=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+  except FileNotFoundError:
+   return
+  with os.fdopen(descriptor,'rb') as handle:
+   details=os.fstat(handle.fileno())
+   if not stat.S_ISREG(details.st_mode) or details.st_uid!=os.geteuid() or details.st_mode&0o077 or details.st_size>8192:
+    raise RuntimeError('Offsite configuration must be private and owned by the backup service user.')
+   config=json.loads(handle.read(8193))
+  fields={'destination':'--destination','remote_directory':'--remote-directory','identity':'--identity','known_hosts':'--known-hosts'}
+  allowed=set(fields)|{'port'}
+  if not isinstance(config,dict) or not set(config).issubset(allowed) or not all(isinstance(config.get(key),str) and 0<len(config[key])<=1024 for key in fields):
+   raise RuntimeError('Invalid offsite configuration fields.')
+  port=config.get('port',22)
+  if type(port) is not int or not 1<=port<=65535 or not all(Path(config[key]).is_absolute() for key in ('identity','known_hosts')):
+   raise RuntimeError('Invalid offsite SSH port or key paths.')
+  script=Path(__file__).resolve().parent.parent/'offsite-backup.sh'
+  arguments=['bash',str(script),'--directory',str(self.base),'--manifest',str(manifest),'--port',str(port)]
+  for key,option in fields.items():arguments.extend([option,config[key]])
+  if subprocess.run(arguments,check=False).returncode:
+   raise RuntimeError('Offsite transfer failed. The verified local snapshot is retained.')
+  self.report_verified('offsite')
  def verify_snapshot(self,manifest):
   manifest=Path(manifest).absolute()
   if manifest.is_symlink() or not manifest.is_file():raise RuntimeError('A regular snapshot manifest is required.')
@@ -189,7 +213,9 @@ if __name__=='__main__':
  args=parser.parse_args()
  try:
   ops=Operations(args.directory)
-  if args.action=='backup':ops.backup(args.maintenance,args.leave_stopped)
+  if args.action=='backup':
+   manifest=ops.backup(args.maintenance,args.leave_stopped)
+   if args.maintenance and not args.leave_stopped:ops.replicate_if_configured(manifest)
   elif args.action=='verify':
    _,archives=ops.verify_snapshot(args.manifest)
    for archive in archives:print(archive)

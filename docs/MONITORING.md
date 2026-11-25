@@ -71,6 +71,28 @@ abgewiesen. Nach einem Abbruch kann ein verborgenes Zwischenverzeichnis am Ziel
 Pfad. Archivschlüssel und SSH-Schlüssel gehören in die getrennte Schlüsselverwahrung.
 [OpenSSH-SFTP-Handbuch](https://man.openbsd.org/sftp)
 
+Für die automatische Kopie nach dem täglichen Backup die Datei
+`/srv/gunindex/config/offsite-backup.json` als `root` mit Dateimodus `0600`
+anlegen. `identity` und `known_hosts` enthalten absolute Pfade. `port` ist
+optional und steht standardmäßig auf 22.
+
+```json
+{
+  "destination": "backup@backup.example.invalid",
+  "remote_directory": "/private/gunindex",
+  "identity": "/root/.ssh/backup_ed25519",
+  "known_hosts": "/root/.ssh/backup_known_hosts"
+}
+```
+
+Der bestehende Backup-Dienst erstellt und prüft zuerst die lokale Sicherung.
+Nach dem Wiederanlauf der Schreiber sendet er das Ergebnis an das konfigurierte
+Ziel. Ein SFTP-Fehler wird im Dienstprotokoll sichtbar, die geprüfte lokale
+Sicherung bleibt verfügbar. Der geschützte Setup-Assistent zeigt den letzten
+erfolgreichen automatischen Rücklesetest an. Die Zeitpunkte für lokales Backup
+und Restore werden separat angezeigt. Für den lokalen Betrieb kann die Datei
+entfallen. Die Sicherung vor einem Upgrade bleibt ein lokaler Vorgang.
+
 Regelmäßig von der Offsite-Kopie in ein frisches Scratch-Schema/privates Verzeichnis
 wiederherstellen und Daten-/Schemametadaten vergleichen. Eine erfolgreiche Übertragung
 oder entschlüsselbare Datei ersetzt keine Restoreprobe. Vor tatsächlichem Wiederanlauf

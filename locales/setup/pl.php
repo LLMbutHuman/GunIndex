@@ -73,7 +73,7 @@ return [
     'setup.workers.detail' => 'Wszystkie siedem procesów musi mieć aktualny sygnał powodzenia. Błąd z tego samego czasu lub późniejszy wywołuje ostrzeżenie.',
     'setup.workers.next' => 'Sprawdź kontenery procesów roboczych i prywatne logi; uruchom ops/health.php w systemie docelowym.',
     'setup.backups.title' => 'Kopie zapasowe i odtwarzanie',
-    'setup.backups.detail' => 'Zweryfikowano kopię lokalną: {backup}. Zweryfikowano odtworzenie do oddzielnego celu: {restore}. Sprawdź kopię zewnętrzną i osobne przechowywanie kluczy.',
+    'setup.backups.detail' => 'Zweryfikowano kopię lokalną: {backup}. Zweryfikowano odtworzenie do oddzielnego celu: {restore}. Odczytano i zweryfikowano kopię zewnętrzną: {offsite}. Przechowuj klucze osobno.',
     'setup.backups.next' => 'Utwórz zaszyfrowaną kopię, rzeczywiście odtwórz ją w izolowanym środowisku i zweryfikuj kopię zewnętrzną z oddzielnie przechowywanymi kluczami.',
     'setup.monitoring.title' => 'Monitorowanie',
     'setup.monitoring.detail' => 'Aktywność procesów roboczych jest widoczna; dostarczanie alarmów i dostępność zewnętrzna nie są tutaj testowane.',
