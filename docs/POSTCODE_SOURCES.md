@@ -13,8 +13,44 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
 Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
-Der Installer startet den Import für DE, FR, AT, CH, LI, LU, CZ und BE nur bei fehlender
+Der Installer startet den Import für DE, FR, AT, CH, LI, LU, CZ, BE und PL nur bei fehlender
 Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
+
+## Polen
+
+`ZIP/PLZ-PL.csv` enthält 18.644 geprüfte PLZ-Mittelpunkte. GUGiK stellt das
+nationale PRG-Archiv vom 25. November 2026 mit 16 GML-Dateien zur freien
+Nutzung bereit. Die Aufbereitung verarbeitet 8.635.874 Adresspunkte aus dem
+Archiv im Stream. Sie verwirft 777 unvollständige oder unplausible Adresspunkte,
+mittelt die Koordinaten je PLZ und transformiert EPSG:2180 mit Proj4js nach
+WGS 84. Ausgeliefert werden ausschließlich aggregierte PLZ-Zentren.
+[Amtliche PRG-Quelle](https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/) ·
+[GML-Format und Schema](https://www.gov.pl/web/gugik/zmiany-struktury-publikowanych-danych-adresowych3)
+
+Von 20.555 PLZ mit verwertbaren Adresskoordinaten haben 18.972 mindestens
+drei unterschiedliche Punkte. Ein Vergleich mit dem GeoNames-Archiv
+vom 25. November hält nur Mittelwerte, die höchstens 25 km von mindestens
+einem GeoNames-Zentrum derselben PLZ entfernt sind. 305 PLZ ohne
+Vergleichspunkt und 23 mit größerer Abweichung entfallen. Dazu zählt `00-010`.
+Die exakte Suche bleibt für alle syntaktisch gültigen PLZ möglich. Der Radius
+verwendet angenäherte PLZ-Zentren und ist kein Nachweis einer Zustelladresse.
+[GeoNames Daten und Lizenz](https://download.geonames.org/export/zip/readme.txt) ·
+[EPSG:2180](https://epsg.io/2180)
+
+Die Prüfsummen und Versionen der Eingabedateien stehen im Quellenmanifest.
+Die Aufbereitung braucht PHP 8.4 mit ZIP und XMLReader sowie den geprüften
+Proj4js-Bundle wie im Abschnitt Tschechien. Für Updates den gemeinsamen
+Datenstand, die Schema-Version, die verworfenen Zeilen und die Abdeckung prüfen.
+
+```sh
+php -d memory_limit=512M ops/prepare-pl-postcodes.php --file=PRG-punkty_adresowe.zip --output=pl-aggregates.json \
+  --expected-source-sha256=5df6a95709c544007919529d7e916b29d72dcf933b4e3fd4cad268bc0d6fd002
+node ops/project-postcodes.mjs PL pl-aggregates.json package/dist/proj4.js pl-wgs84.csv
+php ops/crosscheck-pl-postcodes.php --file=pl-wgs84.csv --reference=PL.zip --output=PLZ-PL.csv \
+  --file-sha256=29de30680ae13e310d568b7b8593582af48e15cab9c45b685ebaf653f6ca6c3a \
+  --reference-sha256=a068b5ee61df4d699f8efb49f9a61fb2c84c5970842c61d95d1a65f3623432ef
+node ops/validate-postcodes.mjs --country=PL --file=PLZ-PL.csv
+```
 
 ## Belgien
 

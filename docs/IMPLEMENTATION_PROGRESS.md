@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Polnische Postleitzahlen aus dem amtlichen PRG-Register
+
+18.644 PLZ-Koordinaten wurden aus allen 16 Regionen nach WGS 84 aufbereitet
+und mit GeoNames-Zentren derselben PLZ verglichen. 328 der entstandenen
+Mittelwerte wurden wegen fehlender Vergleichskoordinaten oder deutlicher
+Abweichung ausgeschlossen. Das Installationspaket enthält nur die
+PLZ-Aggregate. Die Projektion mit Quellenabgleich reproduzierte die Ausgabe
+bytegenau. Node und der PHP-Importer prüften 18.644 eindeutige PLZ und SHA-256.
+Der Ubuntu-Test prüft Erstimport, neun Länderquellen nach
+Update, tatsächliche Warschauer Umkreissuche, Ländertrennung, exakte Suche
+ohne Koordinaten und Quellenanzeige.
+[Quellen und Aufbereitung](POSTCODE_SOURCES.md)
+
 ## Bestätigung für den Sofortbeginn in acht Sprachen
 
 Bei einer bezahlten Inserat-Hervorhebung oder Werbeplatzierung steht die

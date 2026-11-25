@@ -52,6 +52,14 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
                 'CC BY 4.0'=>'https://creativecommons.org/licenses/by/4.0/',
             ],
         ],
+        'PL' => [
+            'sha256'=>'2c9c6df7f4ed5824aaeae7ba4f21fb097d40adde48c948e33073311845615a63',
+            'links'=>[
+                'GUGiK – PRG (2026-11-25)'=>'https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/',
+                'GeoNames (2026-11-25)'=>'https://www.geonames.org/',
+                'CC BY 4.0 (GeoNames)'=>'https://creativecommons.org/licenses/by/4.0/',
+            ],
+        ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
     if ($matched === []) return [];

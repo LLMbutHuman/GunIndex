@@ -250,5 +250,9 @@ seed_postcodes PLZ-BE.csv --country=BE \
  --expected-sha256=c67ba0f01d89504e3aaf6beefbc03ac0f3b025b66309734c1daabf18cb00e3b2 \
  --source='BOSA BeST, Flanders, Brussels-Capital and Wallonia, 2026-11-25 (Belgium)' \
  --license-note='CC BY 4.0. WGS84 postcode means with at least three distinct source points. https://opendata.bosa.be/index.nl.html'
+seed_postcodes PLZ-PL.csv --country=PL \
+ --expected-sha256=2c9c6df7f4ed5824aaeae7ba4f21fb097d40adde48c948e33073311845615a63 \
+ --source='GUGiK PRG (2026-11-25), compared with GeoNames (2026-11-25), Poland' \
+ --license-note='PRG free reuse as stated by GUGiK. GeoNames comparison CC BY 4.0. Derived approximate postcode centres. Sources: https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/ and https://www.geonames.org/'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

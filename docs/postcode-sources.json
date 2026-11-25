@@ -208,6 +208,40 @@
       "sha256": "c67ba0f01d89504e3aaf6beefbc03ac0f3b025b66309734c1daabf18cb00e3b2",
       "constraints": ["Current BOSA address points in provided WGS84 fields", "Mean by postcode, with at least three distinct coordinates", "Dominant municipality among accepted source records", "No address rows are bundled"],
       "status": "bundled_seed_locally_validated"
+    },
+    {
+      "id": "gugik-prg-postcodes-poland",
+      "countries": ["PL"],
+      "publisher": "Główny Urząd Geodezji i Kartografii (GUGiK); GeoNames for geographic comparison",
+      "path": "ZIP/PLZ-PL.csv",
+      "source_url": "https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/",
+      "export_url": "https://opendata.geoportal.gov.pl/prg/adresy/PRG-punkty_adresowe.zip",
+      "schema_url": "https://opendata.geoportal.gov.pl/prg/schemas/prgad/1.0/PRGAD.xsd",
+      "dataset_date": "2026-11-25",
+      "dataset_date_evidence": "HTTP Last-Modified and dates in all 16 GML members",
+      "source_sha256": "5df6a95709c544007919529d7e916b29d72dcf933b4e3fd4cad268bc0d6fd002",
+      "license": "PRG free use as stated by GUGiK; comparison archive CC-BY-4.0",
+      "license_url": "https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/",
+      "comparison": {
+        "url": "https://download.geonames.org/export/zip/PL.zip",
+        "documentation_url": "https://download.geonames.org/export/zip/readme.txt",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "sha256": "a068b5ee61df4d699f8efb49f9a61fb2c84c5970842c61d95d1a65f3623432ef",
+        "last_modified": "2026-11-25T02:54:35Z"
+      },
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "source_addresses": 8635874,
+      "source_skipped_addresses": 777,
+      "source_unique_postcodes_with_valid_points": 20555,
+      "uncompared_aggregate_count": 18972,
+      "uncompared_aggregate_sha256": "29de30680ae13e310d568b7b8593582af48e15cab9c45b685ebaf653f6ca6c3a",
+      "omitted_without_matching_reference": 305,
+      "omitted_outside_reference_range": 23,
+      "validated_unique_postcodes": 18644,
+      "bytes": 617442,
+      "sha256": "2c9c6df7f4ed5824aaeae7ba4f21fb097d40adde48c948e33073311845615a63",
+      "constraints": ["Mean of at least three distinct EPSG:2180 address points per postcode", "Reprojected with pinned proj4 2.23.0 to WGS84", "Within 25 km of a GeoNames class-6 centroid for that postcode", "No address rows bundled; omitted codes retain exact search"],
+      "status": "bundled_seed_locally_validated"
     }
   ]
 }
