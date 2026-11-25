@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Händler-Dashboard und CSV
+
+Händlerprofil, Werbung, Sammelaktionen, CSV-Hilfe und die eigenen
+Prüfmeldungen stehen in acht Sprachen zur Verfügung. Ein ungültiger
+Ländercode führt zu einer Formularmeldung und die übrigen Eingaben
+bleiben sichtbar. Der CSV-Bericht nennt unbekannte Kategoriekennungen
+pro Zeile. Die Hilfe führt den unterstützten Typ Verhandlungsbasis auf.
+Der HTTP-Test prüft die englische Oberfläche, Landvalidierung sowie
+einen Import mit gültiger Zeile, exakter Dublette und Fehler.
+Lokal bestanden elf PHP-Syntaxprüfungen und die Prüfung von 81 Schlüsseln
+in acht Sprachkatalogen.
+
 ## Öffentliche Plattforminformationen
 
 Regeln, Gebühren, Datenschutz und Betreiberhinweise stehen in acht
@@ -10,6 +22,7 @@ beschreiben aktivierbare Identitätsprüfung, E2EE und Altverlauf getrennt.
 Lokal bestanden zehn PHP-Syntaxprüfungen, JavaScript-Syntax, 40 Schlüssel
 und die Nachrechnung für Beispielprovision und Obergrenze. Der Browsertest
 prüft alle vier Abschnitte in acht Sprachen bei 390 Pixel Breite.
+[CI zu den Mobilansichten](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616262092)
 
 ## Händler- und Kampagnenprüfung
 
@@ -20,6 +33,7 @@ Prüfentscheidungen leiten zurück zur Auswahl und bestätigen die Änderung
 einmalig. Zahlungsklärungen erfordern Finanzberechtigung und Banneransichten
 werden beim tatsächlichen Abruf protokolliert. Lokal bestanden 19
 PHP-Syntaxprüfungen sowie 25 Schlüssel und 12 Statuswerte in acht Sprachen.
+Die isolierte Linux-Regression und Windows-Vorprüfung sind bestanden.
 [CI zur Händler- und Kampagnenprüfung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45018417633)
 
 ## Benutzerkonten und Sitzungswiderruf
@@ -374,8 +388,9 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes Händler-Dashboard und verbleibende Kundenseiten mit den
-acht Katalogen abgleichen. Die ausführbare Installation hat
+Als Nächstes die gemeinsamen Formular- und Validierungsmeldungen für
+Inserate, Preise und Bild-Uploads mit den acht Katalogen abgleichen.
+Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
 verschlüsselter externer Sicherung steht für eine reale Betriebsabnahme

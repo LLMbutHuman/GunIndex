@@ -90,7 +90,7 @@ function business_validate_url(string $url): string
         || isset($parts['port']) || !isset($parts['host']) || filter_var($parts['host'], FILTER_VALIDATE_IP)
         || !preg_match('/\A[a-z0-9](?:[a-z0-9.-]{0,251})\.[a-z]{2,63}\z/i', $parts['host'])
         || preg_match('/(?:^|\.)(?:localhost|local|internal|test|invalid)\z/i', $parts['host'])) {
-        throw new InvalidArgumentException('Bitte eine öffentliche HTTP-/HTTPS-Website ohne Zugangsdaten oder Sonderport angeben.');
+        throw new InvalidArgumentException(t('dealer_dashboard.invalid_url'));
     }
     return $url;
 }
@@ -104,12 +104,12 @@ function business_dealer_profile(PDO $pdo, int $userId, bool $publicOnly = true)
 
 function business_save_dealer(PDO $pdo, int $userId, array $input): void
 {
-    if (site_setting($pdo, 'dealer_profiles_enabled', '1') !== '1') throw new DomainException('Händlerprofile sind vorübergehend deaktiviert.');
+    if (site_setting($pdo, 'dealer_profiles_enabled', '1') !== '1') throw new DomainException(t('dealer_dashboard.profiles_disabled'));
     $name = trim(market_input($input, 'company_name')); $address = trim(market_input($input, 'address_text'));
     $email = trim(market_input($input, 'contact_email')); $notice = trim(market_input($input, 'legal_notice'));
     $website = trim(market_input($input, 'website')); $country = business_country(market_input($input, 'country_code', 'DE'));
     if (mb_strlen($name) < 2 || mb_strlen($name) > 150 || mb_strlen($address) < 10 || mb_strlen($address) > 500 || mb_strlen($notice) < 20 || mb_strlen($notice) > 10000
-        || strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL) || !business_country_enabled($pdo, $country)) throw new InvalidArgumentException('Firmenname, vollständige Geschäftsadresse, Kontakt und rechtliche Angaben sind erforderlich.');
+        || strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL) || !business_country_enabled($pdo, $country)) throw new InvalidArgumentException(t('dealer_dashboard.profile_incomplete'));
     if ($website !== '') $website = business_validate_url($website);
     $pdo->beginTransaction();
     try {
@@ -123,15 +123,15 @@ function business_save_dealer(PDO $pdo, int $userId, array $input): void
 function business_create_campaign(PDO $pdo, int $userId, array $input, array $files): int
 {
     $profile = business_dealer_profile($pdo, $userId);
-    if (!$profile) throw new DomainException('Für Händlerwerbung ist ein veröffentlichtes Händlerprofil erforderlich.');
+    if (!$profile) throw new DomainException(t('dealer_dashboard.profile_required'));
     $country = business_country(market_input($input, 'country_code', $profile['country_code']));
     $category = market_input($input, 'category_id'); $title = trim(market_input($input, 'title'));
     if (!ctype_digit($category) || !catalog_category_allowed($pdo, (int)$category) || !business_country_enabled($pdo, $country)
-        || mb_strlen($title) < 5 || mb_strlen($title) > 120 || !catalog_text_allowed($title)) throw new InvalidArgumentException('Bitte Titel, freigegebenes Land und aktive allgemeine Kategorie prüfen.');
+        || mb_strlen($title) < 5 || mb_strlen($title) > 120 || !catalog_text_allowed($title)) throw new InvalidArgumentException(t('dealer_dashboard.invalid_banner'));
     $url = business_validate_url(market_input($input, 'target_url'));
     $images = market_prepare_images($files);
     try {
-        if (count($images) !== 1) throw new InvalidArgumentException('Bitte genau ein Bannerbild auswählen.');
+        if (count($images) !== 1) throw new InvalidArgumentException(t('dealer_dashboard.one_banner'));
         $pdo->beginTransaction(); market_assert_users_active($pdo, [$userId]);
         $q = $pdo->prepare("INSERT INTO market_campaigns(user_id,country_code,category_id,title,target_url,storage_key,status) VALUES (?,?,?,?,?,?,'pending')");
         $q->execute([$userId,$country,(int)$category,$title,$url,$images[0]['key']]); $id = (int)$pdo->lastInsertId();
@@ -368,9 +368,9 @@ function business_worker_once(PDO $pdo,int $limit=200):array
 
 function business_bulk_transition(PDO $pdo,int $userId,array $ids,string $action):int
 {
-    if(!in_array($action,['pause','archive'],true)||$ids===[]||count($ids)>100)throw new InvalidArgumentException('Bitte höchstens 100 eigene Inserate und eine zulässige Aktion auswählen.');
-    $clean=[];foreach($ids as $id){if(!is_scalar($id)||!ctype_digit((string)$id)||(int)$id<1)throw new InvalidArgumentException('Ungültige Inseratsauswahl.');$clean[]=(int)$id;}$clean=array_values(array_unique($clean));sort($clean,SORT_NUMERIC);
-    $pdo->beginTransaction();try{maintenance_assert_market_available($pdo);market_assert_users_active($pdo,[$userId]);foreach($clean as $id){$listing=market_lock_listing($pdo,$id);if((int)$listing['seller_id']!==$userId||!in_array($listing['status'],['draft','active','paused'],true)||market_has_bids($pdo,$id)||($listing['type']==='auction'&&$listing['status']==='active'&&market_expired($listing))||($action==='pause'&&$listing['status']!=='active'))throw new DomainException('Mindestens ein Angebot ist fremd, bereits gebunden oder nicht im passenden Zustand. Es wurde nichts geändert.');}
+    if(!in_array($action,['pause','archive'],true)||$ids===[]||count($ids)>100)throw new InvalidArgumentException(t('dealer_dashboard.bulk_limit'));
+    $clean=[];foreach($ids as $id){if(!is_scalar($id)||!ctype_digit((string)$id)||(int)$id<1)throw new InvalidArgumentException(t('dealer_dashboard.bulk_selection'));$clean[]=(int)$id;}$clean=array_values(array_unique($clean));sort($clean,SORT_NUMERIC);
+    $pdo->beginTransaction();try{maintenance_assert_market_available($pdo);market_assert_users_active($pdo,[$userId]);foreach($clean as $id){$listing=market_lock_listing($pdo,$id);if((int)$listing['seller_id']!==$userId||!in_array($listing['status'],['draft','active','paused'],true)||market_has_bids($pdo,$id)||($listing['type']==='auction'&&$listing['status']==='active'&&market_expired($listing))||($action==='pause'&&$listing['status']!=='active'))throw new DomainException(t('dealer_dashboard.bulk_unavailable'));}
         $q=$pdo->prepare('UPDATE market_listings SET status=?,updated_at=UTC_TIMESTAMP() WHERE id=?');foreach($clean as $id)$q->execute([$action==='pause'?'paused':'archived',$id]);audit_log($pdo,$userId,'dealer.bulk_'.$action,null,['listing_ids'=>$clean]);$pdo->commit();return count($clean);
     }catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
 }
@@ -382,35 +382,37 @@ function business_csv_cell(mixed $value):string
 
 function business_import_csv(PDO $pdo,int $userId,array $file,bool $rules):array
 {
-    if(!$rules)throw new InvalidArgumentException('Bitte die Produktregeln für den Import bestätigen.');
-    if(($file['error']??null)!==UPLOAD_ERR_OK||!is_string($file['tmp_name']??null)||!is_uploaded_file($file['tmp_name'])||!is_int($file['size']??null)||$file['size']<1||$file['size']>1048576||filesize($file['tmp_name'])!==$file['size'])throw new InvalidArgumentException('Bitte eine vollständige CSV-Datei bis 1 MiB hochladen.');
+    if(!$rules)throw new InvalidArgumentException(t('dealer_dashboard.csv_confirm'));
+    if(($file['error']??null)!==UPLOAD_ERR_OK||!is_string($file['tmp_name']??null)||!is_uploaded_file($file['tmp_name'])||!is_int($file['size']??null)||$file['size']<1||$file['size']>1048576||filesize($file['tmp_name'])!==$file['size'])throw new InvalidArgumentException(t('dealer_dashboard.csv_upload'));
     $handle=fopen($file['tmp_name'],'rb');if(!$handle)throw new RuntimeException('CSV nicht lesbar.');
     $columns=['title','description','category_slug','type','price','buyout_price','duration_days','country_code','zip','city','condition_label','pickup','shipping'];
     $records=[];
     try{
         $header=fgetcsv($handle,20001,',','"','');if(is_array($header)&&isset($header[0]))$header[0]=preg_replace('/\A\xEF\xBB\xBF/','',$header[0]);
-        if($header!==$columns)throw new InvalidArgumentException('Die CSV-Kopfzeile stimmt nicht mit der Vorlage überein.');
+        if($header!==$columns)throw new InvalidArgumentException(t('dealer_dashboard.csv_header'));
         while(($values=fgetcsv($handle,30001,',','"',''))!==false){
-            if(count($records)>=100)throw new InvalidArgumentException('Maximal 100 Datensätze pro Import. Es wurde noch kein Datensatz aus dieser Datei angelegt.');
+            if(count($records)>=100)throw new InvalidArgumentException(t('dealer_dashboard.csv_limit'));
             $records[]=$values;
         }
     }finally{fclose($handle);}
     $lock=$pdo->prepare('SELECT GET_LOCK(?,5)');$lock->execute(['dealer.import.'.$userId]);
-    if((int)$lock->fetchColumn()!==1)throw new DomainException('Ein Import für dieses Konto läuft bereits.');
+    if((int)$lock->fetchColumn()!==1)throw new DomainException(t('dealer_dashboard.csv_busy'));
     $report=['created'=>0,'duplicates'=>0,'errors'=>[]];
     try{
         foreach($records as $index=>$values){
             try{
-                if(count($values)!==count($columns))throw new InvalidArgumentException('Falsche Spaltenanzahl.');
-                foreach($values as $value)if(!is_string($value)||!preg_match('//u',$value)||strlen($value)>20000)throw new InvalidArgumentException('Ungültiger UTF-8-Text oder Feldlänge.');
-                $data=array_combine($columns,$values);$q=$pdo->prepare('SELECT id FROM market_categories WHERE slug=?');$q->execute([$data['category_slug']]);$data['category_id']=(string)($q->fetchColumn()?:'');$data['accept_rules']='1';$data['status']='active';
+                if(count($values)!==count($columns))throw new InvalidArgumentException(t('dealer_dashboard.csv_columns'));
+                foreach($values as $value)if(!is_string($value)||!preg_match('//u',$value)||strlen($value)>20000)throw new InvalidArgumentException(t('dealer_dashboard.csv_text'));
+                $data=array_combine($columns,$values);$q=$pdo->prepare('SELECT id FROM market_categories WHERE slug=?');$q->execute([$data['category_slug']]);$categoryId=$q->fetchColumn();
+                if($categoryId===false)throw new InvalidArgumentException(t('dealer_dashboard.csv_unknown_category'));
+                $data['category_id']=(string)$categoryId;$data['accept_rules']='1';$data['status']='active';
                 $valid=market_validate($pdo,$data);$country=business_country($data['country_code']);
                 $q=$pdo->prepare('SELECT id FROM market_listings WHERE seller_id=? AND title=? AND description=? AND price_cents=? AND zip=? AND city=? AND country_code=? LIMIT 1');
                 $q->execute([$userId,$valid['title'],$valid['description'],$valid['price_cents'],$valid['zip'],$valid['city'],$country]);
                 if($q->fetchColumn()){$report['duplicates']++;continue;}
                 market_save_listing($pdo,$userId,$data);$report['created']++;
             }catch(InvalidArgumentException|DomainException|MarketAccessException|MarketConflictException $error){$report['errors'][]=['row'=>$index+2,'message'=>$error->getMessage()];}
-            catch(Throwable){$report['errors'][]=['row'=>$index+2,'message'=>'Technischer Fehler; dieser Datensatz wurde nicht bestätigt.'];}
+            catch(Throwable){$report['errors'][]=['row'=>$index+2,'message'=>t('dealer_dashboard.csv_technical')];}
         }
     }finally{$q=$pdo->prepare('SELECT RELEASE_LOCK(?)');$q->execute(['dealer.import.'.$userId]);}
     return $report;

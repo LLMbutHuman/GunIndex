@@ -59,6 +59,32 @@ class BusinessHTTP(unittest.TestCase):
  def test_profile_is_explicit_pending_and_csrf_protected(self):
   user=self.user();browser=user['browser'];body=browser.request('/user/dealer.php')[2]
   self.assertNotIn('value="'+user['username']+'@example.invalid"',body);self.assertEqual(403,browser.request('/user/dealer.php',{'action':'profile'})[0]);self.profile(user);self.assertEqual('pending',read(user,'profile')['status'])
+ def test_dealer_dashboard_localizes_profile_validation_and_csv_outcomes(self):
+  user=self.user()
+  browser=user['browser']
+  route='/user/dealer.php'
+  self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(route),locale='en',market_country='DE',return_path=route))[0])
+  status,headers,body=browser.request(route)
+  self.assertEqual(200,status)
+  self.assertIn('no-store',headers['Cache-Control'])
+  self.assertIn('<h1>Dealer dashboard</h1>',body)
+  self.assertIn('CSV import and export',body)
+  fields=dict(csrf_token=browser.token(route),action='profile',company_name='Synthetic invalid country',country_code='XX')
+  status,_,body=browser.request(route,fields)
+  self.assertEqual(422,status)
+  self.assertIn('Synthetic invalid country',body)
+  self.assertNotIn('value="XX"',body)
+  self.assertIsNone(read(user,'profile'))
+  self.profile(user)
+  body=browser.request(route)[2]
+  self.assertIn('Awaiting review',body)
+  valid=self.row(type='negotiated')
+  invalid=self.row(category_slug='missing-'+secrets.token_hex(6))
+  status,_,body=self.import_csv(user,[valid,valid,invalid])
+  self.assertEqual(200,status)
+  self.assertIn('Listings created (1) and exact duplicates skipped (1).',body)
+  self.assertIn('The category identifier is unknown.',body)
+  self.assertEqual(1,read(user,'listings')['count'])
  def test_stale_profile_review_does_not_publish_changed_details(self):
   user=self.user();admin=self.user(admin=True);fields=self.profile(user);old=read(user,'profile')['revision'];fields['company_name']='Changed Synthetic Company';fields['csrf_token']=user['browser'].token('/user/dealer.php');self.assertEqual(200,user['browser'].request('/user/dealer.php',fields)[0])
   browser=admin['browser'];route='/admin/campaigns.php?kind=profiles'
