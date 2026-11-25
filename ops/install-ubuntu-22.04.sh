@@ -238,5 +238,9 @@ seed_postcodes PLZ-LI.csv --country=LI \
  --expected-sha256=000921546ad2897cd557eb7cb38fbed29cc5aea7fd0370404ed771f6736703ed \
  --source='Federal Office of Topography swisstopo, official directory of towns and cities, 2026-11-01 (Liechtenstein)' \
  --license-note='swisstopo OGD. Derived from each PLZ6 address density point. https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices'
+seed_postcodes PLZ-LU.csv --country=LU \
+ --expected-sha256=f3d93cab0264847181bd1d8bb58f1e6d26179e54ad05ec3b3b6f33ec5219a5df \
+ --source='Administration du cadastre et de la topographie, BD-Adresses, 2026-11-23 (Luxembourg)' \
+ --license-note='CC0 1.0. Aggregated WGS84 points; at least three distinct coordinates per postcode. https://data.public.lu/fr/datasets/adresses-georeferencees-bd-adresses/'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

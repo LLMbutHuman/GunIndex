@@ -2,7 +2,7 @@
   "schema_version": 1,
   "reviewed_on": "2026-11-25",
   "automatic_import_enabled": true,
-  "automatic_import_policy": "Ubuntu installer seeds pinned DE, FR, AT, CH and LI files only for countries with no import history.",
+  "automatic_import_policy": "Ubuntu installer seeds pinned DE, FR, AT, CH, LI and LU files only for countries with no import history.",
   "sources": [
     {
       "id": "operator-de-legacy",
@@ -134,6 +134,28 @@
         "Approximate locality data. Missing coordinates, including Vienna 1010, retain exact postcode search",
         "GeoNames archive timestamp and RTR version date are publication dates, not independent accuracy evidence"
       ],
+      "status": "bundled_seed_locally_validated"
+    },
+    {
+      "id": "act-bd-adresses-luxembourg",
+      "countries": ["LU"],
+      "publisher": "Administration du cadastre et de la topographie",
+      "path": "ZIP/PLZ-LU.csv",
+      "source_url": "https://data.public.lu/fr/datasets/adresses-georeferencees-bd-adresses/",
+      "export_url": "https://download.data.public.lu/resources/adresses-georeferencees-bd-adresses/20261123-033121/addresses.csv",
+      "dataset_date": "2026-11-23",
+      "dataset_date_evidence": "The date on the listed CSV distribution",
+      "source_md5_published": "0730528cf25eda977dce53658cacd206",
+      "source_sha256": "737a4848a4f78dd355a347119cf906934c2c0dd6d2d47030b38b580ee4e72728",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "source_records": 179808,
+      "source_unique_postcodes": 4201,
+      "validated_unique_postcodes": 4068,
+      "bytes": 148282,
+      "sha256": "f3d93cab0264847181bd1d8bb58f1e6d26179e54ad05ec3b3b6f33ec5219a5df",
+      "constraints": ["Mean of published WGS84 address points per postcode", "At least three distinct source coordinates per postcode", "No address rows are bundled; omitted codes retain exact postcode search"],
       "status": "bundled_seed_locally_validated"
     }
   ]

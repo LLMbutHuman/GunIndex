@@ -13,8 +13,44 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
 Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
-Der Installer startet den Import für DE, FR, AT, CH und LI nur bei fehlender
+Der Installer startet den Import für DE, FR, AT, CH, LI und LU nur bei fehlender
 Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
+
+## Luxemburg
+
+`ZIP/PLZ-LU.csv` enthält 4.068 von 4.201 in BD-Adresses vertretenen
+Postleitzahlen. Die Verwaltung für Kataster und Topografie veröffentlichte
+das verwendete WGS84-CSV am 23. November 2026 unter CC0. Bei der
+Aufbereitung werden die vorhandenen Punkte je PLZ gemittelt und die
+häufigste Ortsbezeichnung übernommen. 133 PLZ mit weniger als drei
+verschiedenen Koordinaten bleiben für die exakte Suche verfügbar.
+Die bereitgestellte Datei enthält ausschließlich PLZ, Ort und
+zusammengefasste Koordinaten.
+[BD-Adresses und Lizenz](https://data.public.lu/fr/datasets/adresses-georeferencees-bd-adresses/)
+· [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+
+Der Download entsprach dem im Katalog veröffentlichten MD5. Die
+Aufbereitung und der Import verwenden zusätzliche SHA-256-Werte.
+Auf neue Veröffentlichungen den gleichen Ablauf mit getrenntem
+Download, dokumentiertem Datum, Quellprüfung und erneuter Validierung
+anwenden. Die Datei bleibt im Installer bis zum nächsten geprüften
+Release fest versioniert.
+[Prüfsummen](postcode-sources.json)
+
+```sh
+php ops/prepare-lu-postcodes.php --file=addresses.csv --output=PLZ-LU.csv \
+  --expected-source-sha256=737a4848a4f78dd355a347119cf906934c2c0dd6d2d47030b38b580ee4e72728
+```
+
+## Dänemark
+
+Der bislang öffentliche DAWA-Postnummern-Endpunkt antwortete am
+25. November 2026 mit HTTP 410. Der Nachfolgedienst Datafordeler
+bietet aktuelle DAGI-Postnummernbereiche per Fildownload mit
+API-Schlüssel oder OAuth an. Für einen importierbaren Datensatz
+werden ein autorisierter Download oder eine gleichwertige, prüfbare
+öffentliche Quelle benötigt.
+[DAGI-Fildownload](https://datafordeler.dk/dataoversigt/danmarks-administrative-geografiske-inddeling-dagi/dagi-fildownload/)
 
 ## Schweiz und Liechtenstein
 

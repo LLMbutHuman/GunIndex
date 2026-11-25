@@ -31,6 +31,13 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
             'sha256'=>'000921546ad2897cd557eb7cb38fbed29cc5aea7fd0370404ed771f6736703ed',
             'links'=>$swisstopo,
         ],
+        'LU' => [
+            'sha256'=>'f3d93cab0264847181bd1d8bb58f1e6d26179e54ad05ec3b3b6f33ec5219a5df',
+            'links'=>[
+                'Administration du cadastre et de la topographie – BD-Adresses (2026-11-23)'=>'https://data.public.lu/fr/datasets/adresses-georeferencees-bd-adresses/',
+                'CC0 1.0'=>'https://creativecommons.org/publicdomain/zero/1.0/',
+            ],
+        ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
     if ($matched === []) return [];

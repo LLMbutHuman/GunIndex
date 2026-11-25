@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Luxemburger Postleitzahlen
+
+Der Installer enthält 4.068 aggregierte PLZ-Punkte aus der amtlichen
+BD-Adresses vom 23. November 2026. Für 133 weitere PLZ mit weniger als
+drei verschiedenen Koordinaten bleibt die exakte Suche verfügbar.
+Die Namensnennung und der CC0-Hinweis erscheinen bei aktivem Import.
+Der amtliche Download-Hash, die reproduzierte Ausgabe, PHP-Dry-Run,
+Node-Validator und die Shell-Syntax sind lokal geprüft. Der Ubuntu-Test
+prüft zusätzlich den Import, die Umkreissuche und gleiche Codes in
+unterschiedlichen Ländern.
+[Datensatz und Methode](POSTCODE_SOURCES.md)
+
 ## Postleitzahlen für die Schweiz und Liechtenstein
 
 Das amtliche swisstopo-Verzeichnis vom 1. November 2026 liefert nach
@@ -9,6 +21,7 @@ Die Suche nennt ©swisstopo und die OGD-Nutzungsbedingungen. Lokal
 bestanden beide reproduzierten Hashes, PHP-Dry-Runs, Node-Validatoren,
 fünf PHP-Syntaxprüfungen und die Shell-Syntax. Der Ubuntu-Test prüft
 zusätzlich Import, Update und die tatsächliche Umkreissuche um Vaduz.
+[CI für Schweiz und Liechtenstein](https://github.com/LLMbutHuman/GunIndex/actions/runs/45621705923)
 [Datensatz und Methode](POSTCODE_SOURCES.md)
 
 ## Österreichische Postleitzahlen
@@ -41,6 +54,9 @@ Einlesen des Request-Bodys vor dem Start des Anwendungscodes gesendet
 wurde. Die PHP-Startkonfiguration protokolliert diese Meldung intern.
 Die isolierte lokale HTTP-Probe liefert jetzt HTTP 413, englischen Text
 und `Cache-Control: no-store`. [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45619163415)
+Die Wiederholung einschließlich des HTTP-413-Falls, Browser- und
+Windows-Tests ist bestanden.
+[CI nach der PHP-Startkorrektur](https://github.com/LLMbutHuman/GunIndex/actions/runs/45620592177)
 
 ## Inseratsänderungen im Konto
 
