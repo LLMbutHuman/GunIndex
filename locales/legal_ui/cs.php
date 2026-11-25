@@ -50,4 +50,10 @@ return [
     'legal_public.confirm' => 'Výslovně potvrďte zobrazenou verzi dokumentu.',
     'legal_public.version_info' => 'Verze {version} · {language} · účinná od {date} UTC',
     'legal_public.confirm_checkbox' => 'Výslovně souhlasím se zobrazenou verzí dokumentu.',
+    'legal_admin.bundled_title' => 'Přiložené právní návrhy',
+    'legal_admin.bundled_help' => 'Naimportujte přiložené německé šablony jako návrhy. Stávající verze zůstanou zachovány. Texty doplňte a zkontrolujte v nové verzi.',
+    'legal_admin.bundled_import' => 'Importovat návrhy',
+    'legal_admin.bundled_result' => 'Nové návrhy: {created}. Stávající verze: {existing}.',
+    'legal_admin.bundle_unavailable' => 'Nepodařilo se načíst všechny přiložené návrhy.',
+    'legal_admin.copy_version' => 'Zkopírovat do nové verze',
 ];

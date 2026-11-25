@@ -50,4 +50,10 @@ return [
     'legal_public.confirm' => 'Confirmez explicitement la version affichée.',
     'legal_public.version_info' => 'Version {version} · {language} · en vigueur à partir du {date} UTC',
     'legal_public.confirm_checkbox' => 'J’accepte explicitement la version du document affichée.',
+    'legal_admin.bundled_title' => 'Projets juridiques fournis',
+    'legal_admin.bundled_help' => 'Importez les modèles allemands fournis comme projets. Les versions existantes sont conservées. Complétez et vérifiez les textes dans une nouvelle version.',
+    'legal_admin.bundled_import' => 'Importer les projets',
+    'legal_admin.bundled_result' => 'Nouveaux projets : {created}. Versions existantes : {existing}.',
+    'legal_admin.bundle_unavailable' => 'Le chargement de tous les projets fournis a échoué.',
+    'legal_admin.copy_version' => 'Copier dans une nouvelle version',
 ];

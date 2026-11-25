@@ -13,6 +13,12 @@ Titel in `docs/legal/manifest.php`. Pflichtfelder und ausstehende Prüfung sind
 gekennzeichnet. Es liegen dadurch keine freigegebenen Rechtstextübersetzungen vor.
 Die acht Oberflächensprachen sind kein Nachweis acht juristisch geprüfter Fassungen.
 
+Die geschützte Rechtsverwaltung bietet **Entwürfe importieren**. Der
+Import legt fehlende deutsche Fassungen als `draft-1.0` an. Über
+**Als neue Version übernehmen** lassen sich Betreiberangaben und
+fachliche Änderungen als separate Fassung speichern. Die mitgelieferten
+Entwürfe behalten ihre Pflichtfelder und bleiben im Entwurfsstatus.
+
 Die Admin-Verwaltung speichert Dokumentkennung, Version, Sprache, Inhalt und
 SHA-256. Freigabe benötigt berechtigte MFA-Anmeldung, dokumentierte Prüfstelle,
 Gültigkeitsdatum und die vorhandene Checkliste. Bereits freigegebene Fassungen

@@ -161,8 +161,59 @@ function legal_accept(PDO $pdo,int $userId,int $documentId,string $type): void
 function legal_create(PDO $pdo,int $actor,string $code,string $version,string $language,string $title,string $body): int
 {
     governance_assert_actor($pdo,$actor,'legal.manage');
+    $pdo->beginTransaction();
+    try {
+        $id = legal_insert_draft($pdo,$actor,$code,$version,$language,$title,$body);
+        $pdo->commit();
+        return $id;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function legal_insert_draft(PDO $pdo,int $actor,string $code,string $version,string $language,string $title,string $body,bool $skipExisting=false): ?int
+{
     if(!preg_match('/\A[a-z0-9-]{2,80}\z/',$code)||!preg_match('/\A[a-zA-Z0-9.-]{1,30}\z/',$version)||!preg_match('/\A[a-z]{2}(?:-[A-Z]{2})?\z/',$language)||mb_strlen($title)<3||mb_strlen($title)>200||mb_strlen($body)<200||strlen($body)>200000||!preg_match('//u',$body))throw new InvalidArgumentException(t('legal_admin.invalid_document'));
-    $pdo->beginTransaction();try{$q=$pdo->prepare('INSERT INTO market_legal_documents(document_code,version,language,title,body_text,content_hash) VALUES (?,?,?,?,?,?)');$q->execute([$code,$version,$language,$title,$body,hash('sha256',$body)]);$id=(int)$pdo->lastInsertId();audit_log($pdo,$actor,'legal.drafted',$id,['code'=>$code,'version'=>$version,'language'=>$language]);$pdo->commit();return$id;}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
+    $q = $pdo->prepare('INSERT INTO market_legal_documents(document_code,version,language,title,body_text,content_hash) VALUES (?,?,?,?,?,?)');
+    try {
+        $q->execute([$code,$version,$language,$title,$body,hash('sha256',$body)]);
+    } catch (PDOException $error) {
+        if ($skipExisting && (int)($error->errorInfo[1] ?? 0) === 1062) return null;
+        throw $error;
+    }
+    $id = (int)$pdo->lastInsertId();
+    audit_log($pdo,$actor,'legal.drafted',$id,['code'=>$code,'version'=>$version,'language'=>$language]);
+    return $id;
+}
+
+function legal_import_bundled_drafts(PDO $pdo,int $actor): array
+{
+    governance_assert_actor($pdo,$actor,'legal.manage');
+    $directory = __DIR__.'/../docs/legal';
+    $manifest = require $directory.'/manifest.php';
+    $drafts = [];
+    foreach ($manifest as $code => $title) {
+        $path = $directory.'/'.$code.'.md';
+        $body = is_file($path) && !is_link($path) ? file_get_contents($path,false,null,0,200001) : false;
+        if ($body === false || !str_contains($body, '[Pflichtfeld:') || strlen($body) > 200000) {
+            throw new DomainException(t('legal_admin.bundle_unavailable'));
+        }
+        $drafts[$code] = [$title,$body];
+    }
+
+    $created = 0;
+    $pdo->beginTransaction();
+    try {
+        foreach ($drafts as $code => [$title,$body]) {
+            if (legal_insert_draft($pdo,$actor,$code,'draft-1.0','de',$title,$body,true) !== null) $created++;
+        }
+        $pdo->commit();
+        return ['created'=>$created,'existing'=>count($drafts)-$created];
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 function legal_approve(PDO $pdo,int $actor,int $id,string $reviewer,string $effective,array $checks): void

@@ -50,4 +50,10 @@ return [
     'legal_public.confirm' => 'Conferma espressamente la versione mostrata.',
     'legal_public.version_info' => 'Versione {version} · {language} · valida dal {date} UTC',
     'legal_public.confirm_checkbox' => 'Accetto espressamente la versione del documento mostrata.',
+    'legal_admin.bundled_title' => 'Bozze legali incluse',
+    'legal_admin.bundled_help' => 'Importa i modelli tedeschi inclusi come bozze. Le versioni esistenti vengono conservate. Completa e verifica i testi in una nuova versione.',
+    'legal_admin.bundled_import' => 'Importa le bozze',
+    'legal_admin.bundled_result' => 'Nuove bozze: {created}. Versioni esistenti: {existing}.',
+    'legal_admin.bundle_unavailable' => 'Impossibile caricare tutte le bozze incluse.',
+    'legal_admin.copy_version' => 'Copia in una nuova versione',
 ];

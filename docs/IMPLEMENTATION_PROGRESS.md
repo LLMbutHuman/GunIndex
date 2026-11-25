@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Mitgelieferte Rechtsentwürfe übernehmen
+
+Die geschützte Rechtsverwaltung importiert die 20 mitgelieferten
+deutschen Vorlagen in einer Transaktion. Wiederholungen bewahren die
+bereits vorhandenen Versionen. Von einer gespeicherten Fassung aus
+lässt sich ein neuer Entwurf mit eigener Versionsnummer anlegen.
+Die Oberfläche steht in acht Sprachen zur Verfügung. Der HTTP-Test
+prüft MFA-Rollen, CSRF, Erstimport, Wiederholung, unveränderte
+Versions-ID und Ablehnung der Originalvorlage bei der Freigabe.
+Lokal bestanden zehn PHP-Syntaxprüfungen, die Prüfung aller 20
+Quelldateien und sechs Oberflächenschlüssel in acht Sprachen.
+
 ## Luxemburger Postleitzahlen
 
 Der Installer enthält 4.068 aggregierte PLZ-Punkte aus der amtlichen
@@ -21,6 +33,7 @@ Die Suche nennt ©swisstopo und die OGD-Nutzungsbedingungen. Lokal
 bestanden beide reproduzierten Hashes, PHP-Dry-Runs, Node-Validatoren,
 fünf PHP-Syntaxprüfungen und die Shell-Syntax. Der Ubuntu-Test prüft
 zusätzlich Import, Update und die tatsächliche Umkreissuche um Vaduz.
+Der Ubuntu-Installer-Test und die Produktionsimage-Probe sind bestanden.
 [CI für Schweiz und Liechtenstein](https://github.com/LLMbutHuman/GunIndex/actions/runs/45621705923)
 [Datensatz und Methode](POSTCODE_SOURCES.md)
 

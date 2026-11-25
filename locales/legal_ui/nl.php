@@ -50,4 +50,10 @@ return [
     'legal_public.confirm' => 'Bevestig uitdrukkelijk de getoonde versie.',
     'legal_public.version_info' => 'Versie {version} · {language} · geldig vanaf {date} UTC',
     'legal_public.confirm_checkbox' => 'Ik ga uitdrukkelijk akkoord met de getoonde documentversie.',
+    'legal_admin.bundled_title' => 'Meegeleverde juridische concepten',
+    'legal_admin.bundled_help' => 'Importeer de meegeleverde Duitse sjablonen als concepten. Bestaande versies blijven behouden. Vul de teksten aan en beoordeel ze in een nieuwe versie.',
+    'legal_admin.bundled_import' => 'Concepten importeren',
+    'legal_admin.bundled_result' => 'Nieuwe concepten: {created}. Bestaande versies: {existing}.',
+    'legal_admin.bundle_unavailable' => 'De meegeleverde concepten konden niet allemaal worden geladen.',
+    'legal_admin.copy_version' => 'Naar een nieuwe versie kopiëren',
 ];

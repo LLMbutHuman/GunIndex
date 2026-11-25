@@ -10,12 +10,56 @@ $statusLabel=static fn(string $status):string=>t(match($status){
     'draft'=>'legal_admin.draft','approved'=>'legal_admin.approved',default=>'legal_admin.unknown',
 });
 $values=['code'=>'','version'=>'1.0','language'=>i18n_locale(),'title'=>'','body'=>''];
-if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){require_csrf();try{$action=post_string('action');if($action==='create'){foreach($values as $key=>$_)$values[$key]=post_string($key,$key==='body'?200000:500);$selectedId=legal_create($pdo,(int)$admin['id'],$values['code'],$values['version'],$values['language'],$values['title'],$values['body']);redirect('/admin/legal.php?id='.$selectedId);}elseif($action==='approve'){$selectedId=(int)post_string('document_id');$checks=[];for($i=1;$i<=5;$i++)$checks[]=post_string('check_'.$i);legal_approve($pdo,(int)$admin['id'],$selectedId,post_string('reviewer',200),post_string('effective_at',10),$checks);redirect('/admin/legal.php?id='.$selectedId);}else throw new InvalidArgumentException(t('legal_admin.invalid_action'));}catch(InvalidArgumentException|DomainException $e){http_response_code(422);$error=$e->getMessage();}catch(PDOException $e){if($e->getCode()!=='23000')throw$e;http_response_code(409);$error=t('legal_admin.duplicate');}}
+if ($method === 'POST') {
+    require_csrf();
+    try {
+        $action = post_string('action');
+        if ($action === 'create') {
+            foreach ($values as $key => $_) $values[$key] = post_string($key, $key === 'body' ? 200000 : 500);
+            $selectedId = legal_create($pdo,(int)$admin['id'],$values['code'],$values['version'],$values['language'],$values['title'],$values['body']);
+            redirect('/admin/legal.php?id='.$selectedId);
+        } elseif ($action === 'approve') {
+            $selectedId = (int)post_string('document_id');
+            $checks = [];
+            for ($i=1; $i<=5; $i++) $checks[] = post_string('check_'.$i);
+            legal_approve($pdo,(int)$admin['id'],$selectedId,post_string('reviewer',200),post_string('effective_at',10),$checks);
+            redirect('/admin/legal.php?id='.$selectedId);
+        } elseif ($action === 'import_bundled') {
+            $_SESSION['legal_bundled_import'] = legal_import_bundled_drafts($pdo,(int)$admin['id']);
+            redirect('/admin/legal.php');
+        } else {
+            throw new InvalidArgumentException(t('legal_admin.invalid_action'));
+        }
+    } catch (InvalidArgumentException|DomainException $errorResponse) {
+        http_response_code(422);
+        $error = $errorResponse->getMessage();
+    } catch (PDOException $errorResponse) {
+        if ($errorResponse->getCode() !== '23000') throw $errorResponse;
+        http_response_code(409);
+        $error = t('legal_admin.duplicate');
+    }
+}
+$imported = $method === 'GET' ? ($_SESSION['legal_bundled_import'] ?? null) : null;
+if ($imported !== null) unset($_SESSION['legal_bundled_import']);
 $q=$pdo->prepare('SELECT * FROM market_legal_documents WHERE id=?');$q->execute([$selectedId]);$selected=$q->fetch();$documents=$pdo->query('SELECT id,document_code,version,language,title,status,content_hash,effective_at,reviewer_name FROM market_legal_documents ORDER BY document_code,language,id DESC LIMIT 500')->fetchAll();
+if ($method === 'GET' && $selected && ($_GET['copy'] ?? null) === '1') {
+    $values = ['code'=>$selected['document_code'],'version'=>'','language'=>$selected['language'],
+        'title'=>$selected['title'],'body'=>$selected['body_text']];
+}
 include __DIR__.'/../includes/header.php';?>
 <main class="container admin-page"><div class="page-heading"><h1><?=h($pageTitle)?></h1><p><?=h(t('legal_admin.intro'))?></p></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php';?><div class="admin-content"><?php if($error):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?>
 <?php if($selected):?><section class="panel"><h2><?=h($selected['title'])?> · <?=h($selected['version'])?> / <?=h($selected['language'])?></h2><p><?=h($statusLabel($selected['status']))?> · SHA-256 <code><?=h($selected['content_hash'])?></code></p><details><summary><?=h(t('legal_admin.content'))?></summary><div style="white-space:pre-wrap;overflow-wrap:anywhere"><?=h($selected['body_text'])?></div></details>
+<p><a class="button secondary" href="?id=<?=(int)$selected['id']?>&amp;copy=1#legal-editor"><?=h(t('legal_admin.copy_version'))?></a></p>
 <?php if($selected['status']==='draft'):?><h3><?=h(t('legal_admin.review'))?></h3><p><?=h(t('legal_admin.review_help'))?></p><form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="approve"><input type="hidden" name="document_id" value="<?=(int)$selected['id']?>"><label class="field"><?=h(t('legal_admin.reviewer'))?><input name="reviewer" minlength="5" maxlength="200" required></label><label class="field"><?=h(t('legal_admin.effective'))?><input type="date" name="effective_at" required></label>
 <?php foreach([t('legal_admin.check_1'),t('legal_admin.check_2'),t('legal_admin.check_3'),t('legal_admin.check_4'),t('legal_admin.check_5')] as $i=>$text):?><label><input type="checkbox" name="check_<?=$i+1?>" value="1" required> <?=h($text)?></label><?php endforeach;?><button class="button" type="submit"><?=h(t('legal_admin.approve'))?></button></form><?php elseif($selected['status']==='approved'):?><p><?=h(t('legal_admin.release',['reviewer'=>$selected['reviewer_name'],'date'=>$selected['effective_at']]))?></p><?php endif;?></section><?php endif;?>
-<section class="panel"><h2><?=h(t('legal_admin.create'))?></h2><form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="create"><label class="field"><?=h(t('legal_admin.code'))?><input name="code" pattern="[a-z0-9-]{2,80}" value="<?=h($values['code'])?>" required></label><label class="field"><?=h(t('legal_admin.version'))?><input name="version" pattern="[a-zA-Z0-9.-]{1,30}" value="<?=h($values['version'])?>" required></label><label class="field"><?=h(t('legal_admin.language'))?><input name="language" pattern="[a-z]{2}(-[A-Z]{2})?" value="<?=h($values['language'])?>" required></label><label class="field"><?=h(t('legal_admin.document_title'))?><input name="title" maxlength="200" value="<?=h($values['title'])?>" required></label><label class="field full-width"><?=h(t('legal_admin.draft_full'))?><textarea name="body" rows="16" minlength="200" maxlength="200000" required><?=h($values['body'])?></textarea></label><button class="button" type="submit"><?=h(t('legal_admin.save'))?></button></form></section>
+<?php if ($imported !== null):?><p class="notice success" role="status"><?=h(t('legal_admin.bundled_result', $imported))?></p><?php endif;?>
+<section class="panel">
+    <h2><?=h(t('legal_admin.bundled_title'))?></h2>
+    <p><?=h(t('legal_admin.bundled_help'))?></p>
+    <form method="post" action="/admin/legal.php">
+        <?=csrf_field()?><input type="hidden" name="action" value="import_bundled">
+        <button class="button secondary" type="submit"><?=h(t('legal_admin.bundled_import'))?></button>
+    </form>
+</section>
+<section class="panel" id="legal-editor"><h2><?=h(t('legal_admin.create'))?></h2><form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="create"><label class="field"><?=h(t('legal_admin.code'))?><input name="code" pattern="[a-z0-9-]{2,80}" value="<?=h($values['code'])?>" required></label><label class="field"><?=h(t('legal_admin.version'))?><input name="version" pattern="[a-zA-Z0-9.-]{1,30}" value="<?=h($values['version'])?>" required></label><label class="field"><?=h(t('legal_admin.language'))?><input name="language" pattern="[a-z]{2}(-[A-Z]{2})?" value="<?=h($values['language'])?>" required></label><label class="field"><?=h(t('legal_admin.document_title'))?><input name="title" maxlength="200" value="<?=h($values['title'])?>" required></label><label class="field full-width"><?=h(t('legal_admin.draft_full'))?><textarea name="body" rows="16" minlength="200" maxlength="200000" required><?=h($values['body'])?></textarea></label><button class="button" type="submit"><?=h(t('legal_admin.save'))?></button></form></section>
 <section class="panel"><h2><?=h(t('legal_admin.versions'))?></h2><div class="table-wrap"><table class="data-table"><thead><tr><th><?=h(t('legal_admin.document'))?></th><th><?=h(t('legal_admin.version'))?></th><th><?=h(t('legal_admin.language'))?></th><th><?=h(t('legal_admin.status'))?></th></tr></thead><tbody><?php foreach($documents as $doc):?><tr><td><a href="?id=<?=(int)$doc['id']?>"><?=h($doc['title'])?></a></td><td><?=h($doc['version'])?></td><td><?=h($doc['language'])?></td><td><?=h($statusLabel($doc['status']))?></td></tr><?php endforeach;?></tbody></table></div></section></div></div></main><?php include __DIR__.'/../includes/footer.php';?>

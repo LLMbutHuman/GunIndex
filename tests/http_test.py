@@ -439,6 +439,39 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(route, headers['Location'])
         self.assertEqual(200, browser.request(route)[0])
 
+    def test_legal_admin_imports_drafts_once_and_can_copy_an_immutable_version(self):
+        route = '/admin/legal.php'
+        member = self.user()['browser']
+        self.assertEqual(403, member.request(route, {'action': 'import_bundled', 'csrf_token': member.token()})[0])
+        admin = self.user(admin=True)['browser']
+        self.assertEqual(303, admin.request('/user/language.php', {
+            'csrf_token': admin.token(route), 'locale': 'en', 'market_country': 'DE', 'return_path': route,
+        })[0])
+        self.assertIn('Import drafts', admin.request(route)[2])
+        self.assertEqual(403, admin.request(route, {'action': 'import_bundled'})[0])
+        payload = {'csrf_token': admin.token(route), 'action': 'import_bundled'}
+        self.assertEqual(303, admin.request(route, payload)[0])
+        first = admin.request(route)[2]
+        self.assertIn('New drafts: 20. Existing versions: 0.', first)
+        self.assertNotIn('New drafts: 20. Existing versions: 0.', admin.request(route)[2])
+        terms = re.search(r'href="\?id=(\d+)">Allgemeine Geschäftsbedingungen</a>', first).group(1)
+        detail = route + '?id=' + terms
+        copy = admin.request(detail + '&copy=1')[2]
+        self.assertIn('name="code" pattern="[a-z0-9-]{2,80}" value="terms"', copy)
+        self.assertIn('name="version" pattern="[a-zA-Z0-9.-]{1,30}" value=""', copy)
+        self.assertIn('[Pflichtfeld:', copy)
+        self.assertEqual(303, admin.request(route, payload)[0])
+        second = admin.request(route)[2]
+        self.assertIn('New drafts: 0. Existing versions: 20.', second)
+        self.assertIn('href="?id=' + terms + '">Allgemeine Geschäftsbedingungen', second)
+        approval = {f'check_{index}': '1' for index in range(1,6)}
+        approval.update(csrf_token=admin.token(detail), action='approve', document_id=terms,
+                        reviewer='Synthetic reviewer', effective_at=datetime.date.today().isoformat())
+        status, _, body = admin.request(detail, approval)
+        self.assertEqual(422, status)
+        self.assertIn('Complete all placeholders before approving the draft.', body)
+        self.assertNotIn('Allgemeine Geschäftsbedingungen', Browser().request('/marketplace/legal.php')[2])
+
     def test_legal_admin_shows_unapproved_draft_and_localized_review_requirements(self):
         browser = self.user(admin=True)['browser']
         route = '/admin/legal.php'
