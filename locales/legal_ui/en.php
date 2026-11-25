@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'New drafts: {created}. Existing versions: {existing}.',
     'legal_admin.bundle_unavailable' => 'The bundled drafts could not all be loaded.',
     'legal_admin.copy_version' => 'Copy into a new version',
+    'legal_admin.coverage_title' => 'Legal documents by language',
+    'legal_admin.coverage_help' => 'The table shows drafts, scheduled approvals and approved versions. Publication is controlled separately.',
+    'legal_admin.coverage_missing' => 'Missing · create draft',
+    'legal_admin.scheduled' => 'Approved · scheduled',
 ];

@@ -469,8 +469,14 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(303, admin.request(route, payload)[0])
         first = admin.request(route)[2]
         self.assertIn('New drafts: 20. Existing versions: 0.', first)
+        self.assertIn('Legal documents by language', first)
+        self.assertIn('href="?code=terms&amp;language=fr#legal-editor">Missing · create draft', first)
+        french = admin.request(route + '?code=terms&language=fr')[2]
+        self.assertIn('name="code" pattern="[a-z0-9-]{2,80}" value="terms"', french)
+        self.assertIn('name="language" pattern="[a-z]{2}(-[A-Z]{2})?" value="fr"', french)
         self.assertNotIn('New drafts: 20. Existing versions: 0.', admin.request(route)[2])
         terms = re.search(r'href="\?id=(\d+)">Allgemeine Geschäftsbedingungen</a>', first).group(1)
+        self.assertIn('href="?id=' + terms + '">Draft · professional review pending · draft-1.0</a>', first)
         detail = route + '?id=' + terms
         copy = admin.request(detail + '&copy=1')[2]
         self.assertIn('name="code" pattern="[a-z0-9-]{2,80}" value="terms"', copy)
@@ -486,6 +492,17 @@ class MarketplaceHTTP(unittest.TestCase):
         status, _, body = admin.request(detail, approval)
         self.assertEqual(422, status)
         self.assertIn('Complete all placeholders before approving the draft.', body)
+        translation_version = 'synthetic-'+secrets.token_hex(5)
+        status, headers, _ = admin.request(route, dict(csrf_token=admin.token(route), action='create', code='terms',
+            version=translation_version, language='fr', title='Traduction de test', body='Contenu de test isolé. '*14))
+        self.assertEqual(303,status)
+        translation_id = headers['Location'].split('id=')[1]
+        body = admin.request(route)[2]
+        self.assertNotIn('href="?code=terms&amp;language=fr#legal-editor"',body)
+        self.assertIn('href="?id=' + translation_id + '">Draft · professional review pending · ' + translation_version,body)
+        approval.update(document_id=translation_id,effective_at='2099-01-01')
+        self.assertEqual(303,admin.request(route,approval)[0])
+        self.assertIn('href="?id=' + translation_id + '">Approved · scheduled · ' + translation_version,admin.request(route)[2])
         self.assertNotIn('Allgemeine Geschäftsbedingungen', Browser().request('/marketplace/legal.php')[2])
 
     def test_legal_admin_shows_unapproved_draft_and_localized_review_requirements(self):

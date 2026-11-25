@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Sprachabdeckung in der geschützten Rechtsverwaltung
+
+Die Rechtsverwaltung zeigt für 20 Dokumentcodes in acht Sprachen fehlende
+Fassungen, Entwürfe, künftige und bereits wirksame Freigaben. Fehlende Fassungen
+öffnen den vorausgefüllten Entwurfseditor. Bestehende Fassungen verlinken den
+jeweiligen geprüften Status und die Versionsnummer. Lokal bestanden zehn
+PHP-Syntaxprüfungen und die Prüfung der vier neuen Texte in allen Sprachen.
+Der integrierte MySQL-/HTTP-Test erfasst den Ablauf anhand eines synthetischen
+französischen Entwurfs bis zur Freigabe mit künftigem Gültigkeitsdatum.
+
 ## Lokalisierte Prüfmeldungen für Bestellungen und Inserat-Hervorhebungen
 
 Elf serverseitige Fehlermeldungen verwenden die ausgewählte Sprache. Dazu
@@ -32,6 +42,9 @@ und Wiederanlaufprobe bleibt Teil der Inbetriebnahme.
 Der erste CI-Lauf wies den Testpfad vor dem Transfer ab, weil der generierte
 Verzeichnisname einen Punkt enthielt. Der Test verwendet nun einen gültigen
 Zielpfad. [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625052567)
+Die korrigierte Ubuntu-CI bestätigte beide Installations-/Image-Jobs und die
+Wiederherstellung aus einer tatsächlich per OpenSSH zurückgeladenen Kopie.
+[Bestandener CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625737690)
 
 ## Mehrbyte-Zeichen in Inseraten, Entwürfen und CSV
 

@@ -7,7 +7,7 @@ $admin=require_permission($pdo,'legal.manage');$pageTitle=t('legal_admin.title')
 $method=$_SERVER['REQUEST_METHOD']??'GET';
 if (!in_array($method,['GET','HEAD','POST'],true)) { header('Allow: GET, HEAD, POST'); abort_request(405,t('account.method')); }
 $statusLabel=static fn(string $status):string=>t(match($status){
-    'draft'=>'legal_admin.draft','approved'=>'legal_admin.approved',default=>'legal_admin.unknown',
+    'draft'=>'legal_admin.draft','approved'=>'legal_admin.approved','scheduled'=>'legal_admin.scheduled',default=>'legal_admin.unknown',
 });
 $values=['code'=>'','version'=>'1.0','language'=>i18n_locale(),'title'=>'','body'=>''];
 if ($method === 'POST') {
@@ -42,9 +42,19 @@ if ($method === 'POST') {
 $imported = $method === 'GET' ? ($_SESSION['legal_bundled_import'] ?? null) : null;
 if ($imported !== null) unset($_SESSION['legal_bundled_import']);
 $q=$pdo->prepare('SELECT * FROM market_legal_documents WHERE id=?');$q->execute([$selectedId]);$selected=$q->fetch();$documents=$pdo->query('SELECT id,document_code,version,language,title,status,content_hash,effective_at,reviewer_name FROM market_legal_documents ORDER BY document_code,language,id DESC LIMIT 500')->fetchAll();
+$bundledCodes = array_keys(require __DIR__.'/../docs/legal/manifest.php');
+$languages = i18n_locales();
+$coverage = legal_language_coverage($pdo,$bundledCodes,array_keys($languages));
 if ($method === 'GET' && $selected && ($_GET['copy'] ?? null) === '1') {
     $values = ['code'=>$selected['document_code'],'version'=>'','language'=>$selected['language'],
         'title'=>$selected['title'],'body'=>$selected['body_text']];
+} elseif ($method === 'GET') {
+    $code = $_GET['code'] ?? '';
+    $language = $_GET['language'] ?? '';
+    if (is_string($code) && in_array($code,$bundledCodes,true) && is_string($language) && isset($languages[$language])) {
+        $values['code'] = $code;
+        $values['language'] = $language;
+    }
 }
 include __DIR__.'/../includes/header.php';?>
 <main class="container admin-page"><div class="page-heading"><h1><?=h($pageTitle)?></h1><p><?=h(t('legal_admin.intro'))?></p></div><div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php';?><div class="admin-content"><?php if($error):?><p class="notice error" role="alert"><?=h($error)?></p><?php endif;?>
@@ -61,5 +71,24 @@ include __DIR__.'/../includes/header.php';?>
         <button class="button secondary" type="submit"><?=h(t('legal_admin.bundled_import'))?></button>
     </form>
 </section>
+<details class="panel" id="legal-coverage">
+    <summary><?=h(t('legal_admin.coverage_title'))?></summary>
+    <p><?=h(t('legal_admin.coverage_help'))?></p>
+    <div class="table-wrap"><table class="data-table">
+        <thead><tr><th scope="col"><?=h(t('legal_admin.document'))?></th>
+            <?php foreach ($languages as $name): ?><th scope="col"><?=h($name)?></th><?php endforeach; ?>
+        </tr></thead>
+        <tbody><?php foreach ($bundledCodes as $code): ?>
+            <tr><th scope="row"><?=h($code)?></th><?php foreach ($languages as $language=>$name): ?>
+                <?php $variant = $coverage[$code][$language] ?? null; ?>
+                <td><?php if ($variant): ?>
+                    <a href="?id=<?=(int)$variant['id']?>"><?=h($statusLabel($variant['review_state']))?> · <?=h($variant['version'])?></a>
+                <?php else: ?>
+                    <a href="?code=<?=h($code)?>&amp;language=<?=h($language)?>#legal-editor"><?=h(t('legal_admin.coverage_missing'))?></a>
+                <?php endif; ?></td>
+            <?php endforeach; ?></tr>
+        <?php endforeach; ?></tbody>
+    </table></div>
+</details>
 <section class="panel" id="legal-editor"><h2><?=h(t('legal_admin.create'))?></h2><form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="create"><label class="field"><?=h(t('legal_admin.code'))?><input name="code" pattern="[a-z0-9-]{2,80}" value="<?=h($values['code'])?>" required></label><label class="field"><?=h(t('legal_admin.version'))?><input name="version" pattern="[a-zA-Z0-9.-]{1,30}" value="<?=h($values['version'])?>" required></label><label class="field"><?=h(t('legal_admin.language'))?><input name="language" pattern="[a-z]{2}(-[A-Z]{2})?" value="<?=h($values['language'])?>" required></label><label class="field"><?=h(t('legal_admin.document_title'))?><input name="title" maxlength="200" value="<?=h($values['title'])?>" required></label><label class="field full-width"><?=h(t('legal_admin.draft_full'))?><textarea name="body" rows="16" minlength="200" maxlength="200000" required><?=h($values['body'])?></textarea></label><button class="button" type="submit"><?=h(t('legal_admin.save'))?></button></form></section>
 <section class="panel"><h2><?=h(t('legal_admin.versions'))?></h2><div class="table-wrap"><table class="data-table"><thead><tr><th><?=h(t('legal_admin.document'))?></th><th><?=h(t('legal_admin.version'))?></th><th><?=h(t('legal_admin.language'))?></th><th><?=h(t('legal_admin.status'))?></th></tr></thead><tbody><?php foreach($documents as $doc):?><tr><td><a href="?id=<?=(int)$doc['id']?>"><?=h($doc['title'])?></a></td><td><?=h($doc['version'])?></td><td><?=h($doc['language'])?></td><td><?=h($statusLabel($doc['status']))?></td></tr><?php endforeach;?></tbody></table></div></section></div></div></main><?php include __DIR__.'/../includes/footer.php';?>

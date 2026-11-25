@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Nye udkast: {created}. Eksisterende versioner: {existing}.',
     'legal_admin.bundle_unavailable' => 'Det lykkedes ikke at indlæse alle medfølgende udkast.',
     'legal_admin.copy_version' => 'Kopiér til en ny version',
+    'legal_admin.coverage_title' => 'Juridiske dokumenter efter sprog',
+    'legal_admin.coverage_help' => 'Tabellen viser udkast, versioner med planlagt ikrafttrædelse og godkendte versioner. Offentliggørelse styres separat.',
+    'legal_admin.coverage_missing' => 'Mangler · opret udkast',
+    'legal_admin.scheduled' => 'Godkendt · planlagt',
 ];

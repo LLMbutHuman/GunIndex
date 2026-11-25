@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Nieuwe concepten: {created}. Bestaande versies: {existing}.',
     'legal_admin.bundle_unavailable' => 'De meegeleverde concepten konden niet allemaal worden geladen.',
     'legal_admin.copy_version' => 'Naar een nieuwe versie kopiëren',
+    'legal_admin.coverage_title' => 'Juridische documenten per taal',
+    'legal_admin.coverage_help' => 'De tabel toont concepten, versies met een ingangsdatum in de toekomst en goedgekeurde versies. Publicatie wordt afzonderlijk beheerd.',
+    'legal_admin.coverage_missing' => 'Ontbreekt · concept aanmaken',
+    'legal_admin.scheduled' => 'Goedgekeurd · gepland',
 ];

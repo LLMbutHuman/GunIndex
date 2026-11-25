@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Nowe projekty: {created}. Istniejące wersje: {existing}.',
     'legal_admin.bundle_unavailable' => 'Nie udało się wczytać wszystkich dołączonych projektów.',
     'legal_admin.copy_version' => 'Skopiuj do nowej wersji',
+    'legal_admin.coverage_title' => 'Dokumenty prawne według języka',
+    'legal_admin.coverage_help' => 'Tabela pokazuje projekty, wersje z przyszłą datą wejścia w życie oraz zatwierdzone wersje. Publikacja jest kontrolowana osobno.',
+    'legal_admin.coverage_missing' => 'Brak · utwórz projekt',
+    'legal_admin.scheduled' => 'Zatwierdzono · oczekuje na wejście w życie',
 ];

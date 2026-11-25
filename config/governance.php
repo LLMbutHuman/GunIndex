@@ -216,6 +216,28 @@ function legal_import_bundled_drafts(PDO $pdo,int $actor): array
     }
 }
 
+/** Pick the current approved, scheduled or newest draft version for each required language. */
+function legal_language_coverage(PDO $pdo,array $codes,array $languages): array
+{
+    $codeSlots = implode(',',array_fill(0,count($codes),'?'));
+    $languageSlots = implode(',',array_fill(0,count($languages),'?'));
+    $q = $pdo->prepare("WITH ranked AS (
+        SELECT id,document_code,language,version,
+               CASE WHEN status='draft' THEN 'draft'
+                    WHEN effective_at<=UTC_TIMESTAMP() THEN 'approved' ELSE 'scheduled' END AS review_state,
+               ROW_NUMBER() OVER (PARTITION BY document_code,language ORDER BY
+                   CASE WHEN status='approved' AND effective_at<=UTC_TIMESTAMP() THEN 0
+                        WHEN status='approved' THEN 1 ELSE 2 END,
+                   CASE WHEN effective_at<=UTC_TIMESTAMP() THEN effective_at END DESC, id DESC) AS rank_order
+        FROM market_legal_documents
+        WHERE document_code IN ($codeSlots) AND language IN ($languageSlots) AND status IN ('draft','approved')
+    ) SELECT id,document_code,language,version,review_state FROM ranked WHERE rank_order=1");
+    $q->execute(array_merge($codes,$languages));
+    $coverage = [];
+    foreach ($q->fetchAll() as $row) $coverage[$row['document_code']][$row['language']] = $row;
+    return $coverage;
+}
+
 function legal_approve(PDO $pdo,int $actor,int $id,string $reviewer,string $effective,array $checks): void
 {
     governance_assert_actor($pdo,$actor,'legal.manage');$reviewer=trim($reviewer);$date=DateTimeImmutable::createFromFormat('!Y-m-d',$effective,new DateTimeZone('UTC'));

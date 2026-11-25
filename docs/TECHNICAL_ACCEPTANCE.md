@@ -109,6 +109,13 @@ einer unterbrochenen Migration, ein verschlüsseltes Datenbank- und Dateibackup,
 die Wiederherstellung sowie sieben Worker-Heartbeats geprüft.
 [CI 44838740876](https://github.com/LLMbutHuman/GunIndex/actions/runs/44838740876)
 
+Ein weiterer isolierter Ubuntu-Lauf bestätigte SFTP mit einem eingeschränkten
+OpenSSH-Dienst auf der Loopback-Schnittstelle, Ablehnung eines anderen
+Hostschlüssels, Rückleseprüfung, Schutz vor Überschreiben und Restore aus der
+zurückgeladenen Kopie. Offsite-Ziel, Schlüsselverwahrung und Wiederanlaufprobe
+auf Betreiberinfrastruktur stehen aus.
+[SFTP- und Restore-Test](https://github.com/LLMbutHuman/GunIndex/actions/runs/45625737690)
+
 Die bereitgestellte deutsche CSV wurde bei der Installationsprobe mit 8.289
 PLZ importiert. Länderauswahl und Umkreissuche sind mit tatsächlichen Koordinaten
 geprüft. [CI 44839813273](https://github.com/LLMbutHuman/GunIndex/actions/runs/44839813273)

@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Nové návrhy: {created}. Stávající verze: {existing}.',
     'legal_admin.bundle_unavailable' => 'Nepodařilo se načíst všechny přiložené návrhy.',
     'legal_admin.copy_version' => 'Zkopírovat do nové verze',
+    'legal_admin.coverage_title' => 'Právní dokumenty podle jazyka',
+    'legal_admin.coverage_help' => 'Tabulka zobrazuje návrhy, verze s plánovanou účinností a schválené verze. Zveřejnění se spravuje samostatně.',
+    'legal_admin.coverage_missing' => 'Chybí · vytvořit návrh',
+    'legal_admin.scheduled' => 'Schváleno · čeká na účinnost',
 ];

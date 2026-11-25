@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Nuove bozze: {created}. Versioni esistenti: {existing}.',
     'legal_admin.bundle_unavailable' => 'Impossibile caricare tutte le bozze incluse.',
     'legal_admin.copy_version' => 'Copia in una nuova versione',
+    'legal_admin.coverage_title' => 'Documenti legali per lingua',
+    'legal_admin.coverage_help' => 'La tabella mostra le bozze, le versioni con entrata in vigore programmata e le versioni approvate. La pubblicazione è gestita separatamente.',
+    'legal_admin.coverage_missing' => 'Mancante · crea bozza',
+    'legal_admin.scheduled' => 'Approvata · in attesa di entrata in vigore',
 ];

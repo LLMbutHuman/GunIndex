@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Nouveaux projets : {created}. Versions existantes : {existing}.',
     'legal_admin.bundle_unavailable' => 'Le chargement de tous les projets fournis a échoué.',
     'legal_admin.copy_version' => 'Copier dans une nouvelle version',
+    'legal_admin.coverage_title' => 'Documents juridiques par langue',
+    'legal_admin.coverage_help' => 'Le tableau présente les brouillons, les versions dont l’entrée en vigueur est prévue et les versions approuvées. La publication est gérée séparément.',
+    'legal_admin.coverage_missing' => 'Manquant · créer un brouillon',
+    'legal_admin.scheduled' => 'Approuvé · entrée en vigueur prévue',
 ];

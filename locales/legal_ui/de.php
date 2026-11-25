@@ -56,4 +56,8 @@ return [
     'legal_admin.bundled_result' => 'Neue Entwürfe: {created}. Bereits vorhandene Versionen: {existing}.',
     'legal_admin.bundle_unavailable' => 'Die mitgelieferten Entwürfe konnten nicht vollständig geladen werden.',
     'legal_admin.copy_version' => 'Als neue Version übernehmen',
+    'legal_admin.coverage_title' => 'Sprachabdeckung der Rechtsdokumente',
+    'legal_admin.coverage_help' => 'Die Übersicht zeigt Entwürfe, geplante Freigaben und bereits fachlich freigegebene Fassungen. Die Veröffentlichung wird separat gesteuert.',
+    'legal_admin.coverage_missing' => 'Fehlt · Entwurf anlegen',
+    'legal_admin.scheduled' => 'Freigegeben · noch nicht wirksam',
 ];
