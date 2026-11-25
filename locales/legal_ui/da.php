@@ -66,4 +66,5 @@ return [
     'legal_admin.import_invalid' => 'Vælg en gyldig JSON-fil med op til 250 udkast på understøttede sprog.',
     'legal_admin.import_duplicate_entry' => 'Filen indeholder den samme dokumentversion mere end én gang.',
     'legal_admin.bundled_all_languages' => 'Alle tilgængelige sprog',
+    'legal_admin.download_drafts' => 'Download alle udkast som JSON',
 ];

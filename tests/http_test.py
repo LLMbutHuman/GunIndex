@@ -466,6 +466,18 @@ class MarketplaceHTTP(unittest.TestCase):
         menu=admin.request(route)[2]
         self.assertIn('Import drafts', menu)
         self.assertIn('<option value="all">All available languages</option>',menu)
+        self.assertEqual(403,member.request(route+'?download_drafts=1')[0])
+        status,headers,body=admin.request(route+'?download_drafts=1')
+        self.assertEqual(200,status)
+        self.assertIn('no-store',headers['Cache-Control'])
+        self.assertIn('gunindex-legal-drafts.json',headers['Content-Disposition'])
+        downloadable=body.encode()
+        drafts=json.loads(body)
+        self.assertEqual('gunindex-legal-drafts-1',drafts['format'])
+        self.assertEqual(160,len(drafts['documents']))
+        self.assertEqual({'de','en','fr','nl','pl','cs','da','it'},{doc['language'] for doc in drafts['documents']})
+        self.assertTrue(all(doc['version']=='draft-1.0' and ('[REQUIRED:' in doc['body'] or '[Pflichtfeld:' in doc['body']) for doc in drafts['documents']))
+        self.assertEqual('',admin.request(route+'?download_drafts=1',method='HEAD')[2])
         self.assertEqual(403, admin.request(route, {'action': 'import_bundled'})[0])
         payload = {'csrf_token': admin.token(route), 'action': 'import_bundled'}
         self.assertEqual(422,admin.request(route,{**payload,'language':'unsupported'})[0])
@@ -507,6 +519,12 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertEqual(303,admin.request(route,approval)[0])
         self.assertIn('href="?id=' + translation_id + '">Approved · scheduled · ' + translation_version,admin.request(route)[2])
         self.assertNotIn('Allgemeine Geschäftsbedingungen', Browser().request('/marketplace/legal.php')[2])
+        self.assertEqual(303,admin.request(route,{**payload,'language':'all'})[0])
+        self.assertIn('New drafts: 140. Existing versions: 20.',admin.request(route)[2])
+        raw,content_type=multipart({'action':'import_file','csrf_token':payload['csrf_token']},
+            [('gunindex-legal-drafts.json','application/json',downloadable)],file_field='drafts')
+        self.assertEqual(303,admin.request(route,raw=raw,content_type=content_type)[0])
+        self.assertIn('New drafts: 0. Existing versions: 160.',admin.request(route)[2])
 
     def test_legal_admin_shows_unapproved_draft_and_localized_review_requirements(self):
         browser = self.user(admin=True)['browser']

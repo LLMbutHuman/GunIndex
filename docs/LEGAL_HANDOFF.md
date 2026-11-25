@@ -28,6 +28,8 @@ und bereits freigegebene Fassungen. Unter **Mehrsprachige Entwürfe hochladen**
 lassen sich bis zu 250 Fassungen pro JSON-Datei (5 MiB) in einem Schritt einspielen.
 Ein Konflikt mit einer bestehenden Fassung bricht die gesamte Einspielung ab.
 Beim erneuten Einspielen derselben Texte bleibt jede Versions-ID erhalten.
+**Alle Vorlagen als JSON herunterladen** liefert die mitgelieferten Entwürfe
+im passenden Format. Für bearbeitete Texte eine neue Versionsnummer vergeben.
 
 ```json
 {

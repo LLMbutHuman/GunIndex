@@ -66,4 +66,5 @@ return [
     'legal_admin.import_invalid' => 'Scegli un file JSON valido con un massimo di 250 bozze nelle lingue supportate.',
     'legal_admin.import_duplicate_entry' => 'Il file contiene più volte la stessa versione del documento.',
     'legal_admin.bundled_all_languages' => 'Tutte le lingue disponibili',
+    'legal_admin.download_drafts' => 'Scarica tutte le bozze in formato JSON',
 ];

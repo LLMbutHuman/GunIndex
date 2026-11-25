@@ -66,4 +66,5 @@ return [
     'legal_admin.import_invalid' => 'Vyberte platný soubor JSON s nejvýše 250 návrhy v podporovaných jazycích.',
     'legal_admin.import_duplicate_entry' => 'Soubor obsahuje stejnou verzi dokumentu vícekrát.',
     'legal_admin.bundled_all_languages' => 'Všechny dostupné jazyky',
+    'legal_admin.download_drafts' => 'Stáhnout všechny návrhy jako JSON',
 ];

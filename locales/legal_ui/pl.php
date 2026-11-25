@@ -66,4 +66,5 @@ return [
     'legal_admin.import_invalid' => 'Wybierz prawidłowy plik JSON z maksymalnie 250 projektami w obsługiwanych językach.',
     'legal_admin.import_duplicate_entry' => 'Plik zawiera tę samą wersję dokumentu więcej niż raz.',
     'legal_admin.bundled_all_languages' => 'Wszystkie dostępne języki',
+    'legal_admin.download_drafts' => 'Pobierz wszystkie projekty w formacie JSON',
 ];

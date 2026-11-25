@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Rechtsentwürfe zur Bearbeitung als JSON herunterladen
+
+Die Rechtsverwaltung exportiert die 160 mitgelieferten Vorlagen mit Sprache,
+Dokumentkennung und Version in das Format des Uploads. Der Export verwendet
+die Vorlagen des Releases und umgeht weder MFA noch die fachliche Freigabe.
+Der HTTP-Test prüft Berechtigung, Cache-Schutz, alle acht Sprachen, gesammelten
+Import und die anschließende bytegleiche Wiedereinspielung. Der Produktionslauf
+prüft die 160 Vorlagen auch im Image aus dem Releasearchiv.
+
 ## Alle 160 Rechtsentwürfe in einem Schritt einspielen
 
 Die 20 mitgelieferten Rechtsvorlagen liegen jetzt in allen acht Sprachen vor.

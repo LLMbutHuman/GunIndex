@@ -66,4 +66,5 @@ return [
     'legal_admin.import_invalid' => 'Sélectionnez un fichier JSON valide contenant jusqu’à 250 brouillons dans les langues prises en charge.',
     'legal_admin.import_duplicate_entry' => 'Le fichier contient plusieurs fois la même version d’un document.',
     'legal_admin.bundled_all_languages' => 'Toutes les langues disponibles',
+    'legal_admin.download_drafts' => 'Télécharger tous les brouillons en JSON',
 ];

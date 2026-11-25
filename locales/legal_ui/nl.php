@@ -66,4 +66,5 @@ return [
     'legal_admin.import_invalid' => 'Kies een geldig JSON-bestand met maximaal 250 concepten in ondersteunde talen.',
     'legal_admin.import_duplicate_entry' => 'Het bestand bevat dezelfde documentversie meerdere keren.',
     'legal_admin.bundled_all_languages' => 'Alle beschikbare talen',
+    'legal_admin.download_drafts' => 'Alle concepten downloaden als JSON',
 ];

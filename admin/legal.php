@@ -6,6 +6,19 @@ header('X-Robots-Tag: noindex, nofollow');
 $admin=require_permission($pdo,'legal.manage');$pageTitle=t('legal_admin.title');$error='';$selectedId=is_string($_GET['id']??null)?(int)$_GET['id']:0;
 $method=$_SERVER['REQUEST_METHOD']??'GET';
 if (!in_array($method,['GET','HEAD','POST'],true)) { header('Allow: GET, HEAD, POST'); abort_request(405,t('account.method')); }
+if (($method==='GET' || $method==='HEAD') && ($_GET['download_drafts']??null)==='1') {
+    $documents=[];
+    foreach (array_keys(legal_bundled_draft_languages()) as $language) {
+        foreach (legal_bundled_drafts($language) as $code=>[$title,$body]) {
+            $documents[]=['code'=>$code,'version'=>'draft-1.0','language'=>$language,'title'=>$title,'body'=>$body];
+        }
+    }
+    $json=json_encode(['format'=>'gunindex-legal-drafts-1','documents'=>$documents],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR);
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="gunindex-legal-drafts.json"');
+    if ($method==='GET') echo $json."\n";
+    exit;
+}
 $statusLabel=static fn(string $status):string=>t(match($status){
     'draft'=>'legal_admin.draft','approved'=>'legal_admin.approved','scheduled'=>'legal_admin.scheduled',default=>'legal_admin.unknown',
 });
@@ -71,6 +84,7 @@ include __DIR__.'/../includes/header.php';?>
 <section class="panel">
     <h2><?=h(t('legal_admin.bundled_title'))?></h2>
     <p><?=h(t('legal_admin.bundled_help'))?></p>
+    <p><a href="?download_drafts=1"><?=h(t('legal_admin.download_drafts'))?></a></p>
     <form method="post" action="/admin/legal.php">
         <?=csrf_field()?><input type="hidden" name="action" value="import_bundled">
         <label class="field"><?=h(t('legal_admin.language'))?>
