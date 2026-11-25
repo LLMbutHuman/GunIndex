@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Mehrsprachige Rechtsentwürfe als Paket einspielen
+
+Die MFA-geschützte Rechtsverwaltung nimmt versionierte JSON-Entwürfe in acht
+Sprachen an. Der Import läuft in einer Transaktion. Identische Fassungen
+behalten ihre ID. Abweichender Inhalt bei derselben Versionskennung führt
+zum Rollback. Das Paket enthält Entwürfe, die über den vorhandenen Prüfablauf
+freigegeben werden. Der synthetische HTTP-Test deckt MFA-Berechtigung, CSRF,
+Mehrfacheintrag, Wiederholung, Konflikt-Rollback und fehlende öffentliche
+Sichtbarkeit der importierten Entwürfe ab.
+Lokal bestanden zehn PHP-Syntaxprüfungen und sieben PHP-Testgruppen mit
+Schlüssel- und Platzhalterprüfung für alle Sprachkataloge.
+[Paketformat und rechtliche Übergabe](LEGAL_HANDOFF.md)
+
 ## Belgische Postleitzahlen aus der CC-BY-Veröffentlichung von BOSA
 
 1.139 PLZ-Zentren aus den drei geprüften Regionalarchiven von BeST. Die

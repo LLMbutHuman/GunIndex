@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'Die Übersicht zeigt Entwürfe, geplante Freigaben und bereits fachlich freigegebene Fassungen. Die Veröffentlichung wird separat gesteuert.',
     'legal_admin.coverage_missing' => 'Fehlt · Entwurf anlegen',
     'legal_admin.scheduled' => 'Freigegeben · noch nicht wirksam',
+    'legal_admin.import_file_title' => 'Mehrsprachige Entwürfe hochladen',
+    'legal_admin.import_file_help' => 'Lade eine JSON-Datei im Format gunindex-legal-drafts-1 hoch. Identische Versionen werden übersprungen. Bei einem Konflikt wird der gesamte Import abgebrochen.',
+    'legal_admin.import_file_label' => 'JSON-Datei mit Entwürfen (maximal 5 MiB)',
+    'legal_admin.import_invalid' => 'Wähle eine gültige JSON-Datei mit bis zu 250 Entwürfen in unterstützten Sprachen.',
+    'legal_admin.import_duplicate_entry' => 'Die Datei enthält dieselbe Dokumentversion mehrfach.',
 ];

@@ -1,4 +1,4 @@
-# Arbeitsstand für die fachliche Prüfung – 2026-11-21
+# Arbeitsstand für die fachliche Prüfung – 2026-11-25
 
 Dies ist eine Übergabe des tatsächlich implementierten Entwicklungsstands,
 **keine abschließende Rechtsfreigabe**. Die Plattform ist noch nicht fertig.
@@ -18,6 +18,31 @@ Import legt fehlende deutsche Fassungen als `draft-1.0` an. Über
 **Als neue Version übernehmen** lassen sich Betreiberangaben und
 fachliche Änderungen als separate Fassung speichern. Die mitgelieferten
 Entwürfe behalten ihre Pflichtfelder und bleiben im Entwurfsstatus.
+
+Die Sprachübersicht zeigt für jedes der 20 Dokumente offene Sprachen, Entwürfe
+und bereits freigegebene Fassungen. Unter **Mehrsprachige Entwürfe hochladen**
+lassen sich bis zu 250 Fassungen pro JSON-Datei (5 MiB) in einem Schritt einspielen.
+Ein Konflikt mit einer bestehenden Fassung bricht die gesamte Einspielung ab.
+Beim erneuten Einspielen derselben Texte bleibt jede Versions-ID erhalten.
+
+```json
+{
+  "format": "gunindex-legal-drafts-1",
+  "documents": [
+    {
+      "code": "terms",
+      "version": "draft-2026-11-25",
+      "language": "en",
+      "title": "Terms of use — draft",
+      "body": "[Pflichtfeld: vollständige geprüfte Vertragsfassung einfügen.] Formatbeispiel für den Entwurfsimport. Dieser Beispieltext demonstriert die Datenstruktur. In einer echten Datei enthält dieses Feld die vollständige Fassung in der gewählten Sprache."
+    }
+  ]
+}
+```
+
+Der Text je Dokument umfasst mindestens 200 Zeichen und höchstens 200.000 Bytes.
+Die Sprachen sind `de`, `en`, `fr`, `nl`, `pl`, `cs`,
+`da` und `it`. Der Import speichert die Fassung zur fachlichen Prüfung.
 
 Die Admin-Verwaltung speichert Dokumentkennung, Version, Sprache, Inhalt und
 SHA-256. Freigabe benötigt berechtigte MFA-Anmeldung, dokumentierte Prüfstelle,

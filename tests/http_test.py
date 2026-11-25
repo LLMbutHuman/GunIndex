@@ -534,6 +534,43 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('confirm all five review items', body)
         self.assertIn('Draft · professional review pending', body)
 
+    def test_legal_uploaded_package_is_atomic_idempotent_and_requires_permission(self):
+        route='/admin/legal.php'
+        editor=self.user(admin=True)['browser']
+        member=self.user()['browser']
+        self.assertEqual(303,editor.request('/user/language.php',{
+            'csrf_token':editor.token(route),'locale':'en','market_country':'DE','return_path':route,
+        })[0])
+        suffix=secrets.token_hex(6)
+        first={'code':'test-a-'+suffix,'version':'draft-1','language':'fr','title':'Projet synthétique A '+suffix,
+               'body':'Projet français destiné au test technique isolé. '*8}
+        second={**first,'code':'test-z-'+suffix,'language':'it','title':'Bozza sintetica B '+suffix,
+                'body':'Bozza italiana destinata alla prova tecnica isolata. '*8}
+
+        def submit(browser,documents,csrf):
+            fields={'action':'import_file','csrf_token':csrf}
+            payload=json.dumps({'format':'gunindex-legal-drafts-1','documents':documents},ensure_ascii=False).encode()
+            raw,content_type=multipart(fields,[('drafts.json','application/json',payload)],file_field='drafts')
+            return browser.request(route,raw=raw,content_type=content_type)
+
+        self.assertEqual(403,submit(member,[first,second],member.token())[0])
+        self.assertEqual(403,submit(editor,[first,second],'invalid')[0])
+        token=editor.token(route)
+        self.assertEqual(422,submit(editor,[first,first],token)[0])
+        self.assertNotIn(first['title'],editor.request(route)[2])
+        self.assertEqual(303,submit(editor,[first,second],token)[0])
+        body=editor.request(route)[2]
+        self.assertIn('New drafts: 2. Existing versions: 0.',body)
+        self.assertIn(first['title'],body)
+        self.assertIn(second['title'],body)
+        self.assertEqual(303,submit(editor,[first,second],token)[0])
+        self.assertIn('New drafts: 0. Existing versions: 2.',editor.request(route)[2])
+        new={**first,'code':'test-b-'+suffix,'title':'Uncommitted legal draft '+suffix}
+        changed={**second,'body':second['body']+' Synthetic conflict.'}
+        self.assertEqual(422,submit(editor,[new,changed],token)[0])
+        self.assertNotIn(new['title'],editor.request(route)[2])
+        self.assertNotIn(second['title'],Browser().request('/marketplace/legal.php')[2])
+
     def test_admin_without_enrolled_mfa_cannot_login(self):
         admin = self.user(admin=True, mfa=False, login=False)
         self.assertEqual(503, self.login(admin)[0])

@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'Tabellen viser udkast, versioner med planlagt ikrafttrædelse og godkendte versioner. Offentliggørelse styres separat.',
     'legal_admin.coverage_missing' => 'Mangler · opret udkast',
     'legal_admin.scheduled' => 'Godkendt · planlagt',
+    'legal_admin.import_file_title' => 'Upload flersprogede udkast',
+    'legal_admin.import_file_help' => 'Upload en JSON-fil i formatet gunindex-legal-drafts-1. Identiske versioner springes over. En konflikt annullerer hele importen.',
+    'legal_admin.import_file_label' => 'JSON-fil med udkast (højst 5 MiB)',
+    'legal_admin.import_invalid' => 'Vælg en gyldig JSON-fil med op til 250 udkast på understøttede sprog.',
+    'legal_admin.import_duplicate_entry' => 'Filen indeholder den samme dokumentversion mere end én gang.',
 ];

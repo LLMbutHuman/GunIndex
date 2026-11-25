@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'Le tableau présente les brouillons, les versions dont l’entrée en vigueur est prévue et les versions approuvées. La publication est gérée séparément.',
     'legal_admin.coverage_missing' => 'Manquant · créer un brouillon',
     'legal_admin.scheduled' => 'Approuvé · entrée en vigueur prévue',
+    'legal_admin.import_file_title' => 'Téléverser des brouillons multilingues',
+    'legal_admin.import_file_help' => 'Téléversez un fichier JSON au format gunindex-legal-drafts-1. Les versions identiques sont ignorées. Un conflit annule tout l’import.',
+    'legal_admin.import_file_label' => 'Fichier JSON de brouillons (5 Mio maximum)',
+    'legal_admin.import_invalid' => 'Sélectionnez un fichier JSON valide contenant jusqu’à 250 brouillons dans les langues prises en charge.',
+    'legal_admin.import_duplicate_entry' => 'Le fichier contient plusieurs fois la même version d’un document.',
 ];

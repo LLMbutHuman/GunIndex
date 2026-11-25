@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'The table shows drafts, scheduled approvals and approved versions. Publication is controlled separately.',
     'legal_admin.coverage_missing' => 'Missing · create draft',
     'legal_admin.scheduled' => 'Approved · scheduled',
+    'legal_admin.import_file_title' => 'Upload multilingual drafts',
+    'legal_admin.import_file_help' => 'Upload a JSON file in gunindex-legal-drafts-1 format. Identical versions are skipped. A conflict cancels the entire import.',
+    'legal_admin.import_file_label' => 'Draft JSON file (up to 5 MiB)',
+    'legal_admin.import_invalid' => 'Choose a valid JSON file with up to 250 drafts in supported languages.',
+    'legal_admin.import_duplicate_entry' => 'The file contains the same document version more than once.',
 ];

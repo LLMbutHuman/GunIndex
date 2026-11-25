@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'Tabela pokazuje projekty, wersje z przyszłą datą wejścia w życie oraz zatwierdzone wersje. Publikacja jest kontrolowana osobno.',
     'legal_admin.coverage_missing' => 'Brak · utwórz projekt',
     'legal_admin.scheduled' => 'Zatwierdzono · oczekuje na wejście w życie',
+    'legal_admin.import_file_title' => 'Prześlij projekty wielojęzyczne',
+    'legal_admin.import_file_help' => 'Prześlij plik JSON w formacie gunindex-legal-drafts-1. Identyczne wersje są pomijane. Konflikt anuluje cały import.',
+    'legal_admin.import_file_label' => 'Plik JSON z projektami (do 5 MiB)',
+    'legal_admin.import_invalid' => 'Wybierz prawidłowy plik JSON z maksymalnie 250 projektami w obsługiwanych językach.',
+    'legal_admin.import_duplicate_entry' => 'Plik zawiera tę samą wersję dokumentu więcej niż raz.',
 ];

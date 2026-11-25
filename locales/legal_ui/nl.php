@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'De tabel toont concepten, versies met een ingangsdatum in de toekomst en goedgekeurde versies. Publicatie wordt afzonderlijk beheerd.',
     'legal_admin.coverage_missing' => 'Ontbreekt · concept aanmaken',
     'legal_admin.scheduled' => 'Goedgekeurd · gepland',
+    'legal_admin.import_file_title' => 'Meertalige concepten uploaden',
+    'legal_admin.import_file_help' => 'Upload een JSON-bestand in de indeling gunindex-legal-drafts-1. Identieke versies worden overgeslagen. Een conflict annuleert de volledige import.',
+    'legal_admin.import_file_label' => 'JSON-bestand met concepten (maximaal 5 MiB)',
+    'legal_admin.import_invalid' => 'Kies een geldig JSON-bestand met maximaal 250 concepten in ondersteunde talen.',
+    'legal_admin.import_duplicate_entry' => 'Het bestand bevat dezelfde documentversie meerdere keren.',
 ];

@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'Tabulka zobrazuje návrhy, verze s plánovanou účinností a schválené verze. Zveřejnění se spravuje samostatně.',
     'legal_admin.coverage_missing' => 'Chybí · vytvořit návrh',
     'legal_admin.scheduled' => 'Schváleno · čeká na účinnost',
+    'legal_admin.import_file_title' => 'Nahrát vícejazyčné návrhy',
+    'legal_admin.import_file_help' => 'Nahrajte soubor JSON ve formátu gunindex-legal-drafts-1. Shodné verze se přeskočí. Konflikt zruší celý import.',
+    'legal_admin.import_file_label' => 'Soubor JSON s návrhy (nejvýše 5 MiB)',
+    'legal_admin.import_invalid' => 'Vyberte platný soubor JSON s nejvýše 250 návrhy v podporovaných jazycích.',
+    'legal_admin.import_duplicate_entry' => 'Soubor obsahuje stejnou verzi dokumentu vícekrát.',
 ];

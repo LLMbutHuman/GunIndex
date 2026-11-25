@@ -27,6 +27,9 @@ if ($method === 'POST') {
         } elseif ($action === 'import_bundled') {
             $_SESSION['legal_bundled_import'] = legal_import_bundled_drafts($pdo,(int)$admin['id']);
             redirect('/admin/legal.php');
+        } elseif ($action === 'import_file') {
+            $_SESSION['legal_bundled_import'] = legal_import_draft_file($pdo,(int)$admin['id'],(array)($_FILES['drafts']??[]));
+            redirect('/admin/legal.php');
         } else {
             throw new InvalidArgumentException(t('legal_admin.invalid_action'));
         }
@@ -68,6 +71,15 @@ include __DIR__.'/../includes/header.php';?>
     <p><?=h(t('legal_admin.bundled_help'))?></p>
     <form method="post" action="/admin/legal.php">
         <?=csrf_field()?><input type="hidden" name="action" value="import_bundled">
+        <button class="button secondary" type="submit"><?=h(t('legal_admin.bundled_import'))?></button>
+    </form>
+</section>
+<section class="panel">
+    <h2><?=h(t('legal_admin.import_file_title'))?></h2>
+    <p><?=h(t('legal_admin.import_file_help'))?></p>
+    <form method="post" action="/admin/legal.php" enctype="multipart/form-data">
+        <?=csrf_field()?><input type="hidden" name="action" value="import_file">
+        <label class="field"><?=h(t('legal_admin.import_file_label'))?><input name="drafts" type="file" accept="application/json,.json" required></label>
         <button class="button secondary" type="submit"><?=h(t('legal_admin.bundled_import'))?></button>
     </form>
 </section>

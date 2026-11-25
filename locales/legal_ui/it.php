@@ -60,4 +60,9 @@ return [
     'legal_admin.coverage_help' => 'La tabella mostra le bozze, le versioni con entrata in vigore programmata e le versioni approvate. La pubblicazione è gestita separatamente.',
     'legal_admin.coverage_missing' => 'Mancante · crea bozza',
     'legal_admin.scheduled' => 'Approvata · in attesa di entrata in vigore',
+    'legal_admin.import_file_title' => 'Carica bozze multilingue',
+    'legal_admin.import_file_help' => 'Carica un file JSON nel formato gunindex-legal-drafts-1. Le versioni identiche vengono saltate. Un conflitto annulla l’intera importazione.',
+    'legal_admin.import_file_label' => 'File JSON con bozze (massimo 5 MiB)',
+    'legal_admin.import_invalid' => 'Scegli un file JSON valido con un massimo di 250 bozze nelle lingue supportate.',
+    'legal_admin.import_duplicate_entry' => 'Il file contiene più volte la stessa versione del documento.',
 ];

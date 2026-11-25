@@ -216,6 +216,62 @@ function legal_import_bundled_drafts(PDO $pdo,int $actor): array
     }
 }
 
+/** Import immutable drafts supplied by an authorized editor, preserving prior versions. */
+function legal_import_draft_file(PDO $pdo,int $actor,array $upload): array
+{
+    governance_assert_actor($pdo,$actor,'legal.manage');
+    $path=$upload['tmp_name']??null;
+    $size=$upload['size']??null;
+    if (($upload['error']??null)!==UPLOAD_ERR_OK || !is_string($path) || !is_uploaded_file($path)
+        || !is_int($size) || $size<1 || $size>5*1024**2 || filesize($path)!==$size) {
+        throw new InvalidArgumentException(t('legal_admin.import_invalid'));
+    }
+    $content=file_get_contents($path,false,null,0,$size);
+    if ($content===false || strlen($content)!==$size) throw new InvalidArgumentException(t('legal_admin.import_invalid'));
+    if (str_starts_with($content,"\xEF\xBB\xBF")) $content=substr($content,3);
+    try { $package=json_decode($content,true,8,JSON_THROW_ON_ERROR); }
+    catch (JsonException) { throw new InvalidArgumentException(t('legal_admin.import_invalid')); }
+    $documents=$package['documents']??null;
+    if (($package['format']??null)!=='gunindex-legal-drafts-1' || !is_array($documents) || !array_is_list($documents)
+        || !$documents || count($documents)>250) {
+        throw new InvalidArgumentException(t('legal_admin.import_invalid'));
+    }
+    $languages=i18n_locales();
+    $fields=['code','version','language','title','body'];
+    $drafts=[];
+    foreach ($documents as $document) {
+        if (!is_array($document) || count($document)!==count($fields)) throw new InvalidArgumentException(t('legal_admin.import_invalid'));
+        foreach ($fields as $field) {
+            if (!is_string($document[$field]??null)) throw new InvalidArgumentException(t('legal_admin.import_invalid'));
+        }
+        if (!isset($languages[$document['language']])) throw new InvalidArgumentException(t('legal_admin.import_invalid'));
+        $key=$document['code']."\0".$document['version']."\0".$document['language'];
+        if (isset($drafts[$key])) throw new InvalidArgumentException(t('legal_admin.import_duplicate_entry'));
+        $drafts[$key]=$document;
+    }
+    ksort($drafts,SORT_STRING);
+    $created=0;
+    $pdo->beginTransaction();
+    try {
+        $previous=$pdo->prepare('SELECT version,title,body_text,content_hash FROM market_legal_documents WHERE document_code=? AND version=? AND language=? FOR SHARE');
+        foreach ($drafts as $document) {
+            ['code'=>$code,'version'=>$version,'language'=>$language,'title'=>$title,'body'=>$body]=$document;
+            if (legal_insert_draft($pdo,$actor,$code,$version,$language,$title,$body,true)!==null) { $created++; continue; }
+            $previous->execute([$code,$version,$language]);
+            $existing=$previous->fetch();
+            if (!$existing || $existing['version']!==$version || $existing['title']!==$title || $existing['body_text']!==$body
+                || !hash_equals($existing['content_hash'],hash('sha256',$body))) {
+                throw new DomainException(t('legal_admin.duplicate'));
+            }
+        }
+        $pdo->commit();
+        return ['created'=>$created,'existing'=>count($drafts)-$created];
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
 /** Pick the current approved, scheduled or newest draft version for each required language. */
 function legal_language_coverage(PDO $pdo,array $codes,array $languages): array
 {
