@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Mehrbyte-Zeichen in Inseraten, Entwürfen und CSV
+
+Die Grenzen für Titel, Ort und Beschreibung berücksichtigen UTF-8-Zeichen.
+Die Datenbankgrenze für den Beschreibungstext bleibt zusätzlich wirksam.
+Autosave und Händler-CSV akzeptieren dieselben längeren UTF-8-Beschreibungen.
+Der lokale Entwurfstest prüft mehr als 20.000 Bytes innerhalb der
+Zeichengrenze und die Ablehnung zu großer Texte. Die HTTP-Regressionsfälle
+prüfen Veröffentlichung und CSV-Import mit mehrbyteigen Eingaben.
+
 ## Verschlüsselter Chat zwischen Browser-Engines
 
 Die CI führt die vorhandene E2EE-Regressionssuite zusätzlich zwischen
@@ -9,6 +18,7 @@ Geprüft werden unter anderem Schlüsselaustausch, Entschlüsselung von
 Dateien, Wiederherstellung und Gerätewiderruf. Lokal wurde die
 JavaScript-Syntax geprüft. Für die Ergebnisse außerhalb von Chromium
 ist der Linux-Lauf maßgeblich.
+[CI für Chromium, Firefox und WebKit](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
 
 ## Mitgelieferte Rechtsentwürfe übernehmen
 

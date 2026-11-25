@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 const LISTING_DRAFT_FIELDS = [
-    'title'=>600,'description'=>20000,'category_id'=>10,'condition_label'=>16,'type'=>16,
+    'title'=>600,'description'=>65535,'category_id'=>10,'condition_label'=>16,'type'=>16,
     'price'=>13,'buyout_price'=>13,'shipping_price'=>13,'country_code'=>2,'zip'=>16,'city'=>400,
     'duration_days'=>2,'listing_duration_days'=>2,'status'=>8,'pickup'=>1,'shipping'=>1,'trade_checkout_enabled'=>1,
     'image_revision'=>64,
@@ -14,7 +14,8 @@ function listing_draft_payload(array $input): array
     foreach (LISTING_DRAFT_FIELDS as $name=>$limit) {
         if (!array_key_exists($name,$input)) continue;
         $value=$input[$name];
-        if (!is_string($value)||strlen($value)>$limit||!preg_match('//u',$value)||str_contains($value,"\0")) {
+        if (!is_string($value)||strlen($value)>$limit||!preg_match('//u',$value)||str_contains($value,"\0")
+            || ($name==='description'&&mb_strlen($value,'UTF-8')>20000)) {
             throw new InvalidArgumentException(t('draft.invalid'));
         }
         $values[$name]=$value;

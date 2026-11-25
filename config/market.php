@@ -131,7 +131,10 @@ function market_validate(PDO $pdo, array $input): array
     $zip = geo_postcode_key($country,market_input($input, 'zip'));
     $city = trim(market_input($input, 'city'));
     $condition = market_input($input, 'condition_label', 'used');
-    if (strlen($title) < 5 || strlen($title) > 150 || strlen($description) < 20 || strlen($description) > 20000) {
+    if (strlen($title) > 600 || strlen($description) > 65535
+        || !mb_check_encoding([$title,$description], 'UTF-8') || str_contains($title,"\0") || str_contains($description,"\0")
+        || mb_strlen($title,'UTF-8') < 5 || mb_strlen($title,'UTF-8') > 150
+        || mb_strlen($description,'UTF-8') < 20 || mb_strlen($description,'UTF-8') > 20000) {
         throw new InvalidArgumentException(t('listing_validation.text_length'));
     }
     if (!catalog_text_allowed($title.' '.$description)) {
@@ -143,7 +146,8 @@ function market_validate(PDO $pdo, array $input): array
     if (!in_array($type, ['fixed','auction','negotiated'], true) || !in_array($status, ['draft','active'], true)) {
         throw new InvalidArgumentException(t('listing_validation.kind'));
     }
-    if (!geo_validate_postcode($country,$zip) || strlen($city) < 2 || strlen($city) > 100) {
+    if (!geo_validate_postcode($country,$zip) || strlen($city) > 400 || !mb_check_encoding($city,'UTF-8')
+        || str_contains($city,"\0") || mb_strlen($city,'UTF-8') < 2 || mb_strlen($city,'UTF-8') > 100) {
         throw new InvalidArgumentException(t('listing_validation.postal_city'));
     }
     if (!in_array($condition, ['new','like_new','used'], true)) {

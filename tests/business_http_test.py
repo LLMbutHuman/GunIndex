@@ -78,7 +78,7 @@ class BusinessHTTP(unittest.TestCase):
   self.profile(user)
   body=browser.request(route)[2]
   self.assertIn('Awaiting review',body)
-  valid=self.row(type='negotiated')
+  valid=self.row(type='negotiated',description='Ł' * 11000)
   invalid=self.row(category_slug='missing-'+secrets.token_hex(6))
   status,_,body=self.import_csv(user,[valid,valid,invalid])
   self.assertEqual(200,status)

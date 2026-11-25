@@ -390,7 +390,7 @@ function business_import_csv(PDO $pdo,int $userId,array $file,bool $rules):array
     try{
         $header=fgetcsv($handle,20001,',','"','');if(is_array($header)&&isset($header[0]))$header[0]=preg_replace('/\A\xEF\xBB\xBF/','',$header[0]);
         if($header!==$columns)throw new InvalidArgumentException(t('dealer_dashboard.csv_header'));
-        while(($values=fgetcsv($handle,30001,',','"',''))!==false){
+        while(($values=fgetcsv($handle,0,',','"',''))!==false){
             if(count($records)>=100)throw new InvalidArgumentException(t('dealer_dashboard.csv_limit'));
             $records[]=$values;
         }
@@ -402,7 +402,10 @@ function business_import_csv(PDO $pdo,int $userId,array $file,bool $rules):array
         foreach($records as $index=>$values){
             try{
                 if(count($values)!==count($columns))throw new InvalidArgumentException(t('dealer_dashboard.csv_columns'));
-                foreach($values as $value)if(!is_string($value)||!preg_match('//u',$value)||strlen($value)>20000)throw new InvalidArgumentException(t('dealer_dashboard.csv_text'));
+                foreach($values as $column=>$value) {
+                    $limit=$columns[$column]==='description'?65535:20000;
+                    if(!is_string($value)||strlen($value)>$limit||!preg_match('//u',$value))throw new InvalidArgumentException(t('dealer_dashboard.csv_text'));
+                }
                 $data=array_combine($columns,$values);$q=$pdo->prepare('SELECT id FROM market_categories WHERE slug=?');$q->execute([$data['category_slug']]);$categoryId=$q->fetchColumn();
                 if($categoryId===false)throw new InvalidArgumentException(t('dealer_dashboard.csv_unknown_category'));
                 $data['category_id']=(string)$categoryId;$data['accept_rules']='1';$data['status']='active';

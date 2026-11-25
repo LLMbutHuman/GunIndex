@@ -334,6 +334,22 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('Choose a valid page.', body)
         self.assertEqual(200, browser.request(route + '?page=1')[0])
 
+    def test_listing_preserves_multibyte_text_within_character_and_storage_limits(self):
+        seller = self.user()
+        browser = seller['browser']
+        route = '/user/create-listing.php'
+        fields = self.fields(seller, title=title('Ż' * 90), description='Ł' * 11000, city='Ł' * 80)
+        self.assertGreater(len(fields['title'].encode()), 150)
+        self.assertEqual(422, browser.request(route, fields | {'description': '🪑' * 17000})[0])
+        status, headers, _ = browser.request(route, fields)
+        self.assertEqual(303, status)
+        listing_id = urllib.parse.parse_qs(urllib.parse.urlsplit(headers['Location']).query)['saved'][0]
+        status, _, body = Browser().request('/marketplace/view-item.php?id=' + listing_id)
+        self.assertEqual(200, status)
+        self.assertIn(fields['title'], body)
+        self.assertIn(fields['description'], body)
+        self.assertIn(fields['city'], body)
+
     def test_registration_requires_csrf_and_rejects_array_values(self):
         browser = Browser()
         self.assertEqual(403, browser.request('/auth/register.php', {'username': identity()})[0])

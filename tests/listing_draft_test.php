@@ -36,6 +36,10 @@ if ($mode==='') {
     $payload=listing_draft_payload(['title'=>'Desk','attributes'=>[4=>'5'],'accept_rules'=>'1','accept_auction_fees'=>'1','legal_confirm'=>'1','csrf_token'=>'secret']);
     foreach (['accept_rules','accept_auction_fees','legal_confirm','csrf_token'] as $key) draft_check(!array_key_exists($key,$payload),'Acceptance or CSRF was stored.');
     draft_check($payload['title']==='Desk'&&$payload['attributes']===[4=>'5']&&$payload['pickup']==='0','Incomplete values not preserved.');
+    $description = str_repeat('Ł', 11000);
+    draft_check(listing_draft_payload(['description'=>$description])['description']===$description,'Multibyte description was rejected below the character limit.');
+    draft_reject(fn()=>listing_draft_payload(['description'=>str_repeat('a',20001)]),InvalidArgumentException::class);
+    draft_reject(fn()=>listing_draft_payload(['description'=>str_repeat('🪑',17000)]),InvalidArgumentException::class);
     draft_reject(fn()=>listing_draft_payload(['title'=>['Desk']]),InvalidArgumentException::class);
     draft_reject(fn()=>listing_draft_payload(['description'=>"bad\0value"]),InvalidArgumentException::class);
     draft_reject(fn()=>listing_draft_payload(['attributes'=>['foo'=>'x']]),InvalidArgumentException::class);
