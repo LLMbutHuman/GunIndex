@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Téléversez une image complète de 5 Mio maximum.',
     'listing_validation.image_count' => 'Ajoutez jusqu’à cinq images par annonce.',
     'listing_validation.image_format' => 'Téléversez un JPEG, PNG ou WebP de 20 mégapixels et 8 000 pixels par côté au maximum.',
+    'listing_validation.action' => 'Action sur l’annonce non valide.',
+    'listing_validation.invalid_transition' => 'L’état actuel de l’annonce empêche cette modification.',
+    'listing_validation.expired_worker' => 'Le service de clôture traite les enchères expirées.',
+    'listing_validation.sold_via_auction' => 'Les enchères se terminent par une offre ou un achat immédiat.',
+    'listing_validation.pause_requires_active' => 'Seules les annonces publiées peuvent être mises en pause.',
+    'listing_validation.cannot_publish' => 'Cette annonce ne peut pas être publiée.',
+    'listing_validation.edit_auction' => 'Définissez la durée de l’enchère en modifiant l’annonce.',
+    'listing_validation.changed' => 'La modification de l’annonce a été enregistrée.',
 ];

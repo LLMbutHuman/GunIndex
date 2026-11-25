@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Upload et komplet billede på højst 5 MiB.',
     'listing_validation.image_count' => 'Tilføj højst fem produktbilleder pr. annonce.',
     'listing_validation.image_format' => 'Upload JPEG, PNG eller WebP på højst 20 megapixel og 8.000 pixel pr. side.',
+    'listing_validation.action' => 'Ugyldig annoncehandling.',
+    'listing_validation.invalid_transition' => 'Annoncens aktuelle status forhindrer ændringen.',
+    'listing_validation.expired_worker' => 'Afslutningstjenesten behandler udløbne auktioner.',
+    'listing_validation.sold_via_auction' => 'Auktioner afsluttes med bud eller Køb nu.',
+    'listing_validation.pause_requires_active' => 'Kun offentliggjorte annoncer kan sættes på pause.',
+    'listing_validation.cannot_publish' => 'Denne annonce kan ikke offentliggøres.',
+    'listing_validation.edit_auction' => 'Indstil auktionsvarigheden ved at redigere annoncen.',
+    'listing_validation.changed' => 'Annonceændringen blev gemt.',
 ];

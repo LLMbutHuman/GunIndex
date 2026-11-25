@@ -259,6 +259,8 @@ class MarketplaceHTTP(unittest.TestCase):
             'csrf_token': browser.token(route), 'locale': 'fr', 'market_country': 'DE', 'return_path': route,
         })[0])
         fields = self.fields(seller)
+        dashboard = '/user/dashboard.php'
+        self.assertNotIn('Votre annonce a été enregistrée.', browser.request(dashboard + '?saved=1')[2])
         for change, expected in (
             ({'category_id': '0'}, 'Choisissez une catégorie générale active.'),
             ({'price': '0.00'}, 'Le prix doit être d’au moins 0,01 €.'),
@@ -274,9 +276,20 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn('Téléversez un JPEG, PNG ou WebP', body)
         self.assertIsNone(fixture('find_listing', username=seller['username'], title=fields['title'])['id'])
         data, content_type = multipart(fields, [('fixture.png', 'image/png', png())])
-        self.assertEqual(303, browser.request(route, raw=data, content_type=content_type)[0])
+        status, headers, _ = browser.request(route, raw=data, content_type=content_type)
+        self.assertEqual(303, status)
+        self.assertIn('Votre annonce a été enregistrée.', browser.request(headers['Location'])[2])
+        self.assertNotIn('Votre annonce a été enregistrée.', browser.request(headers['Location'])[2])
         listing = fixture('find_listing', username=seller['username'], title=fields['title'])
         self.assertEqual(1, fixture('state', listing_id=listing['id'])['images'])
+        action = {'listing_id': listing['id'], 'action': 'pause', 'csrf_token': browser.token(dashboard)}
+        self.assertEqual(303, browser.request('/actions/manage-auction.php', action)[0])
+        self.assertIn('La modification de l’annonce a été enregistrée.', browser.request(dashboard)[2])
+        self.assertNotIn('La modification de l’annonce a été enregistrée.', browser.request(dashboard)[2])
+        self.assertEqual('paused', fixture('state', listing_id=listing['id'])['status'])
+        status, _, body = browser.request('/actions/manage-auction.php', action)
+        self.assertEqual(409, status)
+        self.assertIn('Seules les annonces publiées peuvent être mises en pause.', body)
 
     def test_market_search_localizes_invalid_category_and_missing_distance_origin(self):
         browser = Browser()

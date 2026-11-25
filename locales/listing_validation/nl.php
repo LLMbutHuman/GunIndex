@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Upload een volledige afbeelding van maximaal 5 MiB.',
     'listing_validation.image_count' => 'Voeg maximaal vijf productafbeeldingen per advertentie toe.',
     'listing_validation.image_format' => 'Upload een JPEG-, PNG- of WebP-afbeelding van maximaal 20 megapixel en 8.000 pixels per zijde.',
+    'listing_validation.action' => 'Ongeldige advertentieactie.',
+    'listing_validation.invalid_transition' => 'De huidige advertentiestatus verhindert deze wijziging.',
+    'listing_validation.expired_worker' => 'De afsluitdienst verwerkt verlopen veilingen.',
+    'listing_validation.sold_via_auction' => 'Veilingen worden afgerond met een bod of Direct kopen.',
+    'listing_validation.pause_requires_active' => 'Alleen gepubliceerde advertenties kunnen worden gepauzeerd.',
+    'listing_validation.cannot_publish' => 'Deze advertentie kan niet worden gepubliceerd.',
+    'listing_validation.edit_auction' => 'Stel de veilingduur in door de advertentie te bewerken.',
+    'listing_validation.changed' => 'De advertentiewijziging is opgeslagen.',
 ];

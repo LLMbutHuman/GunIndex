@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Prześlij pełny obraz o rozmiarze do 5 MiB.',
     'listing_validation.image_count' => 'Dodaj maksymalnie pięć zdjęć produktu do ogłoszenia.',
     'listing_validation.image_format' => 'Prześlij JPEG, PNG lub WebP do 20 megapikseli i 8000 pikseli na bok.',
+    'listing_validation.action' => 'Nieprawidłowa akcja ogłoszenia.',
+    'listing_validation.invalid_transition' => 'Bieżący status ogłoszenia uniemożliwia tę zmianę.',
+    'listing_validation.expired_worker' => 'Usługa zamykania przetwarza wygasłe aukcje.',
+    'listing_validation.sold_via_auction' => 'Aukcje kończą się przez licytację lub opcję Kup teraz.',
+    'listing_validation.pause_requires_active' => 'Wstrzymać można tylko opublikowane ogłoszenia.',
+    'listing_validation.cannot_publish' => 'Tego ogłoszenia nie można opublikować.',
+    'listing_validation.edit_auction' => 'Ustaw czas trwania aukcji podczas edycji ogłoszenia.',
+    'listing_validation.changed' => 'Zmiana ogłoszenia została zapisana.',
 ];

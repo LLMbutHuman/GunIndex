@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Nahrajte úplný snímek do 5 MiB.',
     'listing_validation.image_count' => 'K inzerátu přidejte nejvýše pět snímků zboží.',
     'listing_validation.image_format' => 'Nahrajte JPEG, PNG nebo WebP do 20 megapixelů a 8 000 pixelů na stranu.',
+    'listing_validation.action' => 'Neplatná akce inzerátu.',
+    'listing_validation.invalid_transition' => 'Aktuální stav inzerátu brání této změně.',
+    'listing_validation.expired_worker' => 'Ukončovací služba zpracovává vypršené aukce.',
+    'listing_validation.sold_via_auction' => 'Aukce se dokončují příhozem nebo okamžitým nákupem.',
+    'listing_validation.pause_requires_active' => 'Pozastavit lze pouze zveřejněné inzeráty.',
+    'listing_validation.cannot_publish' => 'Tento inzerát nelze zveřejnit.',
+    'listing_validation.edit_auction' => 'Délku aukce nastavte v úpravě inzerátu.',
+    'listing_validation.changed' => 'Změna inzerátu byla uložena.',
 ];

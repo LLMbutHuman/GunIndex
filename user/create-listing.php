@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     $values['pickup']=$_POST['pickup'] ?? '0'; $values['shipping']=$_POST['shipping'] ?? '0';
     if (($_POST['load_attributes']??null)!=='1') try {
         $id=market_save_listing($pdo,(int)$user['id'],$_POST,$_FILES['images'] ?? []);
+        $_SESSION['listing_dashboard_notice']='saved';
         redirect('/user/dashboard.php?saved='.$id);
     } catch (InvalidArgumentException|DomainException|PaymentUnavailable|MarketAccessException|MarketConflictException $exception) {
         http_response_code(422); $error=$exception->getMessage();

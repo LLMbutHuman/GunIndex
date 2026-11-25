@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Carica un’immagine completa fino a 5 MiB.',
     'listing_validation.image_count' => 'Aggiungi fino a cinque immagini prodotto per annuncio.',
     'listing_validation.image_format' => 'Carica un’immagine JPEG, PNG o WebP fino a 20 megapixel e 8.000 pixel per lato.',
+    'listing_validation.action' => 'Azione sull’annuncio non valida.',
+    'listing_validation.invalid_transition' => 'Lo stato attuale dell’annuncio impedisce la modifica.',
+    'listing_validation.expired_worker' => 'Il servizio di chiusura elabora le aste scadute.',
+    'listing_validation.sold_via_auction' => 'Le aste si concludono con offerte o Compra subito.',
+    'listing_validation.pause_requires_active' => 'Puoi sospendere solo gli annunci pubblicati.',
+    'listing_validation.cannot_publish' => 'Questo annuncio non può essere pubblicato.',
+    'listing_validation.edit_auction' => 'Imposta la durata dell’asta modificando l’annuncio.',
+    'listing_validation.changed' => 'La modifica dell’annuncio è stata salvata.',
 ];

@@ -451,24 +451,24 @@ function market_buy_now(PDO $pdo, int $listingId, int $userId): array
 
 function market_transition(PDO $pdo, int $listingId, int $userId, string $action): void
 {
-    if (!in_array($action,['pause','publish','archive','sold'],true)) throw new InvalidArgumentException('Ungültige Angebotsaktion.');
+    if (!in_array($action,['pause','publish','archive','sold'],true)) throw new InvalidArgumentException(t('listing_validation.action'));
     try {
         $pdo->beginTransaction(); maintenance_assert_market_available($pdo);
         $listing=market_lock_listing($pdo,$listingId);
         market_assert_users_active($pdo,[$userId]);
-        if ((int)$listing['seller_id']!==$userId) throw new MarketAccessException('Nur eigene Angebote können geändert werden.');
+        if ((int)$listing['seller_id']!==$userId) throw new MarketAccessException(t('listing_validation.own'));
         if(!trade_listing_available($pdo,$listingId))throw new MarketConflictException(t('trade.unavailable'));
-        if (market_has_bids($pdo,$listingId) || !in_array($listing['status'],['draft','active','paused'],true)) throw new MarketConflictException('Der aktuelle Angebotszustand erlaubt diese Änderung nicht.');
-        if ($listing['type']==='auction' && $listing['status']==='active' && market_expired($listing)) throw new MarketConflictException('Abgelaufene Auktionen werden durch den Abschlussjob verarbeitet.');
+        if (market_has_bids($pdo,$listingId) || !in_array($listing['status'],['draft','active','paused'],true)) throw new MarketConflictException(t('listing_validation.invalid_transition'));
+        if ($listing['type']==='auction' && $listing['status']==='active' && market_expired($listing)) throw new MarketConflictException(t('listing_validation.expired_worker'));
         $states=['pause'=>'paused','publish'=>'active','archive'=>'archived','sold'=>'sold'];
-        if ($action==='sold' && !in_array($listing['type'],['fixed','negotiated'],true)) throw new MarketConflictException('Auktionen werden ausschließlich durch Gebote oder Sofortkauf abgeschlossen.');
-        if ($action==='pause' && $listing['status']!=='active') throw new MarketConflictException('Nur veröffentlichte Angebote können pausiert werden.');
+        if ($action==='sold' && !in_array($listing['type'],['fixed','negotiated'],true)) throw new MarketConflictException(t('listing_validation.sold_via_auction'));
+        if ($action==='pause' && $listing['status']!=='active') throw new MarketConflictException(t('listing_validation.pause_requires_active'));
         if ($action==='publish') {
             if($listing['ends_at']!==null&&strtotime($listing['ends_at'].' UTC')<=time())throw new MarketConflictException(t('trade.expired'));
             if($listing['status']==='draft'&&$listing['type']!=='auction')$pdo->prepare('UPDATE market_listings SET ends_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 30 DAY) WHERE id=?')->execute([$listingId]);
             if(!geo_country_locked_enabled($pdo,$listing['country_code']))throw new MarketAccessException(t('listing_validation.country_closed'));
-            if (!market_category_locked_allowed($pdo,(int)$listing['category_id']) || !catalog_text_allowed($listing['title'].' '.$listing['description'])) throw new MarketAccessException('Dieses Angebot kann nicht veröffentlicht werden.');
-            if ($listing['type']==='auction') throw new MarketConflictException('Eine Auktionslaufzeit bitte über die Bearbeitung festlegen.');
+            if (!market_category_locked_allowed($pdo,(int)$listing['category_id']) || !catalog_text_allowed($listing['title'].' '.$listing['description'])) throw new MarketAccessException(t('listing_validation.cannot_publish'));
+            if ($listing['type']==='auction') throw new MarketConflictException(t('listing_validation.edit_auction'));
             $definitions=classification_definitions($pdo,(int)$listing['category_id'],true,true);
             classification_values($definitions,array_column(classification_entries($pdo,$listingId),'value','id'),true);
         }

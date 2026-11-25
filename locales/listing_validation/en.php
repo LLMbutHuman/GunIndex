@@ -22,4 +22,12 @@ return [
     'listing_validation.image_incomplete' => 'Upload a complete image up to 5 MiB.',
     'listing_validation.image_count' => 'Upload up to five product images per listing.',
     'listing_validation.image_format' => 'Upload a JPEG, PNG or WebP image with up to 20 megapixels and 8,000 pixels per side.',
+    'listing_validation.action' => 'Invalid listing action.',
+    'listing_validation.invalid_transition' => 'The listing’s current state prevents this change.',
+    'listing_validation.expired_worker' => 'The auction closing worker processes expired auctions.',
+    'listing_validation.sold_via_auction' => 'Auctions are completed through bids or Buy it now.',
+    'listing_validation.pause_requires_active' => 'Only published listings can be paused.',
+    'listing_validation.cannot_publish' => 'This listing cannot be published.',
+    'listing_validation.edit_auction' => 'Set the auction duration by editing the listing.',
+    'listing_validation.changed' => 'The listing change was saved.',
 ];

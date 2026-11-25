@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Inseratsänderungen im Konto
+
+Erstellen, Bearbeiten, Pausieren und Archivieren setzen eine einmalige
+Bestätigung nach gespeicherter Änderung. Eine URL allein löst die
+Bestätigung nicht aus. Fehler bei Statuswechseln stehen in acht Sprachen
+zur Verfügung. Der französische HTTP-Fall prüft die Anzeige nach einem
+gültigen Upload und das Pausieren einschließlich einer abgewiesenen
+Wiederholung. Lokal bestanden 14 PHP-Syntaxprüfungen und der Abgleich
+von 29 Schlüsseln in acht Sprachen.
+
 ## Gebote, Sofortkauf und Bewertung
 
 Gebote und Sofortkäufe zeigen eine Bestätigung einmalig für das
@@ -10,6 +20,7 @@ Der HTTP-Test prüft das Speichern eines Gebots, einen blockierten
 Sofortkauf nach Geboten, einen erfolgreichen Sofortkauf und den zugehörigen
 Bewertungszugang. Lokal bestanden 13 PHP-Syntaxprüfungen und der Abgleich
 von 19 Schlüsseln in acht Sprachen.
+[CI für Sofortkauf und Bewertung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45618311221)
 
 ## Suchfilter und Entfernungssortierung
 
@@ -19,6 +30,7 @@ Ungültige Seitennummern werden mit HTTP 400 abgewiesen. Entfernungen
 benötigen weiterhin Postleitzahlen mit freigegebenen Koordinaten.
 Lokal bestanden zehn PHP-Syntaxprüfungen, 14 Suchgruppen und sieben
 Geogruppen. Der HTTP-Fall prüft englische Fehlermeldungen und Seitentypen.
+[CI für die Suchvalidierung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45617737916)
 
 ## Inseratsformular und Upload-Validierung
 
@@ -42,6 +54,7 @@ Der HTTP-Test prüft die englische Oberfläche, Landvalidierung sowie
 einen Import mit gültiger Zeile, exakter Dublette und Fehler.
 Lokal bestanden elf PHP-Syntaxprüfungen und die Prüfung von 81 Schlüsseln
 in acht Sprachkatalogen.
+Die vollständige Linux-Regression und die Windows-Vorprüfung sind bestanden.
 [CI für Dashboard und CSV](https://github.com/LLMbutHuman/GunIndex/actions/runs/45616862936)
 
 ## Öffentliche Plattforminformationen
@@ -422,8 +435,8 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes verbleibende Meldungen für Angebotsaktionen und
-Systemfehler mit den acht Katalogen abgleichen.
+Als Nächstes verbleibende systemweite Zugriffs-, Ausnahme- und
+Uploadgrößenmeldungen mit den acht Katalogen abgleichen.
 Die ausführbare Installation hat
 einen isolierten Ubuntu-Test einschließlich Update bestanden.
 Der Zielhost mit Domain, produktiver TLS-Prüfung, Mailzustellung und
