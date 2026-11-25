@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Öffentliche Plattforminformationen
+
+Regeln, Gebühren, Datenschutz und Betreiberhinweise stehen in acht
+Sprachen zur Verfügung. Die Seite kennzeichnet die Hinweise als ungeprüft,
+verweist auf die freigegebenen Rechtsversionen und zeigt die aktuellen
+Zahlungsmodule sowie zentral berechnete Gebührenwerte. Die Datenschutzhinweise
+beschreiben aktivierbare Identitätsprüfung, E2EE und Altverlauf getrennt.
+Lokal bestanden zehn PHP-Syntaxprüfungen, JavaScript-Syntax, 40 Schlüssel
+und die Nachrechnung für Beispielprovision und Obergrenze. Der Browsertest
+prüft alle vier Abschnitte in acht Sprachen bei 390 Pixel Breite.
+
 ## Händler- und Kampagnenprüfung
 
 Die Kampagnenverwaltung und die gemeinsamen Statusmeldungen für Buchungen
@@ -9,6 +20,7 @@ Prüfentscheidungen leiten zurück zur Auswahl und bestätigen die Änderung
 einmalig. Zahlungsklärungen erfordern Finanzberechtigung und Banneransichten
 werden beim tatsächlichen Abruf protokolliert. Lokal bestanden 19
 PHP-Syntaxprüfungen sowie 25 Schlüssel und 12 Statuswerte in acht Sprachen.
+[CI zur Händler- und Kampagnenprüfung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45018417633)
 
 ## Benutzerkonten und Sitzungswiderruf
 
@@ -18,6 +30,8 @@ einmalig nach dem protokollierten Widerruf. Der HTTP-Test prüft den
 Sitzungswechsel in zwei Browsern, erneute Anmeldung, fehlendes CSRF-Token
 und Versuche zur Selbständerung. Lokal bestanden zehn PHP-Syntaxprüfungen
 und der Abgleich von 14 neuen Schlüsseln in acht Katalogen.
+Die isolierte Regression einschließlich Browser- und Windows-Prüfung ist
+bestanden.
 [CI zur Kontoverwaltung](https://github.com/LLMbutHuman/GunIndex/actions/runs/45017969204)
 
 ## Inserats- und Auktionsübersicht
@@ -28,6 +42,8 @@ Details bleiben Statusfilter und Seite erhalten. Die HTTP-Regression prüft
 Berechtigungen, die Ablehnung von Schreibzugriffen und öffentliche
 Gebotsbeträge bei vertraulichen Maximalgeboten. Lokal bestanden zehn
 PHP-Syntaxprüfungen und der Abgleich von 23 Schlüsseln in acht Katalogen.
+Die isolierte Regression einschließlich Browser- und Windows-Prüfung ist
+bestanden.
 [CI zur Inserats- und Auktionsübersicht](https://github.com/LLMbutHuman/GunIndex/actions/runs/45017760461)
 
 ## Identitätsprüfung in acht Sprachen

@@ -8,6 +8,17 @@ const origin='http://127.0.0.1:8081';
  const registerCopy={de:['Ein Konto. Neue Möglichkeiten.','Der Benutzername benötigt'],en:['One account. New possibilities.','The username must contain'],fr:['Un compte. De nouvelles possibilités.','Le nom d’utilisateur doit contenir'],nl:['Eén account. Nieuwe mogelijkheden.','De gebruikersnaam moet'],pl:['Jedno konto. Nowe możliwości.','Nazwa użytkownika musi zawierać'],cs:['Jeden účet. Nové možnosti.','Uživatelské jméno musí obsahovat'],da:['Én konto. Nye muligheder.','Brugernavnet skal indeholde'],it:['Un account. Nuove possibilità.','Il nome utente deve contenere']};
  const recoveryCopy={de:['Ein neues Passwort.','Deine E-Mail bestätigen.','Der Link ist ungültig'],en:['A new password.','Confirm your email.','The link is invalid'],fr:['Un nouveau mot de passe.','Confirmez votre e-mail.','Le lien est invalide'],nl:['Een nieuw wachtwoord.','Bevestig je e-mail.','De link is ongeldig'],pl:['Nowe hasło.','Potwierdź swój e-mail.','Link jest nieprawidłowy'],cs:['Nové heslo.','Potvrďte svůj e-mail.','Odkaz je neplatný'],da:['En ny adgangskode.','Bekræft din e-mail.','Linket er ugyldigt'],it:['Una nuova password.','Conferma la tua e-mail.','Il link non è valido']};
  try{
+  const policySections=['rules','payments','privacy','operator'];
+  const policyHeadings={
+   de:['Plattformregeln','Zahlungen und Gebühren','Datenschutz','Betreiberangaben'],
+   en:['Marketplace rules','Payments and fees','Privacy','Operator details'],
+   fr:['Règles de la place de marché','Paiements et frais','Confidentialité','Informations sur l’exploitant'],
+   nl:['Marktplaatsregels','Betalingen en kosten','Privacy','Gegevens van de exploitant'],
+   pl:['Zasady rynku','Płatności i opłaty','Prywatność','Dane operatora'],
+   cs:['Pravidla tržiště','Platby a poplatky','Ochrana údajů','Údaje o provozovateli'],
+   da:['Markedspladsens regler','Betalinger og gebyrer','Databeskyttelse','Operatøroplysninger'],
+   it:['Regole del mercato','Pagamenti e commissioni','Privacy','Dati del gestore'],
+  };
   const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   for(const [locale,country] of [['de','DE'],['en','AT'],['fr','FR'],['nl','NL'],['pl','PL'],['cs','CZ'],['da','DK'],['it','CH']]){
    await page.goto(origin+'/',{waitUntil:'networkidle'});await page.locator('.market-switcher summary').click();const form=page.locator('form[action="/user/language.php"]');await form.locator('[name=locale]').selectOption(locale);await form.locator('[name=market_country]').selectOption(country);
@@ -33,6 +44,16 @@ const origin='http://127.0.0.1:8081';
     if(operation==='reset-password'){await page.locator('[name=password]').fill('Synthetic replacement password');await page.locator('[name=password_confirm]').fill('Synthetic replacement password');}
     const tokenResponse=await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==='/auth/'+operation+'.php'&&r.request().method()==='POST'),page.locator('main button[type=submit],main form button:not([type])').click()]);assert.strictEqual(tokenResponse[0].status(),422);await page.waitForLoadState('networkidle');assert((await page.locator('.notice.error').innerText()).startsWith(recoveryCopy[locale][2]));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Token error mobile overflow '+locale);
    }checks.push('localized_recovery_and_verification_'+locale);
+   for (const [index, section] of policySections.entries()) {
+    const response=await page.goto(origin+'/marketplace/policy.php?section='+section);
+    assert.strictEqual(response.status(),200);
+    assert.strictEqual(await page.locator('main h1').textContent(),policyHeadings[locale][index]);
+    assert.strictEqual(await page.locator('.policy-nav [aria-current=page]').textContent(),policyHeadings[locale][index]);
+    assert.strictEqual(await page.locator('.policy-nav a[href="/marketplace/legal.php"]').count(),1);
+    assert(!/market_policy\.[a-z_]+/.test(await page.locator('main').innerText()));
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`Information overflow in ${locale}/${section}`);
+   }
+   checks.push('localized_public_information_'+locale);
   }
   await page.goto(origin+'/marketplace/search.php',{waitUntil:'networkidle'});const search=page.locator('form.search-toolbar');await search.locator('[name=scope]').selectOption('international');await search.locator('[name=country_code]').selectOption('DE');
   await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),search.locator('button[type=submit]').click()]);assert.strictEqual(new URL(page.url()).searchParams.get('scope'),'international');assert.strictEqual(await page.locator('form.search-toolbar [name=scope]').inputValue(),'international');checks.push('international_search_control');
