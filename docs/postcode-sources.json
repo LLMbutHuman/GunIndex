@@ -180,6 +180,34 @@
       "sha256": "b882ad73d8a0ee7a1be49f95630fc7156ea3ffb8ab57f3245314d703dca1d59a",
       "constraints": ["Means of S-JTSK address points grouped by postcode", "Only aggregates with at least three distinct points are bundled", "Project using proj4 2.23.0, EPSG:5514 through EPSG:1623 to WGS 84", "Approximate postcode locations; no individual address rows"],
       "status": "bundled_seed_locally_validated"
+    },
+    {
+      "id": "bosa-best-belgium",
+      "countries": ["BE"],
+      "publisher": "SPF/FOD BOSA; address registers of Flanders, Brussels-Capital and Wallonia",
+      "path": "ZIP/PLZ-BE.csv",
+      "source_url": "https://opendata.bosa.be/index.nl.html",
+      "terms_url": "https://opendata.bosa.be/download/best/bestinabox/bestinabox_conditionsdutilisation.pdf",
+      "dataset_date": "2026-11-25",
+      "dataset_date_evidence": "HTTP Last-Modified and member dates agree for all three regional BOSA CSV archives",
+      "archives": [
+        {"region":"BE-VLG","url":"https://opendata.bosa.be/download/best/openaddress-bevlg.zip","sha256":"f2c56f7705101bfba60334c4715fe7940d1fa00ef8a8afad1528ad73a8b6aeec"},
+        {"region":"BE-BRU","url":"https://opendata.bosa.be/download/best/openaddress-bebru.zip","sha256":"21ef211a86609db217d834b7d8e18153defe5694271afb8ce6b16d17c986ab3d"},
+        {"region":"BE-WAL","url":"https://opendata.bosa.be/download/best/openaddress-bewal.zip","sha256":"52a7538a1cab80cbcc70def4dc3edd34ea9ea4c368c3cda4d62718612f8c84b9"}
+      ],
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "source_records": 7184728,
+      "excluded_status_or_missing_fields": 522919,
+      "excluded_invalid_postcodes": 0,
+      "excluded_invalid_or_out_of_bounds_coordinates": 133755,
+      "source_unique_postcodes_with_valid_points": 1143,
+      "validated_unique_postcodes": 1139,
+      "bytes": 40639,
+      "sha256": "c67ba0f01d89504e3aaf6beefbc03ac0f3b025b66309734c1daabf18cb00e3b2",
+      "constraints": ["Current BOSA address points in provided WGS84 fields", "Mean by postcode, with at least three distinct coordinates", "Dominant municipality among accepted source records", "No address rows are bundled"],
+      "status": "bundled_seed_locally_validated"
     }
   ]
 }

@@ -1,5 +1,16 @@
 # Implementierungsfortschritt
 
+## Belgische Postleitzahlen aus der CC-BY-Veröffentlichung von BOSA
+
+1.139 PLZ-Zentren aus den drei geprüften Regionalarchiven von BeST. Die
+Aufbereitung mittelt die WGS84-Punkte aus 7.184.728 Ausgangszeilen und liefert
+keine Adresszeilen aus. Zwei vollständige Läufe ergaben bytegleiche Ausgaben.
+Node und der PHP-Importer bestätigten 1.139 eindeutige Punkte und die SHA-256.
+Der Ubuntu-Test prüft die acht Länderimporte bei Neuinstallation und
+das Update sowie die Brüsseler Umkreissuche gegen tatsächlich vorhandene
+Koordinaten und den Quellenhinweis.
+[Quellen, Prüfsummen und Reproduktionsbefehl](POSTCODE_SOURCES.md)
+
 ## Tägliche verschlüsselte Offsite-Kopie nach Einrichtung des SSH-Ziels
 
 Der Backup-Dienst übernimmt das optionale Ziel aus einer nur für seinen
@@ -11,6 +22,10 @@ erfolgreichen Rücklesetest in acht Sprachen. Die isolierte Ubuntu-CI prüft den
 automatisierten Pfad, die Ablehnung einer zu weit lesbaren Konfiguration und
 die unveränderte lokale Wiederherstellung.
 [Einrichtung](MONITORING.md)
+Die isolierte Produktions-CI bestätigte den automatischen SFTP-Transfer, die
+Ablehnung der Testkonfiguration mit Modus 0644, den privaten Statusnachweis
+für den Setup-Assistenten und die Wiederherstellung aus der SFTP-Kopie.
+[Ubuntu-Abnahme](https://github.com/LLMbutHuman/GunIndex/actions/runs/45700981508)
 
 ## Tschechische Postleitzahlen aus dem amtlichen RÚIAN-Register
 

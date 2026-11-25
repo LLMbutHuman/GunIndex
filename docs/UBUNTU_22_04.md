@@ -145,7 +145,8 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    einmal und dedupliziert Anwendungsereignisse; SMTP besitzt keine Exactly-once-Garantie.
 
 10. Der Installer importiert geprüfte PLZ für Deutschland, das französische
-    Mutterland, Österreich, die Schweiz, Liechtenstein, Luxemburg und Tschechien.
+    Mutterland, Österreich, die Schweiz, Liechtenstein, Luxemburg, Tschechien
+    und Belgien.
     Der geschützte Länderbereich zeigt den Importstand. Quellen, Prüfsummen und
     mögliche Folgeimporte stehen in [POSTCODE_SOURCES.md](POSTCODE_SOURCES.md).
     Ohne passende Koordinaten darf keine erfundene Entfernung angezeigt werden.

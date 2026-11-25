@@ -246,5 +246,9 @@ seed_postcodes PLZ-CZ.csv --country=CZ \
  --expected-sha256=b882ad73d8a0ee7a1be49f95630fc7156ea3ffb8ab57f3245314d703dca1d59a \
  --source='ČÚZK RÚIAN address points, effective 2026-10-31 (Czechia)' \
  --license-note='CC BY 4.0. Postcode means transformed from S-JTSK to WGS 84. Source: https://geoportal.gov.cz/php/micka/record/basic/CZ-00025712-CUZK_SERIES-MD_RUIAN-CSV-ADR-ST'
+seed_postcodes PLZ-BE.csv --country=BE \
+ --expected-sha256=c67ba0f01d89504e3aaf6beefbc03ac0f3b025b66309734c1daabf18cb00e3b2 \
+ --source='BOSA BeST, Flanders, Brussels-Capital and Wallonia, 2026-11-25 (Belgium)' \
+ --license-note='CC BY 4.0. WGS84 postcode means with at least three distinct source points. https://opendata.bosa.be/index.nl.html'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

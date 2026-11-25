@@ -45,6 +45,13 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
                 'CC BY 4.0'=>'https://creativecommons.org/licenses/by/4.0/',
             ],
         ],
+        'BE' => [
+            'sha256'=>'c67ba0f01d89504e3aaf6beefbc03ac0f3b025b66309734c1daabf18cb00e3b2',
+            'links'=>[
+                'BOSA – BeST (2026-11-25), Vlaanderen, Bruxelles-Capitale, Wallonie'=>'https://opendata.bosa.be/index.nl.html',
+                'CC BY 4.0'=>'https://creativecommons.org/licenses/by/4.0/',
+            ],
+        ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
     if ($matched === []) return [];

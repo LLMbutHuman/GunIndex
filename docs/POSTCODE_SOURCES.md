@@ -13,8 +13,38 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
 Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
-Der Installer startet den Import für DE, FR, AT, CH, LI, LU und CZ nur bei fehlender
+Der Installer startet den Import für DE, FR, AT, CH, LI, LU, CZ und BE nur bei fehlender
 Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
+
+## Belgien
+
+`ZIP/PLZ-BE.csv` enthält 1.139 PLZ aus den BeST-Adressregistern von Flandern,
+Brüssel-Hauptstadt und Wallonien. BOSA stellt die verwendeten drei CSV-Archive
+vom 25. November 2026 unter CC BY 4.0 bereit. Jedes Archiv stellt WGS84 bei.
+Die Aufbereitung verwendet aktuelle Adresspunkte mit vollständigen, gültigen
+Feldern. Sie mittelt die Punkte je PLZ und übernimmt die am häufigsten
+vertretene Gemeinde aus dem jeweiligen regionalen Namensfeld. Vier von
+1.143 PLZ mit gültigen Koordinaten haben weniger als drei verschiedene Punkte
+und behalten die exakte Suche. Einzelne Zustellorte können vom Mittelwert
+abweichen. Adresszeilen und Hausnummern sind in der Ausgabedatei nicht enthalten.
+[BOSA und regionale Herausgeber](https://opendata.bosa.be/index.nl.html) ·
+[BOSA-Nutzungsbedingungen](https://opendata.bosa.be/download/best/bestinabox/bestinabox_conditionsdutilisation.pdf) ·
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+Von 7.184.728 Zeilen scheiden 522.919 wegen Status oder fehlender Felder
+aus. Weitere 133.755 Zeilen aus Wallonien enthalten ungültige Koordinaten oder
+Punkte außerhalb des belgischen Koordinatenrahmens. Die Originalarchive werden direkt von BOSA anhand der
+im Quellenmanifest dokumentierten SHA-256 geprüft. Für eine Aktualisierung
+die regionalen Archive mit gleichem Stand wählen, die Prüfsummen ergänzen
+und Datenfelder, Abdeckung, Nutzungsbedingungen und Radius erneut prüfen.
+
+```sh
+php ops/prepare-be-postcodes.php --source-dir=be-sources --output=PLZ-BE.csv \
+  --bevlg-sha256=f2c56f7705101bfba60334c4715fe7940d1fa00ef8a8afad1528ad73a8b6aeec \
+  --bebru-sha256=21ef211a86609db217d834b7d8e18153defe5694271afb8ce6b16d17c986ab3d \
+  --bewal-sha256=52a7538a1cab80cbcc70def4dc3edd34ea9ea4c368c3cda4d62718612f8c84b9
+node ops/validate-postcodes.mjs --country=BE --file=PLZ-BE.csv
+```
 
 ## Tschechien
 
@@ -228,6 +258,17 @@ Datensätze. Anschließend tatsächliche `geo_imports`-Kennung, SHA, Datensatzan
 verwendete Lizenznotiz und Länder-/Radiusprüfungen im Betriebsprotokoll ergänzen.
 
 ## Recherchierte externe Quellen
+
+### Belgien: Lizenzunterschiede je Veröffentlichung
+
+Der föderale Katalog nennt für `code-postaux-belge` CC BY 4.0. Die Metadaten
+des veröffentlichenden ODWB-Portals zu genau diesem Export nennen CC BY-NC 4.0.
+Der Export ist für GunIndex ausgeschlossen. BOSA stellt die drei eigenen
+BeST-Adressregisterdateien unter CC BY 4.0 bereit. Die Lizenz des separaten
+BeST-GeoPackage und des WMS gilt jeweils für diese Angebote.
+[Föderaler Katalog](https://data.gov.be/en/datasets/httpswwwodwbbeexploredatasetcode-postaux-belge) ·
+[ODWB-Metadaten](https://www.odwb.be/api/explore/v2.1/catalog/datasets/code-postaux-belge) ·
+[BOSA-Datendownloads und Bedingungen](https://opendata.bosa.be/index.nl.html)
 
 ### GeoNames: alle zehn Nachbarmärkte
 
