@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Filtre de prix non valide.',
     'market_search.location_invalid' => 'Filtre de localisation non valide.',
     'market_search.distance_sort_requires_coordinates' => 'Le tri par distance nécessite un code postal avec des coordonnées approuvées.',
+    'market_search.derived_points' => 'Points postaux dérivés',
 ];

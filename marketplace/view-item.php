@@ -53,7 +53,13 @@ include __DIR__ . '/../includes/header.php';
 <?php require_once __DIR__.'/../includes/classification-fields.php'; classification_summary(classification_entries($pdo,(int)$id)); ?>
 </div><aside class="listing-information reveal"><span class="badge <?= $isAuction ? 'accent' : 'muted' ?>"><?= $isAuction ? t('Auktion') : t($item['type']==='negotiated'?'trade.negotiated':'Festpreis') ?></span><h1><?= h($item['title']) ?></h1><div class="detail-location"><?= ui_icon('pin') ?><?= h($item['country_code'].' · '.$item['zip'] . ' ' . $item['city']) ?></div><p class="country-summary"><?=h(geo_countries()[$item['country_code']]??$item['country_code'])?></p>
 <form class="location-origin-form" method="get"><input type="hidden" name="id" value="<?=(int)$id?>"><label class="field"><?=h(t('Bezugsland'))?><select name="origin_country"><?php foreach(geo_active_countries($pdo) as $code=>$name):?><option value="<?=h($code)?>" <?=$originCountry===$code?'selected':''?>><?=h($name)?></option><?php endforeach;?></select></label><label class="field"><?=h(t('Postleitzahl'))?><input name="origin_zip" value="<?=h($originPostal)?>" maxlength="16" autocomplete="postal-code" required></label><button class="button secondary" type="submit"><?=h(t('Entfernung'))?></button></form>
-<?php if($originPostal!==''):?><p class="help"><?=h(geo_distance_label($item['distance_km']??null))?></p><p class="help"><?=h(t('Entfernungen sind ungefähre Luftlinien zwischen PLZ-Mittelpunkten, keine Straßenentfernungen.'))?></p><?php endif;?>
+<?php if($originPostal!==''):?>
+<p class="help"><?=h(geo_distance_label($item['distance_km']??null))?></p><p class="help"><?=h(t('Entfernungen sind ungefähre Luftlinien zwischen PLZ-Mittelpunkten, keine Straßenentfernungen.'))?></p>
+<?php if (($item['distance_km']??null)!==null) {
+    $postcodeSourceCountries=[$originCountry,$item['country_code']];
+    include __DIR__.'/../includes/postcode-attribution.php';
+}
+endif;?>
 <?php if ($auctionNotice !== null):?><p class="notice success" role="status"><?=h(t($auctionNotice))?></p><?php endif;?>
 <div class="detail-price"><?= h(money_eur($price)) ?></div><p class="detail-price-label"><?= $isAuction ? ($item['current_bid_cents'] === null ? t('Startpreis') : t('Aktuelles Höchstgebot')) : t('Angebotspreis') ?></p>
 <?php if ($hasEnded):?><div class="notice"><?=h(t($endedNotice))?></div><?php endif;?>

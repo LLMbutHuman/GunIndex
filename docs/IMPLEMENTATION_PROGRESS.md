@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Österreichische Postleitzahlen
+
+Der Installer importiert 2.200 österreichische Postleitzahlpunkte aus
+einer fest versionierten Datei. GeoNames liefert die Koordinaten und
+das RTR-Verzeichnis bestätigt gültige Adressierungs-PLZ. Die Suche
+zeigt beide Quellen und CC BY 4.0. Für 34 gültige Codes ohne Punkt der
+verwendeten Qualitätsstufen bleibt die exakte Suche verfügbar.
+Lokal bestanden 15 PHP-Syntaxprüfungen, die Shell-Syntax, der erneute
+Quellenlauf, die Ablehnung eines falschen Hashs, der PHP-Dry-Run und die
+Node-Prüfung. Der Installer-Test prüft Import, Update, Quellenhinweise und
+den Radius um Salzburg mit tatsächlichen Daten.
+[Datensatz und Methode](POSTCODE_SOURCES.md)
+
 ## Lokalisierte Systemfehler und Zugriffsverweigerung
 
 Die Anwendung zeigt ihre Fehlerseiten für zu große Anfragen,
@@ -445,7 +458,7 @@ elf PHP-Syntaxprüfungen. Der isolierte Finanz-HTTP-Test prüft die sichtbare
 Navigation und `aria-current` in allen acht Sprachen.
 Beide CI-Jobs waren erfolgreich. [CI 44841239433](https://github.com/LLMbutHuman/GunIndex/actions/runs/44841239433)
 
-## Wiederaufnahmepunkt, 2026-11-22
+## Wiederaufnahmepunkt, 2026-11-25
 
 Die Abnahmematrix zählt 17 technisch geprüfte, sieben extern zu prüfende und
 zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese

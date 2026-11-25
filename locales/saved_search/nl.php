@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Ongeldig prijsfilter.',
     'market_search.location_invalid' => 'Ongeldig locatiefilter.',
     'market_search.distance_sort_requires_coordinates' => 'Sorteren op afstand vereist een postcode met goedgekeurde coördinaten.',
+    'market_search.derived_points' => 'Afgeleide postcodepunten',
 ];

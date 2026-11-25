@@ -13,8 +13,46 @@ Ergänzung 2026-11-02: Auch der vorhandene PHP-Importer wurde mit `--country=DE
 Keine Datenbankänderung; Länder-/Radius-DB-Tests weiterhin separat erforderlich.
 
 Die maschinenlesbaren Angaben stehen in [postcode-sources.json](postcode-sources.json).
-Der Installer startet den verifizierten Import für DE und FR nur bei fehlender
+Der Installer startet den Import für DE, FR und AT nur bei fehlender
 Importhistorie. Die recherchierten weiteren Quellen sind Kandidaten.
+
+## Österreich
+
+Die Datei `ZIP/PLZ-AT.csv` enthält 2.200 von 2.234 zum Stichtag
+gültigen Adressierungs-PLZ aus dem RTR-Verzeichnis. Der Datensatz
+verbindet dessen Ortsnamen und Gültigkeitsangaben (Version 61407 vom
+4. November 2026) mit dem GeoNames-Archiv vom 25. November 2026.
+Beide Quellen stehen unter CC BY 4.0. Die Anwendung nennt sie bei
+aktivem Import auf Such- und Entfernungsseiten.
+[RTR-Katalog und Lizenz](https://www.data.gv.at/datasets/f76ed887-00d6-450f-a158-9f8b1cbbeebf)
+· [GeoNames-Quelle und Datenformat](https://download.geonames.org/export/zip/readme.txt)
+· [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+`ops/prepare-at-postcodes.php` filtert Geodaten der Qualitätsstufen 4
+und 6 auf gültige Adressierungs-PLZ. Pro PLZ werden eindeutige Punkte
+der höchsten verfügbaren Stufe gemittelt. Die Ortsbezeichnung stammt
+aus dem RTR-Verzeichnis. Bei mehreren Namen gilt die alphabetisch
+erste Bezeichnung nach Byte-Reihenfolge. Das Ergebnis enthält
+PLZ, Ort und gerundete WGS84-Koordinaten. Die 34 PLZ ohne geeigneten
+Punkt bleiben exakt suchbar. Dazu gehört Wien 1010.
+
+Für die Aufbereitung sind PHP CLI mit ZIP-Erweiterung und genau die
+beiden im [Quellmanifest](postcode-sources.json) gehashten Snapshots
+erforderlich. Bei Updates die aktuellen Quellen gesondert speichern,
+Publikationsstand, Lizenz und Prüfsummen erfassen, die Abdeckung vergleichen
+und die neue Ableitung erneut prüfen. Der Installer lädt keine Live-Daten.
+
+```sh
+php ops/prepare-at-postcodes.php --geonames=AT.zip --rtr=plz.json \
+  --geonames-sha256=61ae0da7221ff66ce1a78168042d813172558baefd43b3b24f83d9df4261964e \
+  --rtr-sha256=0af881fa64d3056ba554532ba30085330b4c998d36ae3c924566ae4a9623d52b \
+  --date=2026-11-25 --output=PLZ-AT.csv
+```
+
+PHP-Vorprüfung und Node-Validator haben 2.200 eindeutige Datensätze,
+88.864 Bytes, keine Dubletten und SHA-256
+`87109d717f9fdc9aba73d928ed7679b1a3efe563cd0229415cbfb1ab9b5ec29d`
+bestätigt.
 
 ## Bereitgestellte deutsche Datei
 

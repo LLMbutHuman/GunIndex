@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Invalid price filter.',
     'market_search.location_invalid' => 'Invalid location filter.',
     'market_search.distance_sort_requires_coordinates' => 'Sorting by distance requires a postcode with approved coordinates.',
+    'market_search.derived_points' => 'Derived postcode points',
 ];

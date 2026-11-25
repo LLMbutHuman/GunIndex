@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Ungültiger Preisfilter.',
     'market_search.location_invalid' => 'Ungültiger Standortfilter.',
     'market_search.distance_sort_requires_coordinates' => 'Für die Entfernungssortierung ist eine Postleitzahl mit freigegebenen Koordinaten erforderlich.',
+    'market_search.derived_points' => 'Abgeleitete PLZ-Mittelpunkte',
 ];

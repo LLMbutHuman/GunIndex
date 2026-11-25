@@ -144,9 +144,10 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    oder Nachrichtentexte in Logs/Tickets kopieren. Die Versandqueue liefert mindestens
    einmal und dedupliziert Anwendungsereignisse; SMTP besitzt keine Exactly-once-Garantie.
 
-10. Der Installer importiert geprüfte PLZ für Deutschland und das französische
-    Mutterland. Der geschützte Länderbereich zeigt die Abdeckung. Quellen,
-    Prüfsummen und weitere mögliche Importe stehen in `INTERNATIONAL.md`.
+10. Der Installer importiert geprüfte PLZ für Deutschland, das französische
+    Mutterland und Österreich. Die Abdeckung hängt vom Datensatz ab. Der
+    geschützte Länderbereich zeigt den Importstand. Quellen, Prüfsummen und
+    mögliche Folgeimporte stehen in [POSTCODE_SOURCES.md](POSTCODE_SOURCES.md).
     Ohne passende Koordinaten darf keine erfundene Entfernung angezeigt werden.
 
 11. Verschlüsseltes Backup und Wiederherstellung in eine **neue** Datenbank proben:

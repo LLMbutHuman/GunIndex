@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-11-21",
+  "reviewed_on": "2026-11-25",
   "automatic_import_enabled": true,
-  "automatic_import_policy": "Ubuntu installer seeds pinned DE and FR files only for countries with no import history.",
+  "automatic_import_policy": "Ubuntu installer seeds pinned DE, FR and AT files only for countries with no import history.",
   "sources": [
     {
       "id": "operator-de-legacy",
@@ -38,12 +38,12 @@
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
       "attribution": "GeoNames; link to source and license; indicate transformations",
       "format": "UTF-8 tab-separated records; country, postcode, place, administrative fields, WGS84 latitude/longitude, accuracy",
-      "archive_timestamp_observed": "2026-11-01",
+      "archive_timestamp_observed": "2026-11-25",
       "dataset_date": null,
       "sha256": null,
       "accuracy": "Source can estimate coordinates; accuracy varies by record",
       "constraints": ["NL.zip contains partial postcodes; NL_full.csv.zip needs separate validation", "Conflicting places per postcode require reviewed mapping; no silent averaging"],
-      "status": "researched_not_downloaded_not_imported"
+      "status": "Austria used in geonames-rtr-austria; additional country archives remain candidates."
     },
     {
       "id": "swisstopo-localities",
@@ -92,6 +92,43 @@
       "validated_unique_postcodes": 6051,
       "constraints": ["Monaco and overseas territories excluded", "Approximate points derived from distinct commune centroids"],
       "status": "bundled_seed_verified_in_isolated_installer"
+    },
+    {
+      "id": "geonames-rtr-austria",
+      "countries": ["AT"],
+      "path": "ZIP/PLZ-AT.csv",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "sources": [
+        {
+          "publisher": "GeoNames",
+          "url": "https://download.geonames.org/export/zip/AT.zip",
+          "documentation_url": "https://download.geonames.org/export/zip/readme.txt",
+          "archive_last_modified": "2026-11-25T02:53:40Z",
+          "sha256": "61ae0da7221ff66ce1a78168042d813172558baefd43b3b24f83d9df4261964e"
+        },
+        {
+          "publisher": "RTR-GmbH",
+          "url": "https://data.rtr.at/api/v1/tables/plz.json",
+          "catalogue_url": "https://www.data.gv.at/datasets/f76ed887-00d6-450f-a158-9f8b1cbbeebf",
+          "version": 61407,
+          "published": "2026-11-04T09:05:00+01:00",
+          "sha256": "0af881fa64d3056ba554532ba30085330b4c998d36ae3c924566ae4a9623d52b"
+        }
+      ],
+      "snapshot_date": "2026-11-25",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "sha256": "87109d717f9fdc9aba73d928ed7679b1a3efe563cd0229415cbfb1ab9b5ec29d",
+      "bytes": 88864,
+      "active_address_postcodes_in_register": 2234,
+      "validated_unique_postcodes": 2200,
+      "constraints": [
+        "Valid RTR addressing codes only; post office box, historical and non-addressing codes excluded",
+        "GeoNames accuracy classes 4 and 6 only; average of distinct highest-accuracy points per postcode",
+        "Approximate locality data. Missing coordinates, including Vienna 1010, retain exact postcode search",
+        "GeoNames archive timestamp and RTR version date are publication dates, not independent accuracy evidence"
+      ],
+      "status": "bundled_seed_locally_validated"
     }
   ]
 }

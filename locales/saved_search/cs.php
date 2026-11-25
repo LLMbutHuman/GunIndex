@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Neplatný filtr ceny.',
     'market_search.location_invalid' => 'Neplatný filtr polohy.',
     'market_search.distance_sort_requires_coordinates' => 'Řazení podle vzdálenosti vyžaduje PSČ se schválenými souřadnicemi.',
+    'market_search.derived_points' => 'Odvozené body PSČ',
 ];

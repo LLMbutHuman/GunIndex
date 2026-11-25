@@ -226,5 +226,9 @@ seed_postcodes PLZ-FR.csv --country=FR \
  --expected-sha256=3f9471db1ba4f8e6de2bcb35357a8d4e9ad50e9b24e06ce342bf2f978f020634 \
  --source='La Poste - Base officielle des codes postaux, 2026-11-08 (metropolitan France)' \
  --license-note='Licence Ouverte 2.0. Derived from commune centroids. Source: https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux'
+seed_postcodes PLZ-AT.csv --country=AT \
+ --expected-sha256=87109d717f9fdc9aba73d928ed7679b1a3efe563cd0229415cbfb1ab9b5ec29d \
+ --source='GeoNames 2026-11-25; RTR-GmbH 2026-11-04 (Austria)' \
+ --license-note='CC BY 4.0. Derived from GeoNames points filtered by the RTR postal register. Sources: https://www.geonames.org/ and https://www.data.gv.at/datasets/f76ed887-00d6-450f-a158-9f8b1cbbeebf'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup

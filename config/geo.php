@@ -1,15 +1,38 @@
 <?php
 declare(strict_types=1);
 
-function geo_uses_french_seed(PDO $pdo): bool
+function geo_postcode_attributions(PDO $pdo, array $countries): array
 {
+    $sources = [
+        'AT' => [
+            'sha256'=>'87109d717f9fdc9aba73d928ed7679b1a3efe563cd0229415cbfb1ab9b5ec29d',
+            'links'=>[
+                'GeoNames (2026-11-25)'=>'https://www.geonames.org/',
+                'RTR-GmbH (2026-11-04)'=>'https://www.data.gv.at/datasets/f76ed887-00d6-450f-a158-9f8b1cbbeebf',
+                'CC BY 4.0'=>'https://creativecommons.org/licenses/by/4.0/',
+            ],
+        ],
+        'FR' => [
+            'sha256'=>'3f9471db1ba4f8e6de2bcb35357a8d4e9ad50e9b24e06ce342bf2f978f020634',
+            'links'=>[
+                'La Poste – Base officielle des codes postaux (2026-11-08)'=>'https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux',
+                'Licence Ouverte 2.0'=>'https://www.data.gouv.fr/pages/legal/licences/etalab-2-0',
+            ],
+        ],
+    ];
+    $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
+    if ($matched === []) return [];
     $query = $pdo->prepare("SELECT EXISTS(
         SELECT 1 FROM geo_imports i JOIN market_countries c ON c.code=i.country_code
-        WHERE i.country_code='FR' AND i.source_sha256=? AND i.is_active=1 AND i.license_reviewed=1
+        WHERE i.country_code=? AND i.source_sha256=? AND i.is_active=1 AND i.license_reviewed=1
           AND c.is_active=1 AND EXISTS(SELECT 1 FROM geo_locations l WHERE l.import_id=i.id)
     )");
-    $query->execute(['3f9471db1ba4f8e6de2bcb35357a8d4e9ad50e9b24e06ce342bf2f978f020634']);
-    return (bool)$query->fetchColumn();
+    $attributions = [];
+    foreach ($matched as $countryCode => $source) {
+        $query->execute([$countryCode,$source['sha256']]);
+        if ($query->fetchColumn()) $attributions[$countryCode] = $source['links'];
+    }
+    return $attributions;
 }
 /** Local geographic data only; postcode centroids are not exact addresses. */
 function geo_countries(): array {

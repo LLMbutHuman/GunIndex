@@ -19,6 +19,7 @@ done
 sudo "$compose" exec -T php php ops/health.php --installation
 sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM geo_locations WHERE country_code = '\''DE'\''")->fetchColumn() === 8289 ? 0 : 1);'
 sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=french-postcodes php php tests/production_french_postcodes_test.php
+sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=austrian-postcodes php php tests/production_austrian_postcodes_test.php
 python3 tests/production_admin_enrollment.py "$compose"
 if sudo "$compose" exec -T php php ops/create-admin.php; then
     printf '%s\n' 'A second initial administrator was accepted.' >&2
@@ -34,7 +35,7 @@ sudo "$installer" --domain "$domain" --email "$email" --update --prepare-only
 [[ "$(sudo readlink "$directory/current")" != "$initial_release" ]]
 [[ "$(sudo sha256sum "$directory/config/app.env" "$directory/config/database.env" "$directory/keys/backup.key")" == "$initial_config" ]]
 sudo "$compose" exec -T php grep -qx installer-update-probe /var/lib/gunindex/private/installer-update-probe.txt
-sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM users WHERE is_admin=1")->fetchColumn() === 1 && (int)$pdo->query("SELECT COUNT(*) FROM geo_imports")->fetchColumn() === 2 ? 0 : 1);'
+sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM users WHERE is_admin=1")->fetchColumn() === 1 && (int)$pdo->query("SELECT COUNT(*) FROM geo_imports")->fetchColumn() === 3 ? 0 : 1);'
 [[ "$(curl --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1/)" == 503 ]]
 
 # Reject a preparation attempt for a different domain before making certificate changes.
@@ -55,6 +56,9 @@ https=(curl --silent --show-error --retry 3 --retry-connrefused --max-time 10
        --cacert "$RUNNER_TEMP/gunindex-test-ca.pem" --resolve "$domain:443:127.0.0.1")
 "${https[@]}" --fail "https://$domain/" -o /dev/null
 "${https[@]}" --fail "https://$domain/marketplace/search.php?country_code=FR&zip=75001&radius_km=10" | grep -F 'Base officielle des codes postaux (2026-11-08)' >/dev/null
+austrian_search="$("${https[@]}" --fail "https://$domain/marketplace/search.php?country_code=AT&zip=5020&radius_km=25")"
+grep -Fq 'GeoNames (2026-11-25)' <<<"$austrian_search"
+grep -Fq 'RTR-GmbH (2026-11-04)' <<<"$austrian_search"
 headers="$("${https[@]}" -D - -o /dev/null "https://$domain/admin/setup.php")"
 grep -qi '^location: .*login' <<<"$headers"
 

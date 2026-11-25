@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Nieprawidłowy filtr cen.',
     'market_search.location_invalid' => 'Nieprawidłowy filtr lokalizacji.',
     'market_search.distance_sort_requires_coordinates' => 'Sortowanie według odległości wymaga kodu pocztowego z zatwierdzonymi współrzędnymi.',
+    'market_search.derived_points' => 'Pochodne punkty kodów pocztowych',
 ];

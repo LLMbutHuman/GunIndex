@@ -62,4 +62,5 @@ return [
     'market_search.price_filter_invalid' => 'Ugyldigt prisfilter.',
     'market_search.location_invalid' => 'Ugyldigt placeringsfilter.',
     'market_search.distance_sort_requires_coordinates' => 'Sortering efter afstand kræver et postnummer med godkendte koordinater.',
+    'market_search.derived_points' => 'Afledte postnummerpunkter',
 ];
