@@ -85,10 +85,14 @@ sudo openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=$domain" \
 sudo cp "$certificates/fullchain.pem" "$RUNNER_TEMP/gunindex-test-ca.pem"
 sudo chmod 0644 "$RUNNER_TEMP/gunindex-test-ca.pem"
 sudo "$directory/renew-certificate.sh"
-https=(curl --silent --show-error --retry 3 --retry-connrefused --max-time 10
+https=(curl --silent --show-error --noproxy '*' --max-time 10
        --cacert "$RUNNER_TEMP/gunindex-test-ca.pem" --resolve "$domain:443:127.0.0.1")
 # The TLS endpoint shows the installation gate until the administrator activates the site.
-[[ "$("${https[@]}" -o /dev/null -w '%{http_code}' "https://$domain/")" == 503 ]]
+for attempt in {1..10}; do
+    status="$("${https[@]}" -o /dev/null -w '%{http_code}' "https://$domain/" 2>/dev/null)" && break
+    sleep 1
+done
+[[ "$status" == 503 ]]
 headers="$("${https[@]}" -D - -o /dev/null "https://$domain/admin/setup.php")"
 grep -qi '^location: .*login' <<<"$headers"
 grep -qi '^strict-transport-security: max-age=31536000' <<<"$headers"
