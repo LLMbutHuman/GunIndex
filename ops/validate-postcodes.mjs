@@ -52,7 +52,7 @@ function numeric(value, limit) {
   return Number.isFinite(number) && Math.abs(number) <= limit ? number : null;
 }
 
-export function validateBytes(bytes, { country, format = 'standard' } = {}) {
+export function validateBytes(bytes, { country, format = 'standard', sorted = false } = {}) {
   if (!Buffer.isBuffer(bytes) && !(bytes instanceof Uint8Array)) throw new Error('Expected bytes.');
   if (bytes.byteLength > MAX_BYTES) throw new Error('CSV exceeds 32 MiB.');
   if (typeof country !== 'string' || !Object.hasOwn(patterns, country.toUpperCase())) throw new Error('Explicit supported country required.');
@@ -63,6 +63,8 @@ export function validateBytes(bytes, { country, format = 'standard' } = {}) {
   catch { throw new Error('CSV must contain valid UTF-8.'); }
   const entries = new Map();
   let headerNeeded = format === 'standard', sourceRows = 0, identicalDuplicates = 0, paddedPostcodes = 0;
+  let previousPostal, previousValue, uniquePostcodes = 0;
+  const limit = sorted ? 650000 : MAX_RECORDS;
   const bounds = { min_latitude: 90, max_latitude: -90, min_longitude: 180, max_longitude: -180 };
   for (const { row, line } of rows(text)) {
     if (headerNeeded) {
@@ -87,22 +89,25 @@ export function validateBytes(bytes, { country, format = 'standard' } = {}) {
     sourceRows++;
     // Conservatively require identical numeric coordinates. Do not silently average places.
     const normalized = JSON.stringify([city, latitude, longitude]);
-    if (entries.has(postal)) {
-      if (entries.get(postal) !== normalized) throw new Error(`Conflicting duplicate postcode near line ${line}; source review required.`);
+    if (sorted && previousPostal !== undefined && postal < previousPostal) throw new Error(`Postcode sorting is invalid near line ${line}. Sort by normalized postcode.`);
+    const existing = sorted ? (postal === previousPostal ? previousValue : undefined) : entries.get(postal);
+    if (existing !== undefined) {
+      if (existing !== normalized) throw new Error(`Conflicting duplicate postcode near line ${line}; source review required.`);
       identicalDuplicates++; continue;
     }
-    entries.set(postal, normalized);
-    if (entries.size > MAX_RECORDS) throw new Error('CSV exceeds 100000 unique postcodes; split into reviewed parts.');
+    if (sorted) { previousPostal = postal; previousValue = normalized; }
+    else entries.set(postal, normalized);
+    if (++uniquePostcodes > limit) throw new Error(`CSV exceeds ${limit} unique postcodes. Use a reviewed sorted source or smaller parts.`);
     bounds.min_latitude = Math.min(bounds.min_latitude, latitude);
     bounds.max_latitude = Math.max(bounds.max_latitude, latitude);
     bounds.min_longitude = Math.min(bounds.min_longitude, longitude);
     bounds.max_longitude = Math.max(bounds.max_longitude, longitude);
   }
-  if (!entries.size) throw new Error('No valid locations in CSV.');
+  if (!uniquePostcodes) throw new Error('No valid locations in CSV.');
   return {
     country, format, bytes: bytes.byteLength,
     sha256: createHash('sha256').update(bytes).digest('hex'),
-    source_rows: sourceRows, unique_postcodes: entries.size,
+    source_rows: sourceRows, unique_postcodes: uniquePostcodes,
     identical_duplicates: identicalDuplicates, padded_postcodes: paddedPostcodes,
     coordinate_bounds: bounds, database_changed: false,
     accuracy_verified: false, license_verified: false,
@@ -137,8 +142,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   try {
     const options = {};
     for (const argument of process.argv.slice(2)) {
+      if (argument === '--sorted' && !options.sorted) { options.sorted = true; continue; }
       const match = /^--(country|file|format)=(.+)$/.exec(argument);
-      if (!match || Object.hasOwn(options, match[1])) throw new Error('Usage: node ops/validate-postcodes.mjs --country=DE --file=ZIP/PLZ.csv --format=legacy-de');
+      if (!match || Object.hasOwn(options, match[1])) throw new Error('Usage: node ops/validate-postcodes.mjs --country=DE --file=ZIP/PLZ.csv [--format=legacy-de] [--sorted]');
       options[match[1]] = match[2];
     }
     if (!options.file) throw new Error('An explicit --file is required.');

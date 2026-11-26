@@ -14,6 +14,33 @@ geo_test('country_postal_formats_and_leading_zero',static function():void {
 geo_test('haversine_zero_known_degree_and_antimeridian',static function():void {geo_check(geo_distance_km(0,0,0,0)===0.0);geo_check(abs(geo_distance_km(0,0,1,0)-111.195080)<0.001);$wrapped=geo_distance_km(0,179.9,0,-179.9);geo_check($wrapped>22&&$wrapped<23);geo_check(!geo_coordinates_valid(91,0));geo_check(!geo_coordinates_valid('NaN',0));});
 geo_test('bounding_box_keeps_large_circle_and_polar_edges',static function():void {$box=geo_bounding_box(50,6,2000);geo_check($box['min_lat']<33&&$box['max_lat']>67);geo_check($box['max_lon']>34);$polar=geo_bounding_box(89,179,500);geo_check($polar['max_lat']===90.0);geo_check($polar['max_lon']>180);});
 geo_test('unknown_distance_is_never_reported_as_zero',static function():void {$_SESSION['locale']='de';geo_check(geo_distance_label(null)==='Entfernung nicht verfügbar');geo_check(str_contains(geo_distance_label(0),'0,0'));});
+geo_test('sorted_postcode_import_validates_large_sources_with_bounded_memory',static function():void {
+ $file=tempnam(sys_get_temp_dir(),'gi_geo_');geo_check(is_string($file));
+ $header="postal_code;city;latitude;longitude\n";
+ $dryRun=static function(bool $sorted,string $memory)use($file):array{
+  $arguments=[PHP_BINARY,'-n','-d','memory_limit='.$memory,__DIR__.'/../ops/import-postcodes.php','--country=NL','--file='.$file,'--dry-run'];
+  if($sorted)$arguments[]='--sorted';
+  $process=proc_open($arguments,[1=>['pipe','w'],2=>['pipe','w']],$pipes);geo_check(is_resource($process));
+  $output=stream_get_contents($pipes[1]).stream_get_contents($pipes[2]);
+  fclose($pipes[1]);fclose($pipes[2]);return [proc_close($process),$output];
+ };
+ try{
+  $handle=fopen($file,'wb');geo_check(is_resource($handle));fwrite($handle,$header);
+  for($i=0;$i<100001;$i++){
+   $postal=(1000+intdiv($i,676)).chr(65+intdiv($i%676,26)).chr(65+$i%26);
+   fwrite($handle,$postal.";Synthetic;52;5\n");
+  }
+  fclose($handle);
+  [$status,$output]=$dryRun(false,'128M');geo_check($status===1&&str_contains($output,'More than 100000 unique'));
+  [$status,$output]=$dryRun(true,'16M');geo_check($status===0&&str_contains($output,'Validated 100001 locations')&&str_contains($output,hash_file('sha256',$file)));
+  file_put_contents($file,$header."1234AB;Synthetic;52;5\n1234 ab;Synthetic;52.0;5.0\n");
+  [$status,$output]=$dryRun(true,'16M');geo_check($status===0&&str_contains($output,'Validated 1 locations')&&str_contains($output,'duplicates: 1'));
+  file_put_contents($file,$header."1234AB;Synthetic;52;5\n1234 AA;Synthetic;52;5\n");
+  [$status,$output]=$dryRun(true,'16M');geo_check($status===1&&str_contains($output,'sorting is invalid'));
+  file_put_contents($file,$header."1234AB;Synthetic;52;5\n1234 ab;Other;52;5\n");
+  [$status,$output]=$dryRun(true,'16M');geo_check($status===1&&str_contains($output,'Conflicting duplicate'));
+ }finally{unlink($file);}
+});
 geo_test('eight_local_dictionaries_and_safe_fallback',static function():void {geo_check(count(i18n_locales())===8);foreach(i18n_locales() as $locale=>$name){geo_check(count(i18n_dictionary($locale))>=160);}$_SESSION['locale']='en';geo_check(t('Anmelden')==='Sign in');geo_check(geo_countries()['DE']==='Germany');geo_check(t('Not a translated user title')==='Not a translated user title');geo_check(i18n_dictionary('../../etc/passwd')===i18n_dictionary('de'));$_SESSION['locale']='de';});
 
 geo_test('locale_key_and_placeholder_parity',static function():void {

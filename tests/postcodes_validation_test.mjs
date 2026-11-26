@@ -38,6 +38,18 @@ test('duplicates retain exact source counts but never average conflicts', () => 
   assert.throws(() => csv('10115;Synthetic;52;13\n10115;Other;52;13'), /Conflicting/);
   assert.throws(() => csv('10115;Synthetic;52;13\n10115;Synthetic;52.1;13'), /Conflicting/);
 });
+test('large sorted nationwide input has the same normalized duplicate checks', () => {
+  const codes = Array.from({ length: 100001 }, (_, i) => {
+    const digits = 1000 + Math.floor(i / 676), a = 65 + Math.floor(i % 676 / 26), b = 65 + (i % 26);
+    return `${digits}${String.fromCharCode(a, b)};Synthetic;52;5`;
+  });
+  const ordered = codes.join('\n');
+  assert.throws(() => csv(ordered, { country:'NL' }), /100000/);
+  assert.equal(csv(ordered, { country:'NL', sorted:true }).unique_postcodes, 100001);
+  assert.equal(csv('1234AB;Synthetic;52;5\n1234 ab;Synthetic;52.0;5.0', { country:'NL', sorted:true }).identical_duplicates, 1);
+  assert.throws(() => csv('1234AB;Synthetic;52;5\n1234 AA;Synthetic;52;5', { country:'NL', sorted:true }), /sorting/);
+  assert.throws(() => csv('1234AB;Synthetic;52;5\n1234 ab;Other;52;5', { country:'NL', sorted:true }), /Conflicting/);
+});
 test('rejects nonfinite, out-of-range and nondecimal coordinates', () => {
   for (const latitude of ['NaN', 'Infinity', '91', '-91', '', '0x20', '1e999', '52,1']) assert.throws(() => csv(`10115;Synthetic;${latitude};13`));
   assert.throws(() => csv('10115;Synthetic;52;181'));

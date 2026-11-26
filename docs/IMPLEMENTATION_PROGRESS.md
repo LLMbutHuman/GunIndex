@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Größere PLZ-Quellen ohne Vorhalten aller Zeilen im Arbeitsspeicher
+
+Der Validator und der Importer verarbeiten mit `--sorted` bis zu 650.000 PLZ
+aus einer CSV. Sie prüfen die Reihenfolge der normalisierten Schlüssel und
+weisen widersprüchliche Dubletten ab. Der Import schreibt die Daten in
+Stapeln innerhalb derselben Transaktion. Der Installer verwendet diesen
+Ablauf bereits für die polnische Länderdatei.
+Neun PHP- und elf Node-Testgruppen bestanden lokal. Der neue Dry-Run prüfte
+100.001 synthetische PLZ bei einem PHP-Speicherlimit von 16 MiB. Bei der
+polnischen Datei bestätigten beide Validatoren 18.644 Punkte und dieselbe
+SHA-256. Die MySQL-Prüfung läuft über den Ubuntu-Installationslauf.
+
 ## Leistungsbedingungen im Checkout für Guthaben und Werbung
 
 Der Checkout zeigt Preis und Leistungsbedingungen zur jeweiligen Option in acht

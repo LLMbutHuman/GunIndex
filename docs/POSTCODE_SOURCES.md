@@ -145,6 +145,18 @@ php ops/prepare-lu-postcodes.php --file=addresses.csv --output=PLZ-LU.csv \
   --expected-source-sha256=737a4848a4f78dd355a347119cf906934c2c0dd6d2d47030b38b580ee4e72728
 ```
 
+## Niederlande
+
+Der GeoPackage-Download des Katasters (BAG) ist in der öffentlichen
+Veröffentlichung vom 1. November 2026 verfügbar. Der Katalog nennt für
+die BAG-API die Public Domain Mark 1.0. Für ein Installationspaket werden
+die Lizenz der verwendeten Datei, passende Adresspunkte, der Datenstand,
+Prüfsummen und ein reproduzierbarer Abgleich dokumentiert. Die CSV darf
+nur aggregierte PLZ-Ortsangaben und Koordinaten enthalten.
+[BAG-Datensatz](https://www.pdok.nl/introductie/-/article/basisregistratie-adressen-en-gebouwen-ba-1) ·
+[BAG-Downloadkatalog](https://service.pdok.nl/kadaster/bag/atom/bag.xml) ·
+[BAG-API und Lizenz](https://api.pdok.nl/kadaster/bag/ogc/v2?f=html&lang=en)
+
 ## Dänemark
 
 Der bislang öffentliche DAWA-Postnummern-Endpunkt antwortete am
@@ -255,8 +267,18 @@ Der Validator benötigt nur Node-Bordmittel. Er liest maximal 32 MiB, verlangt
 UTF-8, prüft CSV-Struktur, Ländercodes, PLZ-Formate, Koordinatengrenzen und
 Dubletten. Es gibt keine Schreib-, Download- oder Lizenzfreigabeoption.
 Er zeigt Hash, Umfang und Grenzen, keine vollständigen Ortslisten. Symlinks,
-Verzeichnisse, veränderte Dateien und mehr als 100.000 eindeutige PLZ werden
-abgewiesen. Temporäre Dateien der Tests enthalten ausschließlich synthetische Daten.
+Verzeichnisse und veränderte Dateien werden abgewiesen. Eingaben in beliebiger
+Reihenfolge sind auf 100.000 eindeutige PLZ begrenzt. Mit `--sorted` prüfen
+Vorprüfung und Importer bis zu 650.000 PLZ in lexikografischer Reihenfolge ihrer
+normalisierten Schlüssel. Die Dateigröße bleibt auf 32 MiB begrenzt. Der
+Importer prüft die gesamte Eingabe vor der ersten Datenbankänderung, liest
+das hashgeprüfte Abbild erneut und schreibt alle Stapel in einer Transaktion.
+Temporäre Dateien der Tests enthalten ausschließlich synthetische Daten.
+
+```sh
+node ops/validate-postcodes.mjs --country=PL --file=ZIP/PLZ-PL.csv --sorted
+php ops/import-postcodes.php --country=PL --file=ZIP/PLZ-PL.csv --sorted --dry-run
+```
 
 Der Node-Validator ist eine zusätzliche Vorprüfung. Er verlangt bei Dubletten
 identische numerische Koordinaten; der PHP-Importer vergleicht auf sieben
