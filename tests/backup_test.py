@@ -2,7 +2,7 @@
 """Authenticated backup errors and an actual synthetic MySQL restore."""
 import hashlib,os,secrets,subprocess,tempfile,unittest
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];DOCKER=['docker','--host=unix:///var/run/docker.sock'];APP='gunindex-rebuild-app';DB='gunindex-rebuild-db'
+from environment import APP, DB, DOCKER, ROOT
 def command(args,data=None):return subprocess.run(DOCKER+args,input=data,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 class Backups(unittest.TestCase):
  def setUp(self):

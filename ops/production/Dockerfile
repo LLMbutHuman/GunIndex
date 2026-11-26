@@ -1,5 +1,5 @@
-FROM composer:2.8.12@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c AS composer
-FROM php:8.4.27-fpm-bookworm@sha256:1b6bb4f3d32dfbcd1e159d7bd47caa8852507f61666db7731d73f34acec781b6
+FROM composer:2.11.3@sha256:4e5f671c4a5784b422c20fcb993a38da96529438889dbce40be27c452d18dd6d AS composer
+FROM php:8.4.28-fpm-bookworm@sha256:54ce0ded7582385bf6b522aff920d2eff5ec60da9476d8c52ce6aa69c9c5c7cb
 RUN --mount=type=secret,id=proxy_ca,required=true \
     apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca update \
  && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca install -y --no-install-recommends libpng-dev libjpeg62-turbo-dev libwebp-dev libonig-dev libxml2-dev msmtp-mta ca-certificates git \

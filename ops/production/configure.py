@@ -16,7 +16,7 @@ def configure(directory,domain,email,release,source):
  if not any(p.exists() for p in files):
   password=secrets.token_urlsafe(48);root_password=secrets.token_urlsafe(48);app_key=base64.b64encode(secrets.token_bytes(32)).decode()
   private(config/'database.env',f'MYSQL_DATABASE=gunindex\nMYSQL_USER=gunindex_app\nMYSQL_PASSWORD={password}\nMYSQL_ROOT_PASSWORD={root_password}\n')
-  private(config/'app.env',f'DB_DATABASE=gunindex\nDB_USERNAME=gunindex_app\nDB_PASSWORD={password}\nDB_HOST=db\nDB_PORT=3306\nAPP_KEY={app_key}\nAPP_URL=https://{domain}\nAPP_ENV=production\nSESSION_COOKIE_SECURE=1\nAUTH_RATE_LIMIT_DIR=/var/lib/gunindex/limits\nGENERAL_IMAGE_DIR=/var/lib/gunindex/images\nGENERAL_PRIVATE_DIR=/var/lib/gunindex/private\nMAIL_TRANSPORT=none\nMAIL_FROM=no-reply@{domain}\nMAIL_SENDMAIL_PATH=/usr/sbin/sendmail\nPAYPAL_ACCOUNT_TYPE=personal\nPAYPAL_MODE=sandbox\nPAYPAL_BUSINESS_SCOPE=general_only\nPAYPAL_ENABLED=0\nPLATFORM_BILLING_APPROVED=0\nPAYPAL_LIVE_APPROVED=0\n')
+  private(config/'app.env',f'DB_DATABASE=gunindex\nDB_USERNAME=gunindex_app\nDB_PASSWORD={password}\nDB_HOST=db\nDB_PORT=3306\nAPP_KEY={app_key}\nAPP_URL=https://{domain}\nAPP_ENV=production\nINSTALLATION_REQUIRES_ACTIVATION=1\nSESSION_COOKIE_SECURE=1\nAUTH_RATE_LIMIT_DIR=/var/lib/gunindex/limits\nGENERAL_IMAGE_DIR=/var/lib/gunindex/images\nGENERAL_PRIVATE_DIR=/var/lib/gunindex/private\nMAIL_TRANSPORT=none\nMAIL_FROM=no-reply@{domain}\nMAIL_SENDMAIL_PATH=/usr/sbin/sendmail\nPAYPAL_ACCOUNT_TYPE=personal\nPAYPAL_MODE=sandbox\nPAYPAL_BUSINESS_SCOPE=general_only\nPAYPAL_ENABLED=0\nPLATFORM_BILLING_APPROVED=0\nPAYPAL_LIVE_APPROVED=0\n')
   private(keys/'backup.key',secrets.token_bytes(32))
  else:
   for path in files:

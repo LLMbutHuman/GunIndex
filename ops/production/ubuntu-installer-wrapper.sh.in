@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# GunIndex Ubuntu 22.04 amd64 installer and its exact Git release archive.
+# Verify the checksum of this entire file against the trusted delivery before running it.
+set -euo pipefail
+umask 077
+unset TAR_OPTIONS GZIP
+release_commit=@RELEASE_COMMIT@
+archive_sha256=@ARCHIVE_SHA256@
+installer_member=ops/install-ubuntu-22.04.sh
+
+[[ "$release_commit" =~ ^[0-9a-f]{40}$ && "$archive_sha256" =~ ^[0-9a-f]{64}$ ]]
+if [[ "${1:-}" == --verify && "$#" -ne 1 ]]; then
+    printf '%s\n' 'Use --verify by itself.' >&2
+    exit 2
+fi
+
+staging="$(mktemp -d -- /tmp/gunindex-installer.XXXXXXXXXX)"
+archive="$staging/release.tar.gz"
+trap 'rm -f -- "$archive" "$staging/$installer_member"; rmdir -- "$staging/ops" 2>/dev/null || true; rmdir -- "$staging"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+decode_archive() {
+    if ! base64 --decode > "$archive" || ! printf '%s  %s\n' "$archive_sha256" "$archive" | sha256sum --check --status; then
+        printf '%s\n' 'The bundled release archive is damaged or its checksum does not match.' >&2
+        return 1
+    fi
+    if [[ "${1:-}" == --verify ]]; then
+        printf 'Archive verified for commit %s (SHA-256 %s).\n' "$release_commit" "$archive_sha256"
+        return
+    fi
+
+    mkdir -- "$staging/ops"
+    tar --extract --gzip --to-stdout --file="$archive" -- "$installer_member" > "$staging/$installer_member"
+    if (( $# == 0 )); then set -- --guided; fi
+    bash "$staging/$installer_member" --bundled-release "$release_commit" "$archive_sha256" "$@" <&3
+}
+
+# Preserve the operator terminal while decoding the embedded archive on stdin.
+decode_archive "$@" 3<&0 <<'GUNINDEX_RELEASE_ARCHIVE'

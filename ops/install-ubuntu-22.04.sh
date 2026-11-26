@@ -3,11 +3,17 @@
 set -euo pipefail
 umask 077
 usage() {
+ if [[ -n "$archive_sha256" ]]; then
+  printf '%s\n' 'Usage: sudo bash GunIndex-Install-Ubuntu.sh [options]' \
+   '       bash GunIndex-Install-Ubuntu.sh --verify'
+ else
+  printf '%s\n' 'Usage: sudo ./ops/install-ubuntu-22.04.sh [options]'
+ fi
  cat <<'HELP'
-Usage: sudo ./ops/install-ubuntu-22.04.sh
-       sudo ./ops/install-ubuntu-22.04.sh --domain market.your-domain.tld --email admin@your-domain.tld [options]
 
 Ubuntu 22.04 amd64. Docker's signed official repository, pinned PHP 8.4/nginx/MySQL.
+  --domain DOMAIN  Marketplace domain, without scheme.
+  --email EMAIL    Certificate contact email.
   --directory DIR  Managed installation directory (default: /srv/gunindex).
   --guided         Ask for missing domain and email. Prompt for the initial admin on a fresh install.
   --dry-run        Display planned actions only. No root required.
@@ -21,6 +27,7 @@ HTTPS needs real DNS and reachable ports 80 and 443.
 HELP
 }
 domain='' email='' directory='/srv/gunindex' dry=0 update=0 prepare=0 finish_tls=0 setup_admin=0 backup_timer=0 guided=0
+commit='' archive_sha256=''
 if (( $# == 0 )); then guided=1; fi
 while [ "$#" -gt 0 ]; do
  case "$1" in
@@ -31,6 +38,11 @@ while [ "$#" -gt 0 ]; do
   --guided) guided=1;shift;;
   --setup-admin) setup_admin=1;shift;;
   --backup-timer) backup_timer=1;shift;;
+  --bundled-release)
+   [[ "$#" -ge 3 && -z "$commit" && "$2" =~ ^[0-9a-f]{40}$ && "$3" =~ ^[0-9a-f]{64}$ ]] || {
+    printf '%s\n' 'Invalid bundled release metadata.' >&2; exit 2;
+   }
+   commit="$2"; archive_sha256="$3"; shift 3;;
   *) printf '%s\n' 'Unknown option.' >&2;exit 2;;
  esac
 done
@@ -73,7 +85,7 @@ if [ "$dry" -eq 1 ];then
   '4. Copy a clean source release without .git, old exports/uploads or runtime secrets.' \
   '5. Build locked PHP8.4-FPM/local Postfix and start private MySQL without host ports.' \
   '6. Bootstrap only an empty database; verify encrypted DB/files backup before migrations.' \
-  '7. Seed the reviewed postcode files for Germany and metropolitan France where there is no import history.' \
+  '7. Seed the reviewed postcode files where there is no import history.' \
   '8. Verify database, private storage and worker startup. Start the local health timer.' \
   '9. Start ACME-only HTTP 503; request real TLS unless --prepare-only.' \
   'Fresh installations start with mail delivery and payments disabled.'
@@ -146,11 +158,28 @@ if (( finish_tls )); then
  finish_setup
  exit 0
 fi
-for file in public/index.php sql/schema.sql composer.lock;do [ -f "$source_dir/$file" ] || { printf '%s\n' 'Complete reviewed source including composer.lock is required.' >&2;exit 2; };done
-commit="$(git -c safe.directory="$source_dir" -C "$source_dir" rev-parse --verify HEAD)"
-git -c safe.directory="$source_dir" -C "$source_dir" diff --quiet "$commit" || { printf '%s\n' 'Preserve or commit tracked source changes first. Nothing was reset.' >&2;exit 2; }
+if [[ -n "$archive_sha256" ]]; then
+ archive="$source_dir/release.tar.gz"
+ [[ "$(stat -c '%u:%a' -- "$source_dir")" = 0:700 && -f "$archive" && ! -L "$archive" ]] || {
+  printf '%s\n' 'Bundled source must be staged by the installer in a private root directory.' >&2; exit 2;
+ }
+ if ! printf '%s  %s\n' "$archive_sha256" "$archive" | sha256sum --check --status; then
+  printf '%s\n' 'Bundled source checksum mismatch.' >&2; exit 2
+ fi
+else
+ for file in public/index.php sql/schema.sql composer.lock;do [ -f "$source_dir/$file" ] || { printf '%s\n' 'Complete reviewed source including composer.lock is required.' >&2;exit 2; };done
+ commit="$(git -c safe.directory="$source_dir" -C "$source_dir" rev-parse --verify HEAD)"
+ git -c safe.directory="$source_dir" -C "$source_dir" diff --quiet "$commit" || { printf '%s\n' 'Preserve or commit tracked source changes first. Nothing was reset.' >&2;exit 2; }
+fi
 if [ -e "$directory/current" ] && [ "$update" -ne 1 ];then printf '%s\n' 'Existing installation requires --update.' >&2;exit 2;fi
 if [ "$update" -eq 1 ] && [ ! -f "$directory/config/compose.env" ];then printf '%s\n' 'Restore the managed installation configuration first.' >&2;exit 2;fi
+if (( update )); then
+ for compose_file in "$directory/config/compose.yml" "$directory/current/ops/production/compose.yml"; do
+  if [[ -f "$compose_file" ]] && grep -Eq '^[[:space:]]*image:[[:space:]]*mysql:8\.0([.@[:space:]]|$)' "$compose_file"; then
+   printf '%s\n' 'MySQL 8.0 detected. Follow the documented MySQL 8.4 migration before using --update. No database changes were made.' >&2; exit 2
+  fi
+ done
+fi
 if [[ -f "$directory/config/compose.env" ]] &&
    ! grep -Fxq -- "DOMAIN=$domain" "$directory/config/compose.env"; then
  printf '%s\n' 'Review the installation before changing its configured domain.' >&2; exit 2
@@ -161,7 +190,7 @@ if [[ -d "$directory" && ! -f "$directory/config/compose.env" &&
 fi
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y ca-certificates curl gnupg python3 git openssl tar
+apt-get install -y ca-certificates curl gnupg python3 openssl tar
 if ! command -v docker >/dev/null || ! docker compose version >/dev/null 2>&1;then
  install -d -m 0755 /etc/apt/keyrings
  key_download="$(mktemp)";trap 'rm -f "$key_download"' EXIT
@@ -181,7 +210,14 @@ if [ ! -f "$directory/config/app.env" ] && docker volume inspect gunindex_databa
 release="$commit-$(date -u +%Y%m%d%H%M%S)"
 release_dir="$directory/releases/$release"
 mkdir -m 0755 -- "$release_dir"
-bash "$source_dir/ops/production/archive-release.sh" "$source_dir" "$commit" "$release_dir"
+if [[ -n "$archive_sha256" ]]; then
+ tar --extract --gzip --file="$archive" --directory="$release_dir" --no-same-owner --no-same-permissions
+else
+ bash "$source_dir/ops/production/archive-release.sh" "$source_dir" "$commit" "$release_dir"
+fi
+for file in public/index.php sql/schema.sql composer.lock assets/vendor/openpgp/openpgp.min.mjs; do
+ test -f "$release_dir/$file"
+done
 docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \
  --file "$release_dir/ops/production/Dockerfile" --tag "gunindex-production:$release" "$release_dir"
 docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \

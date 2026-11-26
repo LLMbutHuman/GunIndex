@@ -1,6 +1,7 @@
 """Exercise the administrator prompt on a hosted installer-test terminal."""
 import base64
 import hmac
+import json
 import os
 import pty
 import re
@@ -10,12 +11,16 @@ import signal
 import struct
 import sys
 import time
+from pathlib import Path
 
 
 assert os.environ.get('GITHUB_ACTIONS') == 'true'
 assert os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'
 compose = sys.argv[1]
 assert compose == '/srv/gunindex/compose.sh'
+credentials_path = Path(sys.argv[2]) if len(sys.argv) == 3 else None
+if credentials_path is not None:
+    assert credentials_path.parent.resolve() == Path(os.environ['RUNNER_TEMP']).resolve()
 password = secrets.token_urlsafe(28).encode()
 child, terminal = pty.fork()
 if child == 0:
@@ -65,6 +70,10 @@ try:
     _, status = os.waitpid(child, 0)
     finished = True
     assert os.waitstatus_to_exitcode(status) == 0
+    if credentials_path is not None:
+        descriptor = os.open(credentials_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, 'w') as output:
+            json.dump({'password': password.decode(), 'totp_key': key.decode(), 'totp_counter': counter}, output)
 finally:
     if not finished:
         os.kill(child, signal.SIGTERM)

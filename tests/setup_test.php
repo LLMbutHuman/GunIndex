@@ -10,7 +10,7 @@ function setup_step(array $facts, string $id): array {
 $tests = [
     'eight_complete_catalogs_with_placeholder_parity' => static function (): void {
         $base = require __DIR__.'/../locales/setup/de.php';
-        setup_assert(count($base) === 82, 'Unexpected setup catalog coverage.');
+        setup_assert(count($base) === 104, 'Unexpected setup catalog coverage.');
         foreach (i18n_locales() as $locale=>$label) {
             $catalog = require __DIR__.'/../locales/setup/'.$locale.'.php';
             setup_assert(array_keys($catalog) === array_keys($base), 'Missing or unexpected setup translation in '.$locale);
@@ -136,6 +136,42 @@ $tests = [
         setup_assert(setup_step(['workers'=>$workers], 'workers')['status'] === 'tested', 'Complete heartbeat set not recognized.');
         unset($workers['paypal-refund']);
         setup_assert(setup_step(['workers'=>$workers], 'workers')['status'] === 'error', 'Missing worker accepted.');
+    },
+    'public_launch_gate_keeps_only_login_and_permitted_admin_routes' => static function (): void {
+        foreach (['auth/login.php', 'auth/mfa.php', 'auth/logout.php', 'admin/setup.php'] as $route) {
+            setup_assert(setup_installation_route_allowed($route, 'GET'), 'Administrator sign-in path is blocked.');
+        }
+        setup_assert(!setup_installation_route_allowed('admin/settings.php', 'POST'), 'Anonymous setup bypass.');
+        setup_assert(setup_installation_route_allowed('admin/settings.php', 'POST', true), 'Administrator cannot complete settings.');
+        foreach (['auth/register.php', 'marketplace/index.php', 'marketplace/sitemap.php', 'actions/payment-webhook.php', 'api/dealer/v1.php'] as $route) {
+            setup_assert(!setup_installation_route_allowed($route, 'GET', true) && !setup_installation_route_allowed($route, 'POST', true),
+                'Public or provider route open before launch.');
+        }
+    },
+    'positive_launch_evidence_is_complete_current_and_independent' => static function (): void {
+        $facts = array_fill_keys(['database', 'https', 'secure_cookies', 'https_request', 'runtime_probe', 'crypto_probe', 'storage_probe', 'maintenance_clear',
+            'brand', 'operator', 'mail_ready', 'legal_enabled', 'legal_binding'], true);
+        $facts += ['query_errors'=>[], 'workers'=>array_fill_keys(array_keys(worker_heartbeat_limits()), true), 'countries'=>1,
+            'countries_without_geo'=>0, 'categories'=>5, 'mail_transport'=>'smtp', 'mail_failed'=>0, 'legal_approved'=>8,
+            'backup_verified_at'=>'backup', 'restore_verified_at'=>'restore'];
+        $now = 1800000000;
+        $result = ['time'=>$now, 'checks'=>setup_launch_checks($facts)];
+        setup_assert(setup_recent_success($result, $now), 'Complete readiness failed.');
+        foreach ($result['checks'] as $key=>$passed) {
+            setup_assert($passed, 'Positive evidence failed for '.$key);
+            foreach (i18n_locales() as $locale=>$label) {
+                setup_assert(isset(i18n_dictionary($locale)['setup.check.'.$key]), 'Launch check not translated.');
+            }
+            $modified = $result;
+            $modified['checks'][$key] = false;
+            setup_assert(!setup_recent_success($modified, $now), 'Failed check accepted for '.$key);
+        }
+        setup_assert(!setup_recent_success($result, $now-1) && !setup_recent_success($result, $now+901), 'Invalid timestamp accepted.');
+        setup_assert(!setup_recent_success(['time'=>$now, 'checks'=>['fake'=>true]], $now), 'Incomplete forged result accepted.');
+        foreach (['mail_transport'=>'test', 'legal_enabled'=>false, 'paypal_enabled'=>true, 'manual_enabled'=>true, 'restore_verified_at'=>null] as $key=>$value) {
+            $result['checks'] = setup_launch_checks(array_replace($facts, [$key=>$value]));
+            setup_assert(!setup_recent_success($result, $now), 'Unsafe launch condition accepted for '.$key);
+        }
     },
     'no_secret_values_or_claimed_final_acceptance' => static function (): void {
         $facts = ['APP_KEY'=>'synthetic-secret-marker','operator_email'=>'private@example.invalid','database'=>true,'query_errors'=>[]];

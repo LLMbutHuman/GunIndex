@@ -4,11 +4,27 @@ set -euo pipefail
 directory=/srv/gunindex
 domain=installer.gunindex-ci.internal
 email=operator@example.invalid
-installer=./ops/install-ubuntu-22.04.sh
+installer="$RUNNER_TEMP/GunIndex-Install-Ubuntu.sh"
 compose="$directory/compose.sh"
 [[ ! -e "$directory" ]]
 [[ -z "$(docker --host=unix:///var/run/docker.sock volume ls --quiet --filter name=^gunindex_)" ]]
 trap '[[ ! -x "$compose" ]] || sudo "$compose" stop >/dev/null 2>&1 || true' EXIT
+
+bash tests/production_package_test.sh
+bash ops/production/build-ubuntu-installer.sh "$GITHUB_SHA" "$installer"
+"$installer" --verify
+
+legacy_directory=/srv/gunindex-legacy-ci
+[[ ! -e "$legacy_directory" ]]
+sudo install -d -m 0700 "$legacy_directory/config"
+printf 'DOMAIN=%s\n' "$domain" | sudo tee "$legacy_directory/config/compose.env" >/dev/null
+printf '%s\n' '    image: mysql:8.0@sha256:fixture' | sudo tee "$legacy_directory/config/compose.yml" >/dev/null
+if sudo "$installer" --domain "$domain" --email "$email" --directory "$legacy_directory" --update --prepare-only > "$RUNNER_TEMP/gunindex-legacy-output" 2>&1; then
+    printf '%s\n' 'Updating the MySQL 8.0 installation was accepted without migration.' >&2
+    exit 1
+fi
+grep -Fq 'MySQL 8.0 detected' "$RUNNER_TEMP/gunindex-legacy-output"
+sudo test ! -e "$legacy_directory/releases"
 
 sudo "$installer" --domain "$domain" --email "$email" --prepare-only --backup-timer
 [[ "$(curl --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1/)" == 503 ]]
@@ -17,6 +33,15 @@ for timer in gunindex-monitor.timer gunindex-backup.timer; do
     sudo systemctl is-active --quiet "$timer"
 done
 sudo "$compose" exec -T php php ops/health.php --installation
+db_security="$(sudo "$compose" exec -T db sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --batch --skip-column-names -uroot' <<'SQL'
+SELECT VERSION(), @@global.local_infile,
+    (SELECT COUNT(*) FROM information_schema.plugins WHERE plugin_name='mysqlx' AND plugin_status='ACTIVE');
+SELECT Host FROM mysql.user WHERE User='root' ORDER BY Host;
+SQL
+)"
+[[ "${db_security%%$'\n'*}" == 8.4.*$'\t0\t0' ]]
+[[ "${db_security#*$'\n'}" == localhost ]]
+[[ -z "$(sudo "$compose" port db 3306 2>/dev/null || true)" ]]
 sudo "$compose" exec -T php php -r 'require "config/db.php"; exit((int)$pdo->query("SELECT COUNT(*) FROM geo_locations WHERE country_code = '\''DE'\''")->fetchColumn() === 8289 ? 0 : 1);'
 sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=french-postcodes php php tests/production_french_postcodes_test.php
 sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=austrian-postcodes php php tests/production_austrian_postcodes_test.php
@@ -27,7 +52,8 @@ sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=belgian-postcodes php php tests/p
 sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=polish-postcodes php php tests/production_polish_postcodes_test.php
 sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=danish-postcodes php php tests/production_danish_postcodes_test.php
 sudo "$compose" exec -T -e GUNINDEX_CI_FIXTURE=dutch-postcodes php php tests/production_dutch_postcodes_test.php
-python3 tests/production_admin_enrollment.py "$compose"
+installer_test_credentials="$RUNNER_TEMP/gunindex-installer-admin.json"
+python3 tests/production_admin_enrollment.py "$compose" "$installer_test_credentials"
 if sudo "$compose" exec -T php php ops/create-admin.php; then
     printf '%s\n' 'A second initial administrator was accepted.' >&2
     exit 1
@@ -61,6 +87,20 @@ sudo chmod 0644 "$RUNNER_TEMP/gunindex-test-ca.pem"
 sudo "$directory/renew-certificate.sh"
 https=(curl --silent --show-error --retry 3 --retry-connrefused --max-time 10
        --cacert "$RUNNER_TEMP/gunindex-test-ca.pem" --resolve "$domain:443:127.0.0.1")
+# The TLS endpoint shows the installation gate until the administrator activates the site.
+[[ "$("${https[@]}" -o /dev/null -w '%{http_code}' "https://$domain/")" == 503 ]]
+headers="$("${https[@]}" -D - -o /dev/null "https://$domain/admin/setup.php")"
+grep -qi '^location: .*login' <<<"$headers"
+grep -qi '^strict-transport-security: max-age=31536000' <<<"$headers"
+grep -qi '^x-content-type-options: nosniff' <<<"$headers"
+grep -qi '^x-frame-options: DENY' <<<"$headers"
+grep -qi "^content-security-policy: .*frame-ancestors 'none'" <<<"$headers"
+if grep -qi '^server: nginx/' <<<"$headers"; then
+    printf '%s\n' 'The web response exposed the nginx version.' >&2
+    exit 1
+fi
+
+python3 tests/production_setup_activation.py "$installer_test_credentials" "$RUNNER_TEMP/gunindex-test-ca.pem"
 "${https[@]}" --fail "https://$domain/" -o /dev/null
 "${https[@]}" --fail "https://$domain/marketplace/search.php?country_code=FR&zip=75001&radius_km=10" | grep -F 'Base officielle des codes postaux (2026-11-08)' >/dev/null
 austrian_search="$("${https[@]}" --fail "https://$domain/marketplace/search.php?country_code=AT&zip=5020&radius_km=25")"
@@ -85,9 +125,6 @@ grep -Fq 'POSTNR2 (2026)' <<<"$danish_search"
 dutch_search="$("${https[@]}" --fail "https://$domain/marketplace/search.php?country_code=NL&zip=1012%20AA&radius_km=5")"
 grep -Fq 'BAG (2026-11-01)' <<<"$dutch_search"
 grep -Fq 'Public Domain Mark 1.0' <<<"$dutch_search"
-headers="$("${https[@]}" -D - -o /dev/null "https://$domain/admin/setup.php")"
-grep -qi '^location: .*login' <<<"$headers"
-
 # Refuse to overwrite administrator-managed timer configuration.
 timer=/etc/systemd/system/gunindex-monitor.timer
 printf '\n# synthetic operator change\n' | sudo tee -a "$timer" >/dev/null
@@ -96,4 +133,4 @@ if sudo bash "$directory/current/ops/production/install-timers.sh" "$directory" 
     exit 1
 fi
 sudo grep -qF '# synthetic operator change' "$timer"
-printf '%s\n' 'Verified executable installer, bootstrap HTTP gate, HTTPS deploy hook, protected setup and persistent timers.'
+printf '%s\n' 'Verified single-file installer, bootstrap and HTTPS launch gates, HTTPS deploy hook, protected setup and persistent timers.'

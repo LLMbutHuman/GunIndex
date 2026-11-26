@@ -5,6 +5,10 @@ events { worker_connections 1024; }
 http {
   include /etc/nginx/mime.types;
   server_tokens off;
+  client_header_timeout 15s;
+  client_body_timeout 30s;
+  keepalive_timeout 20s;
+  send_timeout 45s;
   log_format minimal '$remote_addr [$time_local] "$request_method $uri" $status $body_bytes_sent';
   access_log /dev/stdout minimal;
   client_body_temp_path /tmp/client;
@@ -13,6 +17,9 @@ http {
   uwsgi_temp_path /tmp/uwsgi;
   scgi_temp_path /tmp/scgi;
   limit_req_zone $binary_remote_addr zone=site:10m rate=15r/s;
+  limit_req_status 429;
+  limit_conn_zone $binary_remote_addr zone=client_connections:10m;
+  limit_conn_status 429;
   server {
     listen 8080 default_server;
     server_name _;
@@ -31,12 +38,14 @@ http {
     ssl_certificate /run/tls/fullchain.pem;
     ssl_certificate_key /run/tls/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_early_data off;
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
     add_header Strict-Transport-Security "max-age=31536000" always;
     client_max_body_size 28m;
     if ($host != "__DOMAIN__") { return 444; }
     location / {
       limit_req zone=site burst=40 nodelay;
+      limit_conn client_connections 40;
       include fastcgi_params;
       fastcgi_param SCRIPT_FILENAME /app/public/index.php;
       fastcgi_param SCRIPT_NAME /index.php;

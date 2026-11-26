@@ -4,6 +4,12 @@ Selbst hostbarer allgemeiner Marktplatz mit PHP und MySQL. Der aktive Katalog en
 
 [Übergabe, Funktionsliste und persönliche Abnahme](docs/HANDOVER.md)
 
+Die lokale Datei `GunIndex-Install-Ubuntu.sh` bündelt den geprüften Release für
+Ubuntu 22.04 amd64. Nach der geführten Installation führt `/admin/setup.php`
+durch die technische Prüfung und Freischaltung. [Installationsanleitung](docs/UBUNTU_22_04.md)
+
+[Drittanbieter, Bibliotheken, Dienste und Datenquellen](DRITTANBIETER.txt)
+
 Vorhanden sind:
 
 - Konten mit E-Mail-Verifikation, Passwortreset, Sitzungswiderruf und verpflichtender Personal-MFA.

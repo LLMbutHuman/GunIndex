@@ -1,60 +1,55 @@
-# Geschützte Einrichtungsübersicht
+# Geschütztes Setup und Freischaltung
 
-`/admin/setup.php` benötigt `site.manage` und eine aktuelle MFA-Anmeldung.
-Die Übersicht liest Einstellungen, aggregierte Datenbankzahlen und feste
-Worker-Heartbeatdateien. Sie schreibt keine Konfiguration, aktiviert keine
-Dienste und führt weder Shellbefehle noch Netzwerktests aus. Antwortdaten sind
-`private, no-store` und `noindex, nofollow`.
+`/admin/setup.php` benötigt die Berechtigung `site.manage` und eine aktuelle
+MFA-Anmeldung. Lege das erste Administratorkonto im Installer oder an der
+Serverkonsole nach der [Ubuntu-Anleitung](UBUNTU_22_04.md) an. Bei einer
+Neuinstallation beantwortet der öffentliche Marktplatz Anfragen bis zur
+Aktivierung mit HTTP 503. Anmeldung, MFA und die berechtigten Verwaltungsseiten
+stehen währenddessen bereit. Bestehende Installationen behalten ihren
+Betriebszustand.
 
-Die 18 Schritte führen zu vorhandenen, weiterhin eigenständig berechtigungs-
-und CSRF-geschützten Einstellungsseiten. Links zu anderen Verwaltungsrechten
-erscheinen nur bei entsprechender aktueller Berechtigung. Prozessgeheimnisse,
-Schlüssel, private Adressen und lokale Dateipfade werden nicht ausgegeben.
+## Einrichtung abschließen
+
+1. Öffne das Setup über die konfigurierte HTTPS-Domain. Die 18 Schritte führen
+   zu vorhandenen, eigenständig berechtigungs- und CSRF-geschützten Einstellungen.
+2. Prüfe Betreiberangaben, Marke, Länder und Kategorien. Richte Mail über
+   [den Mailassistenten](MAIL_SETUP.md) ein und prüfe den tatsächlichen Empfang.
+   Lass die notwendigen Rechtsdokumentversionen prüfen und veröffentlichen.
+3. Erstelle ein verschlüsseltes Backup und probe die Wiederherstellung in eine
+   separate Datenbank. Die [Anleitung](UBUNTU_22_04.md) enthält die Befehle.
+4. Wähle **Technische Prüfungen ausführen**. Das Panel zeigt den Zeitpunkt und
+   das Ergebnis für Datenbank, HTTPS, Laufzeit, private Speicherung, Worker,
+   Betreiberangaben, Katalog, Mail, Rechtstexte, Sicherung und Zahlungssperren.
+5. Prüfe die Betreiberanforderungen und bestätige die Aktivierung. Der Server
+   wiederholt die technischen Prüfungen beim Freischalten und protokolliert den
+   Vorgang. Führe die Prüfung erneut aus, wenn das Ergebnis älter als 15 Minuten ist.
+
+Die Datenspeicherprüfung schreibt, liest und entfernt kurzlebige Stichproben
+in fest konfigurierten privaten Verzeichnissen. Die Diagnose überprüft den
+aktuellen HTTPS-Aufruf und die Cookie-Einstellungen, frische Worker-Heartbeats
+und datierte Betriebsnachweise für Sicherung und Wiederherstellung. Antwortdaten
+sind `private, no-store` und `noindex, nofollow`. Prozessgeheimnisse, Schlüssel
+und lokale Dateipfade bleiben privat. Das Panel führt weder Shellbefehle noch
+beliebige Netzwerkanfragen aus.
 
 ## Bedeutung der Zustände
 
-- **Technisch eingerichtet:** die ausdrücklich beschriebene Konfigurationsprüfung
-  ist erfolgreich. Dies ist kein Funktionstest oder externer Freigabenachweis.
-- **Technisch geprüft:** derzeit nur frische Heartbeats aller fünf Worker,
-  ohne jüngeren oder gleichzeitigen Fehlereintrag. Fachliche Workerfunktionen
-  sind dadurch nicht vollständig nachgewiesen.
-- **Konfiguration fehlt:** benötigte Angaben oder Daten fehlen.
-- **Externe Prüfung erforderlich:** die Seite besitzt keinen tatsächlichen
-  Nachweis über Provider, Recht, DNS/TLS, Postfacheingang, Restore oder Abnahme.
-- **Für Produktion deaktiviert:** vorhandene Aktivierungssperre oder Testtransport.
-- **Fehlerhaft:** inkonsistente Konfiguration, fehlgeschlagene Diagnose oder
-  ausbleibende/fehlerhafte Workeraktivität.
+- **Technisch eingerichtet.** Die beschriebene Konfigurationsprüfung ist erfolgreich.
+- **Technisch geprüft.** Ein messbarer lokaler Nachweis liegt vor.
+- **Konfiguration fehlt.** Benötigte Angaben oder Daten fehlen.
+- **Externe Prüfung erforderlich.** Betreiber oder Anbieter müssen die Angaben
+  fachlich abnehmen. Das betrifft insbesondere Mailzustellung, Rechtstexte und Zahlungen.
+- **Für Produktion deaktiviert.** Die betreffende Funktion ist gesperrt.
+- **Fehlerhaft.** Die Diagnose ist fehlgeschlagen, die Konfiguration ist
+  inkonsistent oder ein erforderlicher Worker meldet einen Fehler.
 
-Die PLZ-Prüfung erkennt aktive Länder ohne freigegebene Koordinaten, beweist
-jedoch keine vollständige nationale PLZ-Abdeckung. Rechtstextversionen und
-Steuerregeln werden gezählt, ohne rechtliche Vollständigkeit zu unterstellen.
-Dateiprüfungen verwenden aufgelöste Pfade außerhalb des Webroots und restriktive
-POSIX-Rechte; Windows-ACLs werden nicht als geprüft ausgegeben. Es werden keine
-Probe-Dateien angelegt. Alarm- und Zertifikatsprüfungen laufen nicht automatisch.
+Die Freischaltung öffnet den Marktplatz. Zahlungsanbieter, Echtgeld, Treuhand
+und Identitätsprüfung behalten ihre eigenen Freigabesperren. Ein erfolgreicher
+SMTP-Transport zeigt eine Annahme durch den Mailserver. Der Eingang in einem
+kontrollierten Postfach wird gesondert geprüft. Die PLZ-Prüfung erkennt aktive
+Länder ohne freigegebene Koordinaten. Die einzelnen Quellen und ihre Abdeckung
+stehen unter [PLZ-Quellen](POSTCODE_SOURCES.md).
 
-## Tests und Grenzen
-
-`php tests/setup_test.php` prüft die reine Statusableitung ohne Datenbank,
-Geheimniswerte, Provider oder echte Nachrichten. HTTP-Zugriff, MFA, Datenbank-
-Diagnosen und mobile Darstellung benötigen zusätzliche Integrationstests.
-Die explizit eingebundenen Kataloge `locales/setup/{de,en,fr,nl,pl,cs,da,it}.php`
-übersetzen sämtliche neuen Einrichtungstexte, Diagnosen und Statusangaben mit
-je 77 Schlüsseln. Dynamische Zahlen und vorgegebene Parameter bleiben unverändert.
-Es gibt keine automatische Übersetzung von Betreiber- oder Nutzertexten.
-Die Tests prüfen Schlüssel- und Platzhaltergleichheit sowie die Ausgabe aller
-18 Schritte in jeder Sprache, ohne den jeweiligen Funktionsstatus zu verändern.
-Das ist keine Übersetzung oder rechtliche Freigabe von Vertragsdokumenten.
-
-Am 2026-11-02 mit dem verifizierten portablen PHP 8.4.27 ausgeführt:
-elf Setup-Prüfungen und sieben datenbankfreie Geo-/I18N-Prüfungen bestanden.
-Alle zwölf betroffenen PHP-Dateien bestanden die Syntaxprüfung.
-Dies ist kein Linux-/HTTP-/Datenbank-Testnachweis.
-
-Dies ist eine funktionale geführte Bestandsübersicht über die bestehenden
-Einrichtungsmodule. Noch offen bleiben ein Eingabeassistent für SMTP samt
-geschützter Konfiguration, DNS-Abfragen, echte Testsendung und gesonderter
-Posteingangsbestätigung; außerdem persistente Betriebsnachweise und Browser-
-prüfungen der mobilen Darstellung aller Sprachen. Die älteren gemeinsamen
-Admin-Navigations-/Layouttexte sind nicht Teil dieses neuen Übersetzungsmoduls.
-Es werden keine fehlenden Module durch
-scheinbar funktionierende Aktivierungsschalter ersetzt.
+`php tests/setup_test.php` prüft Statuslogik und Übersetzungsschlüssel aller
+acht Sprachkataloge. Die Installer-CI prüft den geschützten HTTPS-Ablauf mit
+synthetischen Daten. Die Ergebnisse und Grenzen stehen in [TESTING.md](TESTING.md).

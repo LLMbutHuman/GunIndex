@@ -1,4 +1,5 @@
 .git
+GunIndex-Install-Ubuntu.sh
 .env
 .env.*
 assets/uploads

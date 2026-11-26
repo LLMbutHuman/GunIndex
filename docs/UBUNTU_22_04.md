@@ -3,7 +3,7 @@
 Ziel ist ein eigener Ubuntu 22.04-Server mit **amd64**, einer tatsächlich auf ihn
 zeigenden Domain, SSH-Zugang und mindestens 4 GB RAM (8 GB empfohlen). PHP 8.1 aus
 Ubuntu 22.04 genügt dem Projekt nicht. Deshalb verwendet die Installation geprüfte,
-fest gepinnte PHP 8.4-FPM-, nginx- und MySQL 8-Container statt eines fremden PHP-PPA.
+fest gepinnte PHP 8.4-FPM-, nginx- und MySQL 8.4-LTS-Container.
 Der Server wurde hier **nicht** produktiv bereitgestellt; Installerprüfung und
 lokale Tests sind von echten DNS-/TLS-/Mail-/Betriebsfreigaben zu unterscheiden.
 
@@ -12,18 +12,23 @@ Angaben. Das Skript akzeptiert keine Platzhalterdomain wie example.com.
 
 ## Schnellstart
 
-Mit einem vorbereiteten Ubuntu-Server, dem geprüften Checkout und einer
-erreichbaren Domain startest du die geführte Installation direkt im Terminal.
+Kopiere `GunIndex-Install-Ubuntu.sh` aus dem lokalen GunIndex-Ordner auf deinen
+Ubuntu-Server. Vergleiche den SHA-256-Wert der gesamten Datei mit dem Wert aus
+der Übergabe. Das Skript enthält den geprüften Quellcode des Releases. Der
+Server benötigt Internetzugriff für Ubuntu-Pakete, Containerimages, PHP-Bibliotheken
+und das HTTPS-Zertifikat.
 
 ```sh
-sudo ./ops/install-ubuntu-22.04.sh
+sha256sum GunIndex-Install-Ubuntu.sh
+bash GunIndex-Install-Ubuntu.sh --verify
+sudo bash GunIndex-Install-Ubuntu.sh
 ```
 
 Der Installer fragt nach Domain, Zertifikatskontakt und dem ersten
 Administratorkonto mit Authenticator-App. Danach zeigt er den Link zu
-`/admin/setup.php`. Dort stehen die
-verbleibenden Betreiberangaben, Mail- und Rechtsprüfungen sowie die Zustände der
-Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ein.
+`/admin/setup.php`. Bei einer Neuinstallation bleibt der Marktplatz bis zur
+Aktivierung dort im Einrichtungsmodus. Der Installer richtet auch das lokale
+Monitoring ein.
 
 ## Vorbereitung und Prüfung
 
@@ -34,7 +39,7 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    dpkg --print-architecture
    sudo apt-get update
    sudo apt-get upgrade
-   sudo apt-get install -y git ca-certificates
+   sudo apt-get install -y ca-certificates
    ```
 
 2. SSH absichern und Firewall **unter Erhalt deines tatsächlichen SSH-Ports**
@@ -50,31 +55,27 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    Eine vorhandene Firewallregelung wird vom Installer nicht überschrieben.
    Docker veröffentlicht nur 80/443; MySQL besitzt keinen Hostport.
 
-3. Entwicklungs-/Releasebranch holen und Einstellungen setzen:
+3. Installationsdatei übertragen und Einstellungen setzen:
 
    ```sh
-   git clone --branch feature/general-marketplace-rebuild https://github.com/LLMbutHuman/GunIndex.git
-   cd GunIndex
-   git status --short
-   git log -1 --oneline
    MARKET_DOMAIN='deine-echte-domain.tld'
    MARKET_EMAIL='betreiber@deine-echte-domain.tld'
    MARKET_DIRECTORY='/srv/gunindex'
    ```
 
-4. Installer lesen und zunächst nur den Ablauf anzeigen:
+4. Archiv prüfen und zunächst nur den Ablauf anzeigen:
 
    ```sh
-   less ops/install-ubuntu-22.04.sh
-   ./ops/install-ubuntu-22.04.sh --help
-   ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --dry-run
+   bash GunIndex-Install-Ubuntu.sh --verify
+   bash GunIndex-Install-Ubuntu.sh --help
+   bash GunIndex-Install-Ubuntu.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --dry-run
    ```
 
 5. Nach Prüfung installieren. Domain-DNS und Port 80 müssen für ACME erreichbar
    sein; andernfalls mit `--prepare-only` nur vorbereiten:
 
    ```sh
-   sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --setup-admin
+   sudo bash GunIndex-Install-Ubuntu.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --setup-admin
    ```
 
    Wer mit `--prepare-only` begonnen hat, schließt HTTPS später mit denselben
@@ -83,7 +84,7 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
    eine bereits vorhandene HTTPS-Konfiguration bei.
 
    ```sh
-   sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --finish-tls
+   sudo bash GunIndex-Install-Ubuntu.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --finish-tls
    ```
 
    Docker kommt ausschließlich aus seinem offiziellen signierten Ubuntu-Repository;
@@ -190,6 +191,11 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
     testen: HTTPS, Mailzustellung, Passwortreset, Admin-MFA, Länder/Entfernungen,
     Zahlungstest, rechtliche Angaben, Backup/Restore, Monitoring und Barrierefreiheit.
 
+14. Nach Anmeldung mit Admin-MFA im Setup-Panel die technischen Prüfungen
+    ausführen. Offene Schritte abarbeiten, die angezeigten Betreiberprüfungen
+    bestätigen und den Marktplatz aktivieren. Die Freischaltung des Marktplatzes
+    ist von den Freigaben der einzelnen Zahlungs- und Identitätsdienste getrennt.
+
 ## Update ohne Datenverlust
 
 Die CI probt das Produktionsimage auf einem frischen GitHub-Runner mit
@@ -198,9 +204,8 @@ Wiederherstellung, Migrationsfortsetzung und Worker. DNS, Zertifikatsausstellung
 und die Anbindung an den tatsächlichen Ubuntu-Host werden vor Ort geprüft.
 [GitHub-Runner-Variablen](https://docs.github.com/en/actions/reference/workflows-and-actions/variables)
 
-Das Quellrepository aktualisieren, Änderungen prüfen und einen getesteten Commit
-verwenden. Der Installer verlangt unveränderte versionierte Dateien und `--update`
-für einen vorhandenen Dienst. Er prüft das Release-Archiv vor der Unterbrechung,
+Die geprüfte Installationsdatei des neuen Releases auf den Server kopieren und
+mit `--update` für den vorhandenen Dienst ausführen. Der Installer prüft das Release-Archiv vor der Unterbrechung,
 erstellt ein geprüftes Backup, hält Schreiber an und führt
 additive Migrationen aus. Bei Fehlern werden weder produktive Daten gelöscht noch
 SQL-Änderungen automatisch zurückgerollt; Dienst geschlossen lassen und vorwärts
@@ -208,15 +213,28 @@ reparieren. Administratorveränderte verwaltete Konfigdateien benötigen eine ma
 Zusammenführung und werden nicht still überschrieben.
 
 ```sh
-git fetch origin
-git log --oneline HEAD..origin/feature/general-marketplace-rebuild
-git pull --ff-only
-sudo ./ops/install-ubuntu-22.04.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --update
+bash GunIndex-Install-Ubuntu.sh --verify
+sudo bash GunIndex-Install-Ubuntu.sh --domain "$MARKET_DOMAIN" --email "$MARKET_EMAIL" --directory "$MARKET_DIRECTORY" --update
 ```
+
+Bestehende MySQL-8.0-Installationen benötigen zuerst eine geplante Migration.
+Der Ein-Datei-Installer hält dort vor dem Wechsel an. Sichere Konfiguration,
+Schlüssel, Dateien und Datenbank verschlüsselt. Prüfe die Kompatibilität mit dem
+MySQL Shell Upgrade Checker und lade eine logische Sicherung auf einer
+separaten MySQL-8.4-Testinstallation. Prüfe dort Restore, Anwendung und Worker,
+bevor du die produktive Umstellung planst. Das ursprüngliche Volume bleibt als
+Teil des Rückfallplans erhalten. [Offizielle MySQL-Upgradepfade](https://dev.mysql.com/doc/refman/8.4/en/upgrade-paths.html)
 
 Images sind fest gepinnt. Sicherheitsupdates benötigen eine bewusst geprüfte
 Aktualisierung der Digests und erneute Tests; keine unbeaufsichtigten Containerupdates.
 Ubuntu-Updates, Zertifikatsablauf und Mail-/Queuezustand regelmäßig überwachen.
+
+Entwickler können das Paket aus einem geprüften Commit mit Linux oder Git Bash
+erzeugen. Die Ausgabe wird nur angelegt, wenn sie noch nicht existiert.
+
+```sh
+bash ops/production/build-ubuntu-installer.sh "$(git rev-parse HEAD)"
+```
 
 ## Bestehende Klartext-Chats kontrolliert verschlüsseln
 

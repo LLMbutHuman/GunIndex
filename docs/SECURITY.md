@@ -32,6 +32,23 @@ Transaktionen, Zeilensperren, eindeutige Referenzen und begrenzte Workerbatches 
 
 ## Betrieb und offene Abnahmen
 
+[PHP 8.4.28](https://www.php.net/releases/8_4_28.php), [nginx 1.30.8](https://nginx.org/en/security_advisories.html),
+[MySQL 8.4.13.1 LTS](https://dev.mysql.com/doc/relnotes/mysql/8.4/en/) und
+[Composer 2.11.3](https://getcomposer.org/changelog/2.11.3) sind per Image-Digest
+fixiert. MySQL 8.0 hat sein Wartungsende erreicht. Bestehende MySQL-8.0-Datenbanken
+erfordern die gesonderte [Migrationsprüfung](UBUNTU_22_04.md#update-ohne-datenverlust).
+
+PHP-Dateiuploads kommen ohne serverseitige Sitzungs-Fortschrittsdaten aus.
+nginx begrenzt Anfragerate, gleichzeitige verarbeitete Anfragen und inaktive
+Verbindungen je Client. TLS-Early-Data bleibt deaktiviert. MySQL veröffentlicht
+keinen Hostport und deaktiviert den X-Protocol-Dienst sowie `LOCAL INFILE`.
+Frische Datenbanken legen den MySQL-Root-Account nur für `localhost` an.
+
+Neuinstallationen sperren den öffentlichen Marktplatz bis zur Aktivierung im
+[geschützten Setup-Panel](ADMIN_SETUP.md). Administrationsrecht, aktuelle MFA,
+CSRF, erneut geprüfte technische Voraussetzungen und ein Audit-Eintrag sichern
+den Übergang. Zahlungs- und sonstige Fachfreigaben werden separat verwaltet.
+
 [Ubuntu 22.04](UBUNTU_22_04.md) enthält private Datenbank-/Dateiverzeichnisse, TLS-/Webserverkonfiguration, lokale Mailzustellung, unabhängige Worker, verschlüsselte Sicherungen und strikte SSH-Offsitewerkzeuge. Die tatsächliche Installation auf dem Zielserver, Mail-DNS/Zustellung, Rechte-/Firewallprüfung, Offsite-Restore, Alarmierung und Incidentprozess müssen dort abgenommen werden. Ein lokaler Test ersetzt keine reale Betriebsabnahme.
 
 Historische veröffentlichte Datenbankzugänge gelten als möglicherweise kompromittiert und müssen rotiert werden. Alte sensible Dateien sind aus der neuen Versionierung ausgeschlossen, bleiben aber in der Git-History. Es wurde keine destruktive Historyänderung vorgenommen. Retention, gegebenenfalls Meldepflichten und eine koordinierte Bereinigung sind weiterhin offen.

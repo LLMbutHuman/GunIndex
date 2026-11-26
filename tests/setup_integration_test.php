@@ -136,10 +136,19 @@ try {
         } finally { curl_close($client); }
     });
 
-    setup_integration_test('setup_post_rejected_and_settings_preserved', static function () use ($pdo, $browser): void {
+    setup_integration_test('setup_actions_require_csrf_and_checks_leave_settings_intact', static function () use ($pdo, $browser): void {
         $before = $pdo->query('SELECT setting_key,setting_value,updated_at FROM system_settings ORDER BY setting_key')->fetchAll();
-        $result = setup_integration_request($browser, '/admin/setup.php', ['manual_paypal_enabled'=>'1', 'finance_enabled'=>'1', 'action'=>'activate']);
-        setup_integration_check($result['status'] === 405 && ($result['headers']['allow'] ?? '') === 'GET, HEAD');
+        $path = '/admin/setup.php';
+        $result = setup_integration_request($browser, $path, ['action'=>'activate', 'confirm'=>'1']);
+        setup_integration_check($result['status'] === 403);
+        $token = setup_integration_csrf(setup_integration_request($browser, $path)['body']);
+        $result = setup_integration_request($browser, $path, ['action'=>'activate', 'confirm'=>'1', 'csrf_token'=>$token]);
+        setup_integration_check($result['status'] === 409);
+        $result = setup_integration_request($browser, $path, ['action'=>'run_checks', 'csrf_token'=>$token, 'manual_paypal_enabled'=>'1', 'finance_enabled'=>'1']);
+        setup_integration_check($result['status'] === 303 && ($result['headers']['location'] ?? '') === '/admin/setup.php#installation');
+        $result = setup_integration_request($browser, $path);
+        setup_integration_check($result['status'] === 200 && str_contains($result['body'], 'data-installation-check="database" data-status="passed"'));
+        setup_integration_check(str_contains($result['body'], 'data-installation-check="https" data-status="failed"') && !str_contains($result['body'], 'value="activate"'));
         setup_integration_check($before === $pdo->query('SELECT setting_key,setting_value,updated_at FROM system_settings ORDER BY setting_key')->fetchAll());
     });
 

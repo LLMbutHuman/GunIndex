@@ -1,0 +1,284 @@
+GunIndex – Drittanbieter, Software und Datenquellen
+Stand 26. November 2026
+
+1. Was der Betrieb benötigt
+
+- Ubuntu Server 22.04 LTS (amd64) mit systemd. Ubuntu und seine Paketquellen
+  werden von Canonical und der Ubuntu-Community bereitgestellt.
+  https://ubuntu.com/server/docs
+- Docker Engine und CLI, containerd, Buildx und das Compose-Plugin. Der
+  Installer verwendet bei Bedarf das signierte Docker-APT-Repository für
+  Ubuntu Jammy. Images stammen aus den Docker Official Images. Zugang zu den
+  Paketquellen und zur Registry ist beim Installieren und Bauen erforderlich.
+  https://docs.docker.com/engine/install/ubuntu/
+  https://docs.docker.com/docker-hub/image-library/trusted-content/
+- nginx 1.30.8-alpine (nginx/F5, BSD-2-Clause) als HTTP-/HTTPS-Server.
+  Alpine Linux und seine Basispakete kommen mit dem Image.
+  https://hub.docker.com/_/nginx
+- MySQL Community 8.4.13.1 (Oracle, die Server-Community-Edition unter GPL-2.0)
+  für die Anwendungsdatenbank. Das Image liefert auch mysql und mysqldump
+  zum Prüfen, Sichern und Wiederherstellen.
+  https://hub.docker.com/_/mysql
+  https://www.mysql.com/products/community/
+- PHP 8.4.28 als FPM-Image für Produktion und CLI-Image für Integrationstests
+  (PHP License 3.01), jeweils auf Debian Bookworm. PHP stellt unter anderem
+  DOM/libxml, Fileinfo, Filter, JSON, mbstring, OpenSSL, PDO/PDO MySQL, GD
+  und Sodium/libsodium bereit. OPcache ist im FPM-Image aktiviert. GD nutzt
+  libpng, libjpeg-turbo und libwebp, mbstring nutzt Oniguruma. Debian liefert
+  die Build-Pakete libpng-dev, libjpeg62-turbo-dev, libwebp-dev, libonig-dev
+  und libxml2-dev. Git und in der Testumgebung unzip unterstützen den Build.
+  https://hub.docker.com/_/php
+  https://www.php.net/license/index.php
+- Debian Bookworm Slim als Basis des optionalen lokalen Mailers mit Postfix
+  und CA-Zertifikaten. Im PHP-Image sind msmtp-mta und CA-Zertifikate enthalten.
+  Anbieter für den SMTP-Relay oder den DNS-Betrieb wählt der Betreiber.
+  https://hub.docker.com/_/debian
+  https://www.postfix.org/
+  https://marlam.de/msmtp/
+- Auf dem Host verwendet der Installer die Ubuntu-Pakete ca-certificates,
+  curl, gnupg, python3, openssl und tar sowie bei TLS-Einrichtung
+  certbot. Bash, die Linux-Standardwerkzeuge und systemd werden vorausgesetzt.
+  Backups und Wiederherstellung verwenden Python-Standardbibliothek,
+  MySQL-Werkzeuge und PHP Sodium. Worker und Monitoring sind lokal.
+
+Die vollständigen Image-Digests stehen in ops/production/compose.yml,
+ops/production/Dockerfile, ops/production/Dockerfile.mailer und ops/Dockerfile.
+
+Image | Tag | SHA-256-Digest
+nginx | 1.30.8-alpine | 8eb04fe3b385090e9aa02961f77398ad09b6bf33ab07f6669a5bb7acce22c0d3
+mysql | 8.4.13.1 | 8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+php | 8.4.28-fpm-bookworm | 54ce0ded7582385bf6b522aff920d2eff5ec60da9476d8c52ce6aa69c9c5c7cb
+php | 8.4.28-cli-bookworm | 93a0fed307238c5645ccff9d4b87625bd5b96fdfa987e243dab531fd6140bac8
+composer | 2.11.3 | 4e5f671c4a5784b422c20fcb993a38da96529438889dbce40be27c452d18dd6d
+debian | bookworm-slim | 99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3
+
+Die APT-Pakete und ihre indirekten Systemabhängigkeiten werden von den
+jeweiligen Distributionen beim Bauen oder Installieren aufgelöst. Die exakte
+Paketliste eines konkreten Systems steht in dessen Paketdatenbank
+(dpkg-query -W für Ubuntu/Debian, apk info -v für das nginx-Image). Die
+Lizenztexte der Systempakete liegen in den Images oder in den Paketquellen
+der Distributionen.
+
+2. PHP-Pakete für die Website
+
+Die Versionen und Lizenzangaben stammen aus composer.lock. Composer 2.11.3
+(MIT) ist als Image per Digest fixiert und lädt beim Build Paketmetadaten
+aus Packagist sowie die referenzierten Paketarchive.
+https://hub.docker.com/_/composer
+https://getcomposer.org/
+https://packagist.org/
+
+Direkte Pakete
+
+- dompdf/dompdf v3.1.6 (LGPL-2.1 laut Lockfile) – lokale PDF-Rechnungen.
+  GunIndex verwendet das in Dompdf mitgelieferte DejaVu Sans. Das Fontprojekt
+  führt die Bitstream-Vera-/Arev-Lizenzhinweise. Dompdf enthält auch Metriken
+  für die PDF-Standardschriftarten. Externe Ressourcen sind beim Rendering
+  abgeschaltet.
+  https://github.com/dompdf/dompdf/tree/v3.1.6/lib/fonts
+  https://github.com/dejavu-fonts/dejavu-fonts/blob/master/LICENSE
+- lbuchs/webauthn v2.2.0 (MIT) – serverseitige Passkey-Prüfung.
+  https://github.com/lbuchs/WebAuthn
+- phpmailer/phpmailer v7.2.0 (LGPL-2.1-only) – SMTP-Transport.
+  https://github.com/PHPMailer/PHPMailer
+
+Indirekte Pakete
+
+- dompdf/php-font-lib 1.0.2 (LGPL-2.1-or-later) – Schriftverarbeitung.
+  https://github.com/dompdf/php-font-lib
+- dompdf/php-svg-lib 1.0.2 (LGPL-3.0-or-later) – SVG-Verarbeitung für Dompdf.
+  https://github.com/dompdf/php-svg-lib
+- masterminds/html5 2.12.0 (MIT) – HTML5-Parser für Dompdf.
+  https://github.com/Masterminds/html5-php
+- sabberworm/php-css-parser v9.5.0 (MIT) – CSS-Parser für die SVG-Bibliothek.
+  https://github.com/MyIntervals/PHP-CSS-Parser
+
+3. Browser und Anmeldung
+
+- OpenPGP.js (openpgp) 6.3.2 (LGPL-3.0-or-later) – lokal ausgeliefertes
+  Browsermodul für E2EE von Chats und Anhängen. Pfad, Prüfsummen und Lizenz
+  stehen in assets/vendor/openpgp/PROVENANCE.json und LICENSE. Die im
+  Browserbundle eingebetteten MIT-Komponenten umfassen @noble/ciphers 1.3.0,
+  @noble/curves 1.9.7, @noble/hashes 1.8.0, @openpgp/web-stream-tools 0.3.1,
+  @openpgp/unbzip2-stream 2.1.0, argon2id 1.0.1 und fflate 0.8.3 laut
+  Quell-Lockfile. GunIndex liefert das vollständige Browserbundle lokal
+  mit einer gemeinsamen Prüfsumme aus.
+  https://github.com/openpgpjs/openpgpjs/tree/v6.3.2
+  https://github.com/openpgpjs/openpgpjs/blob/v6.3.2/package-lock.json
+  https://github.com/paulmillr/noble-ciphers
+  https://github.com/paulmillr/noble-hashes
+  https://github.com/paulmillr/noble-curves
+- Web Crypto, IndexedDB und WebAuthn sind Browserfunktionen. Passkeys verwenden
+  den Authenticator des Geräts oder einen Sicherheitsschlüssel. Eine mögliche
+  Synchronisierung durch Betriebssystem oder Passwortmanager hängt von der
+  Wahl des Nutzers ab. Für TOTP kann der Nutzer eine kompatible Authenticator-
+  App wählen. GunIndex bindet dafür keinen bestimmten Anbieter ein.
+  https://www.w3.org/TR/WebCryptoAPI/
+  https://www.w3.org/TR/IndexedDB/
+  https://www.w3.org/TR/webauthn-3/
+  https://www.rfc-editor.org/rfc/rfc6238
+
+In den geprüften PHP-Templates, CSS- und JavaScript-Dateien werden Skripte und
+Stylesheets lokal eingebunden. Es wurden keine automatischen CDN-, Webfont-,
+Tracking- oder Drittanbieter-Frame-Einbindungen gefunden. Schema.org- und
+Sitemap-URLs sind Bezeichner für strukturierte Daten. Quellenverweise und
+eine aktivierte PayPal-Weiterleitung können externe Seiten öffnen.
+
+4. Externe Dienste und Voraussetzungen beim Einrichten
+
+- Hosting, Domain, DNS und Netz. Eigener Ubuntu-Server oder frei gewählter
+  Hoster, Domain beim gewählten Registrar und passende DNS-Einträge. Der
+  Mailassistent fragt TXT-Einträge über den Systemresolver ab. Es ist kein
+  Registrar- oder DNS-Verwaltungs-API eines bestimmten Anbieters eingebunden.
+- ACME und Zertifikate. Der TLS-Schritt verwendet Certbot (Apache-2.0) und
+  standardmäßig die CA Let's Encrypt. Domainauflösung und Erreichbarkeit für
+  HTTP-01 müssen zur Installation passen. Die ACME-CA erhält die für den
+  Zertifikatsauftrag nötigen Domain- und Kontodaten.
+  https://certbot.eff.org/
+  https://letsencrypt.org/how-it-works/
+- E-Mail. Lokaler Postfix-/msmtp-Versand oder betreiberseitig gewählter
+  SMTP-Relay über TLS. Ein Relay braucht dessen Host, Port, Zugangsdaten und
+  einen zugelassenen Absender. Der Betreiber richtet beim DNS-/Mailanbieter
+  SPF, DKIM und DMARC ein und prüft die Zustellung in ein echtes Postfach.
+  Lokale Testzustellung und SMTP-Annahme belegen keinen Posteingang.
+  https://www.rfc-editor.org/rfc/rfc7208
+  https://www.rfc-editor.org/rfc/rfc6376
+  https://www.rfc-editor.org/rfc/rfc7489
+- PayPal. Manuelle Zuordnung mit konfigurierter geschäftlicher Empfängeradresse
+  und Zahlungsprüfung oder optional API-Checkout mit OAuth 2.0, Orders v2,
+  Payments v2, Rückerstattungen und Webhook-Signaturprüfung. Die Anwendung
+  spricht REST serverseitig über HTTPS und leitet Kunden zur PayPal-Freigabe
+  weiter. Der API-Betrieb benötigt ein geeignetes Business-Konto, getrennte
+  Sandbox-/Live-Zugangsdaten, Händler-ID, Webhook-ID und einen erreichbaren
+  HTTPS-Endpunkt. Live-Zahlungen bleiben bis zur Freigabe deaktiviert.
+  https://developer.paypal.com/api/rest/
+  https://developer.paypal.com/api/webhooks/v1/
+- Bitcoin. Optionaler Empfangsadapter über JSON-RPC für Bitcoin Core 30.
+  GunIndex verwendet im isolierten Offline-Regtest die Version 30.4 (MIT)
+  mit geprüfter Archivsumme. Produktive Zahlungen setzen einen geeigneten
+  Node, einen konfigurierten Empfangs-Wallet-Endpunkt, Freigabe sowie einen
+  administrativ vorgegebenen Kurs voraus. Es gibt keine angebundene
+  Kursdienst-, Blockchain-Explorer- oder Auszahlungs-API.
+  https://bitcoincore.org/en/releases/30.4/
+  https://bitcoincore.org/en/doc/30.0.0/rpc/
+- Banküberweisung. Der Betreiber benötigt ein geeignetes Bankkonto und den
+  Export gebuchter EUR-Zahlungen im unterstützten ISO-20022-Format
+  camt.053.001.08. GunIndex importiert diese Kontoauszüge lokal und ordnet
+  sie eindeutigen Zahlungsreferenzen zu. Es gibt keine direkte Bank-API.
+  https://www.iso20022.org/iso-20022-message-definitions
+- Treuhand. GunIndex enthält den internen Simulationsworkflow. Für den
+  Live-Betrieb fehlen ein genehmigter Verwahr- und Auszahlungsanbieter mit
+  entsprechender Anbindung und die erforderlichen Freigaben.
+- Offsite-Backup. Optionaler OpenSSH-SFTP-Client zu einem vom Betreiber
+  gewählten Ziel mit SSH-Schlüssel und geprüftem Hostschlüssel. Übertragen
+  werden verschlüsselte Archive und das zugehörige Manifest. Das lokale
+  Backup und Monitoring benötigen kein externes Konto.
+  https://man.openbsd.org/sftp
+
+5. Mitgelieferte Postleitzahlendaten
+
+GunIndex importiert geprüfte lokale CSV-Bestände. Die Suche ruft Karten- oder
+Geocoding-Dienste zur Laufzeit nicht auf. Koordinaten dienen der Näherung von
+PLZ-Mittelpunkten. Datenstände, Originaldateien, Prüfsummen, Aufbereitung und
+Abdeckung stehen in docs/postcode-sources.json und docs/POSTCODE_SOURCES.md.
+
+- DE – ZIP/PLZ.csv, 8.289 Einträge. Rechtebestätigung des Betreibers für
+  genau diese Datei. Ursprünglicher Herausgeber, Erhebungsdatum und unabhängige
+  Lizenzverifikation fehlen.
+- FR – La Poste, Base officielle des codes postaux, 08.11.2026, 6.051 PLZ.
+  Licence Ouverte 2.0. Aufbereitet aus Gemeindemittelpunkten.
+  https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux
+  https://www.data.gouv.fr/pages/legal/licences/etalab-2-0
+- AT – GeoNames und RTR-GmbH, kombinierter Stand 25.11.2026, 2.200 PLZ.
+  CC BY 4.0. Der RTR-Bestand prüft die Adressierbarkeit der GeoNames-Punkte.
+  https://download.geonames.org/export/zip/readme.txt
+  https://www.data.gv.at/datasets/f76ed887-00d6-450f-a158-9f8b1cbbeebf
+- CH / LI – swisstopo, amtliches Ortschaftenverzeichnis, 01.11.2026,
+  3.177 bzw. 13 PLZ. swisstopo-OGD-Nutzungsbedingungen mit Vermerk ©swisstopo.
+  https://www.swisstopo.admin.ch/en/official-directory-of-towns-and-cities
+  https://www.swisstopo.admin.ch/en/terms-of-use-free-geodata-and-geoservices
+- LU – Administration du cadastre et de la topographie, BD-Adresses,
+  23.11.2026, 4.068 PLZ. CC0 1.0. Aggregierte Adresspunkte.
+  https://data.public.lu/fr/datasets/adresses-georeferencees-bd-adresses/
+- CZ – ČÚZK, RÚIAN, 31.10.2026, 2.675 PLZ. CC BY 4.0. Aggregierte
+  Adresspunkte mit Umrechnung aus S-JTSK nach WGS 84.
+  https://geoportal.gov.cz/php/micka/record/basic/CZ-00025712-CUZK_SERIES-MD_RUIAN-CSV-ADR-ST
+- BE – SPF/FOD BOSA, BeST-Adressregister von Flandern, Brüssel-Hauptstadt
+  und Wallonien, 25.11.2026, 1.139 PLZ. CC BY 4.0. Aggregierte Adresspunkte.
+  https://opendata.bosa.be/index.nl.html
+  https://opendata.bosa.be/download/best/bestinabox/bestinabox_conditionsdutilisation.pdf
+- PL – GUGiK, PRG-Adresspunkte, und GeoNames als Vergleich, 25.11.2026,
+  18.644 PLZ. PRG zur freien Nutzung laut GUGiK, GeoNames CC BY 4.0.
+  https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/
+  https://download.geonames.org/export/zip/readme.txt
+- DK – Klimadatastyrelsen, DAGI über den ArcGIS-REST-Datendienst des
+  Vejdirektoratet, 26.11.2026, 972 PLZ. DAGI CC BY 4.0. StatBank (Statistics
+  Denmark) dient der Auswahl bevölkerter PLZ. Die CSV enthält keine
+  Bevölkerungszahlen oder Originalpolygone.
+  https://kort.vd.dk/server/rest/services/Grunddata/Danmarks_Administrative_Geografiske_Inddelinger/MapServer/35
+  https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser
+  https://www.statbank.dk/POSTNR2
+- NL – Kadaster, BAG via PDOK, 01.11.2026, 436.312 vollständige PLZ.
+  Public Domain Mark 1.0 laut nationalem Katalogeintrag zum Downloadfeed.
+  Aggregierte Positionsdaten aus BAG Light.
+  https://service.pdok.nl/kadaster/bag/atom/bag.xml
+  https://creativecommons.org/publicdomain/mark/1.0/
+
+Weitere GeoNames-Länder und Eurostat/GISCO-Postleitzahlpunkte (CC BY-SA 4.0)
+sind im Quellenmanifest als mögliche zusätzliche Datenstände dokumentiert.
+https://ec.europa.eu/eurostat/web/gisco/geodata/administrative-units/postal-codes
+
+6. Entwicklung, Datenaufbereitung und CI
+
+- Git/GitHub und GitHub Actions, Linux-Runner ubuntu-24.04 und Windows-Runner
+  windows-2022. Die Workflows fixieren actions/checkout v4.2.2 (MIT) auf
+  Commit 11bd71901bbe5b1630ceea73d27597364c9af683. Die Runner-Images und ihre
+  vorinstallierten Tools werden von GitHub gepflegt. OpenSSH Server dient
+  in CI als isoliertes SFTP-Testziel.
+  https://github.com/actions/checkout/tree/v4.2.2
+  https://github.com/actions/runner-images
+- Node.js und npm für E2EE- und Browserprüfungen sowie die Aufbereitung von
+  PLZ-Daten. npm lädt Pakete aus der öffentlichen npm-Registry. Browserchecks
+  benötigen für das gesamte Lockfile Node.js ab 20. Für die erneute BAG-
+  Aufbereitung gilt Node.js ab 22.13 mit node:sqlite. Windows-Vorprüfung und
+  Entwicklungsbetrieb verwenden PowerShell sowie optional Microsoft WSL 2
+  mit Ubuntu und Docker Desktop. Produktion setzt Ubuntu und Docker Engine
+  voraus.
+  https://nodejs.org/
+  https://docs.npmjs.com/
+  https://learn.microsoft.com/windows/wsl/
+  https://docs.docker.com/desktop/features/wsl/
+- Browserchecks laut tests/browser-tools/package-lock.json
+  * @axe-core/playwright 4.11.0 (MPL-2.0), direkt.
+  * axe-core 4.11.4 (MPL-2.0), indirekt.
+  * playwright 1.57.0 (Apache-2.0), direkt.
+  * playwright-core 1.57.0 (Apache-2.0), indirekt unter playwright.
+  * playwright-core 1.64.1 (Apache-2.0), Peer-Auflösung von axe-playwright.
+  * fsevents 2.3.2 (MIT), optional ausschließlich unter macOS.
+  https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright
+  https://github.com/dequelabs/axe-core
+  https://github.com/microsoft/playwright
+  https://github.com/fsevents/fsevents
+- Über Playwright 1.57.0 installierte Testbrowser laut Upstream-Manifest
+  Chromium/Headless Shell 143.0.7499.4 (Revision 1200), Firefox 144.0.2
+  (Revision 1497), WebKit 26.0 (Revision 2227 auf dem Linux-CI-Ziel) und der
+  Playwright-FFmpeg-Hilfsdownload (Revision 1011). Das Manifest enthält
+  plattformspezifische Abweichungen. Lokale Tests können einen anderen
+  bereitgestellten Chromium-Browser verwenden. Lizenzen und Fremdhinweise
+  stehen in den jeweiligen Browserpaketen.
+  https://raw.githubusercontent.com/microsoft/playwright/v1.57.0/packages/playwright-core/browsers.json
+- Proj4js (proj4) 2.23.0 (MIT) für Datenaufbereitung, inklusive der
+  Bibliotheken mgrs 1.0.0 und wkt-parser (^1.9.0 laut Upstream-Manifest). Der
+  SHA-256-Pin für dieses Bundle steht in ops/project-postcodes.mjs. Für die
+  Aufbereitung einzelner Länder kommen PHP ZIP, XMLReader oder iconv sowie
+  veröffentlichte EPSG-Definitionen zum Einsatz. Mitgeliefert werden die
+  daraus erzeugten CSV-Dateien.
+  https://proj4js.org/
+  https://www.npmjs.com/package/proj4/v/2.23.0
+  https://github.com/proj4js/proj4js/blob/v2.23.0/package.json
+  https://epsg.org/
+
+Bei Änderungen an Lockfiles, Basis-Images oder Anbindungen dieses Verzeichnis
+mitpflegen. Für eine Paketprüfung eines ausgelieferten Images gelten dessen
+Digest und installierte Paketmetadaten. Für Betrieb und Freigaben gelten die
+konkrete Betreiberkonfiguration und die Bedingungen des gewählten Anbieters.

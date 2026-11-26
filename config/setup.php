@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/i18n.php';
 require_once __DIR__.'/worker_health.php';
 
-/** Read-only setup diagnostics. Results contain booleans/counts, never secrets. */
+/** Setup diagnostics return only operational evidence, never secrets. */
 function setup_status_labels(): array
 {
     $labels = [];
@@ -35,6 +35,34 @@ function setup_verified_operation(string $path, int $now): ?string
     $stamp = @file_get_contents($path, false, null, 0, 32);
     if (!is_string($stamp) || !preg_match('/\A[1-9][0-9]{0,10}\n\z/', $stamp) || (int)$stamp > $now) return null;
     return gmdate('c', (int)$stamp);
+}
+
+function setup_installation_state(PDO $pdo): string
+{
+    if (getenv('INSTALLATION_REQUIRES_ACTIVATION', true) !== '1') return 'unmanaged';
+    $value = $pdo->query("SELECT setting_value FROM system_settings WHERE setting_key='installation_activated'")->fetchColumn();
+    return $value === '1' ? 'active' : 'pending';
+}
+
+function setup_installation_route_allowed(string $route, string $method, bool $administrator = false): bool
+{
+    if (!in_array($method, ['GET', 'HEAD', 'POST'], true)) return false;
+    if (in_array($route, ['auth/login.php', 'auth/mfa.php', 'auth/logout.php', 'admin/setup.php'], true)) return true;
+    return $administrator && preg_match('/\Aadmin\/[a-z][a-z0-9-]*\.php\z/', $route) === 1;
+}
+
+function setup_enforce_installation_http(PDO $pdo, string $route): void
+{
+    if (setup_installation_state($pdo) !== 'pending') return;
+    $method = $_SERVER['REQUEST_METHOD'] ?? '';
+    if (setup_installation_route_allowed($route, $method)) return;
+    if (setup_installation_route_allowed($route, $method, true)) {
+        $user = current_user($pdo);
+        $allowed = $user !== null && rbac_has_permission($pdo, (int)$user['id'], 'site.manage');
+        if (maintenance_admin_session($user, $_SESSION ?? [], $allowed, time())) return;
+    }
+    header('X-Robots-Tag: noindex, nofollow');
+    app_error_response('setup');
 }
 
 function setup_collect(PDO $pdo, int $actor): array
@@ -101,6 +129,113 @@ function setup_collect(PDO $pdo, int $actor): array
         $facts['workers'][$worker] = worker_heartbeat_status(worker_read_heartbeat($base.'.ok'), worker_read_heartbeat($base.'.failed'), $now, $maximum)['ready'];
     }
     return $facts;
+}
+
+/** Probe exclusively in the storage already selected by deployment configuration. */
+function setup_probe_storage(): bool
+{
+    $directories = [getenv('AUTH_RATE_LIMIT_DIR') ?: '/var/lib/gunindex/limits',
+        getenv('GENERAL_IMAGE_DIR') ?: '/var/lib/gunindex/images',
+        getenv('GENERAL_PRIVATE_DIR') ?: '/var/lib/gunindex/private', ini_get('session.save_path')];
+    foreach ($directories as $directory) {
+        if (!is_string($directory) || !setup_private_directory($directory, dirname(__DIR__).'/public')) return false;
+        $sample = bin2hex(random_bytes(16));
+        $path = $directory.'/.setup-probe-'.$sample;
+        $file = @fopen($path, 'x+b');
+        if ($file === false) return false;
+        try {
+            $readable = fwrite($file, $sample) === strlen($sample) && rewind($file) && fread($file, strlen($sample)) === $sample;
+        } finally {
+            fclose($file);
+            $removed = @unlink($path);
+        }
+        if (!$readable || !$removed) return false;
+    }
+    return true;
+}
+
+function setup_launch_checks(array $facts): array
+{
+    $steps = array_column(setup_steps($facts), 'status', 'id');
+    return [
+        'database' => ($facts['database'] ?? false) === true && ($facts['query_errors'] ?? null) === [],
+        'https' => ($facts['https'] ?? false) === true && ($facts['secure_cookies'] ?? false) === true
+            && ($facts['https_request'] ?? false) === true,
+        'runtime' => ($facts['runtime_probe'] ?? false) === true && ($facts['crypto_probe'] ?? false) === true,
+        'maintenance' => ($facts['maintenance_clear'] ?? false) === true,
+        'storage' => ($facts['storage_probe'] ?? false) === true,
+        'workers' => $steps['workers'] === 'tested',
+        'operator' => $steps['operator'] === 'configured' && $steps['brand'] === 'configured',
+        'catalog' => $steps['categories'] === 'configured' && $steps['geography'] === 'configured',
+        'mail' => $steps['mail'] === 'external' && ($facts['mail_failed'] ?? null) === 0,
+        'legal' => $steps['legal'] === 'external',
+        'recovery' => $steps['backups'] === 'tested',
+        'payment_gates' => $steps['providers'] !== 'error' && $steps['finance'] !== 'error'
+            && (($facts['manual_enabled'] ?? false) === false || $steps['paypal'] === 'external'),
+    ];
+}
+
+function setup_run_checks(PDO $pdo, int $actor): array
+{
+    $facts = setup_collect($pdo, $actor);
+    $cookies = session_get_cookie_params();
+    $facts['https_request'] = false;
+    if ($facts['https']) {
+        $expectedHost = substr(mail_origin(), strlen('https://'));
+        $requestHost = $_SERVER['HTTP_HOST'] ?? null;
+        $facts['https_request'] = is_string($requestHost) && strcasecmp($expectedHost, $requestHost) === 0
+            && in_array($_SERVER['HTTPS'] ?? null, ['on', '1'], true)
+            && $cookies['httponly'] && in_array($cookies['samesite'], ['Lax', 'Strict'], true);
+    }
+    $required = ['dom', 'mbstring', 'openssl', 'pdo_mysql', 'sodium', 'gd'];
+    $autoload = dirname(__DIR__).'/vendor/autoload.php';
+    if (is_file($autoload)) require_once $autoload;
+    $facts['runtime_probe'] = getenv('APP_ENV', true) === 'production' && PHP_VERSION_ID >= 80400
+        && in_array(ini_get('session.upload_progress.enabled'), ['', '0'], true)
+        && array_diff($required, get_loaded_extensions()) === [] && class_exists(Dompdf\Dompdf::class)
+        && class_exists(lbuchs\WebAuthn\WebAuthn::class) && class_exists(PHPMailer\PHPMailer\PHPMailer::class);
+    try {
+        $sample = random_bytes(32);
+        $facts['crypto_probe'] = hash_equals($sample, crypto_decrypt('setup_probe', crypto_encrypt('setup_probe', $sample)));
+    } catch (Throwable) { $facts['crypto_probe'] = false; }
+    try { $facts['storage_probe'] = setup_probe_storage(); }
+    catch (Throwable) { $facts['storage_probe'] = false; }
+    try {
+        $state = $pdo->query('SELECT active FROM market_maintenance_state WHERE id=1')->fetchColumn();
+        $facts['maintenance_clear'] = in_array($state, [0, '0'], true) && !maintenance_enabled(site_settings($pdo, true));
+    } catch (Throwable) { $facts['maintenance_clear'] = false; }
+    return ['time'=>time(), 'checks'=>setup_launch_checks($facts)];
+}
+
+function setup_recent_success(mixed $result, int $now): bool
+{
+    return is_array($result) && is_int($result['time'] ?? null) && $result['time'] > 0 && $result['time'] <= $now
+        && $now - $result['time'] <= 900 && is_array($result['checks'] ?? null) && $result['checks'] !== []
+        && array_keys($result['checks']) === array_keys(setup_launch_checks([]))
+        && count(array_keys($result['checks'], true, true)) === count($result['checks']);
+}
+
+function setup_activate(PDO $pdo, int $actor): bool
+{
+    governance_assert_actor($pdo, $actor, 'site.manage');
+    if (setup_installation_state($pdo) !== 'pending') return false;
+    $pdo->beginTransaction();
+    try {
+        $state = maintenance_state($pdo, true);
+        if ((int)$state['active'] === 1 || setup_installation_state($pdo) !== 'pending'
+            || !setup_recent_success(setup_run_checks($pdo, $actor), time())) {
+            $pdo->rollBack();
+            return false;
+        }
+        $pdo->exec("INSERT INTO system_settings(setting_key,setting_value) VALUES ('installation_activated','1')"
+            ." ON DUPLICATE KEY UPDATE setting_value='1',updated_at=UTC_TIMESTAMP()");
+        audit_log($pdo, $actor, 'installation.activated');
+        $pdo->commit();
+        return true;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 /** Pure presentation model: missing evidence never becomes a successful test. */

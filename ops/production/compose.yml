@@ -21,9 +21,11 @@ x-app: &app
     options: {max-size: "10m", max-file: "3"}
 services:
   db:
-    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+    image: mysql:8.4.13.1@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
     env_file: ["${ENV_DIR}/database.env"]
-    command: ["--character-set-server=utf8mb4","--collation-server=utf8mb4_unicode_ci","--default-time-zone=+00:00","--local-infile=0"]
+    environment:
+      MYSQL_ROOT_HOST: localhost
+    command: ["--character-set-server=utf8mb4","--collation-server=utf8mb4_unicode_ci","--default-time-zone=+00:00","--local-infile=0","--mysqlx=OFF"]
     volumes: [database:/var/lib/mysql]
     networks:
       backend: {ipv4_address: "${DB_IP:-172.30.81.30}"}
@@ -44,7 +46,7 @@ services:
       backend: {ipv4_address: "${WORKER_IP:-172.30.81.11}"}
       frontend: {}
   web:
-    image: nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
+    image: nginx:1.30.8-alpine@sha256:8eb04fe3b385090e9aa02961f77398ad09b6bf33ab07f6669a5bb7acce22c0d3
     user: "101:101"
     entrypoint: ["nginx","-g","daemon off;","-c","/etc/nginx/nginx.conf"]
     read_only: true

@@ -1,5 +1,26 @@
 # Implementierungsfortschritt
 
+## Sicherheit, Ein-Datei-Installer und geschützte Freischaltung, 2026-11-26
+
+PHP 8.4.28, nginx 1.30.8, MySQL 8.4.13.1 LTS und Composer 2.11.3 sind mit
+geprüften Registry-Digests gepinnt. Der Webserver begrenzt Anfragen und
+inaktive Verbindungen. MySQL-Root bleibt bei Neuinstallationen lokal und ein
+bestehendes MySQL-8.0-Volume wird durch den Installer nicht automatisch migriert.
+
+`ops/production/build-ubuntu-installer.sh` erstellt die lokale
+`GunIndex-Install-Ubuntu.sh` aus einem expliziten Commit. Das Paket trägt den
+Quellcode und eine Prüfsumme. `--verify` prüft das Archiv ohne Installation.
+`/admin/setup.php` führt durch Diagnose und erstmalige Aktivierung mit
+Admin-MFA, CSRF und Audit-Eintrag. Zahlungssperren bleiben unabhängig.
+`DRITTANBIETER.txt` erfasst Bibliotheken, Container, Dienste und Datenquellen.
+
+Lokale Nachweise sind Bash-Syntax und die Paketregression, PHP-Tests für Setup,
+Konto/MFA, Sitzungen, Wartung, Mail-DNS, Zahlungen, Bitcoin und Bankabgleich,
+sowie Node-Tests für Postleitzahlen und verschlüsselte Nachrichten. Die
+Installer-CI probt Ubuntu-Neuinstallation, Update und HTTPS-Freischaltung.
+Die abschließenden Betreiberprüfungen finden auf dem Zielserver statt.
+[Setup und Freischaltung](ADMIN_SETUP.md) · [Installation](UBUNTU_22_04.md)
+
 ## Eurobeträge im Checkout gemäß der gewählten Sprache
 
 Preise für Guthaben, Werbeplatzierungen und gespeicherte Bestellungen zeigen

@@ -2,7 +2,7 @@
 """Actual CLI import checks against NEW synthetic MySQL scratch schemas only."""
 import json,os,secrets,subprocess,tempfile,unittest
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];DOCKER=['docker','--host=unix:///var/run/docker.sock'];APP='gunindex-rebuild-app';DB='gunindex-rebuild-db'
+from environment import APP, DB, DOCKER, ROOT
 def call(args,data=None):return subprocess.run(DOCKER+args,input=data,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 def sql(query):
  result=call(['exec','-i',DB,'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --default-character-set=utf8mb4 -uroot -N'],query.encode())

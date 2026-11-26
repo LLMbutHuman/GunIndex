@@ -18,7 +18,7 @@ node tests/accessibility_smoke.js
 
 Die Browserbefehle benötigen Node und die separat gelockten Testabhängigkeiten. Sie verwenden ein installiertes Chromium oder die von Playwright installierte Version; `CHROMIUM_PATH` kann ein anderes Binary wählen. Browser- und Backend-Suites nacheinander ausführen, da beide mit den gleichen synthetischen Daten arbeiten.
 
-Die Container heißen `gunindex-rebuild-db`, `gunindex-rebuild-app` und `gunindex-rebuild-worker`. MySQL besitzt kein Netzwerkinterface; PHP benutzt einen privaten gemeinsamen Unix-Socket. Nur der Webserverport 8081 ist am Hostloopback gebunden. Der Quellcode ist im Container read-only. Die benannten Volumes für Datenbank, Socket und private Bilder/Limiter bleiben bei `stop` erhalten.
+Die Container heißen `gunindex-rebuild-db84`, `gunindex-rebuild-app` und `gunindex-rebuild-worker`. MySQL 8.4 LTS besitzt kein Netzwerkinterface. PHP verbindet sich über einen privaten Unix-Socket. Nur der Webserverport 8081 ist am Hostloopback gebunden. Der Quellcode ist im Container read-only. Die benannten Volumes für Datenbank, Socket und private Bilder/Limiter bleiben bei `stop` erhalten. MySQL 8.4 nutzt eigene Datenbank- und Socket-Volumes. Vorhandene MySQL-8.0-Container und -Volumes bleiben erhalten.
 
 Zufällige Entwicklungszugänge und APP_KEY werden einmalig unter `tests/.runtime/` mit 0600 erzeugt. Dieses Verzeichnis ist ignoriert und kein öffentlicher Webroot. Werte niemals in Chat oder Git kopieren. Ein Verlust dieser Dateien darf nicht durch blindes Erzeugen neuer Zugangsdaten über bestehende Datenbanken kompensiert werden.
 

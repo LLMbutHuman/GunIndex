@@ -38,6 +38,8 @@ jobs:
           docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
             --entrypoint php "$image" -r 'require "/app/vendor/autoload.php"; exit(class_exists(\PHPMailer\PHPMailer\PHPMailer::class) && class_exists(\Dompdf\Dompdf::class) && extension_loaded("pdo_mysql") && extension_loaded("gd") && extension_loaded("mbstring") && extension_loaded("sodium") ? 0 : 1);'
           docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
+            --entrypoint php "$image" -r 'exit(PHP_VERSION_ID >= 80428 && ini_get("session.upload_progress.enabled") === "0" && ini_get("session.cookie_secure") === "1" && ini_get("display_errors") === "0" ? 0 : 1);'
+          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
             --entrypoint php "$image" -r 'require "/app/config/i18n.php"; require "/app/config/governance.php"; $languages = legal_bundled_draft_languages(); if (array_keys($languages) !== array_keys(i18n_locales())) exit(1); foreach (array_keys($languages) as $language) { if (count(legal_bundled_drafts($language)) !== 20) exit(1); }'
       - name: Prepare OpenSSH for the loopback backup test
         run: test -x /usr/sbin/sshd || (sudo apt-get update && sudo apt-get install -y openssh-server)

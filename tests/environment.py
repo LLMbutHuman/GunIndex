@@ -6,8 +6,9 @@ ROOT=Path(__file__).resolve().parents[1]
 RUNTIME=ROOT/'tests/.runtime'
 DOCKER=['docker','--host=unix:///var/run/docker.sock']
 ENV={k:v for k,v in os.environ.items() if k not in ('DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH')}
-DB='gunindex-rebuild-db';APP='gunindex-rebuild-app';WORKER='gunindex-rebuild-worker';IMAGE='gunindex-rebuild-php:local'
-MYSQL='mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b'
+DB='gunindex-rebuild-db84';APP='gunindex-rebuild-app';WORKER='gunindex-rebuild-worker';IMAGE='gunindex-rebuild-php:local'
+DB_SOCKET_VOLUME='gunindex-rebuild-socket84'
+MYSQL='mysql:8.4.13.1@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00'
 def docker(*args,capture=False,data=None):
  if sys.platform != 'linux':
   raise RuntimeError('This runtime requires Linux. On Windows use Ubuntu WSL2 with Docker integration; see docs/WINDOWS_DEVELOPMENT.md. No Docker action was executed.')
@@ -42,10 +43,10 @@ def up():
   lock_hash=hashlib.sha256((ROOT/'composer.lock').read_bytes()).hexdigest()
   marker=RUNTIME/'composer-lock.sha256'
   if not (ROOT/'vendor/autoload.php').exists() or not marker.exists() or marker.read_text()!=lock_hash:
-   docker('run','--rm','-v',str(ROOT)+':/app','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','COMPOSER_CAFILE=/run/gunindex-ca.pem','-e','GIT_SSL_CAINFO=/run/gunindex-ca.pem','-e','COMPOSER_ALLOW_SUPERUSER=1','composer:2.8.12@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c','sh','-c','git config --global --add safe.directory /app && composer install --no-dev --no-interaction --prefer-source --no-scripts --no-plugins',capture=True)
+   docker('run','--rm','-v',str(ROOT)+':/app','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','COMPOSER_CAFILE=/run/gunindex-ca.pem','-e','GIT_SSL_CAINFO=/run/gunindex-ca.pem','-e','COMPOSER_ALLOW_SUPERUSER=1','composer:2.11.3@sha256:4e5f671c4a5784b422c20fcb993a38da96529438889dbce40be27c452d18dd6d','sh','-c','git config --global --add safe.directory /app && composer install --no-dev --no-interaction --prefer-source --no-scripts --no-plugins',capture=True)
    marker.write_text(lock_hash)
  if not exists(DB):
-  docker('run','-d','--name',DB,'--network','none','--env-file',str(dbfile),'-v','gunindex-rebuild-data:/var/lib/mysql','-v','gunindex-rebuild-socket:/var/run/mysqld',MYSQL,capture=True)
+  docker('run','-d','--name',DB,'--network','none','--env-file',str(dbfile),'-v','gunindex-rebuild-data84:/var/lib/mysql','-v',DB_SOCKET_VOLUME+':/var/run/mysqld',MYSQL,capture=True)
  else:docker('start',DB,capture=True)
  for _ in range(60):
   try:sql(b'SELECT 1;');break
@@ -62,7 +63,7 @@ def up():
    version=docker('inspect','--format','{{index .Config.Labels \"gunindex.runtime\"}}',container,capture=True).stdout.strip()
    if old!=new or version!=b'phase6':docker('stop',container,capture=True);docker('rm',container,capture=True)
   if not exists(container):
-   args=['run','-d','--name',container,'--label','gunindex.runtime=phase6','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v','gunindex-rebuild-socket:/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
+   args=['run','-d','--name',container,'--label','gunindex.runtime=phase6','--env-file',str(appfile),'-v',str(ROOT)+':/app:ro','-v',DB_SOCKET_VOLUME+':/var/run/mysqld','-v','gunindex-rebuild-private:/var/lib/gunindex','-v','/etc/ssl/certs/ca-certificates.crt:/run/gunindex-ca.pem:ro','-e','CURL_CA_BUNDLE=/run/gunindex-ca.pem','-e','E2EE_ENABLED=1','-e','E2EE_ATTACHMENT_DIR=/var/lib/gunindex/e2ee']
    for name in ('PAYPAL_CLIENT_ID','PAYPAL_CLIENT_SECRET','PAYPAL_MERCHANT_ID','PAYPAL_WEBHOOK_ID','PAYPAL_MODE','PAYPAL_ACCOUNT_TYPE','PAYPAL_BUSINESS_SCOPE','PAYPAL_ENABLED','PLATFORM_BILLING_APPROVED','PAYPAL_LIVE_APPROVED','APP_URL'):
     if name in os.environ:args+=['-e',name]
    if worker:

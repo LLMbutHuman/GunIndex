@@ -8,5 +8,6 @@
 /tests/browser-tools/node_modules/
 /assets/uploads/
 /datenbank/*.sql
+/GunIndex-Install-Ubuntu.sh
 __pycache__/
 *.log

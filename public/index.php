@@ -57,6 +57,8 @@ if(isset($static[$path])&&is_file($root.$path)){header('Content-Type: '.$static[
 if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route))public_route_error(404,$path);
 if ($route === 'api/dealer/v1.php') define('GUNINDEX_STATELESS_REQUEST', true);
 require_once $root.'/config/bootstrap.php';
+require_once $root.'/config/setup.php';
+setup_enforce_installation_http($pdo,$route);
 maintenance_enforce_http($pdo,$route);
 consent_account_gate_http($pdo,$route);
 require $root.'/'.$route;
