@@ -175,6 +175,19 @@ function setup_launch_checks(array $facts): array
     ];
 }
 
+function setup_maintenance_clear(PDO $pdo): bool
+{
+    $ownsTransaction = !$pdo->inTransaction();
+    if ($ownsTransaction) $pdo->beginTransaction();
+    try {
+        return (int)maintenance_state($pdo)['active'] === 0;
+    } catch (MaintenanceStateConflict) {
+        return false;
+    } finally {
+        if ($ownsTransaction && $pdo->inTransaction()) $pdo->rollBack();
+    }
+}
+
 function setup_run_checks(PDO $pdo, int $actor): array
 {
     $facts = setup_collect($pdo, $actor);
@@ -200,10 +213,7 @@ function setup_run_checks(PDO $pdo, int $actor): array
     } catch (Throwable) { $facts['crypto_probe'] = false; }
     try { $facts['storage_probe'] = setup_probe_storage(); }
     catch (Throwable) { $facts['storage_probe'] = false; }
-    try {
-        $state = $pdo->query('SELECT active FROM market_maintenance_state WHERE id=1')->fetchColumn();
-        $facts['maintenance_clear'] = in_array($state, [0, '0'], true) && !maintenance_enabled(site_settings($pdo, true));
-    } catch (Throwable) { $facts['maintenance_clear'] = false; }
+    $facts['maintenance_clear'] = setup_maintenance_clear($pdo);
     return ['time'=>time(), 'checks'=>setup_launch_checks($facts)];
 }
 
@@ -232,6 +242,9 @@ function setup_activate(PDO $pdo, int $actor): bool
         audit_log($pdo, $actor, 'installation.activated');
         $pdo->commit();
         return true;
+    } catch (MaintenanceStateConflict) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        return false;
     } catch (Throwable $error) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $error;

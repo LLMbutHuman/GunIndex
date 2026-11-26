@@ -87,6 +87,15 @@ with tempfile.TemporaryDirectory(dir=runner_temp) as temp:
     assert status == 200 and len(check_results) == 12 and set(check_results.values()) == {'passed'}, check_results
     assert 'value="activate"' in body and request('/', anonymous)[0] == 503
     assert request(panel, staff, {'action': 'activate', 'csrf_token': token})[0] == 422
+    update_legal = '''require "config/db.php"; $update=$pdo->prepare("UPDATE system_settings SET setting_value=?
+        WHERE setting_key='legal_publication_enabled'"); $update->execute([$argv[1]]);'''
+    subprocess.run(compose + ['php', 'php', '-r', update_legal, '0'], check=True)
+    assert request(panel, staff, {'action': 'activate', 'confirm': '1', 'csrf_token': token})[0] == 303
+    status, body = request(panel, staff)
+    assert status == 200 and 'data-installation-check="legal" data-status="failed"' in body
+    assert 'value="activate"' not in body and request('/', anonymous)[0] == 503
+    subprocess.run(compose + ['php', 'php', '-r', update_legal, '1'], check=True)
+    assert request(panel, staff, {'action': 'run_checks', 'csrf_token': token})[0] == 303
     assert request(panel, staff, {'action': 'activate', 'confirm': '1', 'csrf_token': token})[0] == 303
     assert request('/', anonymous)[0] == 200
     status, body = request(panel, staff)

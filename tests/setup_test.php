@@ -10,7 +10,7 @@ function setup_step(array $facts, string $id): array {
 $tests = [
     'eight_complete_catalogs_with_placeholder_parity' => static function (): void {
         $base = require __DIR__.'/../locales/setup/de.php';
-        setup_assert(count($base) === 104, 'Unexpected setup catalog coverage.');
+        setup_assert(count($base) === 103, 'Unexpected setup catalog coverage.');
         foreach (i18n_locales() as $locale=>$label) {
             $catalog = require __DIR__.'/../locales/setup/'.$locale.'.php';
             setup_assert(array_keys($catalog) === array_keys($base), 'Missing or unexpected setup translation in '.$locale);

@@ -21,6 +21,6 @@ $insert = $pdo->prepare("INSERT INTO market_legal_documents(document_code,versio
 foreach (array_keys(i18n_locales()) as $locale) $insert->execute([$locale, $body, hash('sha256', $body), $admin]);
 
 // Check local transport readiness without queueing delivery or contacting any provider.
-mail_setup_save($pdo, (int)$admin, ['mode'=>'sendmail', 'from'=>'operator@example.invalid', 'host'=>'',
+mail_setup_save($pdo, (int)$admin, ['mode'=>'sendmail', 'from'=>'operator@example.com', 'host'=>'',
     'port'=>'587', 'username'=>'', 'password'=>'', 'selector'=>'',
     'revision'=>mail_setup_view($pdo)['revision']]);
