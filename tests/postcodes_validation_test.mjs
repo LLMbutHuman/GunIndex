@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { validateBytes, validateFile } from '../ops/validate-postcodes.mjs';
+import { prepareDkPostcodes } from '../ops/prepare-dk-postcodes.mjs';
 
 const header = 'postal_code;city;latitude;longitude\n';
 const csv = (body, options = {}) => validateBytes(Buffer.from(header + body), { country: 'DE', ...options });
@@ -53,6 +54,19 @@ test('large sorted nationwide input has the same normalized duplicate checks', (
 test('rejects nonfinite, out-of-range and nondecimal coordinates', () => {
   for (const latitude of ['NaN', 'Infinity', '91', '-91', '', '0x20', '1e999', '52,1']) assert.throws(() => csv(`10115;Synthetic;${latitude};13`));
   assert.throws(() => csv('10115;Synthetic;52;181'));
+});
+test('Danish polygon holes affect the centre and oversized coastal districts are omitted', () => {
+  const x=500000, y=6200000;
+  const ring=(size)=>[[x,y],[x,y+size],[x+size,y+size],[x+size,y],[x,y]];
+  const hole=[[x+10,y+10],[x+30,y+10],[x+30,y+30],[x+10,y+30],[x+10,y+10]];
+  const feature=(postcode,rings)=>({attributes:{Postnummer:postcode,Navn:'Synthetic',LandeKode:'DK',Virkningtil:null},geometry:{rings}});
+  const geometry={geometryType:'esriGeometryPolygon',spatialReference:{wkid:25832},features:[feature(1001,[ring(100),hole]),feature(1002,[ring(80000)]),feature(1003,[ring(100)])]};
+  const statistics='PNR20;KØN;ALDER;TID;INDHOLD\n1011001;TOT;IALT;2026;200\n1011002;TOT;IALT;2026;1\n1011003;TOT;IALT;2026;0\n';
+  const result=prepareDkPostcodes(geometry,statistics,'2026');
+  assert.deepEqual(result.points,[['1001','Synthetic',x+51.25,y+51.25]]);
+  assert.equal(result.geography_excluded,1);
+  assert.equal(result.excluded,2);
+  assert.throws(()=>prepareDkPostcodes({...geometry,exceededTransferLimit:true},statistics,'2026'),/complete collection/);
 });
 test('rejects controls and oversized city fields', () => {
   for (const city of ['A\u0000B', 'A\tB', '"A\nB"', 'X'.repeat(151)]) assert.throws(() => csv(`10115;${city};52;13`));

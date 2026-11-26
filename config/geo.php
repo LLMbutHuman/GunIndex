@@ -60,6 +60,14 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
                 'CC BY 4.0 (GeoNames)'=>'https://creativecommons.org/licenses/by/4.0/',
             ],
         ],
+        'DK' => [
+            'sha256'=>'61ed4d33065c20a58a7ac85eb59f2c763b990000bcb3c940cd470b6375b3b348',
+            'links'=>[
+                'Klimadatastyrelsen – DAGI (2026-11-26)'=>'https://kort.vd.dk/server/rest/services/Grunddata/Danmarks_Administrative_Geografiske_Inddelinger/MapServer/35',
+                'Statistics Denmark – POSTNR2 (2026)'=>'https://www.statbank.dk/POSTNR2',
+                'CC BY 4.0 (DAGI)'=>'https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser',
+            ],
+        ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
     if ($matched === []) return [];

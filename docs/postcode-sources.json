@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-11-25",
+  "reviewed_on": "2026-11-26",
   "automatic_import_enabled": true,
-  "automatic_import_policy": "Ubuntu installer seeds pinned DE, FR, AT, CH, LI and LU files only for countries with no import history.",
+  "automatic_import_policy": "Ubuntu installer seeds each bundled country's pinned CSV only when the country has no import history.",
   "sources": [
     {
       "id": "operator-de-legacy",
@@ -241,6 +241,30 @@
       "bytes": 617442,
       "sha256": "2c9c6df7f4ed5824aaeae7ba4f21fb097d40adde48c948e33073311845615a63",
       "constraints": ["Mean of at least three distinct EPSG:2180 address points per postcode", "Reprojected with pinned proj4 2.23.0 to WGS84", "Within 25 km of a GeoNames class-6 centroid for that postcode", "No address rows bundled; omitted codes retain exact search"],
+      "status": "bundled_seed_locally_validated"
+    },
+    {
+      "id": "dagi-vej-postcodes-denmark",
+      "countries": ["DK"],
+      "publisher": "Klimadatastyrelsen DAGI via Vejdirektoratet; Statistics Denmark for active postcode comparison",
+      "path": "ZIP/PLZ-DK.csv",
+      "source_url": "https://kort.vd.dk/server/rest/services/Grunddata/Danmarks_Administrative_Geografiske_Inddelinger/MapServer/35",
+      "export_url": "https://kort.vd.dk/server/rest/services/Grunddata/Danmarks_Administrative_Geografiske_Inddelinger/MapServer/35/query?where=1%3D1&outFields=ObjectID,Postnummer,Navn,Status,GeometriStatus,Virkningtil,LandeKode&returnGeometry=true&orderByFields=ObjectID&returnZ=false&outSR=25832&geometryPrecision=2&maxAllowableOffset=2&f=json",
+      "retrieved_on": "2026-11-26",
+      "source_sha256": "a691af4219f1445265c12895d90eea11988d4e5efdbef24bdcb5d185821dccac",
+      "license": "CC-BY-4.0 for DAGI geography",
+      "license_url": "https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser",
+      "comparison_url": "https://api.statbank.dk/v1/data/POSTNR2/CSV?PNR20=%2A&K%C3%98N=TOT&ALDER=IALT&Tid=2026&valuePresentation=Code",
+      "comparison_sha256": "c56d100f82e7d2f82684d4a9642b2488ee2d920f45ffbeae452da16eada46cd5",
+      "source_postcode_polygons": 1089,
+      "statbank_populated_postcodes": 1051,
+      "matched_populated_postcodes": 1050,
+      "excluded_geography": 78,
+      "validated_unique_postcodes": 972,
+      "bytes": 33135,
+      "sha256": "61ed4d33065c20a58a7ac85eb59f2c763b990000bcb3c940cd470b6375b3b348",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "constraints": ["Area-weighted EPSG:25832 polygon centres, including holes", "Out-of-range centres and polygons with spans over 30 km excluded", "StatBank 2026 positive population required", "No raw polygons or population figures bundled"],
       "status": "bundled_seed_locally_validated"
     }
   ]

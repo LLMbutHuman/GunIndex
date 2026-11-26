@@ -182,13 +182,33 @@ php ops/import-postcodes.php --country=NL --file=PLZ-NL.csv --sorted --dry-run
 
 ## Dänemark
 
-Der bislang öffentliche DAWA-Postnummern-Endpunkt antwortete am
-25. November 2026 mit HTTP 410. Der Nachfolgedienst Datafordeler
-bietet aktuelle DAGI-Postnummernbereiche per Fildownload mit
-API-Schlüssel oder OAuth an. Für einen importierbaren Datensatz
-werden ein autorisierter Download oder eine gleichwertige, prüfbare
-öffentliche Quelle benötigt.
-[DAGI-Fildownload](https://datafordeler.dk/dataoversigt/danmarks-administrative-geografiske-inddeling-dagi/dagi-fildownload/)
+Die Straßenbehörde Vejdirektoratet stellt den landesweiten DAGI-Bestand
+der Klimadatastyrelsen als öffentlichen Kartendienst bereit. Der Abruf
+vom 26. November 2026 enthielt 1.089 eindeutige Postbezirke in EPSG:25832.
+Der Dienst lieferte kein Auszugsdatum je Bezirk. Die referenzierte
+StatBank-Tabelle POSTNR2 bestätigt für 2026 in 1.050 dieser Bezirke
+Einwohner. Die Aufbereitung berechnet flächengewichtete Mittelpunkte unter
+Berücksichtigung der Innenringe. 78 der 1.050 Bezirke wurden wegen ihrer
+Ausdehnung oder Lage ausgeschlossen. Unter den Ausschlüssen sind Bezirke,
+deren Polygone weit in die Nordsee reichen. Die 972 verbleibenden Punkte
+sind Näherungen für die Umkreissuche. Gültige PLZ ohne Punkt können weiterhin
+exakt gesucht werden. Das Paket enthält keine Geometrien oder StatBank-Zahlen.
+[DAGI-Kartendienst](https://kort.vd.dk/server/rest/services/Grunddata/Danmarks_Administrative_Geografiske_Inddelinger/MapServer/35) ·
+[Amtliche DAGI-Beschreibung](https://www.klimadatastyrelsen.dk/data/danmarks-administrative-geografiske-inddeling) ·
+[CC-BY-4.0-Bedingungen](https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser) ·
+[POSTNR2](https://www.statbank.dk/POSTNR2)
+
+Die Geometrieabfrage, die StatBank-Abfrage und die Prüfsummen stehen in
+`postcode-sources.json`. Für ein Update werden Dateistand und Felder erneut
+geprüft und der Ablauf zweimal mit den neuen Prüfsummen ausgeführt.
+
+```sh
+node ops/prepare-dk-postcodes.mjs DAGI.json POSTNR2.csv 2026 \
+  a691af4219f1445265c12895d90eea11988d4e5efdbef24bdcb5d185821dccac \
+  c56d100f82e7d2f82684d4a9642b2488ee2d920f45ffbeae452da16eada46cd5 dk-rd.json
+node ops/project-postcodes.mjs DK dk-rd.json package/dist/proj4.js PLZ-DK.csv
+php ops/import-postcodes.php --country=DK --file=PLZ-DK.csv --sorted --dry-run
+```
 
 ## Schweiz und Liechtenstein
 

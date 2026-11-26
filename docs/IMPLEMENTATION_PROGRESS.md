@@ -1,5 +1,15 @@
 # Implementierungsfortschritt
 
+## Dänische Postleitzahlen aus DAGI und StatBank
+
+Die Aufbereitung prüfte 1.089 amtliche Postbezirke und glich bewohnte PLZ
+mit der StatBank für 2026 ab. Große Geometrien mit weitreichenden Anteilen
+im Meer und andere Geometrieausreißer wurden ausgeschlossen. Zwei vollständige
+lokale Läufe ergaben bytegleiche CSVs mit 972 Koordinaten. Node und der
+PHP-Importer bestätigten Anzahl und SHA-256. Der Ubuntu-Test prüft den
+Erstimport, das Update, die Kopenhagener Umkreissuche und die Quellenanzeige.
+[Quellen und Prüfsummen](POSTCODE_SOURCES.md#dänemark)
+
 ## Mehrsprachige Fehlerseiten für öffentliche Adressen
 
 Der Router antwortet bei einer unbekannten öffentlichen Adresse oder einer
@@ -827,9 +837,9 @@ betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
 Als Nächstes den vollständigen BAG-Download verifizieren, das niederländische
-PLZ-Aggregat zweimal erstellen und den Länderimport auf Ubuntu prüfen. Der
-dänische Import benötigt einen autorisierten DAGI-Download oder eine
-gleichwertige nachweisbare Quelle. Danach die weiterhin offenen Sprach- und
+PLZ-Aggregat zweimal erstellen und den Länderimport auf Ubuntu prüfen. Für
+Dänemark liegt der lokal geprüfte Quellimport aus dem öffentlichen
+Vejdirektorat-Dienst vor. Danach die weiterhin offenen Sprach- und
 Formatprüfungen aus `TECHNICAL_ACCEPTANCE.md` abarbeiten.
 Die Rechtsfassungen benötigen vor Veröffentlichung die Betreiberangaben
 und Prüfung. Fehler durch vorgelagerte Infrastruktur benötigen eine

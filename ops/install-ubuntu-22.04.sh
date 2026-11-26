@@ -254,5 +254,9 @@ seed_postcodes PLZ-PL.csv --country=PL --sorted \
  --expected-sha256=2c9c6df7f4ed5824aaeae7ba4f21fb097d40adde48c948e33073311845615a63 \
  --source='GUGiK PRG (2026-11-25), compared with GeoNames (2026-11-25), Poland' \
  --license-note='PRG free reuse as stated by GUGiK. GeoNames comparison CC BY 4.0. Derived approximate postcode centres. Sources: https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/ and https://www.geonames.org/'
+seed_postcodes PLZ-DK.csv --country=DK --sorted \
+ --expected-sha256=61ed4d33065c20a58a7ac85eb59f2c763b990000bcb3c940cd470b6375b3b348 \
+ --source='Klimadatastyrelsen DAGI via Vejdirektoratet (2026-11-26), Statistics Denmark POSTNR2 (2026)' \
+ --license-note='CC BY 4.0 for DAGI. Approximate polygon centres filtered by the 2026 postcode population statistics and geographic bounds. https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup
