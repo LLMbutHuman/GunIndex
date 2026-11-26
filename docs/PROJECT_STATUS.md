@@ -1,6 +1,6 @@
 # GunIndex: Gesamtstatus und Restaufwand
 
-## Nachgewiesener Stand vom 25. November 2026
+## Nachgewiesener Stand vom 26. November 2026
 
 Von den 26 nummerierten Anforderungen sind **17 technisch implementiert
 und geprüft, 7 technisch umgesetzt mit externer Abnahme und 2 technisch offen
@@ -12,14 +12,17 @@ Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
 fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
 [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
 
-Der Ubuntu-Installer prüft jetzt acht länderspezifische PLZ-Quellen.
+Neuinstallation und Update wurden mit neun länderspezifischen PLZ-Quellen
+geprüft. Der zehnte Import für die Niederlande benötigt noch die vollständige
+Auswertung des BAG-Datensatzes und einen weiteren Installationslauf.
 Die Rechtsverwaltung enthält 20 Vorlagen in jeweils acht Sprachen und kann
-sie gesammelt als unveröffentlichte Entwürfe importieren. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
+sie gesammelt als unveröffentlichte Entwürfe importieren und im gleichen Format
+exportieren. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
 bestanden. Native Tests auf Apple-Geräten, fachlich freigegebene Rechtstexte
 und die unabhängige Sicherheitsprüfung bleiben Teil der Abnahme.
-[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702394866) ·
-[Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623239492) ·
-[E2EE-Browser](https://github.com/LLMbutHuman/GunIndex/actions/runs/45623624368)
+[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45746041877) ·
+[Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705399661) ·
+[E2EE-Browser](https://github.com/LLMbutHuman/GunIndex/actions/runs/45707792187)
 
 Neu nachgewiesen sind Gebühren und Belege je Auktion, Wiedereröffnung nach
 simulierter neuntägiger Wartung, der deutsche PLZ-Import, die sichere Ersetzung

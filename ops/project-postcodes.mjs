@@ -11,13 +11,16 @@ const systems = {
   // EPSG:2180 with the ETRS89 approximation for postcode distances.
   PL: {code:/^[0-9]{5}$/, lon:[14,24.3], lat:[48.9,55.2],
     definition:'+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +towgs84=0,0,0 +units=m'},
+  // EPSG:28992 with EPSG:4833 rotations written in position-vector convention.
+  NL: {code:/^[1-9][0-9]{3}[A-Z]{2}$/, lon:[3.1,7.4], lat:[50.7,53.7], limit:650000,
+    definition:'+proj=sterea +lat_0=52.1561605555556 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.4171,50.3319,465.5524,-0.398957388,0.343987817,-1.87740164,4.0725 +units=m'},
 };
 
 export function projectPostcodes(country, args) {
   const system = Object.hasOwn(systems,country) ? systems[country] : null;
   const [input, projection, output] = args;
   if (!system || !input || !projection || !output || args.length !== 3) {
-    throw new Error('Usage: node ops/project-postcodes.mjs CZ|PL AGGREGATES.json PROJ4.js NEW.csv');
+    throw new Error('Usage: node ops/project-postcodes.mjs CZ|PL|NL AGGREGATES.json PROJ4.js NEW.csv');
   }
   const library = resolve(projection);
   const digest = createHash('sha256').update(readFileSync(library)).digest('hex');
@@ -27,7 +30,7 @@ export function projectPostcodes(country, args) {
   const proj4 = createRequire(import.meta.url)(library);
   const conversion = proj4(system.definition,'EPSG:4326');
   const points = JSON.parse(readFileSync(input,'utf8'));
-  if (!Array.isArray(points) || points.length < 2 || points.length > 100000) throw new Error('Unexpected postcode count.');
+  if (!Array.isArray(points) || points.length < 2 || points.length > (system.limit ?? 100000)) throw new Error('Unexpected postcode count.');
   const rows = ['postal_code;city;latitude;longitude'];
   let previous = '';
   for (const [code,town,east,north] of points) {

@@ -148,14 +148,37 @@ php ops/prepare-lu-postcodes.php --file=addresses.csv --output=PLZ-LU.csv \
 ## Niederlande
 
 Der GeoPackage-Download des Katasters (BAG) ist in der öffentlichen
-Veröffentlichung vom 1. November 2026 verfügbar. Der Katalog nennt für
-die BAG-API die Public Domain Mark 1.0. Für ein Installationspaket werden
-die Lizenz der verwendeten Datei, passende Adresspunkte, der Datenstand,
-Prüfsummen und ein reproduzierbarer Abgleich dokumentiert. Die CSV darf
-nur aggregierte PLZ-Ortsangaben und Koordinaten enthalten.
+Veröffentlichung vom 1. November 2026 verfügbar. Der amtliche Datensatz
+im Downloadkatalog ist mit Public Domain Mark 1.0 gekennzeichnet. Die
+Datei umfasst 7.827.132.416 Bytes. Die Aufbereitung verarbeitet aus
+`verblijfsobject`, `ligplaats` und `standplaats` gültige Nutzungspunkte
+je vollständiger PLZ. Sie verwendet den Mittelwert der verschiedenen
+Koordinaten und die häufigste Ortsbezeichnung. PLZ mit weniger als drei
+verschiedenen Punkten oder mehr als fünf Kilometern Ausdehnung auf einer
+RD-Achse erhalten aus dieser Verarbeitung keine Koordinaten.
 [BAG-Datensatz](https://www.pdok.nl/introductie/-/article/basisregistratie-adressen-en-gebouwen-ba-1) ·
 [BAG-Downloadkatalog](https://service.pdok.nl/kadaster/bag/atom/bag.xml) ·
-[BAG-API und Lizenz](https://api.pdok.nl/kadaster/bag/ogc/v2?f=html&lang=en)
+[Lizenz im amtlichen Download-Datensatz](https://www.nationaalgeoregister.nl/geonetwork/srv/dut/csw?service=CSW&version=2.0.2&request=GetRecordById&outputschema=http%3A%2F%2Fwww.isotc211.org%2F2005%2Fgmd&elementsetname=full&id=aa3b5e6e-7baa-40c0-8972-3353e927ec2f)
+
+Die Aufbereitung benötigt Node.js ab 22.13 mit `node:sqlite` und Platz
+für temporäre SQLite-Dateien. Die Projektion nach WGS 84 verwendet
+EPSG:28992, die Näherung EPSG:4833 und das bereits geprüfte `proj4`-Paket.
+Die Kontrollpunkte Delft, Ameland und Vlissingen wurden mit den veröffentlichten
+ETRS89-Referenzen verglichen. Die größte Abweichung dieser Stichprobe betrug
+0,65 Meter. Die Ausgabe ist für die angenäherte Umkreissuche bestimmt. Für das Release
+stehen der vollständige, hashgeprüfte Download, Umfang und Stichproben des
+resultierenden Datensatzes, der zweite reproduzierbare Lauf sowie der
+Installationstest noch aus. Es wird noch keine NL-Länderdatei ausgeliefert.
+[RD-Koordinatensystem der NSGI](https://www.nsgi.nl/coordinatenstelsels-en-transformaties/overzicht-coordinatenstelsels) ·
+[NSGI-Kontrollkoordinaten](https://www.nsgi.nl/documents/1888506/2842654/coordinaten_AGRS_NL.pdf/9a8420b9-822c-cba3-da09-8561c2d5a930?t=1589968713129) ·
+[GeoPackage-Spezifikation](https://docs.ogc.org/is/12-128r19/12-128r19.html)
+
+```sh
+node ops/prepare-nl-postcodes.mjs bag-light.gpkg nl-rd.json EXPECTED_SOURCE_SHA256
+node ops/project-postcodes.mjs NL nl-rd.json package/dist/proj4.js PLZ-NL.csv
+node ops/validate-postcodes.mjs --country=NL --file=PLZ-NL.csv --sorted
+php ops/import-postcodes.php --country=NL --file=PLZ-NL.csv --sorted --dry-run
+```
 
 ## Dänemark
 

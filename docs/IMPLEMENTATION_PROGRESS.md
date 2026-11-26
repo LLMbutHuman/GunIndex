@@ -1,5 +1,18 @@
 # Implementierungsfortschritt
 
+## Niederländische BAG-Daten für die PLZ-Aggregation vorbereitet
+
+Das Aufbereitungsskript prüft den Hash eines lokalen GeoPackage und liest es
+schreibgeschützt. Drei amtliche Punkttabellen werden nach eindeutigen
+Positionen je PLZ zusammengefasst. Die Reihenfolge und die Auswahl der
+Ortsbezeichnung sind reproduzierbar. Ein synthetisches GeoPackage hat die
+Punktformate, Dubletten, Mindestabdeckung, Hashprüfung und bytegleiche Ausgabe
+bestätigt. Der öffentliche Downloadkatalog stimmt mit den abgerufenen
+Tabellenmetadaten überein. Bei drei amtlichen RD-Kontrollpunkten lag die
+Abweichung der Projektion unter einem Meter. Die vollständige Auswertung
+der BAG-Datei und der NL-Import im Installer stehen aus.
+[Quelle und Reproduktionsbefehle](POSTCODE_SOURCES.md#niederlande)
+
 ## Größere PLZ-Quellen ohne Vorhalten aller Zeilen im Arbeitsspeicher
 
 Der Validator und der Importer verarbeiten mit `--sorted` bis zu 650.000 PLZ
@@ -11,6 +24,7 @@ Neun PHP- und elf Node-Testgruppen bestanden lokal. Der neue Dry-Run prüfte
 100.001 synthetische PLZ bei einem PHP-Speicherlimit von 16 MiB. Bei der
 polnischen Datei bestätigten beide Validatoren 18.644 Punkte und dieselbe
 SHA-256. Die MySQL-Prüfung läuft über den Ubuntu-Installationslauf.
+[Transaktionaler Erstimport und Update auf Ubuntu bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45746041877)
 
 ## Leistungsbedingungen im Checkout für Guthaben und Werbung
 
@@ -30,6 +44,7 @@ Finanztest zeigte, dass bei einer unvollständigen Eingabe die bisherige
 Zustimmungsmeldung fehlte. Beide Formulare prüfen die ausdrückliche Zustimmung
 wieder vor den übrigen Eingaben.
 [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45745402389)
+[Migration und Produktionsimage bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45745402421)
 
 ## Rechtsübersicht auf kleinen Bildschirmen
 
@@ -37,6 +52,7 @@ Die Tabelle mit 20 Dokumenten und acht Sprachen lässt sich mit der Tastatur
 fokussieren und innerhalb ihres Bereichs horizontal lesen. Die Browser-CI
 prüft alle acht Ansichten bei 390 Pixeln einschließlich geöffnetem Bereich.
 PHP- und JavaScript-Syntax sind lokal geprüft.
+[Mobilprüfung der Rechtsübersicht in allen acht Sprachfassungen bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45744746228)
 
 ## Polnische Postleitzahlen aus dem amtlichen PRG-Register
 
@@ -757,15 +773,18 @@ elf PHP-Syntaxprüfungen. Der isolierte Finanz-HTTP-Test prüft die sichtbare
 Navigation und `aria-current` in allen acht Sprachen.
 Beide CI-Jobs waren erfolgreich. [CI 44841239433](https://github.com/LLMbutHuman/GunIndex/actions/runs/44841239433)
 
-## Wiederaufnahmepunkt, 2026-11-25
+## Wiederaufnahmepunkt, 2026-11-26
 
 Die Abnahmematrix zählt 17 technisch geprüfte, sieben extern zu prüfende und
 zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes die fachlichen Rechtsfassungen und die weiterhin offenen
-technischen Abnahmepunkte aus `TECHNICAL_ACCEPTANCE.md` abgleichen.
+Als Nächstes den vollständigen BAG-Download verifizieren, das niederländische
+PLZ-Aggregat zweimal erstellen und den Länderimport auf Ubuntu prüfen. Der
+dänische Import benötigt einen autorisierten DAGI-Download oder eine
+gleichwertige nachweisbare Quelle. Danach die weiterhin offenen Sprach- und
+Formatprüfungen aus `TECHNICAL_ACCEPTANCE.md` abarbeiten.
 Die Rechtsfassungen benötigen vor Veröffentlichung die Betreiberangaben
 und Prüfung. Fehler durch vorgelagerte Infrastruktur benötigen eine
 Zielsystemabnahme.
