@@ -1,4 +1,5 @@
-# Preserve the exact audited dependency bytes and their SHA256 provenance.
-assets/vendor/openpgp/* -text
-# Installer seeds are verified byte-for-byte on each platform.
-ZIP/PLZ*.csv -text
+# Retired admin scripts are kept for source history only.
+/admin/auction-disputes.php export-ignore
+/admin/global-logout.php export-ignore
+/admin/messages.php export-ignore
+/admin/verify-queue.php export-ignore

@@ -2,6 +2,10 @@
 .env
 .env.*
 assets/uploads
+admin/auction-disputes.php
+admin/global-logout.php
+admin/messages.php
+admin/verify-queue.php
 datenbank
 ZIP
 tests/.runtime

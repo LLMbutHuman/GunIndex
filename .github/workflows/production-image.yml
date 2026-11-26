@@ -19,6 +19,10 @@ jobs:
           release="$RUNNER_TEMP/gunindex-release"
           mkdir -- "$release"
           bash ops/production/archive-release.sh "$PWD" "$GITHUB_SHA" "$release"
+          for retired in auction-disputes global-logout messages verify-queue; do
+            test ! -e "$release/admin/$retired.php"
+          done
+          test -f "$release/admin/verifications.php"
           image="gunindex-production-ci:$GITHUB_SHA"
           docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \
             --file "$release/ops/production/Dockerfile" --tag "$image" "$release"
@@ -26,6 +30,8 @@ jobs:
           actual="$(docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
             --entrypoint sha256sum "$image" /app/assets/vendor/openpgp/openpgp.min.mjs)"
           test "${actual%% *}" = "${expected%% *}"
+          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
+            --entrypoint sh "$image" -ec 'for retired in auction-disputes global-logout messages verify-queue; do test ! -e "/app/admin/$retired.php"; done; test -f /app/admin/verifications.php'
           docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
             --entrypoint php "$image" -r 'require "/app/vendor/autoload.php"; exit(class_exists(\PHPMailer\PHPMailer\PHPMailer::class) && class_exists(\Dompdf\Dompdf::class) && extension_loaded("pdo_mysql") && extension_loaded("gd") && extension_loaded("mbstring") && extension_loaded("sodium") ? 0 : 1);'
           docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges \

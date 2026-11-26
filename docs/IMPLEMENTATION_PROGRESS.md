@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Stillgelegte Admin-Skripte aus Produktionspaketen ausgeschlossen
+
+Vier historische Admin-Dateien bleiben im Git-Quellbaum erhalten. Der
+öffentliche Router führt sie nicht aus. Releasearchiv und Docker-Build
+schließen sie zusätzlich aus. Die produktive Identitätsprüfung läuft über
+die vorhandene Verwaltungsseite mit MFA und eigener Berechtigung.
+Die Produktionsprüfung kontrolliert die Dateien im Archiv und im Image.
+
 ## Niederländische BAG-Daten für die PLZ-Aggregation vorbereitet
 
 Das Aufbereitungsskript prüft den Hash eines lokalen GeoPackage und liest es
