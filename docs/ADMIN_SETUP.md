@@ -17,7 +17,7 @@ Betriebszustand.
    Lass die notwendigen Rechtsdokumentversionen prüfen und veröffentlichen.
 3. Erstelle ein verschlüsseltes Backup und probe die Wiederherstellung in eine
    separate Datenbank. Die [Anleitung](UBUNTU_22_04.md) enthält die Befehle.
-4. Wähle **Technische Prüfungen ausführen**. Das Panel zeigt den Zeitpunkt und
+4. Wähle **Betriebsprüfungen ausführen**. Das Panel zeigt den Zeitpunkt und
    das Ergebnis für Datenbank, HTTPS, Laufzeit, private Speicherung, Worker,
    Betreiberangaben, Katalog, Mail, Rechtstexte, Sicherung und Zahlungssperren.
 5. Prüfe die Betreiberanforderungen und bestätige die Aktivierung. Der Server

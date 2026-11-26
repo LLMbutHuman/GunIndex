@@ -16,9 +16,15 @@ Admin-MFA, CSRF und Audit-Eintrag. Zahlungssperren bleiben unabhängig.
 
 Lokale Nachweise sind Bash-Syntax und die Paketregression, PHP-Tests für Setup,
 Konto/MFA, Sitzungen, Wartung, Mail-DNS, Zahlungen, Bitcoin und Bankabgleich,
-sowie Node-Tests für Postleitzahlen und verschlüsselte Nachrichten. Die
-Installer-CI probt Ubuntu-Neuinstallation, Update und HTTPS-Freischaltung.
-Die abschließenden Betreiberprüfungen finden auf dem Zielserver statt.
+sowie Node-Tests für Postleitzahlen und verschlüsselte Nachrichten.
+Für Commit `1a33241` sind Ubuntu-Neuinstallation, datenerhaltendes Update,
+MFA-/CSRF-geschützte Freischaltung über HTTPS und der getrennte verschlüsselte
+Restore samt SFTP-Test bestanden. Die abschließenden Betreiberprüfungen finden
+auf dem Zielserver statt. [Ubuntu- und Produktionsimage-Tests](https://github.com/LLMbutHuman/GunIndex/actions/runs/45901636364)
+
+Die lokale Installationsdatei enthält Commit `1a33241` und wurde mit `--verify`
+und `--dry-run` geprüft. SHA-256 der vollständigen Datei
+`63fb9caea7717dee60fd47aee05a87a04ed4337c89d517c2c78427ae40ca44ff`.
 [Setup und Freischaltung](ADMIN_SETUP.md) · [Installation](UBUNTU_22_04.md)
 
 ## Eurobeträge im Checkout gemäß der gewählten Sprache

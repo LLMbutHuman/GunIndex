@@ -1,5 +1,27 @@
 # Tatsächlicher Testnachweis
 
+## Ein-Datei-Installation und Freischaltung, 2026-11-26
+
+- Git Bash verifizierte deterministische Paketierung, genaue Commit-Zuordnung,
+  Archivprüfsumme, Ablehnung privater Pfade und die Befehle `--verify`, `--help`
+  und `--dry-run`. Der Paketierer ersetzt vorhandene Ausgaben nicht.
+- Ubuntu 22.04 installierte und aktualisierte das Paket aus Commit `1a33241`.
+  Die Prüfung umfasste den Erhalt vorhandener Konfiguration und Dateien, die
+  getrennte Behandlung von MySQL 8.0, den lokalen Datenbank-Root-Account und
+  deaktivierte Funktionen `LOCAL INFILE` und MySQL X Protocol. Über eine
+  isolierte HTTPS-Verbindung wurden Sicherheitsheader, Admin-Passwort und TOTP,
+  die öffentliche HTTP-503-Sperre, CSRF, fehlende und zwischenzeitlich ungültige
+  Voraussetzungen, einmalige Freischaltung mit Audit-Eintrag und die weiterhin
+  deaktivierten Zahlungen geprüft. SMTP, Rechtsdokumente und der Restore-Nachweis
+  für diese Panelprobe verwenden synthetische Daten.
+- Die separate Ubuntu-24.04-Prüfung bestätigte das Produktionsimage mit der
+  gehärteten PHP-Konfiguration, die Datenbank, Worker und einen tatsächlichen
+  verschlüsselten Restore in ein neues Schema samt SFTP-Test auf Loopback.
+  [CI-Nachweis für Commit 1a33241](https://github.com/LLMbutHuman/GunIndex/actions/runs/45901636364)
+
+Live-HTTPS, externe Mailzustellung, Zugriffsschutz des Zielhosts und unabhängige
+Sicherheitsabnahme bleiben Gegenstand der Betreiberprüfung.
+
 ## E2EE: kompletter isolierter Lauf erfolgreich, 2026-11-14
 
 `7ba5dfd79315da10f5d6f3282a9a4e7c246b5656`,
