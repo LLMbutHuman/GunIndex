@@ -141,9 +141,8 @@ function geo_distance_label(mixed $distance):string {
     if(!is_numeric($distance)||!is_finite((float)$distance)||(float)$distance<0)return function_exists('t')?t('Entfernung nicht verfügbar'):'Entfernung nicht verfügbar';
     $locale=function_exists('i18n_locale')?i18n_locale():'de';
     $km=(float)$distance;
-    $group=match($locale){'en'=>',','fr'=>"\u{202F}",'cs','pl'=>"\u{00A0}",default=>'.'};
-    if(in_array($locale,['pl','it'],true)&&round($km)<10000)$group='';
-    $value=number_format($km,$km<10?1:0,$locale==='en'?'.':',',$group);
+    [$decimal,$group]=function_exists('i18n_number_separators')?i18n_number_separators($locale,round($km)):[',','.'];
+    $value=number_format($km,$km<10?1:0,$decimal,$group);
     return function_exists('t')?t('ca. {distance} km Luftlinie',['distance'=>$value]):'ca. '.$value.' km Luftlinie';
 }
 function geo_request_origin(PDO $pdo,array $input):?array {

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../config/payments.php';
 require_once __DIR__ . '/../config/finance.php';
 require_once __DIR__ . '/../config/i18n.php';
 require_once __DIR__ . '/../config/paypal_refunds.php';
+require_once __DIR__ . '/../config/money.php';
 
 $passed = 0;
 function same(mixed $expected, mixed $actual): void { if ($expected !== $actual) throw new RuntimeException('Assertion failed.'); }
@@ -25,6 +26,16 @@ function test_config(array $replace = []): array
     return array_replace(['enabled'=>true,'mode'=>'sandbox','scope'=>'general_only','account_type'=>'business','billing_approved'=>true,'live_approved'=>false,'client_id'=>'synthetic-client','client_secret'=>'synthetic-secret','merchant_id'=>'SYNTHETICMERCH','webhook_id'=>'SYNTHETICHOOK','app_url'=>'https://market.example.invalid'], $replace);
 }
 function test_invoice(): array { return ['id'=>42,'invoice_number'=>'GI-42','gross_cents'=>1650,'currency'=>'EUR','status'=>'issued']; }
+test_payment('checkout_euro_amounts_are_cent_exact_in_eight_locales', static function (): void {
+    $expected = [
+        'de'=>"1.234,56\u{00A0}€", 'en'=>'€1,234.56', 'fr'=>"1\u{202F}234,56\u{00A0}€", 'nl'=>"€\u{00A0}1.234,56",
+        'pl'=>"1234,56\u{00A0}€", 'cs'=>"1\u{00A0}234,56\u{00A0}€", 'da'=>"1.234,56\u{00A0}€", 'it'=>"1234,56\u{00A0}€",
+    ];
+    foreach ($expected as $locale=>$amount) same($amount, money_eur(123456,$locale));
+    same('1.234,56 €',money_eur(123456));
+    same('−€0.01',money_eur(-1,'en'));
+    same('4321098.76',payments_decimal(432109876));
+});
 test_payment('invoice_snapshot_binds_identity_reference_tariff_and_exact_tax',static function():void{
  $invoice=test_invoice()+['service_code'=>'bump_single','fee_version'=>'synthetic-fixed-1','user_id'=>7];
  $snapshot=['service_code'=>'bump_single','fee_version'=>'synthetic-fixed-1','currency'=>'EUR','order_reference'=>'GI-42','gross_cents'=>1650,'net_cents'=>1387,'tax_cents'=>263,'buyer'=>['user_id'=>7]];

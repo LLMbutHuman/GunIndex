@@ -88,7 +88,10 @@ class ManualHTTP(unittest.TestCase):
   self.assertEqual(599,int(snapshot['gross_cents']));self.assertEqual('fr',snapshot['terms_language'])
   self.assertIn('Crédits de mise en avant pour trois activations.',snapshot['terms_text'])
   self.assertEqual(hashlib.sha256(snapshot['terms_text'].encode()).hexdigest(),snapshot['terms_hash'])
+  self.assertIn('5,99\xa0€',browser.request(headers['Location'])[2])
   language('en');saved=browser.request(headers['Location'])[2]
+  self.assertIn('€5.99',saved)
+  self.assertIn('name="amount" value="5.99"',saved)
   self.assertIn('id="saved-order-terms" lang="fr">Crédits de mise en avant pour trois activations.',saved)
  def test_bump_only_after_review_and_obeys_72_hours(self):
   admin=self.enabled();user=self.user();invoice,listing,state=self.order(user,'bump_pack',listing_type='auction');browser=user['browser']

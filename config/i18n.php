@@ -20,6 +20,18 @@ function t(string $key,array $parameters=[]):string {
     foreach($parameters as $name=>$value)if(is_scalar($value))$translated=str_replace('{'.$name.'}',(string)$value,$translated);
     return $translated;
 }
+
+function i18n_number_separators(string $locale, int|float $whole): array
+{
+    $group = match ($locale) {
+        'en' => ',',
+        'fr' => "\u{202F}",
+        'cs', 'pl' => "\u{00A0}",
+        default => '.',
+    };
+    if (in_array($locale, ['pl', 'it'], true) && $whole < 10000) $group = '';
+    return [$locale === 'en' ? '.' : ',', $group];
+}
 function i18n_setting(PDO $pdo,string $key,string $default=''):string {
     if(!in_array($key,['hero_title','hero_text','tagline'],true))return site_setting($pdo,$key,$default);
     $locale=i18n_locale();

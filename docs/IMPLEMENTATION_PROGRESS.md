@@ -1,5 +1,13 @@
 # Implementierungsfortschritt
 
+## Eurobeträge im Checkout gemäß der gewählten Sprache
+
+Preise für Guthaben, Werbeplatzierungen und gespeicherte Bestellungen zeigen
+sprachgerechte Dezimaltrennzeichen, Gruppierung und Platzierung des Eurozeichens.
+Die Zahlungsreferenz und der Betrag in Cent kommen weiterhin aus der
+gespeicherten Bestellung. Der HTTP-Test öffnet dieselbe französisch bestellte
+Leistung auf Französisch und Englisch und prüft die Betragsanbindung.
+
 ## Vollständiger BAG-Download und niederländische PC6-Aggregate
 
 Der Download aus 117 Teilbereichen desselben ETags ergab ein GeoPackage mit

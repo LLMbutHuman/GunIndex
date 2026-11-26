@@ -40,7 +40,7 @@ function manual_checkout_fields(PDO $pdo,array $services):void {
  foreach($services as $index=>$service){
   $quote=manual_checkout_quote($pdo,$service);
   echo '<label><input type="radio" name="service" value="'.h($service).'" required'.($index===0?' checked':'').'> '
-   .h(payments_service_label($service).' · '.money_eur($quote['gross_cents'])).'</label>'
+   .h(payments_service_label($service).' · '.money_eur($quote['gross_cents'],$quote['language'])).'</label>'
    .'<input type="hidden" name="service_terms['.h($service).']" value="'.h($quote['approval_hash']).'">'
    .'<details><summary>'.h(t('billing_customer.service_terms',['service'=>payments_service_label($service)])).'</summary>'
    .'<p>'.h($quote['terms']).'</p></details>';
