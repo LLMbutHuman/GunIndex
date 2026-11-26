@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / ESPLORA',
     'notification.bid.title'=>'Nuova offerta',
     'notification.bid.body'=>'È stata fatta un’offerta valida sul tuo annuncio “{listing}”.',
+    'notification.report_decision.title'=>'Decisione sul tuo caso',
+    'notification.report_decision.body'=>'La decisione sulla tua segnalazione o sul tuo ricorso è disponibile nel tuo caso.',
     'notification.outbid.title'=>'La tua offerta è stata superata',
     'notification.outbid.body'=>'Un altro partecipante è in testa all’asta “{listing}”. Controlla lo stato nel tuo account.',
     'notification.auction_won.title'=>'Asta vinta',

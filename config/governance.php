@@ -140,8 +140,15 @@ function governance_decide(PDO $pdo,int $actor,int $id,string $action,string $re
                 $pdo->prepare("UPDATE market_reports SET status='resolved',decision_action=?,decision_reason=? WHERE id=?")->execute([$action,$reason,$id]);
             }
         }
-        audit_log($pdo,$actor,'report.'.$action,$id,['reason'=>$reason]);$pdo->commit();
-        if($action!=='assign'&&function_exists('notify_user'))foreach(array_unique([(int)$case['reporter_id'],(int)$case['subject_user_id']]) as $recipient)notify_user($pdo,$recipient,'case:'.$id.':'.$action,'Entscheidung zu deinem Fall','Eine begründete Entscheidung oder Beschwerdeantwort ist in deinem Fall verfügbar.','/user/reports.php?id='.$id,true);
+        audit_log($pdo,$actor,'report.'.$action,$id,['reason'=>$reason]);
+        if($action!=='assign'&&function_exists('notify_user')){
+            foreach(array_unique([(int)$case['reporter_id'],(int)$case['subject_user_id']]) as $recipient){
+                notify_user($pdo,$recipient,'case:'.$id.':'.$action,
+                    i18n_user_text($pdo,$recipient,'notification.report_decision.title'),
+                    i18n_user_text($pdo,$recipient,'notification.report_decision.body'),'/user/reports.php?id='.$id,true);
+            }
+        }
+        $pdo->commit();
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }
 

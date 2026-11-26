@@ -1020,6 +1020,10 @@ class MarketplaceHTTP(unittest.TestCase):
         self.assertIn(evidence, body)
         for action in ('assign', 'dismiss'):
             self.assertEqual(303, browser.request(route, fields | {'action': action})[0])
+        status, _, notices = reporter.request('/user/notifications.php')
+        self.assertEqual(200, status)
+        self.assertIn('Decision on your case', notices)
+        self.assertNotIn(evidence, notices)
         status, _, body = reporter.request(customer_case)
         self.assertEqual(200, status)
         self.assertIn('Submit appeal', body)

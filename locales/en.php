@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / EXPLORE',
     'notification.bid.title'=>'New bid',
     'notification.bid.body'=>'A valid bid was placed on your listing “{listing}”.',
+    'notification.report_decision.title'=>'Decision on your case',
+    'notification.report_decision.body'=>'A decision on your report or appeal is available in your case.',
     'notification.outbid.title'=>'You have been outbid',
     'notification.outbid.body'=>'Another bidder is now leading the auction “{listing}”. View the current status in your account.',
     'notification.auction_won.title'=>'Auction won',

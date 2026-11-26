@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / ENTDECKEN',
     'notification.bid.title'=>'Neues Gebot',
     'notification.bid.body'=>'Für dein Angebot „{listing}“ wurde ein gültiges Gebot abgegeben.',
+    'notification.report_decision.title'=>'Entscheidung zu deinem Fall',
+    'notification.report_decision.body'=>'Eine Entscheidung zu deiner Meldung oder Beschwerde ist in deinem Fall verfügbar.',
     'notification.outbid.title'=>'Du wurdest überboten',
     'notification.outbid.body'=>'Bei der Auktion „{listing}“ führt jetzt ein anderer Bieter. Den aktuellen Stand findest du in deinem Konto.',
     'notification.auction_won.title'=>'Auktion gewonnen',

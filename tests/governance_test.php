@@ -38,12 +38,32 @@ gov_test('case_and_private_message_access_is_object_bound',static function()use(
     $q=$pdo->prepare('INSERT INTO market_messages(listing_id,sender_id,receiver_id,message_text,cipher_version) VALUES (?,?,?,?,1)');$q->execute([$listing,$owner['id'],$reporter['id'],crypto_encrypt('chat','Synthetic message evidence.')]);$message=(int)$pdo->lastInsertId();
     gov_reject(static fn()=>governance_subject($pdo,$stranger['id'],'message',$message));gov_check(governance_subject($pdo,$reporter['id'],'message',$message)===$owner['id']);
 });
-gov_test('moderation_requires_assignment_preserves_data_and_handles_appeal',static function()use($pdo,$admin,$reporter,$listing,&$case):void{
+gov_test('moderation_requires_assignment_preserves_data_and_handles_appeal',static function()use($pdo,$admin,$owner,$reporter,$listing,&$case):void{
+    $recipients=[[$owner,'pl'],[$reporter,'fr']];
+    foreach($recipients as [$recipient,$locale]){
+        $pdo->prepare('UPDATE users SET preferred_locale=?,email_verified_at=UTC_TIMESTAMP() WHERE id=?')->execute([$locale,$recipient['id']]);
+        $pdo->prepare('INSERT INTO market_notification_preferences(user_id,inapp_enabled,mail_enabled) VALUES (?,1,1) ON DUPLICATE KEY UPDATE mail_enabled=1')->execute([$recipient['id']]);
+    }
     gov_reject(static fn()=>governance_decide($pdo,$admin['id'],$case,'hide','Synthetic reason with sufficient detail.'));
     governance_decide($pdo,$admin['id'],$case,'assign','Synthetic assignment for review.');governance_decide($pdo,$admin['id'],$case,'hide','Synthetic content decision with clear reasoning.');
     $q=$pdo->prepare('SELECT status,title FROM market_listings WHERE id=?');$q->execute([$listing]);$row=$q->fetch();gov_check($row&&$row['status']==='paused'&&str_contains($row['title'],'Governance'));
     governance_appeal($pdo,$reporter['id'],$case,'Synthetic complaint requesting a renewed review.');governance_decide($pdo,$admin['id'],$case,'appeal_upheld','Synthetic complaint reviewed and original decision confirmed.');
     $row=governance_case_for_user($pdo,$case,$reporter['id']);gov_check($row['status']==='resolved'&&$row['appeal_resolution']!==null);gov_reject(static fn()=>governance_appeal($pdo,$reporter['id'],$case,'Another duplicate appeal should not overwrite the record.'));
+    $notifications=$pdo->prepare('SELECT event_key,title,body,target_url FROM market_notifications WHERE user_id=? AND event_key LIKE ? ORDER BY event_key');
+    $email=$pdo->prepare('SELECT payload_ciphertext FROM market_mail_queue WHERE user_id=? AND dedupe_key=?');
+    foreach($recipients as [$recipient,$locale]){
+        $dictionary=i18n_dictionary($locale);
+        $notifications->execute([$recipient['id'],'case:'.$case.':%']);$events=$notifications->fetchAll();
+        gov_check(array_column($events,'event_key')===['case:'.$case.':appeal_upheld','case:'.$case.':hide']);
+        foreach($events as $event){
+            gov_check($event['title']===$dictionary['notification.report_decision.title']&&$event['body']===$dictionary['notification.report_decision.body']);
+            gov_check($event['target_url']==='/user/reports.php?id='.$case);
+            $email->execute([$recipient['id'],'notification:'.$recipient['id'].':'.$event['event_key']]);
+            $payload=json_decode(crypto_decrypt('mail',$email->fetchColumn()),true,8,JSON_THROW_ON_ERROR);
+            gov_check($payload['to']===$recipient['username'].'@example.invalid'&&$payload['subject']===$event['title']);
+            gov_check(str_starts_with($payload['body'],$event['body'])&&!str_contains($payload['body'],'Synthetic'));
+        }
+    }
 });
 gov_test('moderator_cannot_restrict_accounts_without_permission',static function()use($pdo,$staff,$reporter,$stranger):void{
     $target=governance_report($pdo,$reporter['id'],'user',$stranger['id'],'Synthetic account complaint for permission checks.');governance_decide($pdo,$staff['id'],$target,'assign','Synthetic moderator assignment.');

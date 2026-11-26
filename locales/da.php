@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / OPDAG',
     'notification.bid.title'=>'Nyt bud',
     'notification.bid.body'=>'Der er afgivet et gyldigt bud på din annonce “{listing}”.',
+    'notification.report_decision.title'=>'Afgørelse i din sag',
+    'notification.report_decision.body'=>'Afgørelsen om din anmeldelse eller klage er tilgængelig i din sag.',
     'notification.outbid.title'=>'Du er blevet overbudt',
     'notification.outbid.body'=>'En anden byder fører nu auktionen “{listing}”. Se den aktuelle status på din konto.',
     'notification.auction_won.title'=>'Auktion vundet',

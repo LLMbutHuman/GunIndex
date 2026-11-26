@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / ODKRYWAJ',
     'notification.bid.title'=>'Nowa oferta',
     'notification.bid.body'=>'Na Twoją ofertę „{listing}” złożono ważną ofertę kupna.',
+    'notification.report_decision.title'=>'Decyzja w Twojej sprawie',
+    'notification.report_decision.body'=>'Decyzja dotycząca zgłoszenia lub odwołania jest dostępna w Twojej sprawie.',
     'notification.outbid.title'=>'Twoja oferta została przebita',
     'notification.outbid.body'=>'Inny uczestnik prowadzi teraz w aukcji „{listing}”. Sprawdź bieżący stan na swoim koncie.',
     'notification.auction_won.title'=>'Wygrana aukcja',

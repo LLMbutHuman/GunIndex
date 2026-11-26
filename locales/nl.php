@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / ONTDEKKEN',
     'notification.bid.title'=>'Nieuw bod',
     'notification.bid.body'=>'Er is een geldig bod geplaatst op je advertentie ‘{listing}’.',
+    'notification.report_decision.title'=>'Beslissing over uw dossier',
+    'notification.report_decision.body'=>'De beslissing over uw melding of bezwaar staat in uw dossier.',
     'notification.outbid.title'=>'Je bent overboden',
     'notification.outbid.body'=>'Een andere bieder leidt nu de veiling ‘{listing}’. Bekijk de actuele status in je account.',
     'notification.auction_won.title'=>'Veiling gewonnen',

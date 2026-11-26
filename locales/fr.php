@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / DÉCOUVRIR',
     'notification.bid.title'=>'Nouvelle enchère',
     'notification.bid.body'=>'Une enchère valide a été déposée sur votre annonce « {listing} ».',
+    'notification.report_decision.title'=>'Décision concernant votre dossier',
+    'notification.report_decision.body'=>'La décision relative à votre signalement ou à votre recours est disponible dans votre dossier.',
     'notification.outbid.title'=>'Vous avez été surenchéri',
     'notification.outbid.body'=>'Un autre enchérisseur mène désormais l’enchère « {listing} ». Consultez le statut dans votre compte.',
     'notification.auction_won.title'=>'Enchère remportée',

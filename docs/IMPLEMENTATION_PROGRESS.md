@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Moderationsentscheidungen in der Sprache der Beteiligten
+
+Bei Entscheidungen über Meldungen und Beschwerden erhalten Beteiligte die
+Benachrichtigung in ihrer Kontosprache. Die Entscheidung und die Einträge
+für interne Mitteilungen und Mailversand werden gemeinsam gespeichert.
+Die Texte leiten zum geschützten Vorgang. Fallbeweise und Begründungen
+stehen nur dort für Berechtigte bereit. Die isolierte Regression prüft
+verschiedene Sprachen für beide Beteiligten und verschlüsselte Mailaufträge.
+
 ## Entfernungsangaben in der gewählten Sprache
 
 Die Marktplatzsuche formatiert Dezimal- und Tausendertrennzeichen für alle

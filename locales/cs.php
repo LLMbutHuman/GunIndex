@@ -264,6 +264,8 @@ return [
     '01 / ENTDECKEN'=>'01 / OBJEVOVAT',
     'notification.bid.title'=>'Nový příhoz',
     'notification.bid.body'=>'Na tvou nabídku „{listing}“ byl podán platný příhoz.',
+    'notification.report_decision.title'=>'Rozhodnutí ve tvém případu',
+    'notification.report_decision.body'=>'Rozhodnutí o oznámení nebo odvolání najdeš ve svém případu.',
     'notification.outbid.title'=>'Tvoje nabídka byla překonána',
     'notification.outbid.body'=>'V aukci „{listing}“ nyní vede jiný zájemce. Aktuální stav najdeš ve svém účtu.',
     'notification.auction_won.title'=>'Aukce vyhrána',
