@@ -150,9 +150,10 @@ php ops/prepare-lu-postcodes.php --file=addresses.csv --output=PLZ-LU.csv \
 Der GeoPackage-Download des Katasters (BAG) ist in der öffentlichen
 Veröffentlichung vom 1. November 2026 verfügbar. Der amtliche Datensatz
 im Downloadkatalog ist mit Public Domain Mark 1.0 gekennzeichnet. Die
-Datei umfasst 7.827.132.416 Bytes. Die Aufbereitung verarbeitet aus
-`verblijfsobject`, `ligplaats` und `standplaats` gültige Nutzungspunkte
-je vollständiger PLZ. Sie verwendet den Mittelwert der verschiedenen
+Datei umfasst 7.827.132.416 Bytes. Alle 117 Downloadbereiche stammten vom
+gleichen ETag. Die Aufbereitung übernimmt aus `verblijfsobject` gültige
+Nutzungspunkte und aus `ligplaats` und `standplaats` die Mittelpunkte ihrer
+zugewiesenen Flächen je vollständiger PLZ. Sie verwendet den Mittelwert der verschiedenen
 Koordinaten und die häufigste Ortsbezeichnung. PLZ mit weniger als drei
 verschiedenen Punkten oder mehr als fünf Kilometern Ausdehnung auf einer
 RD-Achse erhalten aus dieser Verarbeitung keine Koordinaten.
@@ -165,16 +166,18 @@ für temporäre SQLite-Dateien. Die Projektion nach WGS 84 verwendet
 EPSG:28992, die Näherung EPSG:4833 und das bereits geprüfte `proj4`-Paket.
 Die Kontrollpunkte Delft, Ameland und Vlissingen wurden mit den veröffentlichten
 ETRS89-Referenzen verglichen. Die größte Abweichung dieser Stichprobe betrug
-0,65 Meter. Die Ausgabe ist für die angenäherte Umkreissuche bestimmt. Für das Release
-stehen der vollständige, hashgeprüfte Download, Umfang und Stichproben des
-resultierenden Datensatzes, der zweite reproduzierbare Lauf sowie der
-Installationstest noch aus. Es wird noch keine NL-Länderdatei ausgeliefert.
+0,65 Meter. Sechs Datensätze zu `3511 AB` aus dem amtlichen BAG-WFS ergaben beim
+Vergleich mit dessen WGS-84-Ausgabe maximal 0,54 Meter Abweichung.
+`ZIP/PLZ-NL.csv` enthält 436.312 eindeutige Punkte für die angenäherte
+Umkreissuche. Die Ausgabe enthält PLZ, Ort und Koordinate.
 [RD-Koordinatensystem der NSGI](https://www.nsgi.nl/coordinatenstelsels-en-transformaties/overzicht-coordinatenstelsels) ·
 [NSGI-Kontrollkoordinaten](https://www.nsgi.nl/documents/1888506/2842654/coordinaten_AGRS_NL.pdf/9a8420b9-822c-cba3-da09-8561c2d5a930?t=1589968713129) ·
+[Amtliches BAG-WFS](https://www.pdok.nl/introductie/-/article/basisregistratie-adressen-en-gebouwen-ba-1) ·
 [GeoPackage-Spezifikation](https://docs.ogc.org/is/12-128r19/12-128r19.html)
 
 ```sh
-node ops/prepare-nl-postcodes.mjs bag-light.gpkg nl-rd.json EXPECTED_SOURCE_SHA256
+node ops/prepare-nl-postcodes.mjs bag-light.gpkg nl-rd.json \
+  d52279acd00a104b1790e0c86b189779b5e6b0ef657f56cfe491aa262d05cc3b
 node ops/project-postcodes.mjs NL nl-rd.json package/dist/proj4.js PLZ-NL.csv
 node ops/validate-postcodes.mjs --country=NL --file=PLZ-NL.csv --sorted
 php ops/import-postcodes.php --country=NL --file=PLZ-NL.csv --sorted --dry-run

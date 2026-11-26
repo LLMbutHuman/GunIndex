@@ -68,6 +68,13 @@ function geo_postcode_attributions(PDO $pdo, array $countries): array
                 'CC BY 4.0 (DAGI)'=>'https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser',
             ],
         ],
+        'NL' => [
+            'sha256'=>'0f1edd27c45f08738fca2aa28667c67874aea02234680d8e47156cf8f6fec40b',
+            'links'=>[
+                'Kadaster – BAG (2026-11-01)'=>'https://www.pdok.nl/introductie/-/article/basisregistratie-adressen-en-gebouwen-ba-1',
+                'Public Domain Mark 1.0'=>'https://creativecommons.org/publicdomain/mark/1.0/',
+            ],
+        ],
     ];
     $matched = array_intersect_key($sources, array_flip(array_map('strtoupper', $countries)));
     if ($matched === []) return [];

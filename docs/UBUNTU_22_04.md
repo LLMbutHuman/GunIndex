@@ -146,7 +146,7 @@ Zahlungsverfahren. Der Installationsbefehl richtet auch das lokale Monitoring ei
 
 10. Der Installer importiert geprüfte PLZ für Deutschland, das französische
     Mutterland, Österreich, die Schweiz, Liechtenstein, Luxemburg, Tschechien,
-    Belgien, Polen und Dänemark.
+    Belgien, Polen, Dänemark und die Niederlande.
     Der geschützte Länderbereich zeigt den Importstand. Quellen, Prüfsummen und
     mögliche Folgeimporte stehen in [POSTCODE_SOURCES.md](POSTCODE_SOURCES.md).
     Ohne passende Koordinaten darf keine erfundene Entfernung angezeigt werden.

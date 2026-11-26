@@ -6,12 +6,44 @@ import { pathToFileURL } from 'node:url';
 
 const BAG_REFERENCE_SYSTEM = 28992;
 const sources = {
-  verblijfsobject: ['Verblijfsobject in gebruik', 'Verblijfsobject in gebruik (niet ingemeten)'],
-  standplaats: ['Plaats aangewezen'],
-  ligplaats: ['Plaats aangewezen'],
+  verblijfsobject: {type:'POINT', statuses:['Verblijfsobject in gebruik', 'Verblijfsobject in gebruik (niet ingemeten)']},
+  standplaats: {type:'POLYGON', statuses:['Plaats aangewezen']},
+  ligplaats: {type:'POLYGON', statuses:['Plaats aangewezen']},
 };
 
-// Read the horizontal coordinates from a GeoPackage Binary point.
+function polygonAxis(view,start,littleEndian,axis) {
+  if (start+4>view.byteLength) throw new Error('Incomplete WKB polygon.');
+  const rings=view.getUint32(start,littleEndian);
+  let offset=start+4, totalArea=0, weighted=0;
+  if (!rings || rings>(view.byteLength-offset)/68) throw new Error('Invalid WKB polygon ring count.');
+  for (let ring=0;ring<rings;ring++) {
+    if (offset+4>view.byteLength) throw new Error('Incomplete WKB polygon ring.');
+    const size=view.getUint32(offset,littleEndian);
+    offset+=4;
+    if (size<4 || offset+size*16>view.byteLength) throw new Error('Invalid WKB polygon ring length.');
+    const east=view.getFloat64(offset,littleEndian), north=view.getFloat64(offset+8,littleEndian);
+    let twiceArea=0, moment=0, previousEast=0, previousNorth=0;
+    for (let i=1;i<size;i++) {
+      const point=offset+i*16;
+      const x=view.getFloat64(point,littleEndian)-east, y=view.getFloat64(point+8,littleEndian)-north;
+      const cross=previousEast*y-x*previousNorth;
+      if (!Number.isFinite(cross)) throw new Error('BAG polygon is non-finite.');
+      twiceArea+=cross;
+      moment+=(axis===0?previousEast+x:previousNorth+y)*cross;
+      previousEast=x; previousNorth=y;
+    }
+    if (previousEast!==0 || previousNorth!==0) throw new Error('BAG polygon ring is not closed.');
+    offset+=size*16;
+    if (twiceArea===0) continue;
+    const area=(ring===0?1:-1)*Math.abs(twiceArea);
+    totalArea+=area;
+    weighted+=area*((axis===0?east:north)+moment/(3*twiceArea));
+  }
+  if (offset!==view.byteLength) throw new Error('Unexpected trailing WKB polygon bytes.');
+  return totalArea>0?weighted/totalArea:null;
+}
+
+// Read an address point or derive the centre of its designated parcel geometry.
 function bagCoordinate(value, axis) {
   if (value === null) return null;
   if (!(value instanceof Uint8Array) || value.length < 8 || value[0] !== 71 || value[1] !== 80 || value[2] !== 0) {
@@ -28,6 +60,10 @@ function bagCoordinate(value, axis) {
   if (value.length < start + 5 || value[start] > 1) throw new Error('Invalid WKB point header.');
   const littleEndian = value[start] === 1;
   const type = view.getUint32(start + 1, littleEndian);
+  if(type===3){
+    const coordinate=polygonAxis(view,start+5,littleEndian,axis);
+    return coordinate===null?null:Math.round(coordinate*100);
+  }
   const dimensions = {1: 2, 1001: 3, 2001: 3, 3001: 4}[type];
   if (!dimensions || value.length !== start + 5 + dimensions * 8) throw new Error('Expected a WKB point.');
   const coordinate = view.getFloat64(start + 5 + axis * 8, littleEndian);
@@ -35,44 +71,63 @@ function bagCoordinate(value, axis) {
   return Math.round(coordinate * 100);
 }
 
-function verifiedBagLabels(db) {
+function bagAddressQuery(db) {
   if (db.prepare('PRAGMA application_id').get().application_id !== 0x47504b47) throw new Error('Expected a GeoPackage.');
   const geometry = db.prepare('SELECT column_name, geometry_type_name, srs_id FROM gpkg_geometry_columns WHERE table_name=?');
   const selects = [];
   const statuses = [];
-  for (const [table, allowedStatus] of Object.entries(sources)) {
+  for (const [table, specification] of Object.entries(sources)) {
     const shape = geometry.get(table);
-    if (shape?.column_name !== 'geom' || !['POINT','GEOMETRY'].includes(shape.geometry_type_name) || shape.srs_id !== BAG_REFERENCE_SYSTEM) {
+    if (shape?.column_name !== 'geom' || shape.geometry_type_name!==specification.type || shape.srs_id !== BAG_REFERENCE_SYSTEM) {
       throw new Error('Unexpected BAG GeoPackage metadata.');
     }
-    const placeholders = allowedStatus.map(() => '?').join(',');
+    const placeholders = specification.statuses.map(() => '?').join(',');
     selects.push(`SELECT upper(replace(trim(postcode),' ','')) AS postal, trim(woonplaats_naam) AS town, geom
       FROM ${table} WHERE status IN (${placeholders}) AND geom IS NOT NULL AND postcode IS NOT NULL AND woonplaats_naam IS NOT NULL`);
-    statuses.push(...allowedStatus);
+    statuses.push(...specification.statuses);
   }
   return {
-    sql: `WITH addresses AS (${selects.join(' UNION ALL ')}),
-      points AS MATERIALIZED (
-        SELECT postal,town,bag_east(geom) AS east,bag_north(geom) AS north
-        FROM addresses WHERE postal GLOB '[1-9][0-9][0-9][0-9][A-Z][A-Z]' AND bag_town_valid(town)
-      ),
-      distinct_points AS MATERIALIZED (
-        SELECT postal,east,north,min(town) AS town FROM points
-        WHERE east BETWEEN 1000000 AND 28500000 AND north BETWEEN 30000000 AND 63000000
-        GROUP BY postal,east,north
-      ),
-      centres AS (
-        SELECT postal,avg(east)/100 AS east,avg(north)/100 AS north FROM distinct_points
-        GROUP BY postal HAVING count(*)>=3 AND max(east)-min(east)<=500000 AND max(north)-min(north)<=500000
-      ),
-      towns AS (
-        SELECT postal,town,row_number() OVER (PARTITION BY postal ORDER BY count(*) DESC,town) AS priority
-        FROM distinct_points GROUP BY postal,town
-      )
-      SELECT c.postal,t.town,c.east,c.north FROM centres c
-      JOIN towns t ON t.postal=c.postal AND t.priority=1 ORDER BY c.postal`,
+    sql: `WITH addresses AS (${selects.join(' UNION ALL ')})
+      SELECT postal,town,geom FROM addresses
+      WHERE postal GLOB '[1-9][0-9][0-9][0-9][A-Z][A-Z]' ORDER BY postal,town COLLATE BINARY`,
     statuses,
   };
+}
+
+function bagAggregate(postal, locations) {
+  if (locations.size<3) return null;
+  const towns=new Map();
+  let sumEast=0,sumNorth=0,minEast=Infinity,maxEast=-Infinity,minNorth=Infinity,maxNorth=-Infinity;
+  for (const [town,east,north] of locations.values()) {
+    towns.set(town,(towns.get(town)??0)+1);
+    sumEast+=east;sumNorth+=north;
+    minEast=Math.min(minEast,east);maxEast=Math.max(maxEast,east);
+    minNorth=Math.min(minNorth,north);maxNorth=Math.max(maxNorth,north);
+  }
+  if (maxEast-minEast>500000 || maxNorth-minNorth>500000) return null;
+  const [[town]]=Array.from(towns).sort(([a,aCount],[b,bCount])=>bCount-aCount||Buffer.compare(Buffer.from(a),Buffer.from(b)));
+  return [postal,town,(sumEast/locations.size)/100,(sumNorth/locations.size)/100];
+}
+
+function* bagCentres(rows) {
+  const locations=new Map();
+  let previous=null;
+  for (const {postal,town,geom} of rows) {
+    if (postal!==previous) {
+      const centre=bagAggregate(previous,locations);
+      if (centre) yield centre;
+      locations.clear();
+      previous=postal;
+    }
+    if (!/^[^\u0000-\u001f\u007f;"\ufffd]{1,150}$/u.test(town)) continue;
+    const east=bagCoordinate(geom,0), north=bagCoordinate(geom,1);
+    if (!Number.isFinite(east) || !Number.isFinite(north) || east<1000000 || east>28500000 || north<30000000 || north>63000000) continue;
+    const key=east+','+north;
+    // The cursor orders towns within each postcode, so the first label wins for repeated points.
+    if (!locations.has(key)) locations.set(key,[town,east,north]);
+  }
+  const last=bagAggregate(previous,locations);
+  if (last) yield last;
 }
 
 export async function prepareNlPostcodes(input, output, expected) {
@@ -86,12 +141,9 @@ export async function prepareNlPostcodes(input, output, expected) {
   const points = [];
   try {
     db.exec('PRAGMA query_only=ON; PRAGMA trusted_schema=OFF; PRAGMA temp_store=FILE');
-    db.function('bag_east', { deterministic:true }, value => bagCoordinate(value, 0));
-    db.function('bag_north', { deterministic:true }, value => bagCoordinate(value, 1));
-    db.function('bag_town_valid', { deterministic:true }, value => /^[^\u0000-\u001f\u007f;"\ufffd]{1,150}$/u.test(value) ? 1 : 0);
-    const {sql, statuses} = verifiedBagLabels(db);
-    for (const {postal, town, east, north} of db.prepare(sql).iterate(...statuses)) {
-      points.push([postal,town,east,north]);
+    const {sql, statuses} = bagAddressQuery(db);
+    for (const centre of bagCentres(db.prepare(sql).iterate(...statuses))) {
+      points.push(centre);
       if (points.length > 650000) throw new Error('Unexpected number of postcode aggregates.');
     }
   } finally { db.close(); }

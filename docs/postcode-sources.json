@@ -266,6 +266,28 @@
       "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
       "constraints": ["Area-weighted EPSG:25832 polygon centres, including holes", "Out-of-range centres and polygons with spans over 30 km excluded", "StatBank 2026 positive population required", "No raw polygons or population figures bundled"],
       "status": "bundled_seed_locally_validated"
+    },
+    {
+      "id": "kadaster-bag-postcodes-netherlands",
+      "countries": ["NL"],
+      "publisher": "Kadaster LV-BAG via Publieke Dienstverlening Op de Kaart (PDOK)",
+      "path": "ZIP/PLZ-NL.csv",
+      "source_url": "https://service.pdok.nl/kadaster/bag/atom/bag.xml",
+      "export_url": "https://service.pdok.nl/kadaster/bag/atom/downloads/bag-light.gpkg",
+      "dataset_date": "2026-11-01",
+      "dataset_date_evidence": "ATOM record and HTTP Last-Modified for verified range responses",
+      "source_etag": "0x8DF37AD59D78064",
+      "source_bytes": 7827132416,
+      "source_sha256": "d52279acd00a104b1790e0c86b189779b5e6b0ef657f56cfe491aa262d05cc3b",
+      "license": "Public Domain Mark 1.0, as specified by the national catalogue record linked by the exact download feed",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "license_record_id": "aa3b5e6e-7baa-40c0-8972-3353e927ec2f",
+      "validated_unique_postcodes": 436312,
+      "bytes": 14696074,
+      "sha256": "0f1edd27c45f08738fca2aa28667c67874aea02234680d8e47156cf8f6fec40b",
+      "format": "UTF-8 semicolon CSV: postal_code, city, latitude, longitude",
+      "constraints": ["Mean of at least three distinct EPSG:28992 positions per PC6", "A selected building unit contributes a point and a designated berth or plot contributes its polygon centre", "Groups spanning more than 5 km on either axis excluded", "Reprojected with pinned Proj4js 2.23.0 and the EPSG:4833 approximation", "No address rows bundled; omitted codes retain exact search"],
+      "status": "bundled_seed_locally_validated"
     }
   ]
 }

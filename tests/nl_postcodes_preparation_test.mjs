@@ -21,6 +21,15 @@ function point(east, north, {littleEndian = true, envelope = false, srid = 28992
   return data;
 }
 
+function parcel(east,north) {
+  const ring=[[east-2,north-2],[east+2,north-2],[east+2,north+2],[east-2,north+2],[east-2,north-2]];
+  const data=Buffer.alloc(21+16*ring.length);
+  data.write('GP');data[3]=1;data.writeInt32LE(28992,4);data[8]=1;data.writeUInt32LE(3,9);
+  data.writeUInt32LE(1,13);data.writeUInt32LE(ring.length,17);
+  ring.forEach(([x,y],i)=>{data.writeDoubleLE(x,21+i*16);data.writeDoubleLE(y,29+i*16);});
+  return data;
+}
+
 const directory = mkdtempSync(join(tmpdir(), 'gunindex-bag-test-'));
 const input = join(directory,'fixture.gpkg');
 const target = join(directory,'aggregates.json');
@@ -30,7 +39,7 @@ try {
   fixture.exec('PRAGMA application_id=1196444487; CREATE TABLE gpkg_geometry_columns(table_name TEXT, column_name TEXT, geometry_type_name TEXT, srs_id INTEGER)');
   for (const table of ['verblijfsobject','standplaats','ligplaats']) {
     fixture.exec(`CREATE TABLE ${table}(postcode TEXT, woonplaats_naam TEXT, status TEXT, geom BLOB)`);
-    fixture.prepare("INSERT INTO gpkg_geometry_columns VALUES (?, 'geom', 'POINT', 28992)").run(table);
+    fixture.prepare("INSERT INTO gpkg_geometry_columns VALUES (?, 'geom', ?, 28992)").run(table,table==='verblijfsobject'?'POINT':'POLYGON');
   }
   const add = fixture.prepare('INSERT INTO verblijfsobject VALUES (?,?,?,?)');
   const used = 'Verblijfsobject in gebruik';
@@ -38,7 +47,7 @@ try {
   add.run('1234AB','Synthetic locality',used,point(155000,463000));
   add.run('1234AB','Synthetic locality',used,point(155030,463060,{littleEndian:false,envelope:true}));
   add.run('1234AB','Synthetic locality','Verblijfsobject ingetrokken',point(160001,463060));
-  fixture.prepare('INSERT INTO ligplaats VALUES (?,?,?,?)').run('1234AB','Other synthetic locality','Plaats aangewezen',point(155060,463120));
+  fixture.prepare('INSERT INTO ligplaats VALUES (?,?,?,?)').run('1234AB','Other synthetic locality','Plaats aangewezen',parcel(155060,463120));
   for (const [postal,town,easts] of [
     ['1234AA','Synthetic short group',[155001,155002]],
     ['1235AA','Synthetic wide group',[155001,155002,160010]],

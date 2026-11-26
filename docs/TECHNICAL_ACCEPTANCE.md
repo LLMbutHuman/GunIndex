@@ -143,9 +143,13 @@ der In-Place-Aktualisierung umfasst damit acht Länderimporte.
 [Ubuntu-Installer mit Belgien](https://github.com/LLMbutHuman/GunIndex/actions/runs/45702394866)
 Polen ergänzt 18.644 geprüfte PLZ-Punkte. Der transaktionale Import der
 sortierten Länderdatei, die Warschauer Umkreissuche und das Update mit neun
-Länderquellen waren erfolgreich. Die vollständige Aufbereitung der
-niederländischen Daten und der dänische Quellimport stehen aus.
+Länderquellen waren erfolgreich.
 [Ubuntu-Installer mit Polen](https://github.com/LLMbutHuman/GunIndex/actions/runs/45746041877)
+Dänemark ergänzt 972 geprüfte PLZ-Punkte. Der Umkreis um Kopenhagen und
+das Update mit zehn Länderdateien bestanden. Die elf Länderquellen enthalten
+zusätzlich 436.312 lokal und auf Bytegleichheit geprüfte niederländische
+PLZ. Die umfassende Installationsprobe für diesen Stand steht aus.
+[Ubuntu-Installer mit Dänemark](https://github.com/LLMbutHuman/GunIndex/actions/runs/45750112803)
 
 Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
 neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL

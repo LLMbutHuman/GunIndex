@@ -1,5 +1,17 @@
 # Implementierungsfortschritt
 
+## Vollständiger BAG-Download und niederländische PC6-Aggregate
+
+Der Download aus 117 Teilbereichen desselben ETags ergab ein GeoPackage mit
+7.827.132.416 Bytes. Die tatsächlichen BAG-Nutzungsstellen bestätigten
+Punkt- und Polygonformate. Zwei unabhängig ausgeführte Aufbereitungen
+ergaben bytegleiche CSVs mit 436.312 eindeutigen PC6-Koordinaten. Der zweite
+Lauf verarbeitet die nach PLZ sortierte Datenbankausgabe gruppenweise. Der
+PHP-Dry-Run prüfte die Ausgabe bei 16 MiB
+Speicherlimit. Die Installer-Probe prüft die Amsterdam-Suche, die
+Quellenanzeige und den Update-Erhalt aller elf Länderquellen.
+[Quelle und Prüfsummen](POSTCODE_SOURCES.md#niederlande)
+
 ## Dänische Postleitzahlen aus DAGI und StatBank
 
 Die Aufbereitung prüfte 1.089 amtliche Postbezirke und glich bewohnte PLZ
@@ -9,6 +21,7 @@ lokale Läufe ergaben bytegleiche CSVs mit 972 Koordinaten. Node und der
 PHP-Importer bestätigten Anzahl und SHA-256. Der Ubuntu-Test prüft den
 Erstimport, das Update, die Kopenhagener Umkreissuche und die Quellenanzeige.
 [Quellen und Prüfsummen](POSTCODE_SOURCES.md#dänemark)
+[Ubuntu-Installer und Produktionsimage bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45750112803)
 
 ## Mehrsprachige Fehlerseiten für öffentliche Adressen
 
@@ -18,6 +31,7 @@ setzt den passenden HTTP-Status, `Content-Language` und Robots-Schutz direkt
 vor dem Anwendungsstart. HEAD sendet die Header ohne Textkörper. Der
 lokale Testserver bestand 24 tatsächliche HTTP-Anfragen in acht Sprachen.
 Die isolierte Linux-Regression wiederholt diese Prüfung im normalen Router.
+[HTTP- und Browserregression bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45748798331)
 
 ## Moderationsentscheidungen in der Sprache der Beteiligten
 
@@ -27,6 +41,7 @@ für interne Mitteilungen und Mailversand werden gemeinsam gespeichert.
 Die Texte leiten zum geschützten Vorgang. Fallbeweise und Begründungen
 stehen nur dort für Berechtigte bereit. Die isolierte Regression prüft
 verschiedene Sprachen für beide Beteiligten und verschlüsselte Mailaufträge.
+[Moderations- und Mailwarteschlangentests bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45748446127)
 
 ## Entfernungsangaben in der gewählten Sprache
 
@@ -36,6 +51,7 @@ Fehler bei PLZ und Standortfiltern nutzen die vorhandenen Sprachfassungen.
 Zehn lokale Geo- und Sprachtests
 bestanden, einschließlich der acht Entfernungsformate.
 [Unicode CLDR-Zahlenformate](https://www.unicode.org/cldr/charts/49/summary/fr.html)
+[Marktplatzregression bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45748158392)
 
 ## Stillgelegte Admin-Skripte aus Produktionspaketen ausgeschlossen
 
@@ -48,18 +64,15 @@ Lokal bestanden die Archivprüfung und der Git-Attributtest. Die zunächst
 überschriebenen Schutzregeln für die Dateibytes der PLZ- und OpenPGP-Dateien
 wurden im Folgecommit `49a1196` wiederhergestellt. Der Produktionslauf
 startet jetzt auch bei Änderungen an diesen Regeln und prüft sie vor dem Build.
+[Produktionsimage und Ubuntu-Installer bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45747962785)
 
 ## Niederländische BAG-Daten für die PLZ-Aggregation vorbereitet
 
 Das Aufbereitungsskript prüft den Hash eines lokalen GeoPackage und liest es
-schreibgeschützt. Drei amtliche Punkttabellen werden nach eindeutigen
-Positionen je PLZ zusammengefasst. Die Reihenfolge und die Auswahl der
-Ortsbezeichnung sind reproduzierbar. Ein synthetisches GeoPackage hat die
-Punktformate, Dubletten, Mindestabdeckung, Hashprüfung und bytegleiche Ausgabe
-bestätigt. Der öffentliche Downloadkatalog stimmt mit den abgerufenen
-Tabellenmetadaten überein. Bei drei amtlichen RD-Kontrollpunkten lag die
-Abweichung der Projektion unter einem Meter. Die vollständige Auswertung
-der BAG-Datei und der NL-Import im Installer stehen aus.
+schreibgeschützt. Ein synthetisches GeoPackage hat Geometrieformate,
+Dubletten, Mindestabdeckung, Hashprüfung und bytegleiche Ausgabe bestätigt.
+Bei drei amtlichen RD-Kontrollpunkten lag die Abweichung der Projektion
+unter einem Meter.
 [Quelle und Reproduktionsbefehle](POSTCODE_SOURCES.md#niederlande)
 
 ## Größere PLZ-Quellen ohne Vorhalten aller Zeilen im Arbeitsspeicher
@@ -101,6 +114,7 @@ alle acht Sprachen und prüft die Pflichtbestätigung, sichtbare Texte und
 Überbreite. Sie aktiviert die manuelle Zahlungsmethode nur in der
 synthetischen Datenbank, mit einer `example.invalid`-Adresse. Die
 Browser-Syntaxprüfung ist lokal bestanden.
+[Checkout-Mobiltest in allen acht Sprachen bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45747513787)
 
 ## Rechtsübersicht auf kleinen Bildschirmen
 
@@ -836,11 +850,10 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Als Nächstes den vollständigen BAG-Download verifizieren, das niederländische
-PLZ-Aggregat zweimal erstellen und den Länderimport auf Ubuntu prüfen. Für
-Dänemark liegt der lokal geprüfte Quellimport aus dem öffentlichen
-Vejdirektorat-Dienst vor. Danach die weiterhin offenen Sprach- und
-Formatprüfungen aus `TECHNICAL_ACCEPTANCE.md` abarbeiten.
+Die niederländische Länderdatei ist lokal einschließlich einer bytegleichen
+Wiederholung geprüft. Der abschließende Ubuntu-Lauf prüft die elf vorhandenen
+Länderquellen. Als Nächstes die weiterhin offenen Sprach- und Formatprüfungen
+aus `TECHNICAL_ACCEPTANCE.md` abarbeiten.
 Die Rechtsfassungen benötigen vor Veröffentlichung die Betreiberangaben
 und Prüfung. Fehler durch vorgelagerte Infrastruktur benötigen eine
 Zielsystemabnahme.

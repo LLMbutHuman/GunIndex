@@ -12,15 +12,15 @@ Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
 fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
 [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
 
-Neuinstallation und Update wurden mit neun länderspezifischen PLZ-Quellen
-geprüft. Der zehnte Import für die Niederlande benötigt noch die vollständige
-Auswertung des BAG-Datensatzes und einen weiteren Installationslauf.
+Neuinstallation und Update wurden mit zehn länderspezifischen PLZ-Quellen
+einschließlich Dänemark geprüft. Der elfte Import für die Niederlande ist
+lokal geprüft. Seine Installationsprobe steht aus.
 Die Rechtsverwaltung enthält 20 Vorlagen in jeweils acht Sprachen und kann
 sie gesammelt als unveröffentlichte Entwürfe importieren und im gleichen Format
 exportieren. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
 bestanden. Native Tests auf Apple-Geräten, fachlich freigegebene Rechtstexte
 und die unabhängige Sicherheitsprüfung bleiben Teil der Abnahme.
-[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45746041877) ·
+[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45750112803) ·
 [Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705399661) ·
 [E2EE-Browser](https://github.com/LLMbutHuman/GunIndex/actions/runs/45707792187)
 

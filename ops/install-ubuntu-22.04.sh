@@ -258,5 +258,9 @@ seed_postcodes PLZ-DK.csv --country=DK --sorted \
  --expected-sha256=61ed4d33065c20a58a7ac85eb59f2c763b990000bcb3c940cd470b6375b3b348 \
  --source='Klimadatastyrelsen DAGI via Vejdirektoratet (2026-11-26), Statistics Denmark POSTNR2 (2026)' \
  --license-note='CC BY 4.0 for DAGI. Approximate polygon centres filtered by the 2026 postcode population statistics and geographic bounds. https://www.klimadatastyrelsen.dk/om-klimadatastyrelsen/vilkaar-og-priser'
+seed_postcodes PLZ-NL.csv --country=NL --sorted \
+ --expected-sha256=0f1edd27c45f08738fca2aa28667c67874aea02234680d8e47156cf8f6fec40b \
+ --source='Kadaster BAG light GeoPackage via PDOK, 2026-11-01 (Netherlands)' \
+ --license-note='Public Domain Mark 1.0. Approximate centres from at least three distinct BAG positions per PC6. https://service.pdok.nl/kadaster/bag/atom/bag.xml'
 "$directory/compose.sh" up -d php mailer web worker
 finish_setup
