@@ -26,7 +26,7 @@ Stand 26. November 2026
   und Sodium/libsodium bereit. OPcache ist im FPM-Image aktiviert. GD nutzt
   libpng, libjpeg-turbo und libwebp, mbstring nutzt Oniguruma. Debian liefert
   die Build-Pakete libpng-dev, libjpeg62-turbo-dev, libwebp-dev, libonig-dev
-  und libxml2-dev. Git und in der Testumgebung unzip unterstützen den Build.
+  und libxml2-dev. Git und unzip unterstützen den Build.
   https://hub.docker.com/_/php
   https://www.php.net/license/index.php
 - Debian Bookworm Slim als Basis des optionalen lokalen Mailers mit Postfix
