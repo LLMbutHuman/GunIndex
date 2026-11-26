@@ -146,19 +146,19 @@ sortierten Länderdatei, die Warschauer Umkreissuche und das Update mit neun
 Länderquellen waren erfolgreich.
 [Ubuntu-Installer mit Polen](https://github.com/LLMbutHuman/GunIndex/actions/runs/45746041877)
 Dänemark ergänzt 972 geprüfte PLZ-Punkte. Der Umkreis um Kopenhagen und
-das Update mit zehn Länderdateien bestanden. Die elf Länderquellen enthalten
-zusätzlich 436.312 lokal und auf Bytegleichheit geprüfte niederländische
-PLZ. Die umfassende Installationsprobe für diesen Stand steht aus.
-[Ubuntu-Installer mit Dänemark](https://github.com/LLMbutHuman/GunIndex/actions/runs/45750112803)
+das Update mit zehn Länderdateien bestanden. Die Niederlande ergänzen 436.312
+bytegleich reproduzierte PLZ. Der nächste Ubuntu-Lauf bestätigte Amsterdam-Suche,
+Quellenanzeige, Neuinstallation, Update und Erhalt aller elf Länderquellen.
+[Ubuntu mit Dänemark](https://github.com/LLMbutHuman/GunIndex/actions/runs/45750112803) ·
+[Ubuntu mit allen elf Quellen](https://github.com/LLMbutHuman/GunIndex/actions/runs/45751150681)
 
 Der Wechsel einer kompromittierten E2EE-Kontoautorität ist mit frischer MFA,
 neuem Wiederherstellungscode und erneuter Fingerabdruckprüfung in PHP/MySQL
 und Chromium geprüft. Alte Anhänge bleiben bei vorhandenen passenden Schlüsseln
 und verifiziertem Manifest lesbar. [CI 44951559532](https://github.com/LLMbutHuman/GunIndex/actions/runs/44951559532)
 
-Zusätzlich offen sind die unabhängige E2EE-Sicherheitsprüfung und Browsermatrix,
-weitere Länderimporte mit geprüften
-Quellen, die Betriebsabnahme auf dem vorgesehenen Ubuntu-Host einschließlich
+Zusätzlich offen sind die unabhängige E2EE-Sicherheitsprüfung, native Tests
+auf Apple-Geräten, die Betriebsabnahme auf dem vorgesehenen Ubuntu-Host einschließlich
 DNS und TLS sowie die fachliche Prüfung mit dem Legal-Team. Alte serverseitige
 Chatverschlüsselung bleibt **keine E2EE**; der neue Modus ist in E2EE_PROTOCOL.md
 getrennt beschrieben. Neue Sprachmodule sind nicht mit einer

@@ -2,19 +2,21 @@
 
 Selbst hostbarer allgemeiner Marktplatz mit PHP und MySQL. Der aktive Katalog enthält allgemeine Waren; historische spezialisierte Inserate und private Uploads werden nicht öffentlich übernommen. Der Entwicklungsstand liegt auf `feature/general-marketplace-rebuild`.
 
+[Übergabe, Funktionsliste und persönliche Abnahme](docs/HANDOVER.md)
+
 Vorhanden sind:
 
 - Konten mit E-Mail-Verifikation, Passwortreset, Sitzungswiderruf und verpflichtender Personal-MFA.
 - Hierarchische Kategorien, Inserate mit aufbereiteten Bildern, Suche, Merklisten, Bewertungen und Proxyauktionen mit unabhängigem Abschlussworker.
 - Kostenlose Gesuche, lokales Matching, gespeicherte Suchen, Suchalarme und In-App-/optionale E-Mail-Hinweise.
-- Elf Ländermärkte, internationale Suche, lokale PLZ-/Radiusfilter und acht Sprachen für wesentliche Oberflächen. Teile der Administration, Geschäfts- und Rechtstexte verwenden weiterhin Deutsch.
+- Elf Ländermärkte mit lokal geprüften PLZ-Quellen, internationale Suche, Radiusfilter und acht Sprachen für die geprüften Oberflächen. Der vollständige Sprach- und Formatabgleich ist Teil der weiteren Abnahme.
 - Inseratsbezogener Chat mit Teilnehmerprüfung, Blockieren und Melden. Neuer, standardmäßig deaktivierter E2EE-Modus mit OpenPGP-Geräteschlüsseln, Fingerabdruckvergleich, Wiederherstellung und verschlüsselten Anhängen; [Architektur und Abnahmegrenzen](docs/E2EE_PROTOCOL.md). Der erhaltene alte Verlauf mit serverseitiger AEAD-Verschlüsselung ist keine E2EE.
 - Händlerprofile, eigene Kennzahlen, CSV-/Massenverwaltung, begrenzte Premiumplätze und landesspezifische Bannerkampagnen.
 - Manuelle PayPal-Zahlungsaufträge mit festem Betrag/Verwendungszweck, tatsächlicher Personalprüfung, Bumps und versionierten Buchungsbedingungen. Nach gesonderter Finanzfreigabe entstehen unveränderliche Rechnungsbelege/PDFs und dokumentierte Korrekturen.
 - Berechtigungsbasierte Administration, Meldungen und Beschwerden, eigener Datenexport, kontrollierte Deaktivierung/Anonymisierung sowie technisch vorbereitete, standardmäßig deaktivierte Identitätsprüfung.
-- Zwanzig versionierbare deutsche Rechtsentwürfe, lokale Hintergrundqueues, Betriebsüberwachung und ein Ubuntu-22.04-Installer mit verschlüsselten Sicherungs-/Restorewerkzeugen.
+- Zwanzig versionierbare Rechtsentwürfe in acht Sprachen, lokale Hintergrundqueues, Betriebsüberwachung und ein ausführbarer Ubuntu-22.04-Installer mit verschlüsselten Sicherungen und Wiederherstellung.
 
-Die Plattform ist **noch nicht produktionsfreigegeben**. Zahlungs-, Werbe-, Finanz-, Identitäts- und Rechtstextveröffentlichung benötigen die jeweiligen expliziten Konfigurationen und tatsächlichen fachlichen Freigaben. Bitcoin, Banküberweisung und Treuhand bleiben deaktiviert. Auktions-Einstell- und Erfolgsforderungen sind integriert und isoliert geprüft; automatische Providererstattungen und weitere Korrekturen bleiben offen. Automatisierte PayPal-API-Abläufe wurden mit lokalen Testantworten geprüft; ein echter Provider-Sandbox-/Live-Nachweis steht aus.
+Der geprüfte Entwicklungsstand kann auf einem Testserver abgenommen werden. Der produktive Betrieb setzt Betreiberkonfiguration und die jeweiligen fachlichen Freigaben voraus. Auktionsgebühren und Korrekturen sind integriert und isoliert geprüft. Automatische PayPal-Erstattungen, Bankabgleich und Bitcoin sind mit Testdaten geprüft. Externe Providerabnahmen stehen aus. Treuhand läuft als isolierte Simulation.
 
 Entwicklung mit ausschließlich synthetischen Daten:
 

@@ -1,5 +1,8 @@
 # Umsetzungsbericht: allgemeiner Marktplatz
 
+Dieser Bericht dokumentiert die frühe Implementierungsetappe. Die aktuelle
+Funktionsliste und ausstehenden Betriebsprüfungen stehen in der [Übergabeliste](HANDOVER.md).
+
 Der Entwicklungsbranch `feature/general-marketplace-rebuild` baut auf dem
 wiederhergestellten Stand `7e66f55` und dem bereits hochgeladenen Basiscommit
 `085e4bb` auf. Der aktive Marktplatz enthält allgemeine Waren; historische

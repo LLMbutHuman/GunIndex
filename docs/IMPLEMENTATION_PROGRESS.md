@@ -19,6 +19,8 @@ PHP-Dry-Run prüfte die Ausgabe bei 16 MiB
 Speicherlimit. Die Installer-Probe prüft die Amsterdam-Suche, die
 Quellenanzeige und den Update-Erhalt aller elf Länderquellen.
 [Quelle und Prüfsummen](POSTCODE_SOURCES.md#niederlande)
+[Ubuntu-Installer und Produktionsimage bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45751150681) ·
+[Marktplatzregression bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45751150875)
 
 ## Dänische Postleitzahlen aus DAGI und StatBank
 
@@ -858,10 +860,10 @@ zwei offene oder teilweise umgesetzte nummerierte Anforderungen. Diese
 betreffen die vollständige Sprachabdeckung und einen Treuhandadapter für
 eine freigegebene Infrastruktur.
 
-Die niederländische Länderdatei ist lokal einschließlich einer bytegleichen
-Wiederholung geprüft. Der abschließende Ubuntu-Lauf prüft die elf vorhandenen
-Länderquellen. Als Nächstes die weiterhin offenen Sprach- und Formatprüfungen
-aus `TECHNICAL_ACCEPTANCE.md` abarbeiten.
+Der Ubuntu-Installer und das Update sind mit allen elf Länderquellen geprüft.
+Die Übergabeliste nennt den geprüften Stand zur Testabnahme. Als Nächstes
+folgen die weiterhin offenen Sprach- und Formatprüfungen und die Tests auf
+dem vorgesehenen Zielserver. [Übergabeliste](HANDOVER.md)
 Die Rechtsfassungen benötigen vor Veröffentlichung die Betreiberangaben
 und Prüfung. Fehler durch vorgelagerte Infrastruktur benötigen eine
 Zielsystemabnahme.

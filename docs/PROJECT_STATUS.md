@@ -6,21 +6,19 @@ Von den 26 nummerierten Anforderungen sind **17 technisch implementiert
 und geprüft, 7 technisch umgesetzt mit externer Abnahme und 2 technisch offen
 oder teilweise umgesetzt**. Die offenen Nummern sind 5, vollständige
 Übersetzungen, und 26, die reale Treuhandanbindung. Die Zählung gilt für die
-nummerierte Liste. Weitere Anforderungen umfassen die unabhängige E2EE-Abnahme,
-weitere Länderquellen und die
-Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
+nummerierte Liste. Weitere Anforderungen umfassen die unabhängige E2EE-Abnahme
+und die Betriebsabnahme auf dem vorgesehenen Server. Für die lokale Linux-Testumgebung
 fehlen zum Prüfzeitpunkt eine WSL-Distribution und Docker Desktop.
-[Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
+[Übergabeliste für den Betreiber](HANDOVER.md) · [Aktuelle Abnahmematrix](TECHNICAL_ACCEPTANCE.md)
 
-Neuinstallation und Update wurden mit zehn länderspezifischen PLZ-Quellen
-einschließlich Dänemark geprüft. Der elfte Import für die Niederlande ist
-lokal geprüft. Seine Installationsprobe steht aus.
+Neuinstallation und Update wurden mit allen elf länderspezifischen PLZ-Quellen
+einschließlich Dänemark und der Niederlande geprüft.
 Die Rechtsverwaltung enthält 20 Vorlagen in jeweils acht Sprachen und kann
 sie gesammelt als unveröffentlichte Entwürfe importieren und im gleichen Format
 exportieren. Die E2EE-Suite ist unter Linux mit Chromium, Firefox und WebKit
 bestanden. Native Tests auf Apple-Geräten, fachlich freigegebene Rechtstexte
 und die unabhängige Sicherheitsprüfung bleiben Teil der Abnahme.
-[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45750112803) ·
+[Ubuntu](https://github.com/LLMbutHuman/GunIndex/actions/runs/45751150681) ·
 [Rechtsentwürfe](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705399661) ·
 [E2EE-Browser](https://github.com/LLMbutHuman/GunIndex/actions/runs/45707792187)
 
