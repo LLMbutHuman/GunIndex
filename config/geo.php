@@ -110,7 +110,7 @@ function geo_active_countries(PDO $pdo):array {
 }
 function geo_postcode(PDO $pdo,string $country,string $postal):?array {
     $country=geo_country($country);
-    if(!geo_validate_postcode($country,$postal))throw new InvalidArgumentException('Die Postleitzahl passt nicht zum ausgewählten Land.');
+    if(!geo_validate_postcode($country,$postal))throw new InvalidArgumentException(function_exists('t')?t('Die Postleitzahl passt nicht zum ausgewählten Land.'):'Die Postleitzahl passt nicht zum ausgewählten Land.');
     $q=$pdo->prepare('SELECT p.country_code,p.postal_code,p.city,p.latitude,p.longitude FROM geo_locations p JOIN geo_imports i ON i.id=p.import_id JOIN market_countries c ON c.code=p.country_code WHERE p.country_code=? AND p.postal_code=? AND c.is_active=1 AND i.license_reviewed=1 AND i.is_active=1');
     $q->execute([$country,geo_postcode_key($country,$postal)]);$row=$q->fetch();return $row?:null;
 }
@@ -124,12 +124,16 @@ function geo_distance_km(float $lat1,float $lon1,float $lat2,float $lon2):float 
 }
 function geo_distance_label(mixed $distance):string {
     if(!is_numeric($distance)||!is_finite((float)$distance)||(float)$distance<0)return function_exists('t')?t('Entfernung nicht verfügbar'):'Entfernung nicht verfügbar';
-    $value=(float)$distance<10?number_format((float)$distance,1,',','.'):number_format((float)$distance,0,',','.');
+    $locale=function_exists('i18n_locale')?i18n_locale():'de';
+    $km=(float)$distance;
+    $group=match($locale){'en'=>',','fr'=>"\u{202F}",'cs','pl'=>"\u{00A0}",default=>'.'};
+    if(in_array($locale,['pl','it'],true)&&round($km)<10000)$group='';
+    $value=number_format($km,$km<10?1:0,$locale==='en'?'.':',',$group);
     return function_exists('t')?t('ca. {distance} km Luftlinie',['distance'=>$value]):'ca. '.$value.' km Luftlinie';
 }
 function geo_request_origin(PDO $pdo,array $input):?array {
     $postal=$input['zip']??'';$country=$input['origin_country']??($input['country_code']??geo_country());
-    if(!is_string($postal)||!is_string($country))throw new InvalidArgumentException('Ungültiger Standortfilter.');
+    if(!is_string($postal)||!is_string($country))throw new InvalidArgumentException(function_exists('t')?t('market_search.location_invalid'):'Ungültiger Standortfilter.');
     if(trim($postal)==='')return null;
     return geo_postcode($pdo,geo_country($country),$postal);
 }

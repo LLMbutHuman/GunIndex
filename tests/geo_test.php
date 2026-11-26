@@ -14,6 +14,15 @@ geo_test('country_postal_formats_and_leading_zero',static function():void {
 geo_test('haversine_zero_known_degree_and_antimeridian',static function():void {geo_check(geo_distance_km(0,0,0,0)===0.0);geo_check(abs(geo_distance_km(0,0,1,0)-111.195080)<0.001);$wrapped=geo_distance_km(0,179.9,0,-179.9);geo_check($wrapped>22&&$wrapped<23);geo_check(!geo_coordinates_valid(91,0));geo_check(!geo_coordinates_valid('NaN',0));});
 geo_test('bounding_box_keeps_large_circle_and_polar_edges',static function():void {$box=geo_bounding_box(50,6,2000);geo_check($box['min_lat']<33&&$box['max_lat']>67);geo_check($box['max_lon']>34);$polar=geo_bounding_box(89,179,500);geo_check($polar['max_lat']===90.0);geo_check($polar['max_lon']>180);});
 geo_test('unknown_distance_is_never_reported_as_zero',static function():void {$_SESSION['locale']='de';geo_check(geo_distance_label(null)==='Entfernung nicht verfügbar');geo_check(str_contains(geo_distance_label(0),'0,0'));});
+geo_test('distance_numbers_follow_all_eight_interface_languages',static function():void {
+ foreach(['de'=>'1.234','en'=>'1,234','fr'=>"1\u{202F}234",'nl'=>'1.234','pl'=>'1234','cs'=>"1\u{00A0}234",'da'=>'1.234','it'=>'1234'] as $locale=>$large){
+  $_SESSION['locale']=$locale;
+  geo_check(str_contains(geo_distance_label(2.4),$locale==='en'?'2.4':'2,4'));
+  geo_check(str_contains(geo_distance_label(1234),$large));
+ }
+ geo_check(str_contains(geo_distance_label(12345),'12.345'));
+ $_SESSION['locale']='de';
+});
 geo_test('sorted_postcode_import_validates_large_sources_with_bounded_memory',static function():void {
  $file=tempnam(sys_get_temp_dir(),'gi_geo_');geo_check(is_string($file));
  $header="postal_code;city;latitude;longitude\n";

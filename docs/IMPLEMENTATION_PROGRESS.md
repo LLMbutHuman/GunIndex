@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Entfernungsangaben in der gewählten Sprache
+
+Die Marktplatzsuche formatiert Dezimal- und Tausendertrennzeichen für alle
+acht Sprachen. Fehlende Koordinaten erscheinen als unbekannte Entfernung.
+Fehler bei PLZ und Standortfiltern nutzen die vorhandenen Sprachfassungen.
+Zehn lokale Geo- und Sprachtests
+bestanden, einschließlich der acht Entfernungsformate.
+[Unicode CLDR-Zahlenformate](https://www.unicode.org/cldr/charts/49/summary/fr.html)
+
 ## Stillgelegte Admin-Skripte aus Produktionspaketen ausgeschlossen
 
 Vier historische Admin-Dateien bleiben im Git-Quellbaum erhalten. Der
