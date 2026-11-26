@@ -45,6 +45,13 @@ Zustimmungsmeldung fehlte. Beide Formulare prüfen die ausdrückliche Zustimmung
 wieder vor den übrigen Eingaben.
 [Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45745402389)
 [Migration und Produktionsimage bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45745402421)
+[Vollständige Regression nach Korrektur bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45745897505)
+
+Die Browserprüfung öffnet beide Leistungsbedingungen mit 390 Pixeln für
+alle acht Sprachen und prüft die Pflichtbestätigung, sichtbare Texte und
+Überbreite. Sie aktiviert die manuelle Zahlungsmethode nur in der
+synthetischen Datenbank, mit einer `example.invalid`-Adresse. Die
+Browser-Syntaxprüfung ist lokal bestanden.
 
 ## Rechtsübersicht auf kleinen Bildschirmen
 

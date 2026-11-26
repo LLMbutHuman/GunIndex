@@ -146,6 +146,52 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   const name='Testmarkt '+crypto.randomBytes(4).toString('hex');await page.locator('[name=brand_name]').fill(name);await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');await phone.goto(origin+'/');assert((await phone.locator('title').textContent()).includes(name));
   await page.goto(origin+'/admin/settings.php');await page.locator('[name=brand_name]').fill(previous);await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');await page.goto(origin+'/admin/categories.php');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Admin table must scroll inside its panel');await page.screenshot({path:__dirname+'/.runtime/admin-categories.png',fullPage:true});journeys.push('admin_brand_categories');
   await phone.goto(origin+'/user/billing.php');assert((await phone.locator('main').innerText()).includes('noch nicht aktiviert'));journeys.push('manual_payment_gate');
+  fixture('seed_listing',{username:buyer.username,title:'Fixture '+crypto.randomBytes(8).toString('hex')+' Checkout',type:'fixed',category_id:Number(category)});
+  const paymentChecks=['manual_paypal_enabled','manual_paypal_approved','manual_tax_reviewed','business_promotions_enabled'];
+  const paymentInputs=['manual_paypal_recipient','manual_tax_bps'];
+  const settings=origin+'/admin/settings.php';
+  const control=name=>page.locator('form.settings-form input[name="'+name+'"]'+(paymentChecks.includes(name)?'[type=checkbox]':''));
+  const saveSettings=async()=>{
+   const response=await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),page.getByRole('button',{name:'Änderungen speichern',exact:true}).click()]);
+   assert.strictEqual(response[0].status(),200);
+  };
+  await page.goto(settings);
+  const originalChecks=await Promise.all(paymentChecks.map(name=>control(name).isChecked()));
+  const originalInputs=await Promise.all(paymentInputs.map(name=>control(name).inputValue()));
+  try{
+   for(const name of paymentChecks)await control(name).check();
+   await control('manual_paypal_recipient').fill('checkout@example.invalid');
+   await control('manual_tax_bps').fill('1900');
+   await saveSettings();
+   const content={billing:new Set(),promotions:new Set()};
+   for(const locale of ['en','fr','nl','pl','cs','da','it','de']){
+    await phone.goto(origin+'/user/billing.php');await phone.locator('.market-switcher summary').click();
+    const language=phone.locator('form[action="/user/language.php"]');await language.locator('[name=locale]').selectOption(locale);
+    await Promise.all([phone.waitForNavigation({waitUntil:'networkidle'}),language.locator('button[type=submit]').click()]);
+    for(const [name,option,version] of [['billing','bump_pack','manual-bump-1.2'],['promotions','banner_monthly','premium-1.1']]){
+     await phone.goto(origin+'/user/'+name+'.php');
+     assert.strictEqual(await phone.locator('html').getAttribute('lang'),locale);
+     const form=phone.locator('main form:has([name=action][value=order])');
+     await form.locator('[name=service][value='+option+']').check();
+     const accept=form.locator('[name=accept_terms]');
+     assert.strictEqual(await accept.isChecked(),false);
+     assert.strictEqual(await accept.evaluate(node=>node.checkValidity()),false);
+     const terms=form.locator('input[name="service_terms['+option+']"] + details');
+     await terms.locator('summary').click();
+     const text=await terms.locator('p').innerText();
+     assert(text.includes(version)&&!/(billing_customer|promotion)\.[a-z_]+|\{[a-z_]+\}/.test(text),'Untranslated checkout copy '+locale);
+     content[name].add(text);
+     assert(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Checkout mobile overflow '+locale+' '+name);
+    }
+   }
+   assert.strictEqual(content.billing.size,8);assert.strictEqual(content.promotions.size,8);
+   journeys.push('localized_paid_checkout_terms_eight_mobile_locales');
+  }finally{
+   await page.goto(settings);
+   for(const [i,name] of paymentChecks.entries())await control(name).setChecked(originalChecks[i]);
+   for(const [i,name] of paymentInputs.entries())await control(name).fill(originalInputs[i]);
+   await saveSettings();
+  }
   const reduced=await browser.newContext({reducedMotion:'reduce',viewport:{width:390,height:844}});const calm=await reduced.newPage();monitor(calm);await calm.goto(origin+'/');assert(await calm.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches));await reduced.close();journeys.push('reduced_motion');
   assert.deepStrictEqual(errors,[]);assert.deepStrictEqual(failures,[]);assert.deepStrictEqual(external,[]);console.log(JSON.stringify({result:'PASS',journeys,js_errors:0,server_errors:0,external_requests:0}));
  }finally{await browser.close();}
