@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'Un mese di calendario',
+    'promotion.seven_days' => 'Sette giorni',
+    'promotion.order_terms' => '{service} nel mercato dell’annuncio scelto. Durata {duration}. In questa sezione sono disponibili al massimo {limit} spazi. La prenotazione dura {minutes} minuti dall’ordine. La ricezione del pagamento viene verificata. Se il pagamento è confermato in tempo, devi richiedere espressamente l’avvio entro {days} giorni. In caso di pagamento tardivo o prenotazione scaduta, il gestore definirà l’erogazione o il rimborso. Le pubblicità sono contrassegnate come «Sponsorizzato». Clic, visibilità e vendite non sono garantiti. I diritti dei consumatori previsti dalla legge restano applicabili. Con questo ordine non chiedo l’avvio anticipato del servizio.',
     'promotion.paid_title' => 'Posizionamento pagato',
     'promotion.paid_body' => 'Il pagamento è stato verificato. Attiva il posizionamento entro {days} giorni.',
     'promotion.review_title' => 'Pagamento da verificare ulteriormente',

@@ -9,7 +9,6 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
     try{
         $action=post_string('action');
         if($action==='order'){
-            if(post_string('accept_terms')!=='1')throw new InvalidArgumentException(t('billing_customer.terms_required'));
             $key=post_string('order_key',64);if(!hash_equals($_SESSION['promotion_order_key'],$key))throw new DomainException(t('billing_customer.reload'));
             $service=post_string('service',24);business_scope($service);
             $listing=post_string('listing_id',20);$campaign=post_string('campaign_id',20);
@@ -39,10 +38,9 @@ include __DIR__.'/../includes/header.php';
 <form method="post" class="form-grid"><?=csrf_field()?><input type="hidden" name="action" value="order"><input type="hidden" name="order_key" value="<?=h($_SESSION['promotion_order_key'])?>">
 <?php consent_form($contractDocuments,i18n_locale());?>
 <label class="field"><?=h(t('billing_customer.listing'))?><select name="listing_id" required><?php foreach($listings as $listing):?><option value="<?=(int)$listing['id']?>"><?=h($listing['title'].' · '.$listing['country_code'].' · '.$listing['category_name'])?></option><?php endforeach;?></select></label>
-<label class="field"><?=h(t('payment_customer.service'))?><select name="service"><?php foreach(['category_top','home_top','banner_monthly'] as $service):$quote=fees_quote($service,null,$pdo);?><option value="<?=h($service)?>"><?=h(payments_service_label($service).' · '.money_eur($quote['gross_cents']))?></option><?php endforeach;?></select></label>
 <label class="field"><?=h(t('promotion.approved_banner'))?> <small><?=h(t('promotion.banner_help'))?></small><select name="campaign_id"><option value=""><?=h(t('promotion.no_banner'))?></option><?php foreach($campaigns as $campaign):?><option value="<?=(int)$campaign['id']?>"><?=h($campaign['title'].' · '.$campaign['country_code'])?></option><?php endforeach;?></select></label>
-<p><?=h(t('promotion.reservation_help',['minutes'=>business_reservation_minutes($pdo),'days'=>BUSINESS_PAID_START_DAYS]))?></p>
-<label lang="de"><input type="checkbox" name="accept_terms" value="1" required> Ich bestelle die ausgewählte Leistung zum angegebenen Gesamtpreis, bestätige die <a href="/marketplace/policy.php">Bedingungen</a> und weiß, dass keine bestimmte Reichweite, Klickzahl oder Transaktion garantiert wird. Die Bestellung verlangt noch keinen vorzeitigen Leistungsbeginn.</label>
+<p><a href="/marketplace/policy.php"><?=h(t('billing_customer.read_terms'))?></a></p>
+<?php manual_checkout_fields($pdo,['category_top','home_top','banner_monthly']);?>
 <button class="button" type="submit"><?=h(business_label('Zahlungspflichtig reservieren'))?></button></form><?php endif;?></section>
 <section class="panel"><h2><?=h(t('promotion.bookings'))?></h2><?php if(!$bookings):?><p><?=h(t('promotion.empty'))?></p><?php else:?>
 <?php foreach($bookings as $booking):?><article class="panel"><p class="eyebrow"><?=h($booking['country_code'].' · '.payments_service_label($booking['scope']))?></p><h3><?=h($booking['title'])?></h3><p><?=h(business_state_label($booking['status']))?> · <?=h(money_eur((int)$booking['gross_cents']))?></p>

@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Środki na jedno podbicie ogłoszenia.',
+    'billing_customer.bump_terms_pack' => 'Środki na trzy podbicia ogłoszenia.',
+    'billing_customer.bump_terms' => 'Ogłoszenie można podbić raz na 72 godziny. Podbicie zmienia tylko miejsce ogłoszenia na liście posortowanej według aktualności. Zasięg i sprzedaż nie są gwarantowane.',
+    'billing_customer.verify_direct' => 'Płatność jest weryfikowana na podstawie faktycznego wpływu środków wybraną metodą.',
+    'billing_customer.verify_paypal' => 'Operator sprawdza, czy płatność PayPal rzeczywiście wpłynęła.',
+    'billing_customer.bump_activation' => 'Środki są udostępniane po weryfikacji płatności i można je następnie aktywować osobno. Ustawowe prawa konsumenta pozostają w mocy. Składając zamówienie, nie wnoszę o wcześniejsze rozpoczęcie świadczenia usługi.',
+    'billing_customer.terms_version' => 'Wersja {version}.',
+    'billing_customer.service_terms' => 'Warunki usługi {service}',
     'billing_customer.title' => 'Podbicia i zlecenia płatności',
     'billing_customer.eyebrow' => 'Zwiększ widoczność',
     'billing_customer.heading' => 'Podbicia ogłoszeń',

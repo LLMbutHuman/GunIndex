@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'Eén kalendermaand',
+    'promotion.seven_days' => 'Zeven dagen',
+    'promotion.order_terms' => '{service} op de markt van de gekozen advertentie. Looptijd {duration}. Deze rubriek heeft maximaal {limit} plaatsen. Vanaf de bestelling blijft de reservering {minutes} minuten geldig. De ontvangst van de betaling wordt gecontroleerd. Is de betaling op tijd bevestigd, dan moet u de start binnen {days} dagen uitdrukkelijk aanvragen. Bij een late betaling of verlopen reservering regelt de beheerder de uitvoering of terugbetaling. Reclame krijgt het label ‘Gesponsord’. Klikken, bereik en verkoop zijn niet gegarandeerd. Wettelijke consumentenrechten blijven gelden. Met deze bestelling vraag ik niet om een vervroegde start.',
     'promotion.paid_title' => 'Plaatsing betaald',
     'promotion.paid_body' => 'De betaling is gecontroleerd. Start je plaatsing binnen {days} dagen.',
     'promotion.review_title' => 'Betaling vereist nader onderzoek',

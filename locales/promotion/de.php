@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'Ein Kalendermonat',
+    'promotion.seven_days' => 'Sieben Tage',
+    'promotion.order_terms' => '{service} im Markt des ausgewählten Inserats. Laufzeit {duration}. Für diesen Bereich stehen höchstens {limit} Plätze zur Verfügung. Die Reservierung gilt {minutes} Minuten ab Bestellung. Der Zahlungseingang wird geprüft. Nach rechtzeitiger Bestätigung muss der Start innerhalb von {days} Tagen ausdrücklich angefordert werden. Bei verspätetem Zahlungseingang oder abgelaufener Reservierung klärt der Betreiber die Erfüllung oder Erstattung. Werbung wird als „Gesponsert“ gekennzeichnet. Klicks, Reichweite und Verkauf sind nicht garantiert. Gesetzliche Verbraucherrechte bleiben bestehen. Mit dieser Bestellung beantrage ich keinen vorzeitigen Leistungsbeginn.',
     'promotion.paid_title' => 'Platzierung bezahlt',
     'promotion.paid_body' => 'Die Zahlung wurde bestätigt. Starte deine Platzierung bitte innerhalb von {days} Tagen.',
     'promotion.review_title' => 'Zahlung erfordert weitere Prüfung',

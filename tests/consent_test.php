@@ -4,6 +4,7 @@ if(PHP_SAPI!=='cli'){http_response_code(404);exit(2);}
 require_once __DIR__.'/../config/consent.php';
 require_once __DIR__.'/../config/functions.php';
 require_once __DIR__.'/../config/settings.php';
+require_once __DIR__.'/../config/manual_payments.php';
 $passed=0;
 function consent_test(string $name,callable $run):void {global $passed;try{$run();$passed++;echo 'PASS '.$name."\n";}catch(Throwable $e){fwrite(STDERR,'FAIL '.$name.' '.get_class($e).' at '.$e->getLine()."\n");exit(1);}}
 function consent_assert(bool $ok):void {if(!$ok)throw new RuntimeException('Consent assertion failed.');}
@@ -38,5 +39,21 @@ consent_test('paid_start_binds_service_language_and_exact_displayed_notice',stat
   consent_reject(static fn()=>consent_start_check('bump',$input));
  }
  unset($_SESSION['locale']);
+});
+consent_test('all_eight_languages_have_distinct_complete_paid_order_terms',static function():void {
+ $single=$pack=$placements=[];
+ foreach(i18n_locales() as $locale=>$_) {
+  $_SESSION['locale']=$locale;
+  $single[]=manual_terms(1);
+  $pack[]=manual_terms(3,true);
+  consent_assert(manual_terms(1)!==manual_terms(3));
+  consent_assert(str_contains(manual_terms(1),'manual-bump-1.2')&&str_contains(manual_terms(1),'PayPal'));
+  consent_assert(str_contains(manual_terms(3,true),'manual-bump-1.3')&&!str_contains(manual_terms(3,true),'PayPal'));
+  $terms=t('promotion.order_terms',['service'=>'SERVICE','duration'=>t('promotion.calendar_month'),'limit'=>2,'minutes'=>1440,'days'=>7]);
+  consent_assert(!str_contains($terms,'{')&&str_contains($terms,'SERVICE')&&str_contains($terms,'1440'));
+  $placements[]=$terms;
+ }
+ unset($_SESSION['locale']);
+ consent_assert(count(array_unique($single))===8&&count(array_unique($pack))===8&&count(array_unique($placements))===8);
 });
 echo 'Consent checks passed: '.$passed."\n";

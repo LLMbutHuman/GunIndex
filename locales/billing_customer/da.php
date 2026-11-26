@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Fremhævningskredit til én aktivering.',
+    'billing_customer.bump_terms_pack' => 'Fremhævningskreditter til tre aktiveringer.',
+    'billing_customer.bump_terms' => 'En annonce kan rykkes op én gang hver 72. time. Oprykningen ændrer kun placeringen, når annoncerne sorteres efter aktualitet. Rækkevidde og salg er ikke garanteret.',
+    'billing_customer.verify_direct' => 'Betalingen kontrolleres ved at kontrollere, at pengene er modtaget via den valgte betalingsmetode.',
+    'billing_customer.verify_paypal' => 'Operatøren kontrollerer, at PayPal-betalingen faktisk er modtaget.',
+    'billing_customer.bump_activation' => 'Kreditterne stilles til rådighed efter kontrol af betalingen og kan derefter aktiveres separat. Lovbestemte forbrugerrettigheder gælder fortsat. Med denne bestilling anmoder jeg ikke om, at leveringen begynder før tid.',
+    'billing_customer.terms_version' => 'Version {version}.',
+    'billing_customer.service_terms' => 'Vilkår for {service}',
     'billing_customer.title' => 'Annoncefremhævelser og betalingsordrer',
     'billing_customer.eyebrow' => 'Øg synligheden',
     'billing_customer.heading' => 'Annoncefremhævelser',

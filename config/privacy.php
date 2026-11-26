@@ -255,7 +255,7 @@ function privacy_export(PDO $pdo,int $userId,string $password)
             'dealer_stock_activity'=>['market_dealer_stock_movements','actor_id=?',[$userId],['id','owner_id','item_id','delta','quantity_after','reason','movement_kind','created_at']],
             'campaigns'=>['market_campaigns','user_id=?',[$userId],['id','country_code','category_id','title','target_url','status','moderation_reason','created_at','updated_at']],
             'premium_bookings'=>['market_premium_bookings','user_id=?',[$userId],['id','invoice_id','listing_id','campaign_id','country_code','scope','category_id','status','reserved_until','starts_at','ends_at','immediate_start_at','created_at']],
-            'manual_orders'=>['market_manual_orders','user_id=?',[$userId],['invoice_id','listing_id','reference','recipient','quantity','net_cents','tax_cents','tax_bps','terms_hash','terms_text','customer_claimed_at','created_at'],'invoice_id'],
+            'manual_orders'=>['market_manual_orders','user_id=?',[$userId],['invoice_id','listing_id','reference','recipient','quantity','net_cents','tax_cents','tax_bps','terms_hash','terms_text','terms_language','customer_claimed_at','created_at'],'invoice_id'],
             'bump_credits'=>['market_bump_credits','user_id=?',[$userId],['id','invoice_id','quantity','remaining','created_at']],
             'bump_history'=>['market_bump_events','user_id=?',[$userId],['id','credit_id','listing_id','created_at']],
             'cases'=>['market_reports','(reporter_id=? OR subject_user_id=?)',[$userId,$userId],['id','case_code','target_type','target_id','reason','status','decision_action','decision_reason','appeal_text','appeal_resolution','submitted_evidence','created_at','updated_at']],

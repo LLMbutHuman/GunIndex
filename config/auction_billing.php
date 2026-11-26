@@ -129,8 +129,8 @@ function auction_billing_charge(PDO $pdo,int $listingId,string $kind,?int $sale)
         $snapshot['render_labels']=finance_pdf_labels($snapshot['locale']);
         $json=auction_billing_json($snapshot);
         $pdo->prepare('INSERT INTO market_invoice_snapshots(invoice_id,user_id,payload_ciphertext,payload_hash) VALUES (?,?,?,?)')->execute([$invoiceId,$seller,crypto_encrypt('finance',$json),hash('sha256',$json)]);
-        $pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,request_key) VALUES (?,?,?,?,?,1,?,?,?,?,?,?)')
-            ->execute([$invoiceId,$seller,$listingId,$reference,$contract['recipient'],$tax['net_cents'],$tax['tax_cents'],$contract['tax_bps'],hash('sha256',$contract['terms']),$contract['terms'],hash('sha256','auction-fee:'.$listingId.':'.$kind)]);
+        $pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,terms_language,request_key) VALUES (?,?,?,?,?,1,?,?,?,?,?,?,?)')
+            ->execute([$invoiceId,$seller,$listingId,$reference,$contract['recipient'],$tax['net_cents'],$tax['tax_cents'],$contract['tax_bps'],hash('sha256',$contract['terms']),$contract['terms'],$contract['locale'],hash('sha256','auction-fee:'.$listingId.':'.$kind)]);
         // Copy the historical acceptance, never require consent to a later document version.
         $pdo->prepare("INSERT INTO market_contract_receipts(user_id,scope,context_key,invoice_id,document_id,content_hash) SELECT ?,'checkout',?,?,document_id,content_hash FROM market_auction_fee_acceptances WHERE listing_id=?")
             ->execute([$seller,'invoice:'.$invoiceId,$invoiceId,$listingId]);

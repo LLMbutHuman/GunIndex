@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'Un mois calendaire',
+    'promotion.seven_days' => 'Sept jours',
+    'promotion.order_terms' => '{service} sur le marché de l’annonce sélectionnée. Durée de la prestation {duration}. Cette zone compte au maximum {limit} emplacements. La réservation est valable {minutes} minutes à compter de la commande. La réception du paiement est vérifiée. Si le paiement est confirmé à temps, vous devez demander expressément le démarrage dans les {days} jours. En cas de paiement tardif ou d’expiration de la réservation, l’exploitant règle l’exécution de la prestation ou le remboursement. Les publicités portent la mention « Sponsorisé ». Les clics, la visibilité et les ventes ne sont pas garantis. Les droits légaux des consommateurs restent applicables. Par cette commande, je ne demande pas le démarrage anticipé de la prestation.',
     'promotion.paid_title' => 'Mise en avant payée',
     'promotion.paid_body' => 'Le paiement a été vérifié. Lancez votre mise en avant dans un délai de {days} jours.',
     'promotion.review_title' => 'Paiement à examiner',

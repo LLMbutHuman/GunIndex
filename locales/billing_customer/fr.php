@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Crédit de mise en avant pour une activation.',
+    'billing_customer.bump_terms_pack' => 'Crédits de mise en avant pour trois activations.',
+    'billing_customer.bump_terms' => 'Une mise en avant est possible par annonce toutes les 72 heures. Elle modifie uniquement la position dans le tri par date. La visibilité et la vente ne sont pas garanties.',
+    'billing_customer.verify_direct' => 'Le paiement est vérifié d’après la réception effective des fonds par le moyen choisi.',
+    'billing_customer.verify_paypal' => 'L’exploitant vérifie la réception effective du paiement PayPal.',
+    'billing_customer.bump_activation' => 'Les crédits sont disponibles après vérification du paiement et peuvent ensuite être activés séparément. Les droits légaux des consommateurs restent applicables. Par cette commande, je ne demande pas le démarrage anticipé de la prestation.',
+    'billing_customer.terms_version' => 'Version {version}.',
+    'billing_customer.service_terms' => 'Conditions de la prestation {service}',
     'billing_customer.title' => 'Remontées et ordres de paiement',
     'billing_customer.eyebrow' => 'Améliorer la visibilité',
     'billing_customer.heading' => 'Remontées d’annonces',

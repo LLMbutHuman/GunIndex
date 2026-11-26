@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Boost credit for one activation.',
+    'billing_customer.bump_terms_pack' => 'Boost credits for three activations.',
+    'billing_customer.bump_terms' => 'You can boost each listing once every 72 hours. A boost only changes the listing’s position when sorted by recency. Reach and sales are not guaranteed.',
+    'billing_customer.verify_direct' => 'Payment is verified against the actual receipt of funds through the selected payment method.',
+    'billing_customer.verify_paypal' => 'The operator verifies that the PayPal payment has actually been received.',
+    'billing_customer.bump_activation' => 'Credits are made available after payment is verified and can then be activated separately. Statutory consumer rights apply. By placing this order I do not request that the service start early.',
+    'billing_customer.terms_version' => 'Version {version}.',
+    'billing_customer.service_terms' => 'Service terms for {service}',
     'billing_customer.title' => 'Listing boosts & payment orders',
     'billing_customer.eyebrow' => 'Improve visibility',
     'billing_customer.heading' => 'Listing boosts',

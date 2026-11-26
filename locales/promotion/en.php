@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'One calendar month',
+    'promotion.seven_days' => 'Seven days',
+    'promotion.order_terms' => '{service} in the market of the selected listing. Duration {duration}. This area has a maximum of {limit} slots. The reservation is held for {minutes} minutes from the order. Receipt of payment is verified. If payment is confirmed in time, you must explicitly request the start within {days} days. If payment arrives late or the reservation expires, the operator will resolve delivery or a refund. Advertising is marked as Sponsored. Clicks, reach and sales are not guaranteed. Statutory consumer rights apply. By placing this order I do not request that the service start early.',
     'promotion.paid_title' => 'Placement paid',
     'promotion.paid_body' => 'Payment was verified. Start your placement within {days} days.',
     'promotion.review_title' => 'Payment needs further review',

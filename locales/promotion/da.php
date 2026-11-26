@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'En kalendermåned',
+    'promotion.seven_days' => 'Syv dage',
+    'promotion.order_terms' => '{service} på markedet for den valgte annonce. Varighed {duration}. Der er højst {limit} pladser i dette område. Reservationen gælder i {minutes} minutter fra bestilling. Betalingens modtagelse kontrolleres. Bekræftes betalingen i tide, skal du udtrykkeligt anmode om opstart inden for {days} dage. Ved sen betaling eller udløbet reservation afklarer operatøren levering eller tilbagebetaling. Reklamer er mærket »Sponsoreret«. Klik, rækkevidde og salg er ikke garanteret. Lovbestemte forbrugerrettigheder gælder fortsat. Med denne bestilling anmoder jeg ikke om, at leveringen begynder før tid.',
     'promotion.paid_title' => 'Placering betalt',
     'promotion.paid_body' => 'Betalingen er verificeret. Start din placering inden for {days} dage.',
     'promotion.review_title' => 'Betaling kræver nærmere kontrol',

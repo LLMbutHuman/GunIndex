@@ -22,10 +22,13 @@ function business_reason(PDO $pdo): ?string
     return direct_payment_reason($pdo);
 }
 
-function business_terms(PDO $pdo,string $scope,array $listing):string
+function business_terms(PDO $pdo,string $scope):string
 {
-    $spec=business_scope($scope);$country=business_country($listing['country_code']??'DE');
-    return $spec['label'].' für '. $country .', Laufzeit '.$spec['duration'].'. Maximal '.$spec['limit'].' Plätze in diesem Bereich. Reservierung '.business_reservation_minutes($pdo).' Minuten ab Bestellung. Zahlung wird manuell geprüft. Nach rechtzeitiger Freigabe muss der Beginn innerhalb von sieben Tagen ausdrücklich angefordert werden. Bei verspätetem Eingang bzw. abgelaufener Reservierung wird keine Überbuchung vorgenommen; Erfüllung oder Erstattung muss vom Betreiber geklärt werden. Werbung ist als Gesponsert gekennzeichnet. Keine Garantie bestimmter Klick-, Reichweiten- oder Verkaufszahlen. Gesetzliche Verbraucherrechte bleiben bestehen; kein vorzeitiger Beginn wird allein durch diese Bestellung erklärt. Version premium-1.0.';
+    $spec=business_scope($scope);
+    return t('promotion.order_terms',[
+        'service'=>$spec['label'],'duration'=>t($scope==='banner_monthly'?'promotion.calendar_month':'promotion.seven_days'),
+        'limit'=>$spec['limit'],'minutes'=>business_reservation_minutes($pdo),'days'=>BUSINESS_PAID_START_DAYS,
+    ]).' '.t('billing_customer.terms_version',['version'=>'premium-1.1']);
 }
 
 function business_label(string $label):string {return function_exists('t')?t($label):$label;}
@@ -33,9 +36,9 @@ function business_label(string $label):string {return function_exists('t')?t($la
 function business_scope(string $scope): array
 {
     $spec = match ($scope) {
-        'category_top' => ['limit'=>3, 'label'=>'Kategorie-Top', 'duration'=>'Sieben Tage'],
-        'home_top' => ['limit'=>2, 'label'=>'Startseiten-Top', 'duration'=>'Sieben Tage'],
-        'banner_monthly' => ['limit'=>2, 'label'=>'Händlerbanner', 'duration'=>'Ein Kalendermonat'],
+        'category_top' => ['limit'=>3, 'label'=>'Kategorie-Top'],
+        'home_top' => ['limit'=>2, 'label'=>'Startseiten-Top'],
+        'banner_monthly' => ['limit'=>2, 'label'=>'Händlerbanner'],
         default => throw new InvalidArgumentException(t('promotion.invalid_selection')),
     };
     $spec['label']=business_label($spec['label']);return $spec;

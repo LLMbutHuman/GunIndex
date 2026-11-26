@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Manual payment and private communication regressions; no PayPal requests."""
-import re,secrets,unittest
+import hashlib,re,secrets,unittest
 import http_test as cases
-from http_test import Browser,fixture,service_start_fields
+from http_test import Browser,fixture,service_start_fields,service_terms_fields
 
 class ManualHTTP(unittest.TestCase):
  user=cases.MarketplaceHTTP.user
@@ -24,6 +24,7 @@ class ManualHTTP(unittest.TestCase):
   listing=self.seed_listing(user,type=listing_type);browser=user['browser'];body=browser.request('/user/billing.php')[2]
   key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
   fields=dict(csrf_token=browser.token('/user/billing.php'),action='order',order_key=key,listing_id=listing,service=service,accept_terms='1')
+  fields.update(service_terms_fields(body,service))
   status,headers,_=browser.request('/user/billing.php',fields);self.assertEqual(303,status)
   invoice=int(headers['Location'].split('order=')[1]);state=fixture('manual_state',username=user['username'],invoice_id=invoice)
   return invoice,listing,state
@@ -65,6 +66,30 @@ class ManualHTTP(unittest.TestCase):
   values=self.settings(admin);values['fee_bump_single_cents']='299';self.assertEqual(200,admin['browser'].request('/admin/settings.php',values)[0])
   self.assertEqual(199,int(fixture('manual_state',username=user['username'],invoice_id=invoice)['gross_cents']))
   _,_,new=self.order(user);self.assertEqual(299,int(new['gross_cents']))
+ def test_order_binds_price_service_and_original_language(self):
+  admin=self.enabled();user=self.user();browser=user['browser'];listing=self.seed_listing(user);route='/user/billing.php'
+  def language(locale):
+   self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(route),locale=locale,market_country='DE',return_path=route))[0])
+  language('fr');body=browser.request(route)[2]
+  self.assertIn('Crédits de mise en avant pour trois activations.',body)
+  key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
+  post=dict(csrf_token=browser.token(route),action='order',order_key=key,listing_id=listing,service='bump_pack',accept_terms='1')
+  quoted=service_terms_fields(body,'bump_pack')
+  self.assertEqual(422,browser.request(route,post)[0])
+  self.assertEqual(422,browser.request(route,{**post,**quoted,'accept_terms':'0'})[0])
+  self.assertEqual(422,browser.request(route,{**post,**quoted,'service':'bump_single'})[0])
+  language('en');self.assertEqual(422,browser.request(route,{**post,**quoted})[0]);language('fr')
+  values=self.settings(admin);values['fee_bump_pack_cents']='599';self.assertEqual(200,admin['browser'].request('/admin/settings.php',values)[0])
+  self.assertEqual(422,browser.request(route,{**post,**quoted})[0])
+  latest=service_terms_fields(browser.request(route)[2],'bump_pack')
+  self.assertNotEqual(quoted,latest)
+  status,headers,_=browser.request(route,{**post,**latest});self.assertEqual(303,status)
+  invoice=int(headers['Location'].split('order=')[1]);snapshot=fixture('manual_state',username=user['username'],invoice_id=invoice)
+  self.assertEqual(599,int(snapshot['gross_cents']));self.assertEqual('fr',snapshot['terms_language'])
+  self.assertIn('Crédits de mise en avant pour trois activations.',snapshot['terms_text'])
+  self.assertEqual(hashlib.sha256(snapshot['terms_text'].encode()).hexdigest(),snapshot['terms_hash'])
+  language('en');saved=browser.request(headers['Location'])[2]
+  self.assertIn('id="saved-order-terms" lang="fr">Crédits de mise en avant pour trois activations.',saved)
  def test_bump_only_after_review_and_obeys_72_hours(self):
   admin=self.enabled();user=self.user();invoice,listing,state=self.order(user,'bump_pack',listing_type='auction');browser=user['browser']
   bidder=self.user();self.assertEqual(303,self.bid(bidder,listing,'20.00')[0])

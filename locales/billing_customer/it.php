@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Credito di rilancio per una attivazione.',
+    'billing_customer.bump_terms_pack' => 'Crediti di rilancio per tre attivazioni.',
+    'billing_customer.bump_terms' => 'Puoi rilanciare ogni annuncio una volta ogni 72 ore. Il rilancio modifica soltanto la posizione nell’ordinamento per data. La visibilità e la vendita non sono garantite.',
+    'billing_customer.verify_direct' => 'Il pagamento viene verificato accertando l’effettiva ricezione dei fondi tramite il metodo scelto.',
+    'billing_customer.verify_paypal' => 'Il gestore verifica che il pagamento PayPal sia stato effettivamente ricevuto.',
+    'billing_customer.bump_activation' => 'I crediti sono disponibili dopo la verifica del pagamento e possono poi essere attivati separatamente. I diritti dei consumatori previsti dalla legge restano applicabili. Con questo ordine non chiedo l’avvio anticipato del servizio.',
+    'billing_customer.terms_version' => 'Versione {version}.',
+    'billing_customer.service_terms' => 'Condizioni del servizio {service}',
     'billing_customer.title' => 'Promozioni e ordini di pagamento',
     'billing_customer.eyebrow' => 'Aumenta la visibilità',
     'billing_customer.heading' => 'Promozioni degli annunci',

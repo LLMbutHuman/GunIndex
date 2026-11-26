@@ -57,7 +57,7 @@ function auction_fee_correct(PDO $pdo,int $actor,int $invoiceId,int $reduction,s
     $pdo->beginTransaction();
     try {
         governance_assert_actor($pdo,$actor,'finance.manage');
-        $q=$pdo->prepare('SELECT i.*,o.reference,o.recipient,o.listing_id,o.terms_hash,o.terms_text,o.customer_claimed_at FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? FOR UPDATE');
+        $q=$pdo->prepare('SELECT i.*,o.reference,o.recipient,o.listing_id,o.terms_hash,o.terms_text,o.terms_language,o.customer_claimed_at FROM market_invoices i JOIN market_manual_orders o ON o.invoice_id=i.id WHERE i.id=? FOR UPDATE');
         $q->execute([$invoiceId]);
         $invoice=$q->fetch();
         if (!$invoice||!auction_billing_service($invoice['service_code'])||$invoice['currency']!=='EUR') throw new PaymentConflict(t('auction_correction.ineligible'));
@@ -96,8 +96,8 @@ function auction_fee_correct(PDO $pdo,int $actor,int $invoiceId,int $reduction,s
         $json=auction_billing_json($snapshot);
         $pdo->prepare('INSERT INTO market_invoice_snapshots(invoice_id,user_id,payload_ciphertext,payload_hash) VALUES (?,?,?,?)')
             ->execute([$replacement,$seller,crypto_encrypt('finance',$json),hash('sha256',$json)]);
-        $pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,request_key) VALUES (?,?,?,?,?,1,?,?,?,?,?,?)')
-            ->execute([$replacement,$seller,$charge['listing_id'],$reference,$invoice['recipient'],$tax['net_cents'],$tax['tax_cents'],$snapshot['tax_bps'],$invoice['terms_hash'],$invoice['terms_text'],hash('sha256','auction-correction:'.$invoiceId)]);
+        $pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,terms_language,request_key) VALUES (?,?,?,?,?,1,?,?,?,?,?,?,?)')
+            ->execute([$replacement,$seller,$charge['listing_id'],$reference,$invoice['recipient'],$tax['net_cents'],$tax['tax_cents'],$snapshot['tax_bps'],$invoice['terms_hash'],$invoice['terms_text'],$invoice['terms_language'],hash('sha256','auction-correction:'.$invoiceId)]);
         // The accepted documents and their original timestamps remain the historical evidence.
         $pdo->prepare("INSERT INTO market_contract_receipts(user_id,scope,context_key,invoice_id,document_id,content_hash,created_at) SELECT user_id,scope,?,?,document_id,content_hash,created_at FROM market_contract_receipts WHERE invoice_id=? AND user_id=? AND scope='checkout'")
             ->execute(['invoice:'.$replacement,$replacement,$invoiceId,$seller]);

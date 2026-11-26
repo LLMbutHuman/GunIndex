@@ -284,6 +284,7 @@ try {
             finance_assert_invoice_snapshot($i,$snapshot);
             abt_check($i['status']==='issued'&&(int)$i['gross_cents']===50&&$i['service_code']==='auction_listing','Fee was not recorded as unpaid listing service.');
             abt_check($order['reference']===$i['invoice_number']&&$snapshot['order_reference']===$order['reference'],'Payment reference mismatch.');
+            abt_check($order['terms_language']===$fixture['quote']['payload']['locale']&&$order['terms_text']===$fixture['quote']['payload']['terms'],'Fee terms differ from the accepted language or text.');
             abt_check((int)$order['net_cents']===42&&(int)$order['tax_cents']===8&&(int)$order['tax_bps']===1900,'Cent-accurate fee tax split failed.');
             abt_check($order['recipient']==='auction-merchant@example.invalid'&&$snapshot['auction_listing_id']===$id,'Frozen recipient or listing binding is missing.');
             $acceptance=abt_row($pdo,'SELECT document_id,content_hash FROM market_auction_fee_acceptances WHERE listing_id=?',[$id]);
@@ -617,6 +618,8 @@ try {
             abt_check($snapshot['previous_order_reference']===$originalSnapshot['order_reference']&&$snapshot['order_reference']!==$originalSnapshot['order_reference'],'Replacement reference was not linked or distinct.');
             foreach(['operator','buyer','tax_bps','fee_version','service_description'] as $field)
                 abt_check($snapshot[$field]===$originalSnapshot[$field],'Correction changed historical terms.');
+            $orderTerms='SELECT terms_language,terms_text,terms_hash FROM market_manual_orders WHERE invoice_id=?';
+            abt_check(abt_row($pdo,$orderTerms,[$original])===abt_row($pdo,$orderTerms,[$replacement]),'Correction changed the original terms snapshot.');
             $q->execute([$replacement]);
             abt_check($acceptances!==[]&&$q->fetchAll()===$acceptances,'Original consent evidence was not retained exactly.');
             abt_check(finance_snapshot($pdo,$original)===$originalSnapshot,'Original invoice snapshot was rewritten.');

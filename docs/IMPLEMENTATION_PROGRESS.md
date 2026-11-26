@@ -1,5 +1,19 @@
 # Implementierungsfortschritt
 
+## Leistungsbedingungen im Checkout für Guthaben und Werbung
+
+Der Checkout zeigt Preis und Leistungsbedingungen zur jeweiligen Option in acht
+Sprachen. Der Server prüft beim Bestellen die ausdrückliche Zustimmung und den
+Hash aus Preis, Leistung, Sprache und Wortlaut. Die Bestellung speichert den
+Wortlaut und die Sprache. Eine additive Migration erhält historische Texte
+und Hashes. Rechnungskorrekturen übernehmen den Nachweis aus der ursprünglichen
+Rechnung. Die Sprachfassungen stehen für die fachliche Betreiberprüfung bereit.
+
+Lokal bestanden die PHP-Syntaxprüfung, 16 Zustimmungsprüfungen und acht
+Geo- und Übersetzungsprüfungen. Die MySQL- und HTTP-Regression prüft zusätzlich
+fehlende Nachweise, Sprach- und Preiswechsel, gespeicherte Fassungen und
+Auktionskorrekturen. Der Ubuntu-Test prüft die Migration.
+
 ## Rechtsübersicht auf kleinen Bildschirmen
 
 Die Tabelle mit 20 Dokumenten und acht Sprachen lässt sich mit der Tastatur

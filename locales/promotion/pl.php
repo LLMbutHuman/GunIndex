@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'Jeden miesiąc kalendarzowy',
+    'promotion.seven_days' => 'Siedem dni',
+    'promotion.order_terms' => '{service} na rynku wybranego ogłoszenia. Okres świadczenia usługi {duration}. W tym obszarze dostępnych jest maksymalnie {limit} miejsc. Rezerwacja obowiązuje przez {minutes} minut od złożenia zamówienia. Wpływ płatności jest weryfikowany. Jeśli płatność zostanie potwierdzona w terminie, należy wyraźnie zlecić rozpoczęcie usługi w ciągu {days} dni. W razie spóźnionej płatności lub wygaśnięcia rezerwacji operator ustali sposób wykonania usługi lub zwrotu pieniędzy. Reklamy mają oznaczenie „Sponsorowane”. Liczba kliknięć, zasięg i sprzedaż nie są gwarantowane. Ustawowe prawa konsumenta pozostają w mocy. Składając zamówienie, nie wnoszę o wcześniejsze rozpoczęcie świadczenia usługi.',
     'promotion.paid_title' => 'Promocja opłacona',
     'promotion.paid_body' => 'Płatność została zweryfikowana. Uruchom swoją promocję w ciągu {days} dni.',
     'promotion.review_title' => 'Płatność wymaga sprawdzenia',

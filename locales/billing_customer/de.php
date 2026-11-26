@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Bump-Guthaben für eine Aktivierung.',
+    'billing_customer.bump_terms_pack' => 'Bump-Guthaben für drei Aktivierungen.',
+    'billing_customer.bump_terms' => 'Ein Bump pro Inserat alle 72 Stunden. Ein Bump ändert nur die Position bei der Sortierung nach Aktualität. Reichweite und Verkauf sind nicht garantiert.',
+    'billing_customer.verify_direct' => 'Die Zahlung wird anhand des tatsächlichen Eingangs im gewählten Zahlungsweg geprüft.',
+    'billing_customer.verify_paypal' => 'Der Betreiber prüft den tatsächlichen PayPal-Zahlungseingang.',
+    'billing_customer.bump_activation' => 'Das Guthaben wird nach der Zahlungsprüfung bereitgestellt und kann anschließend gesondert aktiviert werden. Gesetzliche Verbraucherrechte bleiben bestehen. Mit dieser Bestellung beantrage ich keinen vorzeitigen Leistungsbeginn.',
+    'billing_customer.terms_version' => 'Version {version}.',
+    'billing_customer.service_terms' => 'Leistungsbedingungen für {service}',
     'billing_customer.title' => 'Bumps & Zahlungsaufträge',
     'billing_customer.eyebrow' => 'Mehr Sichtbarkeit',
     'billing_customer.heading' => 'Bumps. Klar und kontrolliert.',

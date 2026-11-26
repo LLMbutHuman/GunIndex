@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Tegoed voor één activering van een advertentieboost.',
+    'billing_customer.bump_terms_pack' => 'Tegoed voor drie activeringen van een advertentieboost.',
+    'billing_customer.bump_terms' => 'Per advertentie is één boost per 72 uur mogelijk. Een boost wijzigt alleen de positie bij sortering op recentheid. Bereik en verkoop zijn niet gegarandeerd.',
+    'billing_customer.verify_direct' => 'De betaling wordt gecontroleerd aan de hand van de daadwerkelijke ontvangst via de gekozen betaalmethode.',
+    'billing_customer.verify_paypal' => 'De beheerder controleert of de PayPal-betaling daadwerkelijk is ontvangen.',
+    'billing_customer.bump_activation' => 'Het tegoed komt beschikbaar nadat de betaling is gecontroleerd en kan daarna apart worden geactiveerd. Wettelijke consumentenrechten blijven gelden. Met deze bestelling vraag ik niet om een vervroegde start.',
+    'billing_customer.terms_version' => 'Versie {version}.',
+    'billing_customer.service_terms' => 'Dienstvoorwaarden voor {service}',
     'billing_customer.title' => 'Advertentieboosts en betaalopdrachten',
     'billing_customer.eyebrow' => 'Meer zichtbaarheid',
     'billing_customer.heading' => 'Advertentieboosts',

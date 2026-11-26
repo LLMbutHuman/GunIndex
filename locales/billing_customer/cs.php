@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'billing_customer.bump_terms_single' => 'Kredit na jedno posunutí inzerátu.',
+    'billing_customer.bump_terms_pack' => 'Kredity na tři posunutí inzerátu.',
+    'billing_customer.bump_terms' => 'Každý inzerát lze posunout jednou za 72 hodin. Posunutí mění pouze pořadí inzerátu při řazení podle aktuálnosti. Dosah ani prodej nejsou zaručeny.',
+    'billing_customer.verify_direct' => 'Platba se ověřuje podle skutečného přijetí prostředků zvoleným způsobem platby.',
+    'billing_customer.verify_paypal' => 'Provozovatel ověřuje skutečné přijetí platby přes PayPal.',
+    'billing_customer.bump_activation' => 'Kredity jsou k dispozici po ověření platby a poté je lze aktivovat samostatně. Zákonná práva spotřebitelů platí i nadále. Touto objednávkou nežádám o předčasné zahájení služby.',
+    'billing_customer.terms_version' => 'Verze {version}.',
+    'billing_customer.service_terms' => 'Podmínky služby {service}',
     'billing_customer.title' => 'Zvýraznění a platební příkazy',
     'billing_customer.eyebrow' => 'Zvyšte viditelnost',
     'billing_customer.heading' => 'Zvýraznění inzerátů',

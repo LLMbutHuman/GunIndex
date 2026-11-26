@@ -19,7 +19,8 @@ function fin_profile(PDO $pdo,int $user,string $country='DE',string $name='Synth
 function fin_order(PDO $pdo,array $user,int $category,bool $profile=true):int{
  if($profile)fin_profile($pdo,(int)$user['id']);
  $listing=market_save_listing($pdo,(int)$user['id'],['title'=>'Finance fixture '.bin2hex(random_bytes(8)),'description'=>'Ordinary synthetic product for isolated invoice regression tests.','category_id'=>(string)$category,'type'=>'fixed','price'=>'45.00','status'=>'active','zip'=>'10115','city'=>'Testort','country_code'=>'DE','condition_label'=>'used','pickup'=>'1','shipping'=>'1','duration_days'=>'7','accept_rules'=>'1']);
- return manual_order($pdo,(int)$user['id'],$listing,'bump_single',bin2hex(random_bytes(32)));
+ $quote=manual_checkout_quote($pdo,'bump_single');
+ return manual_order($pdo,(int)$user['id'],$listing,'bump_single',bin2hex(random_bytes(32)),null,['accept_terms'=>'1','service_terms'=>['bump_single'=>$quote['approval_hash']]]);
 }
 function fin_pay(PDO $pdo,int $admin,int $invoice,?string $transaction=null):string{
  $q=$pdo->prepare('SELECT o.reference,i.gross_cents FROM market_manual_orders o JOIN market_invoices i ON i.id=o.invoice_id WHERE o.invoice_id=?');$q->execute([$invoice]);$order=$q->fetch();fin_assert((bool)$order);

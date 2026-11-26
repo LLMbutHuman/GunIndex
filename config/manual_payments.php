@@ -13,8 +13,39 @@ function direct_payment_reason(PDO $pdo):?string {
  return $paypal!==null&&bank_gate($pdo)!==null&&bitcoin_gate($pdo,null,true)!==null?$paypal:null;
 }
 function manual_terms(int $quantity,bool $additionalMethod=false):string {
- $channel=$additionalMethod?'Zahlung wird anhand des tatsächlichen Eingangs im gewählten Zahlungsweg geprüft.':'Zahlung wird vom Betreiber anhand des tatsächlichen PayPal-Eingangs geprüft.';
- return 'Bump-Guthaben: '.$quantity.' Aktivierung(en). Ein Bump pro Inserat alle 72 Stunden; verändert nur die Sortieraktualität. Keine Reichweiten- oder Verkaufsgarantie. '.$channel.' Guthaben entsteht erst nach Prüfung und wird vom Nutzer gesondert aktiviert. Gesetzliche Verbraucherrechte bleiben bestehen. Kein vorzeitiger Leistungsbeginn wird mit der Bestellung erklärt. Version manual-bump-'.($additionalMethod?'1.1.':'1.0.');
+ $key=$quantity===1?'billing_customer.bump_terms_single':'billing_customer.bump_terms_pack';
+ return t($key).' '.t('billing_customer.bump_terms').' '.t($additionalMethod?'billing_customer.verify_direct':'billing_customer.verify_paypal')
+  .' '.t('billing_customer.bump_activation').' '.t('billing_customer.terms_version',['version'=>$additionalMethod?'manual-bump-1.3':'manual-bump-1.2']);
+}
+
+function manual_checkout_quote(PDO $pdo,string $service):array {
+ $quote=fees_quote($service,null,$pdo);
+ $terms=match($service){
+  'bump_single','bump_pack'=>manual_terms($service==='bump_pack'?3:1,bank_gate($pdo)===null||bitcoin_gate($pdo,null,true)===null),
+  'category_top','home_top','banner_monthly'=>business_terms($pdo,$service),
+  default=>throw new InvalidArgumentException(t('billing_customer.invalid_order')),
+ };
+ $quote['terms']=$terms;
+ $quote['language']=i18n_locale();
+ $quote['confirmation']=t('billing_customer.confirm');
+ $quote['receipt']=$terms."\n\n".$quote['confirmation'];
+ $quote['approval_hash']=hash('sha256',json_encode([
+  $service,$quote['currency'],$quote['gross_cents'],$quote['version'],$quote['language'],$quote['receipt'],
+ ],JSON_THROW_ON_ERROR));
+ return $quote;
+}
+
+function manual_checkout_fields(PDO $pdo,array $services):void {
+ echo '<fieldset class="span-2"><legend>'.h(t('payment_customer.service')).'</legend>';
+ foreach($services as $index=>$service){
+  $quote=manual_checkout_quote($pdo,$service);
+  echo '<label><input type="radio" name="service" value="'.h($service).'" required'.($index===0?' checked':'').'> '
+   .h(payments_service_label($service).' · '.money_eur($quote['gross_cents'])).'</label>'
+   .'<input type="hidden" name="service_terms['.h($service).']" value="'.h($quote['approval_hash']).'">'
+   .'<details><summary>'.h(t('billing_customer.service_terms',['service'=>payments_service_label($service)])).'</summary>'
+   .'<p>'.h($quote['terms']).'</p></details>';
+ }
+ echo '</fieldset><label><input type="checkbox" name="accept_terms" value="1" required> '.h(t('billing_customer.confirm')).'</label>';
 }
 function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string $requestKey,?int $campaignId=null,array $consent=[]):int {
  if(($reason=direct_payment_reason($pdo))!==null)throw new PaymentUnavailable($reason);
@@ -22,24 +53,30 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
  $listing=market_find($pdo,$listingId,false);if(!$listing||(int)$listing['seller_id']!==$userId||($listing['type']==='auction'&&market_expired($listing)))throw new PaymentConflict(t('billing_customer.own_active_listing'));
  $promotion=in_array($service,['category_top','home_top','banner_monthly'],true);
  if($promotion&&(!function_exists('business_reserve_order')||($businessReason=business_reason($pdo))!==null))throw new PaymentUnavailable($businessReason??t('billing_customer.placement_unavailable'));
- $quote=fees_quote($service,null,$pdo);if($quote['gross_cents']<1)throw new PaymentConflict(t('billing_customer.free_credits'));
- $quantity=$service==='bump_pack'?3:1;$terms=$promotion?business_terms($pdo,$service,$listing):manual_terms($quantity,bank_gate($pdo)===null||bitcoin_gate($pdo,null,true)===null);
- $tax=fees_tax_split($quote['gross_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),true);
  $pdo->beginTransaction();
  try{
   maintenance_assert_market_available($pdo);
   $q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1 FOR UPDATE');$q->execute([$userId]);if(!$q->fetchColumn())throw new PaymentConflict(t('billing_customer.account_missing'));
   $q=$pdo->prepare('SELECT invoice_id FROM market_manual_orders WHERE request_key=? AND user_id=?');$q->execute([$requestKey,$userId]);$previous=$q->fetchColumn();if($previous){$pdo->commit();return(int)$previous;}
   $contractDocuments=consent_check($pdo,'checkout',$consent,i18n_locale());
+  if(($consent['accept_terms']??null)!=='1')throw new InvalidArgumentException(t('billing_customer.terms_required'));
+  $quote=manual_checkout_quote($pdo,$service);
+  $hashes=$consent['service_terms']??null;
+  $hash=is_array($hashes)?($hashes[$service]??null):null;
+  if(!is_string($hash)||!hash_equals($quote['approval_hash'],$hash))throw new InvalidArgumentException(t('consent.changed'));
+  if($quote['gross_cents']<1)throw new PaymentConflict(t('billing_customer.free_credits'));
+  $quantity=$service==='bump_pack'?3:1;
+  $taxBps=(int)site_setting($pdo,'manual_tax_bps','0');$tax=fees_tax_split($quote['gross_cents'],$taxBps,true);
+  $termsHash=hash('sha256',$quote['receipt']);
   $q=$pdo->prepare('SELECT COUNT(*) FROM market_manual_orders WHERE user_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 HOUR');$q->execute([$userId]);if((int)$q->fetchColumn()>=10)throw new PaymentConflict(t('billing_customer.hourly_limit'));
   $reference='GI-'.strtoupper(bin2hex(random_bytes(10)));
   $q=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,?,?,?,'issued')");$q->execute([$userId,$reference,$service,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
-  $q=$pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,request_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
-  $q->execute([$id,$userId,$listingId,$reference,manual_payment_reason($pdo)===null?site_setting($pdo,'manual_paypal_recipient'):'',$quantity,$tax['net_cents'],$tax['tax_cents'],(int)site_setting($pdo,'manual_tax_bps','0'),hash('sha256',$terms),$terms,$requestKey]);
+  $q=$pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,terms_language,request_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
+  $q->execute([$id,$userId,$listingId,$reference,manual_payment_reason($pdo)===null?site_setting($pdo,'manual_paypal_recipient'):'',$quantity,$tax['net_cents'],$tax['tax_cents'],$taxBps,$termsHash,$quote['receipt'],$quote['language'],$requestKey]);
   if($promotion)business_reserve_order($pdo,$id,$userId,$listing,$service,$campaignId);
   if(function_exists('finance_prepare_order'))finance_prepare_order($pdo,$id,$userId);
   consent_record($pdo,$userId,'checkout',$id,$contractDocuments);
-  audit_log($pdo,$userId,'payment.manual_ordered',$id,['fee_version'=>$quote['version'],'terms_hash'=>hash('sha256',$terms)]);
+  audit_log($pdo,$userId,'payment.manual_ordered',$id,['fee_version'=>$quote['version'],'terms_hash'=>$termsHash,'terms_language'=>$quote['language'],'approval_hash'=>$quote['approval_hash']]);
   $pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
 }

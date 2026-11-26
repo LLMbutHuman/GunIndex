@@ -149,6 +149,11 @@ def service_start_fields(body):
             for key in ('start_language','start_hash')}
 
 
+def service_terms_fields(body, service):
+    field = 'service_terms[' + service + ']'
+    return {field: re.search(r'name="' + re.escape(field) + r'" value="([a-f0-9]{64})"', body).group(1)}
+
+
 class MarketplaceHTTP(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

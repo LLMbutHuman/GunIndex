@@ -2,7 +2,7 @@
 """Dealer/profile/banner/CSV HTTP checks on synthetic isolated identities only."""
 import csv,io,json,re,secrets,subprocess,unittest,urllib.parse
 import http_test as cases
-from http_test import Browser,fixture,png,title,service_start_fields
+from http_test import Browser,fixture,png,title,service_start_fields,service_terms_fields
 
 READ=r'''
 if(PHP_SAPI!=='cli'||getenv('DB_DATABASE')!=='gunindex_rebuild_test')exit(2);
@@ -108,7 +108,8 @@ class BusinessHTTP(unittest.TestCase):
   self.assertEqual(200,self.campaign(user)[0]);campaign=read(user,'campaigns')[0]
   moderation=dict(csrf_token=admin['browser'].token('/admin/settings.php'),action='campaign',target_id=campaign['id'],status='approved',reason='Synthetic banner content review')
   self.assertEqual(303,admin['browser'].request('/admin/campaigns.php',moderation)[0]);listing=self.seed_listing(user,type='fixed');browser=user['browser'];body=browser.request('/user/promotions.php')[2];key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
-  result=browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='order',order_key=key,service='banner_monthly',listing_id=listing,campaign_id=campaign['id'],accept_terms='1'));self.assertEqual(303,result[0]);booking=read(user,'bookings')[0]
+  self.assertIn('Ein Kalendermonat',body)
+  result=browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='order',order_key=key,service='banner_monthly',listing_id=listing,campaign_id=campaign['id'],accept_terms='1',**service_terms_fields(body,'banner_monthly')));self.assertEqual(303,result[0]);booking=read(user,'bookings')[0]
   self.assertEqual(404,Browser().request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE')[0])
   cents=int(booking['gross_cents']);approval=dict(csrf_token=admin['browser'].token('/admin/settings.php'),invoice_id=booking['invoice_id'],transaction_id='SYNTHETIC'+secrets.token_hex(8).upper(),reference=booking['reference'],received_amount=f'{cents//100}.{cents%100:02}',decision='approve',reason='Synthetic direct account verification',review_confirmed='1')
   self.assertEqual(200,admin['browser'].request('/admin/payments.php',approval)[0])

@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'promotion.calendar_month' => 'Jeden kalendářní měsíc',
+    'promotion.seven_days' => 'Sedm dní',
+    'promotion.order_terms' => '{service} na trhu vybraného inzerátu. Doba trvání {duration}. V této části je nejvýše {limit} míst. Rezervace platí {minutes} minut od objednání. Přijetí platby se ověřuje. Je-li platba potvrzena včas, musíte do {days} dnů výslovně požádat o zahájení služby. V případě pozdní platby nebo vypršení rezervace provozovatel vyřeší poskytnutí služby nebo vrácení peněz. Reklama je označena jako „Sponzorováno“. Počet kliknutí, dosah ani prodej nejsou zaručeny. Zákonná práva spotřebitelů platí i nadále. Touto objednávkou nežádám o předčasné zahájení služby.',
     'promotion.paid_title' => 'Pozice zaplacena',
     'promotion.paid_body' => 'Platba byla ověřena. Spusťte svou pozici do {days} dní.',
     'promotion.review_title' => 'Platba vyžaduje další kontrolu',
