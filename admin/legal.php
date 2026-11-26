@@ -109,7 +109,7 @@ include __DIR__.'/../includes/header.php';?>
 <details class="panel" id="legal-coverage">
     <summary><?=h(t('legal_admin.coverage_title'))?></summary>
     <p><?=h(t('legal_admin.coverage_help'))?></p>
-    <div class="table-wrap"><table class="data-table">
+    <div class="table-wrap" tabindex="0" role="region" aria-label="<?=h(t('legal_admin.coverage_title'))?>"><table class="data-table">
         <thead><tr><th scope="col"><?=h(t('legal_admin.document'))?></th>
             <?php foreach ($languages as $name): ?><th scope="col"><?=h($name)?></th><?php endforeach; ?>
         </tr></thead>

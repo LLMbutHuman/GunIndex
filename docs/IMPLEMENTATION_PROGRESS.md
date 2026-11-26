@@ -1,5 +1,12 @@
 # Implementierungsfortschritt
 
+## Rechtsübersicht auf kleinen Bildschirmen
+
+Die Tabelle mit 20 Dokumenten und acht Sprachen lässt sich mit der Tastatur
+fokussieren und innerhalb ihres Bereichs horizontal lesen. Die Browser-CI
+prüft alle acht Ansichten bei 390 Pixeln einschließlich geöffnetem Bereich.
+PHP- und JavaScript-Syntax sind lokal geprüft.
+
 ## Polnische Postleitzahlen aus dem amtlichen PRG-Register
 
 18.644 PLZ-Koordinaten wurden aus allen 16 Regionen nach WGS 84 aufbereitet
@@ -12,6 +19,8 @@ Der Ubuntu-Test prüft Erstimport, neun Länderquellen nach
 Update, tatsächliche Warschauer Umkreissuche, Ländertrennung, exakte Suche
 ohne Koordinaten und Quellenanzeige.
 [Quellen und Aufbereitung](POSTCODE_SOURCES.md)
+[Ubuntu-Erstinstallation, Update und Produktionsimage bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45708559676) ·
+[Marktplatzregression bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45708559751)
 
 ## Bestätigung für den Sofortbeginn in acht Sprachen
 
@@ -22,6 +31,7 @@ den exakten Text gemeinsam mit der Buchung im Auditprotokoll. Eine geänderte
 Fassung verlangt erneutes Laden. Die Rechtsprüfung der Sprachfassungen bleibt
 Teil der Betreiberfreigabe. HTTP-Tests prüfen fehlende oder abweichende Nachweise,
 den erfolgreichen Start mit der angezeigten Fassung und den gespeicherten Hash.
+[HTTP und Browser bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45708169082)
 
 ## Deterministische Ed25519-Prüfung beim Öffnen des Chats
 
@@ -32,6 +42,7 @@ Bei einem fehlenden oder fehlerhaften WebCrypto-Verfahren bleibt der Chat
 gesperrt. Der Kryptografietest prüft den Nachweis mit einer simulierten
 vorübergehenden Störung der Schlüsselerzeugung.
 [Fehlerlauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705102235) ·
+[Linux-Browser einschließlich WebKit bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45707792187) ·
 [RFC 8032 Abschnitt 7.1](https://www.rfc-editor.org/rfc/rfc8032.html#section-7.1)
 
 ## Fehlende Übersetzungsschlüssel in Konto, Suche und Kategorien ergänzt
@@ -51,6 +62,8 @@ die Vorlagen des Releases und umgeht weder MFA noch die fachliche Freigabe.
 Der HTTP-Test prüft Berechtigung, Cache-Schutz, alle acht Sprachen, gesammelten
 Import und die anschließende bytegleiche Wiedereinspielung. Der Produktionslauf
 prüft die 160 Vorlagen auch im Image aus dem Releasearchiv.
+[HTTP und Browser bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705399661) ·
+[Produktionsimage und Installer bestanden](https://github.com/LLMbutHuman/GunIndex/actions/runs/45705399765)
 
 ## Alle 160 Rechtsentwürfe in einem Schritt einspielen
 

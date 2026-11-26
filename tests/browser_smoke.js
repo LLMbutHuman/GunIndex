@@ -98,7 +98,18 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
    await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),language.locator('button[type=submit]').click()]);
    assert.strictEqual(await page.locator('html').getAttribute('lang'),locale);assert.strictEqual(await page.locator('section[id^=setup-]').count(),18);
    assert(!/setup\.[a-z]+\./.test(await page.locator('main').innerText()),'Untranslated setup key');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Setup mobile overflow '+locale);
-  }journeys.push('admin_setup_eight_mobile_locales');
+   await page.goto(origin+'/admin/legal.php');
+   const coverage=page.locator('#legal-coverage');
+   await coverage.locator('summary').click();
+   assert.strictEqual(await page.locator('html').getAttribute('lang'),locale);
+   assert.strictEqual(await coverage.locator('thead th').count(),9);
+   assert.strictEqual(await coverage.locator('tbody tr').count(),20);
+   const tableRegion=coverage.locator('[role=region]');
+   await tableRegion.focus();
+   assert(await tableRegion.evaluate(node=>node===document.activeElement),'Legal coverage needs keyboard access');
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Legal coverage mobile overflow '+locale);
+   assert(!/legal_admin\.[a-z_]+/.test(await page.locator('main').innerText()),'Untranslated legal admin key');
+  }journeys.push('admin_setup_and_legal_drafts_eight_mobile_locales');
   // Configure a synthetic required document through the real protected admin UI.
   const legalCode='browser-'+crypto.randomBytes(8).toString('hex');
   await page.goto(origin+'/admin/legal.php');const draft=page.locator('form:has([name=action][value=create])');
