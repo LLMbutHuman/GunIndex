@@ -1,10 +1,10 @@
 name: Production image from release archive
 on:
   pull_request:
-    paths: ['.github/workflows/production-image.yml', 'ops/create-admin.php', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/*postcodes.php', 'ops/backup.php', 'ops/offsite-backup.sh', 'ops/health.php', 'tests/production_*', 'sql/**', 'ZIP/PLZ*.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**', 'docs/legal/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/create-admin.php', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/*postcodes.php', 'ops/backup.php', 'ops/offsite-backup.sh', 'ops/health.php', 'tests/production_*', 'sql/**', 'ZIP/PLZ*.csv', '.gitattributes', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**', 'docs/legal/**']
   push:
     branches: [feature/general-marketplace-rebuild]
-    paths: ['.github/workflows/production-image.yml', 'ops/create-admin.php', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/*postcodes.php', 'ops/backup.php', 'ops/offsite-backup.sh', 'ops/health.php', 'tests/production_*', 'sql/**', 'ZIP/PLZ*.csv', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**', 'docs/legal/**']
+    paths: ['.github/workflows/production-image.yml', 'ops/create-admin.php', 'ops/install-ubuntu-22.04.sh', 'ops/production/**', 'ops/migrate.php', 'ops/*postcodes.php', 'ops/backup.php', 'ops/offsite-backup.sh', 'ops/health.php', 'tests/production_*', 'sql/**', 'ZIP/PLZ*.csv', '.gitattributes', '.dockerignore', 'composer.*', 'assets/vendor/openpgp/**', 'docs/legal/**']
 permissions:
   contents: read
 jobs:
@@ -16,6 +16,9 @@ jobs:
       - name: Build and verify the archived production image
         run: |
           set -euo pipefail
+          for file in ZIP/PLZ*.csv assets/vendor/openpgp/openpgp.min.mjs; do
+            test "$(git check-attr text -- "$file")" = "$file: text: unset"
+          done
           release="$RUNNER_TEMP/gunindex-release"
           mkdir -- "$release"
           bash ops/production/archive-release.sh "$PWD" "$GITHUB_SHA" "$release"

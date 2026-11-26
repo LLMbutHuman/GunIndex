@@ -7,6 +7,10 @@ Vier historische Admin-Dateien bleiben im Git-Quellbaum erhalten. Der
 schließen sie zusätzlich aus. Die produktive Identitätsprüfung läuft über
 die vorhandene Verwaltungsseite mit MFA und eigener Berechtigung.
 Die Produktionsprüfung kontrolliert die Dateien im Archiv und im Image.
+Lokal bestanden die Archivprüfung und der Git-Attributtest. Die zunächst
+überschriebenen Schutzregeln für die Dateibytes der PLZ- und OpenPGP-Dateien
+wurden im Folgecommit `49a1196` wiederhergestellt. Der Produktionslauf
+startet jetzt auch bei Änderungen an diesen Regeln und prüft sie vor dem Build.
 
 ## Niederländische BAG-Daten für die PLZ-Aggregation vorbereitet
 
