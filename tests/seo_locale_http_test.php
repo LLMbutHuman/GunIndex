@@ -163,6 +163,20 @@ try {
         seo_http_check(seo_http_request($invalid, $path, 'POST')['status'] === 405, "The localized public route $path accepted a POST.");
     }
     echo "PASS invalid_prefixes_private_paths_traversal_and_post_rejected\n";
+    foreach (array_keys(i18n_locales()) as $locale) {
+        $path='/'.$locale.'/unavailable-test-page';
+        $copy=i18n_dictionary($locale);
+        $missing=seo_http_request($invalid,$path);
+        seo_http_check($missing['status']===404 && $missing['body']===$copy['shared.route_missing']
+            && ($missing['headers']['content-language']??'')===$locale
+            && ($missing['headers']['x-robots-tag']??'')==='noindex, nofollow', 'Incorrect localized missing-page response.');
+        $head=seo_http_request($invalid,$path,'HEAD');
+        seo_http_check($head['status']===404 && $head['body']==='' && ($head['headers']['content-language']??'')===$locale, 'Incorrect missing-page HEAD response.');
+        $method=seo_http_request($invalid,'/'.$locale.'/','POST');
+        seo_http_check($method['status']===405 && $method['body']===$copy['shared.route_method']
+            && ($method['headers']['allow']??'')==='GET, HEAD', 'Incorrect localized method response.');
+    }
+    echo "PASS missing_route_and_method_responses_in_eight_languages\n";
 } finally {
     $pdo->prepare('DELETE FROM market_listings WHERE id IN (?,?) AND seller_id=?')
         ->execute([$fixture['fixed'], $fixture['auction'], $fixture['seller']]);

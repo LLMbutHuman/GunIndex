@@ -1,16 +1,29 @@
 <?php
 declare(strict_types=1);
+
+function public_route_error(int $status,string $path):never
+{
+    require_once dirname(__DIR__).'/config/i18n.php';
+    $language='de';
+    if(preg_match('~\A/([a-z]{2})(?:/|\z)~',$path,$match)&&isset(i18n_locales()[$match[1]]))$language=$match[1];
+    $copy=i18n_dictionary($language);
+    http_response_code($status);
+    header('Content-Type: text/plain; charset=UTF-8');
+    header('Content-Language: '.$language);
+    header('X-Robots-Tag: noindex, nofollow');
+    if($status===405)header('Allow: GET, HEAD');
+    if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')echo $copy[$status===405?'shared.route_method':'shared.route_missing'];
+    exit;
+}
+
 $root=dirname(__DIR__);$path=rawurldecode(parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH)?:'/');
-if(str_contains($path,"\0")||str_contains($path,'\\')||preg_match('~(?:^|/)\.\.?(/|$)~',$path)){http_response_code(404);exit('Nicht gefunden.');}
+if(str_contains($path,"\0")||str_contains($path,'\\')||preg_match('~(?:^|/)\.\.?(/|$)~',$path))public_route_error(404,$path);
 if (preg_match('~\A/[a-z]{2}/~', $path)) {
     require_once $root . '/config/seo.php';
     $publicRoute = seo_public_route($path);
     if ($publicRoute !== null) {
         if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET','HEAD'], true)) {
-            http_response_code(405);
-            header('Allow: GET, HEAD');
-            header('X-Robots-Tag: noindex, nofollow');
-            exit;
+            public_route_error(405,$path);
         }
         define('GUNINDEX_PUBLIC_LOCALE', $publicRoute['locale']);
         $path = $publicRoute['path'];
@@ -41,7 +54,7 @@ $static['/assets/css/trade.css']='text/css; charset=utf-8';
 $static['/assets/js/listing-draft.js']='application/javascript; charset=utf-8';
 $static['/assets/js/passkeys.js']='application/javascript; charset=utf-8';
 if(isset($static[$path])&&is_file($root.$path)){header('Content-Type: '.$static[$path]);header('X-Content-Type-Options: nosniff');if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')readfile($root.$path);exit;}
-if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route)){http_response_code(404);header('X-Robots-Tag: noindex');exit('Nicht gefunden.');}
+if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route))public_route_error(404,$path);
 if ($route === 'api/dealer/v1.php') define('GUNINDEX_STATELESS_REQUEST', true);
 require_once $root.'/config/bootstrap.php';
 maintenance_enforce_http($pdo,$route);

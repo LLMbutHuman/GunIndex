@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 return [
+    'shared.route_missing'=>'Nie znaleziono tej strony.',
+    'shared.route_method'=>'Ta metoda żądania jest niedozwolona dla tej strony.',
     'shared.footer_info'=>'Więcej informacji',
     'shared.footer_eyebrow'=>'Nowy początek',
     'shared.footer_title'=>"Dobre rzeczy zasługują\nna kolejną historię.",

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 return [
+    'shared.route_missing'=>'Questa pagina non è stata trovata.',
+    'shared.route_method'=>'Questo metodo di richiesta non è consentito per la pagina.',
     'shared.footer_info'=>'Altre informazioni',
     'shared.footer_eyebrow'=>'Un nuovo inizio',
     'shared.footer_title'=>"Le cose belle meritano\nuna nuova storia.",

@@ -1,5 +1,14 @@
 # Implementierungsfortschritt
 
+## Mehrsprachige Fehlerseiten für öffentliche Adressen
+
+Der Router antwortet bei einer unbekannten öffentlichen Adresse oder einer
+unzulässigen Anfragemethode in der Sprache des gültigen URL-Präfixes. Er
+setzt den passenden HTTP-Status, `Content-Language` und Robots-Schutz direkt
+vor dem Anwendungsstart. HEAD sendet die Header ohne Textkörper. Der
+lokale Testserver bestand 24 tatsächliche HTTP-Anfragen in acht Sprachen.
+Die isolierte Linux-Regression wiederholt diese Prüfung im normalen Router.
+
 ## Moderationsentscheidungen in der Sprache der Beteiligten
 
 Bei Entscheidungen über Meldungen und Beschwerden erhalten Beteiligte die

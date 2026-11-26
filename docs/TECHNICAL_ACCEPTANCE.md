@@ -62,8 +62,9 @@ Aktuelle Gesamt- und Aufwandsbewertung: [PROJECT_STATUS.md](PROJECT_STATUS.md).
   `699c35b`, CI 41480002310 vollständig erfolgreich. Auch der echte Paralleltest
   mit zwei getrennten Prozessen besteht: `0194d59`, CI 41481388425.
   Keine reale Providerabnahme.
-- **C:** Lokale WSL-/Docker-Laufzeit: Speicherplatz/Neustart ausstehend.
-  Die externe Linux-CI ist funktionsfähig.
+- **C:** Die Windows-Vorprüfung fand keine einsatzfähige Ubuntu-Distribution
+  in WSL 2 und keine lokale Linux-Containerlaufzeit. Die isolierte Linux-CI
+  läuft auf GitHub.
 
 ## Die 26 Masteranforderungen
 

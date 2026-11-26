@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 return [
+    'shared.route_missing'=>'Cette page est introuvable.',
+    'shared.route_method'=>'Cette méthode de requête n’est pas autorisée pour cette page.',
     'shared.footer_info'=>'Plus d’informations',
     'shared.footer_eyebrow'=>'Un nouveau départ',
     'shared.footer_title'=>"Les belles choses méritent\nune nouvelle histoire.",
