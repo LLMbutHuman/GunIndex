@@ -9,6 +9,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
     try{
         $action=post_string('action');
         if($action==='order'){
+            if(post_string('accept_terms')!=='1')throw new InvalidArgumentException(t('billing_customer.terms_required'));
             $key=post_string('order_key',64);if(!hash_equals($_SESSION['promotion_order_key'],$key))throw new DomainException(t('billing_customer.reload'));
             $service=post_string('service',24);business_scope($service);
             $listing=post_string('listing_id',20);$campaign=post_string('campaign_id',20);

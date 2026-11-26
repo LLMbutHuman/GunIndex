@@ -13,6 +13,11 @@ Lokal bestanden die PHP-Syntaxprüfung, 16 Zustimmungsprüfungen und acht
 Geo- und Übersetzungsprüfungen. Die MySQL- und HTTP-Regression prüft zusätzlich
 fehlende Nachweise, Sprach- und Preiswechsel, gespeicherte Fassungen und
 Auktionskorrekturen. Der Ubuntu-Test prüft die Migration.
+Der erste Linux-Lauf bestand die HTTP-Tests für die Bestellungen. Der spätere
+Finanztest zeigte, dass bei einer unvollständigen Eingabe die bisherige
+Zustimmungsmeldung fehlte. Beide Formulare prüfen die ausdrückliche Zustimmung
+wieder vor den übrigen Eingaben.
+[Erster CI-Lauf](https://github.com/LLMbutHuman/GunIndex/actions/runs/45745402389)
 
 ## Rechtsübersicht auf kleinen Bildschirmen
 

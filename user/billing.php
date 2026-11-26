@@ -8,6 +8,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
   $action=post_string('action');
   if($action==='order'){
+   if(post_string('accept_terms')!=='1')throw new InvalidArgumentException(t('billing_customer.terms_required'));
    $key=post_string('order_key',64);if(!hash_equals($_SESSION['billing_order_key'],$key))throw new PaymentConflict(t('billing_customer.reload'));
    $id=manual_order($pdo,(int)$user['id'],(int)post_string('listing_id'),post_string('service'),$key,null,$_POST);
    $_SESSION['billing_order_key']=bin2hex(random_bytes(32));redirect('/user/billing.php?order='.$id);
