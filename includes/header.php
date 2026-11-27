@@ -103,7 +103,7 @@ if (!function_exists('ui_icon')) {
 <a class="skip-link" href="#main-content"> <?=h(t('Zum Inhalt'))?> </a>
 <div class="ambient-field" aria-hidden="true"></div>
 <header class="site-header">
-    <div class="nav-shell">
+    <div class="nav-shell<?=$viewer?' has-inbox':''?>">
         <a class="brand" href="<?=h(defined('GUNINDEX_PUBLIC_LOCALE') ? seo_localized_path('/', GUNINDEX_PUBLIC_LOCALE) : '/marketplace/index.php')?>" aria-label="<?= h($brandName) ?> – <?=h(t('Entdecken'))?>"><span class="brand-mark" aria-hidden="true"><span></span></span><span><?= h($brandName) ?></span></a>
         <nav class="desktop-nav" aria-label="<?=h(t('Hauptnavigation'))?>">
             <a href="/marketplace/search.php"><?=h(t('Entdecken'))?></a><a href="/marketplace/search.php?type=auction"><?=h(t('Auktionen'))?></a><a href="/marketplace/policy.php"><?=h(t('So funktioniert’s'))?></a>

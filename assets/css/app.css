@@ -66,8 +66,12 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 .profile-actions { display: flex; align-items: stretch; flex-wrap: wrap; gap: .75rem; margin-block: .85rem; }
 .profile-actions .button { min-height: 49px; max-width: 100%; overflow-wrap: anywhere; }
 @media (min-width: 981px) and (max-width: 1280px) {
-    .nav-shell { gap: clamp(.7rem, 2vw, 1.5rem); }
-    .desktop-nav { gap: clamp(.6rem, 1.6vw, 1.4rem); }
+    .nav-shell.has-inbox { gap: clamp(.7rem, 2vw, 1.5rem); }
+    .has-inbox .desktop-nav { gap: clamp(.6rem, 1.6vw, 1.4rem); }
+}
+@media (min-width: 981px) and (max-width: 1120px) {
+    .has-inbox .account-link span { display: none; }
+    .has-inbox .brand > span:last-child { max-width: 145px; }
 }
 @media (max-width: 980px) {
     .nav-actions .mobile-messages { display: inline-grid; }
@@ -83,4 +87,8 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 @media (max-width: 420px) {
     .profile-actions .button { flex: 1 1 100%; }
     .nav-actions:has(.mobile-messages) { gap: .45rem; }
+    .nav-shell.has-inbox { width: calc(100% - 24px); gap: .45rem; }
+    .nav-shell.has-inbox .brand { min-width: 0; flex: 1 1 auto; }
+    .nav-shell.has-inbox .brand > span:last-child { font-size: clamp(1rem, 5.8vw, 1.4rem); }
+    .nav-shell.has-inbox .icon-button { width: 36px; height: 36px; }
 }

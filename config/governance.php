@@ -59,7 +59,8 @@ function rbac_permissions(PDO $pdo,int $userId): array
     $roles = governance_user_roles($pdo, $userId);
     if ($roles === []) return [];
     $effective = governance_role_policy($pdo)['roles'];
-    return array_values(array_unique(array_merge(...array_intersect_key($effective, array_fill_keys($roles, true)))));
+    $assignedPermissions = array_values(array_intersect_key($effective, array_fill_keys($roles, true)));
+    return array_values(array_unique(array_merge(...$assignedPermissions)));
 }
 
 function rbac_has_permission(PDO $pdo,int $userId,string $permission): bool

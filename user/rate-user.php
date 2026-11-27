@@ -16,6 +16,7 @@ if (!$listing || $listing['type']!=='auction' || !in_array($listing['status'],['
 if (trade_auction_rating_recipient($pdo,$listing,$actor)===null) abort_request(403,t('trade.auction_rating_parties'));
 $error = '';
 $comment = '';
+$saved = false;
 if ($method==='POST') {
     require_csrf();
     try {
@@ -23,8 +24,7 @@ if ($method==='POST') {
         if (!$stars) throw new InvalidArgumentException(t('trade.auction_rating_invalid'));
         $comment = post_string('comment',3000);
         trade_rate_auction($pdo,$actor,$id,$stars,$comment);
-        $_SESSION['auction_rating_saved'] = $id;
-        redirect('/user/rate-user.php?listing_id='.$id);
+        $saved = true;
     } catch (InvalidArgumentException $exception) {
         http_response_code(422); $error=$exception->getMessage();
     } catch (MarketConflictException $exception) {
@@ -33,8 +33,6 @@ if ($method==='POST') {
         http_response_code(403); $error=$exception->getMessage();
     }
 }
-$saved = ($_SESSION['auction_rating_saved'] ?? null)===$id;
-if ($saved && $method==='GET') unset($_SESSION['auction_rating_saved']);
 $query = $pdo->prepare('SELECT 1 FROM market_ratings WHERE listing_id=? AND sender_id=?');
 $query->execute([$id,$actor]);
 $rated = $query->fetchColumn()!==false;

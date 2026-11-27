@@ -23,6 +23,12 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
     return Math.abs((first.left+last.right)/2-(strip.left+strip.right)/2)<4 && document.documentElement.scrollWidth<=innerWidth;
   }),'Desktop manifesto did not center its visible text');
   journeys.push('desktop_manifesto_centered');
+  for(const width of [320,981,1024,1440]){
+   await page.setViewportSize({width,height:1000});
+   assert(await page.evaluate(()=>[...document.querySelector('.nav-shell').children].every(el=>el.getBoundingClientRect().right<=innerWidth)), 'Signed-in navigation overflow at '+width);
+   const inbox=page.locator(width<=980?'.nav-actions .mobile-messages':'.desktop-nav .messages-link');
+   assert(await inbox.isVisible(),'Inbox unavailable at '+width);
+  }
   await page.goto(origin+'/user/create-listing.php');const title='Fixture '+crypto.randomBytes(8).toString('hex')+' Browser Schreibtisch';
   await page.locator('[name=title]').fill(title);await page.locator('textarea[name=description]').fill('Synthetischer Testartikel für die echte Browserprüfung, ohne reale personenbezogene Daten.');await page.locator('[name=category_id]').selectOption(String(category));await page.locator('[name=price]').fill('45.00');await page.locator('[name=zip]').fill('10115');await page.locator('[name=city]').fill('Teststadt');await page.locator('[name=accept_rules]').check();
   const picture=execFileSync('docker',['--host=unix:///var/run/docker.sock','exec','gunindex-rebuild-app','php','-r',"$i=imagecreatetruecolor(200,160);imagefill($i,0,0,imagecolorallocate($i,46,160,130));imagepng($i);"]);
