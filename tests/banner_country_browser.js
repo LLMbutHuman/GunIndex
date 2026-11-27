@@ -46,7 +46,17 @@ function fixture(operation, data = {}) {
     for (const [width,columns] of [[1440,3],[820,2],[390,1],[320,1]]) {
       await page.setViewportSize({width,height:850});
       assert.equal(await section.locator('.banner-ad-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),columns);
-      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Banner horizontal overflow');
+      const geometry=await section.evaluate(el=>{
+        const widthWithBanners=document.documentElement.scrollWidth;
+        const insideViewport=[el,...el.querySelectorAll('.banner-ad-grid,.banner-ad-card,.banner-ad-link,.banner-ad-report')]
+          .every(node=>{const bounds=node.getBoundingClientRect();return bounds.left>=0&&bounds.right<=innerWidth+1;});
+        el.hidden=true;
+        const widthWithoutBanners=document.documentElement.scrollWidth;
+        el.hidden=false;
+        return {insideViewport,widthWithBanners,widthWithoutBanners};
+      });
+      assert(geometry.insideViewport&&geometry.widthWithBanners<=geometry.widthWithoutBanners,
+        `Banner adds horizontal overflow at ${width}px: ${JSON.stringify(geometry)}`);
       const hit=await links.first().boundingBox();
       assert(hit&&hit.height>=44&&hit.width>=44,'Banner target too small');
       const rects=await section.locator('.banner-ad-card').evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().height));
