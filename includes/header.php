@@ -5,10 +5,6 @@ require_once __DIR__ . '/banner-advertising.php';
 $viewer = current_user($pdo);
 $brandName = site_setting($pdo, 'brand_name', 'GunIndex.eu');
 $tagline = i18n_setting($pdo, 'tagline', 'Besonderes finden. Gemeinsam weitergeben.');
-$accent = site_setting($pdo, 'accent', '#35e6bd');
-$secondary = site_setting($pdo, 'secondary', '#ffb86c');
-$accent = preg_match('/\A#[0-9a-fA-F]{6}\z/', $accent) ? $accent : '#35e6bd';
-$secondary = preg_match('/\A#[0-9a-fA-F]{6}\z/', $secondary) ? $secondary : '#ffb86c';
 $motion = site_setting($pdo, 'animation_mode', 'full');
 $motion = in_array($motion, ['full', 'reduced', 'off'], true) ? $motion : 'reduced';
 $unreadNotices=$viewer?notification_unread_count($pdo,(int)$viewer['id']):0;
@@ -21,7 +17,7 @@ $marketCountry=geo_country();$marketCountryLabels=geo_countries();
 $pageTitle = isset($pageTitle) && is_string($pageTitle) ? $pageTitle : t('Entdecken');
 $pageDescription = isset($pageDescription) && is_string($pageDescription) ? $pageDescription : $tagline;
 $seoPage = ['index'=>false, 'canonical'=>null, 'structured'=>null, 'alternates'=>[]];
-if (function_exists('seo_page') && in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET','HEAD'], true)
+if (empty($seoFiltered) && function_exists('seo_page') && in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET','HEAD'], true)
     && (http_response_code() === false || http_response_code() === 200)) {
     $requestPath = rawurldecode((string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'));
     $seoPage = seo_page(site_settings($pdo), $requestPath, $seoListing ?? null, seo_request_origin($_SERVER) ?? '', i18n_locale());
@@ -96,7 +92,6 @@ if (!function_exists('ui_icon')) {
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/assets/css/international.css">
     <?php if (!empty($publicBannerPlacement)): ?><link rel="stylesheet" href="/assets/css/banner-advertising.css"><?php endif; ?>
-    <style>:root{--accent:<?= h($accent) ?>;--secondary:<?= h($secondary) ?>}</style>
     <script src="/assets/js/app.js" defer></script>
 </head>
 <body>
@@ -106,7 +101,7 @@ if (!function_exists('ui_icon')) {
     <div class="nav-shell<?=$viewer?' has-inbox':''?>">
         <a class="brand" href="<?=h(defined('GUNINDEX_PUBLIC_LOCALE') ? seo_localized_path('/', GUNINDEX_PUBLIC_LOCALE) : '/marketplace/index.php')?>" aria-label="<?= h($brandName) ?> – <?=h(t('Entdecken'))?>"><span class="brand-mark" aria-hidden="true"><span></span></span><span><?= h($brandName) ?></span></a>
         <nav class="desktop-nav" aria-label="<?=h(t('Hauptnavigation'))?>">
-            <a href="/marketplace/search.php"><?=h(t('Entdecken'))?></a><a href="/marketplace/search.php?type=auction"><?=h(t('Auktionen'))?></a><a href="/marketplace/policy.php"><?=h(t('So funktioniert’s'))?></a>
+            <a href="/marketplace/search.php"><?=h(t('ember.market'))?></a><a href="/marketplace/search.php?type=auction"><?=h(t('Auktionen'))?></a><a href="<?=h(seo_localized_path('/fachwissen', i18n_locale()))?>"><?=h(t('ember.editorial_nav'))?></a>
             <?php if ($viewer): ?>
                 <a class="messages-link" href="/user/messages.php" aria-label="<?=h($messagesLabel)?>"><?=ui_icon('messages')?><?=h(t('Nachrichten'))?><?php if ($unreadMessages): ?><span class="message-count" aria-hidden="true"><?=h($messageBadge)?></span><?php endif; ?></a>
                 <a href="/user/notifications.php"><?=h(t('Benachrichtigungen'))?><?=$unreadNotices?' ('.min(99,$unreadNotices).')':''?></a>
@@ -118,7 +113,7 @@ if (!function_exists('ui_icon')) {
             <a class="account-link" aria-label="<?=h($viewer ? t('Mein Konto').': '.$viewer['username'] : t('Anmelden'))?>" href="<?= $viewer ? '/user/dashboard.php' : '/auth/login.php' ?>"><?= ui_icon('account') ?><span><?= $viewer ? h($viewer['username']) : t('Anmelden') ?></span></a>
             <a class="button small sell-link" href="/user/create-listing.php"><?= ui_icon('plus') ?><?=h(t('Inserieren'))?></a>
         </div>
-        <details class="mobile-menu"><summary aria-label="<?=h(t('Menü öffnen'))?>"><?= ui_icon('menu') ?></summary><nav aria-label="<?=h(t('Hauptnavigation'))?>"><?php if($viewer): ?><a href="/user/notifications.php"><?= h(t('Benachrichtigungen')) ?> (<?= $unreadNotices ?>)</a><a class="messages-link" href="/user/messages.php" aria-label="<?=h($messagesLabel)?>"><?=ui_icon('messages')?><?=h(t('Nachrichten'))?><?php if ($unreadMessages): ?><span class="message-count" aria-hidden="true"><?=h($messageBadge)?></span><?php endif; ?></a><?php endif; ?><a href="/marketplace/search.php"><?=h(t('Entdecken'))?></a><a href="/marketplace/search.php?type=auction"><?=h(t('Auktionen'))?></a><a href="/user/create-listing.php"><?=h(t('Inserat erstellen'))?></a><a href="<?= $viewer ? '/user/dashboard.php' : '/auth/login.php' ?>"><?=h(t($viewer?'Mein Konto':'Anmelden'))?></a><?php if ($canOpenAdmin): ?><a href="/admin/index.php"><?=h(t('refine.open_admin'))?></a><?php endif; ?><a href="/marketplace/policy.php"><?=h(t('Plattformregeln'))?></a></nav></details>
+        <details class="mobile-menu"><summary aria-label="<?=h(t('Menü öffnen'))?>"><?= ui_icon('menu') ?></summary><nav aria-label="<?=h(t('Hauptnavigation'))?>"><?php if($viewer): ?><a href="/user/notifications.php"><?= h(t('Benachrichtigungen')) ?> (<?= $unreadNotices ?>)</a><a class="messages-link" href="/user/messages.php" aria-label="<?=h($messagesLabel)?>"><?=ui_icon('messages')?><?=h(t('Nachrichten'))?><?php if ($unreadMessages): ?><span class="message-count" aria-hidden="true"><?=h($messageBadge)?></span><?php endif; ?></a><?php endif; ?><a href="/marketplace/search.php"><?=h(t('ember.market'))?></a><a href="<?=h(seo_localized_path('/fachwissen', i18n_locale()))?>"><?=h(t('ember.editorial_nav'))?></a><a href="/marketplace/search.php?type=auction"><?=h(t('Auktionen'))?></a><a href="/user/create-listing.php"><?=h(t('Inserat erstellen'))?></a><a href="<?= $viewer ? '/user/dashboard.php' : '/auth/login.php' ?>"><?=h(t($viewer?'Mein Konto':'Anmelden'))?></a><?php if ($canOpenAdmin): ?><a href="/admin/index.php"><?=h(t('refine.open_admin'))?></a><?php endif; ?><a href="/marketplace/policy.php"><?=h(t('Plattformregeln'))?></a></nav></details>
     </div>
     <div class="market-tools page-width"><details class="market-switcher"><summary><?=h(t('Ländermarkt'))?>: <?=h($marketCountryLabels[$marketCountry])?> · <?=h(i18n_locales()[i18n_locale()])?></summary><form action="/user/language.php" method="post"><?=csrf_field()?><input type="hidden" name="return_path" value="<?=h($_SERVER['REQUEST_URI']??'/')?>"><label class="field"><?=h(t('Sprache'))?><select name="locale"><?php foreach(i18n_locales() as $headerLocaleCode=>$headerLocaleLabel):?><option value="<?=h($headerLocaleCode)?>" <?=i18n_locale()===$headerLocaleCode?'selected':''?>><?=h($headerLocaleLabel)?></option><?php endforeach;?></select></label><label class="field"><?=h(t('Ländermarkt'))?><select name="market_country"><?php foreach(geo_active_countries($pdo) as $headerMarketCode=>$headerMarketLabel):?><option value="<?=h($headerMarketCode)?>" <?=$marketCountry===$headerMarketCode?'selected':''?>><?=h($headerMarketLabel.' ('.$headerMarketCode.')')?></option><?php endforeach;?></select></label><button class="button small" type="submit"><?=h(t('Übernehmen'))?></button></form></details></div>
 </header>

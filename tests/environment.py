@@ -97,6 +97,7 @@ def test():
    docker('exec',APP,'php','tests/'+suite)
   docker('exec',APP,'php','tests/seo_locale_http_test.php')
   docker('exec',APP,'php','tests/marketplace_refinements_test.php','--database')
+  docker('exec',APP,'php','tests/carbon_ember_test.php','--database')
   docker('exec',APP,'php','tests/banner_advertising_test.php','--database')
   for suite in ('escrow_workflow_test.php','escrow_integration_test.php','escrow_parallel_test.php'):
    docker('exec',APP,'php','tests/'+suite)

@@ -5,14 +5,14 @@ require_once __DIR__ . '/i18n.php';
 /** Locale prefixes apply exclusively to these public document routes. */
 function seo_public_route(string $path): ?array
 {
-    if (!preg_match('~\A/([a-z]{2})(/|/marketplace/view-(?:item|auction)\.php)\z~', $path, $matches)
+    if (!preg_match('~\A/([a-z]{2})(/|/fachwissen|/marketplace/view-(?:item|auction)\.php)\z~', $path, $matches)
         || !isset(i18n_locales()[$matches[1]])) return null;
     return ['locale'=>$matches[1], 'path'=>$matches[2]];
 }
 
 function seo_localized_path(string $path, string $locale): string
 {
-    if (!isset(i18n_locales()[$locale]) || ($path !== '/' && !preg_match('~\A/marketplace/view-(?:item|auction)\.php\?id=[1-9][0-9]{0,18}\z~', $path))) {
+    if (!isset(i18n_locales()[$locale]) || (!in_array($path, ['/', '/fachwissen'], true) && !preg_match('~\A/marketplace/view-(?:item|auction)\.php\?id=[1-9][0-9]{0,18}\z~', $path))) {
         throw new InvalidArgumentException('Invalid public localized path.');
     }
     return '/' . $locale . $path;
@@ -26,7 +26,7 @@ function seo_switch_path(string $return, string $locale): string
     $route = seo_public_route($path);
     if ($route !== null) $path = $route['path'];
     if (in_array($path, ['/', '/index.php', '/marketplace/index.php'], true)) $path = '/';
-    if (!in_array($path, ['/', '/marketplace/view-item.php', '/marketplace/view-auction.php'], true)) return $return;
+    if (!in_array($path, ['/', '/fachwissen', '/marketplace/view-item.php', '/marketplace/view-auction.php'], true)) return $return;
     $query = isset($parts['query']) ? '?' . $parts['query'] : '';
     $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
     return '/' . $locale . $path . $query . $fragment;
@@ -170,6 +170,10 @@ function seo_page(array $settings, string $requestPath, ?array $listing = null, 
         $alternates = seo_alternates($origin, '/');
         return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>null, 'alternates'=>$alternates, 'breadcrumbs'=>null];
     }
+    if ($requestPath === '/fachwissen') {
+        $alternates = seo_alternates($origin, '/fachwissen');
+        return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>null, 'alternates'=>$alternates, 'breadcrumbs'=>null];
+    }
     if ($listing !== null && seo_listing_current($listing)) {
         $path = seo_listing_path($listing);
         if ($requestPath === parse_url($path, PHP_URL_PATH)) {
@@ -255,7 +259,10 @@ function seo_sitemap_document(string $origin, ?int $page, array $data): string
     }
     if ($page < 1 || $page > 50000 || !is_array($data['items'] ?? null) || count($data['items']) > 1000) throw new InvalidArgumentException('Invalid sitemap rows.');
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">';
-    if ($page === 1) $xml .= seo_sitemap_entries($origin, '/');
+    if ($page === 1) {
+        $xml .= seo_sitemap_entries($origin, '/');
+        $xml .= seo_sitemap_entries($origin, '/fachwissen');
+    }
     foreach ($data['items'] as $listing) {
         if (!seo_listing_current($listing)) continue;
         $updated = $listing['updated_at'] ?? '';

@@ -6,11 +6,11 @@ function site_setting_definitions(): array
 {
     return [
         'brand_name' => ['type' => 'text', 'default' => 'GunIndex.eu', 'label' => 'admin_settings.field.brand_name', 'max' => 60, 'min' => 2],
-        'tagline' => ['type' => 'text', 'default' => 'Gute Dinge. Neue Geschichten.', 'label' => 'admin_settings.field.tagline', 'max' => 120, 'min' => 0],
-        'hero_title' => ['type' => 'text', 'default' => 'Besonderes finden. Neues möglich machen.', 'label' => 'admin_settings.field.hero_title', 'max' => 120, 'min' => 2],
-        'hero_text' => ['type' => 'text', 'default' => 'Besondere Fundstücke, ehrliche Angebote und spannende Auktionen für deinen Alltag.', 'label' => 'admin_settings.field.hero_text', 'max' => 500, 'min' => 0],
-        'accent' => ['type' => 'color', 'default' => '#35e6bd', 'label' => 'admin_settings.field.accent'],
-        'secondary' => ['type' => 'color', 'default' => '#ffb86c', 'label' => 'admin_settings.field.secondary'],
+        'tagline' => ['type' => 'text', 'default' => 'Ausrüstung und Fachwissen für Jagd, Schießsport und Outdoor.', 'translation'=>'ember.tagline', 'label' => 'admin_settings.field.tagline', 'max' => 120, 'min' => 0],
+        'hero_title' => ['type' => 'text', 'default' => 'Gut ausgerüstet. Klar informiert.', 'translation'=>'ember.hero', 'label' => 'admin_settings.field.hero_title', 'max' => 120, 'min' => 2],
+        'hero_text' => ['type' => 'text', 'default' => 'Finde Ausrüstung für Jagd, Schießsport und Outdoor, Optik und Sammlerbedarf. Lies Fachinformationen zum Waffenrecht.', 'translation'=>'ember.hero_intro', 'label' => 'admin_settings.field.hero_text', 'max' => 500, 'min' => 0],
+        'accent' => ['type' => 'color', 'default' => '#ff9955', 'label' => 'admin_settings.field.accent'],
+        'secondary' => ['type' => 'color', 'default' => '#8faebb', 'label' => 'admin_settings.field.secondary'],
         'animation_mode' => ['type' => 'animation', 'default' => 'full', 'label' => 'admin_settings.field.animation_mode'],
         'maintenance_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'maintenance.enable'],
         'seo_indexing_enabled' => ['type' => 'boolean', 'default' => '0', 'label' => 'admin_settings.field.seo_indexing_enabled'],

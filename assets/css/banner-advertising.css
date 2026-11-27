@@ -7,8 +7,8 @@
 .banner-ad-overlay{position:relative;margin:.7rem;padding:.38rem .6rem;border-radius:.35rem;background:#17352f;color:#fff;text-align:center;font-weight:700;overflow-wrap:anywhere;max-width:calc(100% - 1.4rem);line-height:1.2}
 .banner-ad-dark{background:#121e2d}
 .banner-ad-dark .banner-ad-overlay{background:#121e2d;color:#fff}
-.banner-ad-light{background:#eef5f2;color:#102822}
-.banner-ad-light .banner-ad-overlay{background:#eef5f2;color:#102822}
+.banner-ad-light{background:#F5F5F3;color:var(--on-accent)}
+.banner-ad-light .banner-ad-overlay{background:#F5F5F3;color:var(--on-accent)}
 .banner-ad-caption{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;padding:.5rem .75rem;color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
 .banner-ad-caption a{flex-shrink:0;text-decoration:underline}
 .banner-ad-url{overflow-wrap:anywhere}

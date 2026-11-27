@@ -67,6 +67,7 @@ function i18n_dictionary(?string $locale=null):array {
     static $cache=[];$locale=$locale??i18n_locale();if(!isset(i18n_locales()[$locale]))$locale='de';
     if(!isset($cache[$locale])){
         $path=dirname(__DIR__).'/locales/'.$locale.'.php';$loaded=is_file($path)?require $path:[];$cache[$locale]=is_array($loaded)?$loaded:[];
+        $cache[$locale] = array_replace($cache[$locale], require dirname(__DIR__).'/locales/carbon_ember/'.$locale.'.php');
         // Explicit trusted modules only; never discover PHP catalogs from user-controlled paths.
         foreach (['setup','personal','consent','account','shared','dashboard','auction_billing','auction_correction','maintenance','relisting','e2ee','trade','classification','listing_draft','listing_alert','sessions','user_security','profile_images','paypal_refunds','bank','bitcoin','mail_setup','escrow','dealer_team','dealer_stock','dealer_api','dealer_checkout','dealer_subscription','account_consent','payment_customer','finance_customer','billing_customer','finance_admin','promotion','admin_nav','admin_audit','admin_privacy','admin_settings','saved_search','legal_ui','wanted','admin_overview','identity','admin_listings','admin_users','admin_campaigns','market_policy','dealer_dashboard','listing_validation','auction_actions','banner_ads','marketplace_refinements','admin_roles_matrix','setup_wizard'] as $moduleName) {
             $modulePath=dirname(__DIR__).'/locales/'.$moduleName.'/'.$locale.'.php';
@@ -99,7 +100,7 @@ function i18n_setting(PDO $pdo,string $key,string $default=''):string {
     if($locale!=='de'){$q=$pdo->prepare('SELECT content FROM market_content_translations WHERE setting_key=? AND locale=?');$q->execute([$key,$locale]);$localized=$q->fetchColumn();if(is_string($localized)&&$localized!=='')return $localized;}
     $value=site_setting($pdo,$key,$default);$definition=site_setting_definitions()[$key]??null;
     // A custom operator text remains its authored language until a translation is entered.
-    return $definition&&$value===$definition['default']?t($value):$value;
+    return $definition&&$value===$definition['default']?t($definition['translation'] ?? $value):$value;
 }
 function i18n_category(PDO $pdo,array $category):string {
     $locale=i18n_locale();if($locale==='de')return(string)($category['name']??$category['category_name']??'');

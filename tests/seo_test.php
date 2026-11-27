@@ -132,6 +132,7 @@ $tests = [
     'sitemap_emits_only_public_canonical_urls_and_real_timestamps' => static function () use ($fixed,$auction,$origin): void {
         $xml=seo_sitemap_document($origin,1,['items'=>[$fixed,$auction,array_merge($fixed,['id'=>44,'status'=>'draft'])]]);
         seo_assert(str_contains($xml,'<loc>'.$origin.'/de/</loc>'),'Homepage missing.');
+        seo_assert(str_contains($xml,'<loc>'.$origin.'/de/fachwissen</loc>'),'Editorial index missing.');
         seo_assert(str_contains($xml,'view-item.php?id=42') && str_contains($xml,'view-auction.php?id=43'),'Current public listing missing.');
         seo_assert(!str_contains($xml,'id=44'),'Draft exposed in sitemap.');
         seo_assert(str_contains($xml,'2026-10-30T12:13:14Z'),'Real modification time absent.');
@@ -142,7 +143,7 @@ $tests = [
         $xpath->registerNamespace('s','http://www.sitemaps.org/schemas/sitemap/0.9');
         $xpath->registerNamespace('x','http://www.w3.org/1999/xhtml');
         $entries = $xpath->query('/s:urlset/s:url');
-        seo_assert($entries->length===24,'Eight versions per public entity must be emitted.');
+        seo_assert($entries->length===32,'Eight versions per public entity must be emitted.');
         foreach ($entries as $entry) {
             $location = $xpath->evaluate('string(s:loc)', $entry);
             $links = $xpath->query('x:link[@rel="alternate"]', $entry);

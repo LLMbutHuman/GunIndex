@@ -19,11 +19,16 @@ if ($method === 'POST') {
     require_csrf();
     $submitted = [];
     foreach (array_keys($definitions) as $key) {
-        $submitted[$key] = $_POST[$key] ?? $values[$key];
+        $submitted[$key] = in_array($key, ['accent','secondary'], true) ? $values[$key] : ($_POST[$key] ?? $values[$key]);
         if (is_string($submitted[$key])) $values[$key] = $submitted[$key];
     }
     $receivedRevision = $_POST['_revision'] ?? null;
     try {
+        foreach (['accent','secondary'] as $colorKey) {
+            if (array_key_exists($colorKey, $_POST) && $_POST[$colorKey] !== $values[$colorKey]) {
+                throw new InvalidArgumentException(t('admin_settings.invalid_field', ['field'=>t($definitions[$colorKey]['label'])]));
+            }
+        }
         if (!is_string($receivedRevision) || !preg_match('/\A[a-f0-9]{64}\z/', $receivedRevision)) throw new InvalidArgumentException(t('admin_settings.reload_required'));
         $changed = site_settings_save($pdo, (int)$admin['id'], $submitted, $receivedRevision);
         $values = site_settings($pdo, true);
@@ -41,7 +46,7 @@ if ($method === 'POST') {
 include __DIR__ . '/../includes/header.php';
 $groups = [
     'admin_settings.brand' => ['brand_name', 'tagline', 'hero_title', 'hero_text', 'contact_email'],
-    'admin_settings.appearance' => ['accent', 'secondary', 'animation_mode'],
+    'admin_settings.appearance' => ['animation_mode'],
     'admin_settings.availability' => ['registration_enabled', 'maintenance_enabled', 'seo_indexing_enabled'],
     'admin_settings.paypal' => ['manual_paypal_enabled','manual_paypal_recipient','manual_paypal_approved','manual_tax_reviewed','manual_tax_bps'],
     'admin_settings.business' => ['business_promotions_enabled','dealer_profiles_enabled','business_reservation_minutes'],
@@ -60,6 +65,7 @@ $groups = [
             <?= csrf_field() ?><input type="hidden" name="_revision" value="<?= h($revision) ?>">
             <?php foreach ($groups as $heading => $keys): ?><section class="panel"><h2><?= h(t($heading)) ?></h2>
                 <?php if ($heading === 'admin_settings.fees'): ?><p class="notice"><?=h(t('admin_settings.fees_help'))?></p><?php endif; ?>
+                <?php if ($heading === 'admin_settings.appearance'): ?><p><?=h(t('ember.palette'))?></p><?php endif; ?>
                 <div class="form-grid">
                     <?php foreach ($keys as $key): $definition = $definitions[$key]; ?>
                         <div class="field<?= in_array($key, ['hero_text', 'hero_title'], true) ? ' full-width' : '' ?>">

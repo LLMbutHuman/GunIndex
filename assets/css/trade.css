@@ -27,7 +27,7 @@
 .trade .trade-history li + li { margin-top: .8rem; }
 .trade .trade-history time { display: block; opacity: .75; font-size: .88rem; }
 .trade .trade-text { white-space: pre-wrap; }
-.trade .trade-note { border-inline-start: .2rem solid var(--accent, #35e6bd); padding-inline-start: .9rem; }
+.trade .trade-note { border-inline-start: .2rem solid var(--accent); padding-inline-start: .9rem; }
 .trade .trade-empty { margin-block: 1rem; }
 .trade .trade-tabs { display: flex; gap: .7rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
 .trade .trade-tabs [aria-current=page] { text-decoration: underline; text-underline-offset: .2em; }

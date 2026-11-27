@@ -23,17 +23,42 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
     return Math.abs((first.left+last.right)/2-(strip.left+strip.right)/2)<4 && document.documentElement.scrollWidth<=innerWidth;
   }),'Desktop manifesto did not center its visible text');
   journeys.push('desktop_manifesto_centered');
-  for(const width of [320,981,1024,1440]){
+  for(const width of [320,820,981,1024,1440]){
    await page.setViewportSize({width,height:1000});
    assert(await page.evaluate(()=>[...document.querySelector('.nav-shell').children].every(el=>el.getBoundingClientRect().right<=innerWidth)), 'Signed-in navigation overflow at '+width);
    const inbox=page.locator(width<=980?'.nav-actions .mobile-messages':'.desktop-nav .messages-link');
    assert(await inbox.isVisible(),'Inbox unavailable at '+width);
   }
+  await phone.goto(origin+'/');
+  const heroButton=await phone.locator('.hero-search button').boundingBox();
+  assert(heroButton.width>=44 && heroButton.height>=44,'Hero search target is too small');
+  await Promise.all([phone.waitForURL('**/de/fachwissen'),phone.locator('.hero-links a[href="/de/fachwissen"]').click()]);
+  assert.strictEqual(await phone.locator('.editorial-topic').count(),7);
+  assert.strictEqual(await phone.locator('.editorial-topic :is(form, a)').count(),0,'Editorial topic links to a market action');
+  await phone.locator('main select[name=country]').selectOption('DE');
+  await phone.locator('main select[name=status]').selectOption('pending');
+  const editorial=await Promise.all([phone.waitForNavigation(),phone.getByRole('button',{name:'Anzeigen',exact:true}).click()]);
+  assert.strictEqual(editorial[0].headers()['x-robots-tag'],'noindex, nofollow');
+  assert.strictEqual(await phone.locator('.editorial-topic').count(),7);
+  await phone.setViewportSize({width:320,height:820});
+  await phone.addStyleTag({content:'html{font-size:200%}'});
+  assert(await phone.evaluate(()=>document.querySelector('main').getBoundingClientRect().right<=innerWidth),'Enlarged editorial layout overflows');
+  await phone.setViewportSize({width:390,height:844});
+  await phone.goto(origin+'/marketplace/search.php');
+  assert(await phone.locator('.search-primary select[name=category_id]').isVisible());
+  assert(!(await phone.locator('.search-more select[name=sort]').isVisible()));
+  await phone.locator('.search-more summary').focus();
+  await phone.keyboard.press('Enter');
+  assert(await phone.locator('.search-more select[name=sort]').isVisible());
+  journeys.push('editorial_and_keyboard_search_flow');
   await page.goto(origin+'/user/create-listing.php');const title='Fixture '+crypto.randomBytes(8).toString('hex')+' Browser Schreibtisch';
   await page.locator('[name=title]').fill(title);await page.locator('textarea[name=description]').fill('Synthetischer Testartikel für die echte Browserprüfung, ohne reale personenbezogene Daten.');await page.locator('[name=category_id]').selectOption(String(category));await page.locator('[name=price]').fill('45.00');await page.locator('[name=zip]').fill('10115');await page.locator('[name=city]').fill('Teststadt');await page.locator('[name=accept_rules]').check();
   const picture=execFileSync('docker',['--host=unix:///var/run/docker.sock','exec','gunindex-rebuild-app','php','-r',"$i=imagecreatetruecolor(200,160);imagefill($i,0,0,imagecolorallocate($i,46,160,130));imagepng($i);"]);
   await page.locator('[name="images[]"]').setInputFiles([{name:'synthetic.png',mimeType:'image/png',buffer:picture},{name:'synthetic-second.png',mimeType:'image/png',buffer:picture}]);await Promise.all([page.waitForURL('**/user/dashboard.php?saved=*'),page.getByRole('button',{name:'Inserat speichern',exact:true}).click()]);
   const listing=Number(fixture('find_listing',{username:seller.username,title}).id);assert(listing>0);await page.goto(origin+'/marketplace/view-item.php?id='+listing);await page.waitForFunction(()=>{const i=document.querySelector('[data-gallery-main]');return i&&i.complete&&i.naturalWidth>0;});journeys.push('listing_image');
+  assert(await page.locator('main h1').isVisible());
+  assert(await page.getByRole('link',{name:'Angebot melden',exact:true}).isVisible());
+  assert(await page.locator('.detail-facts').first().getByText('Privater Anbieter').isVisible());
   await page.goto(origin+'/user/edit-listing.php?id='+listing);
   const imageSelects=page.locator('select[name^="image_positions["]');
   const imageNames=await imageSelects.evaluateAll(nodes=>nodes.map(node=>node.name));assert.strictEqual(imageNames.length,2);

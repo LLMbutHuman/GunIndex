@@ -11,7 +11,7 @@ $adminLinks=[
  '/admin/categories.php'=>['admin_nav.categories','categories.manage'],'/admin/users.php'=>['admin_nav.users','users.manage'],'/admin/roles.php'=>['admin_nav.roles','roles.manage'],
  '/admin/listings.php'=>['admin_nav.listings','content.moderate'],'/admin/ratings.php'=>['admin_nav.ratings','content.moderate'],'/admin/moderation.php'=>['admin_nav.moderation','reports.read'],
  '/admin/dealers.php'=>['banner_ads.dealers_title','dealers.manage'],'/admin/campaigns.php'=>['banner_ads.admin_title','campaigns.manage'],'/admin/payments.php'=>['finance_admin.payments','finance.manage'],'/admin/finance.php'=>['admin_nav.finance','finance.manage'],
- '/admin/privacy.php'=>['admin_nav.privacy','privacy.review'],'/admin/verifications.php'=>['admin_nav.identity','identity.review'],'/admin/legal.php'=>['admin_nav.legal','legal.manage'],'/admin/logs.php'=>['admin_nav.audit','site.manage']];
+ '/admin/privacy.php'=>['admin_nav.privacy','privacy.review'],'/admin/verifications.php'=>['admin_nav.identity','identity.review'],'/admin/legal.php'=>['admin_nav.legal','legal.manage'],'/admin/editorial.php'=>['ember.editorial_admin','legal.manage'],'/admin/logs.php'=>['admin_nav.audit','site.manage']];
 if (escrow_simulation_enabled($pdo)) $adminLinks['/admin/escrow.php'] = ['escrow.admin_title','finance.manage'];
 $adminPath=parse_url($_SERVER['REQUEST_URI']??'',PHP_URL_PATH);
 ?>

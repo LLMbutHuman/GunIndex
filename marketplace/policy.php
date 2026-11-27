@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
 $sections = [
     'rules'=>'market_policy.rules', 'payments'=>'market_policy.payments',
-    'privacy'=>'market_policy.privacy', 'operator'=>'market_policy.operator',
+    'privacy'=>'market_policy.privacy', 'operator'=>'ember.imprint',
 ];
 $section = $_GET['section'] ?? 'rules';
 if (!is_string($section) || !isset($sections[$section])) abort_request(404, t('market_policy.missing'));
@@ -23,6 +23,7 @@ include __DIR__.'/../includes/header.php';
         <article class="prose panel">
             <p class="notice"><?=h(t('market_policy.review'))?></p>
             <?php if ($section === 'rules'):?>
+                <p><?=h(t('ember.rules_summary'))?></p>
                 <p><?=h(t('market_policy.scope'))?></p>
                 <h2><?=h(t('market_policy.prohibited'))?></h2>
                 <ul>
@@ -62,14 +63,30 @@ include __DIR__.'/../includes/header.php';
                     'example'=>money_eur((int)fees_quote('auction_success', 100000)['gross_cents']),
                 ]))?></p>
             <?php elseif ($section === 'privacy'):?>
+                <p><?=h(t('ember.privacy_summary'))?></p>
                 <p><?=h(t('market_policy.data'))?></p>
                 <p><?=h(t('market_policy.storage'))?></p>
                 <p><?=h(t('market_policy.identity'))?></p>
                 <p><?=h(t('market_policy.chat'))?></p>
             <?php else:?>
-                <p><?=h(t('market_policy.operator_help'))?></p>
-                <?php $contact = site_setting($pdo, 'contact_email', '');
-                if (filter_var($contact, FILTER_VALIDATE_EMAIL)):?>
+                <?php $operator = site_settings($pdo);
+                $contact = $operator['operator_email'] ?: $operator['contact_email'];
+                $address = trim($operator['operator_postcode'].' '.$operator['operator_city']);
+                $countryLabel = geo_countries()[$operator['operator_country']] ?? $operator['operator_country'];
+                if ($operator['operator_legal_name'] !== ''): ?>
+                    <address class="operator-address">
+                        <strong><?=h($operator['operator_legal_name'])?></strong><br>
+                        <?php foreach ([$operator['operator_address_line1'], $operator['operator_address_line2'], $address, $countryLabel] as $line): ?>
+                            <?php if ($line !== ''): ?><?=h($line)?><br><?php endif; ?>
+                        <?php endforeach; ?>
+                    </address>
+                <?php endif; ?>
+                <?php if ($operator['operator_legal_name'] === '' || $operator['operator_address_line1'] === '' || $operator['operator_city'] === '' || $operator['operator_postcode'] === '' || $contact === ''): ?>
+                <p class="notice"><?=h(t('ember.operator_pending'))?></p>
+                <?php endif; ?>
+                <?php if ($operator['operator_registration'] !== ''): ?><p><?=h(t('admin_settings.field.operator_registration'))?> · <?=h($operator['operator_registration'])?></p><?php endif; ?>
+                <?php if ($operator['operator_vat_id'] !== ''): ?><p><?=h(t('admin_settings.field.operator_vat_id'))?> · <?=h($operator['operator_vat_id'])?></p><?php endif; ?>
+                <?php if (filter_var($contact, FILTER_VALIDATE_EMAIL)):?>
                     <p><?=h(t('market_policy.contact'))?> <a href="mailto:<?=h($contact)?>"><?=h($contact)?></a></p>
                 <?php endif;?>
             <?php endif;?>

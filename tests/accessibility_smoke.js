@@ -4,7 +4,7 @@ const {playwright:pw,launchOptions,axe}=require('./browser_tools');
 const AxeBuilder=axe();
 const origin=process.env.GUNINDEX_A11Y_URL||'http://127.0.0.1:8081';const parsed=new URL(origin);
 assert(parsed.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(parsed.hostname)&&!parsed.username&&!parsed.password,'Only a local test origin is supported');
-const paths=['/','/marketplace/search.php','/auth/login.php','/auth/register.php'];
+const paths=['/','/marketplace/search.php','/de/fachwissen','/auth/login.php','/auth/register.php'];
 (async()=>{
  const browser=await pw.chromium.launch(launchOptions());const checks=[];
  try{

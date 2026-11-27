@@ -1080,13 +1080,14 @@ class MarketplaceHTTP(unittest.TestCase):
 
     def test_settings_require_csrf_and_public_brand_changes(self):
         admin = self.user(admin=True); original = self.settings(admin)
-        changed = dict(original, brand_name='TestMarket ' + secrets.token_hex(6), accent='#123abc', secondary='#de9012', animation_mode='reduced')
+        changed = dict(original, brand_name='TestMarket ' + secrets.token_hex(6), animation_mode='reduced')
         no_token = dict(changed); no_token.pop('csrf_token')
         self.assertEqual(403, admin['browser'].request('/admin/settings.php', no_token)[0])
         try:
             self.assertEqual(200, admin['browser'].request('/admin/settings.php', changed)[0])
             body = Browser().request('/')[2]
-            self.assertIn(changed['brand_name'], body); self.assertIn('--accent:#123abc', body)
+            self.assertIn(changed['brand_name'], body)
+            self.assertIn('--accent:#FF9955', Browser().request('/assets/css/app.css')[2])
             self.assertIn('data-motion="reduced"', body)
         finally:
             self.restore_settings(admin, original)
@@ -1096,19 +1097,19 @@ class MarketplaceHTTP(unittest.TestCase):
         changed = dict(original, accent='red;}</style><script>alert(1)</script>')
         self.assertEqual(422, admin['browser'].request('/admin/settings.php', changed)[0])
         current = self.settings(admin)
-        self.assertEqual(original['accent'], current['accent'])
+        self.assertNotIn('accent', current)
         self.assertEqual(original['_revision'], current['_revision'])
 
     def test_stale_settings_revision_preserves_newer_changes(self):
         admin = self.user(admin=True); original = self.settings(admin)
         first = dict(original, brand_name='Fresh market ' + secrets.token_hex(5))
-        stale = dict(original, secondary='#aa2211')
+        stale = dict(original, tagline='Synthetic stale tagline')
         try:
             self.assertEqual(200, admin['browser'].request('/admin/settings.php', first)[0])
             self.assertEqual(409, admin['browser'].request('/admin/settings.php', stale)[0])
             current = self.settings(admin)
             self.assertEqual(first['brand_name'], current['brand_name'])
-            self.assertEqual(original['secondary'], current['secondary'])
+            self.assertEqual(original['tagline'], current['tagline'])
         finally:
             self.restore_settings(admin, original)
 
