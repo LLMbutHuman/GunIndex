@@ -10,7 +10,7 @@ function fixture(operation,fields={}){return JSON.parse(execFileSync('docker',['
  docker('stop','gunindex-rebuild-worker');
  try{
   data=fixture('setup');browser=await playwright.chromium.launch(launchOptions());
-  const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'de-DE',viewport:{width:390,height:844},reducedMotion:'reduce'});
   await context.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());
   const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   page.on('request',request=>{if(!request.url().startsWith(origin+'/'))external.push(new URL(request.url()).hostname);});

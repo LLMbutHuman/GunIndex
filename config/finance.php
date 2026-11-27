@@ -48,6 +48,12 @@ function finance_prepare_order(PDO $pdo,int $invoiceId,int $userId):void {
  if($localized!==$invoice['service_code'])$payload['label']=$localized;
  $payload['render_labels']=finance_pdf_labels($payload['locale']);
  if($invoice['service_code']==='dealer_subscription')$payload['service_description']=t('dealer_subscription.access',['days'=>dealer_subscription_terms()['term_days']]);
+ if($invoice['service_code']==='banner_advertising'){
+  $q=$pdo->prepare('SELECT c.placement,c.term_days FROM market_premium_bookings b JOIN market_campaigns c ON c.id=b.campaign_id WHERE b.invoice_id=?');
+  $q->execute([$invoiceId]);$campaign=$q->fetch();
+  if(!$campaign)throw new PaymentConflict(t('promotion.booking_missing'));
+  $payload['service_description']=t('banner_ads.'.$campaign['placement']).' · '.t('banner_ads.days',['days'=>(int)$campaign['term_days']]);
+ }
  $json=json_encode($payload,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
  $pdo->prepare('INSERT INTO market_invoice_snapshots(invoice_id,user_id,payload_ciphertext,payload_hash) VALUES (?,?,?,?)')->execute([$invoiceId,$userId,crypto_encrypt('finance',$json),hash('sha256',$json)]);
  $pdo->prepare('UPDATE market_manual_orders SET net_cents=?,tax_cents=?,tax_bps=? WHERE invoice_id=?')->execute([$tax['net_cents'],$tax['tax_cents'],$rule['basis_points'],$invoiceId]);

@@ -10,7 +10,7 @@ const origin='http://127.0.0.1:8081';
     'php','tests/auth_session_test.php','--browser-fixture'],{encoding:'utf8'}));
   const browser=await playwright.chromium.launch(launchOptions());
   async function login(user, userAgent) {
-    const context=await browser.newContext({userAgent});
+    const context=await browser.newContext({locale:'de-DE',userAgent});
     const page=await context.newPage();
     await page.goto(origin+'/auth/login.php');
     await page.locator('[name=login]').fill(user.username);

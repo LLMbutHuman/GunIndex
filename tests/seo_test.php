@@ -21,10 +21,27 @@ $tests = [
             'https://user:secret@market.example.org','https://market.example.org:8443',"https://market.example.org\r\nHost: other",'https://market.example.org\\evil'] as $value)
             seo_assert(seo_origin($value) === null, 'Untrusted origin accepted.');
     },
+    'request_indexing_rejects_ip_hosts_test_environments_and_forged_proxy_headers' => static function () use ($origin): void {
+        $server = ['HTTPS'=>'on', 'HTTP_HOST'=>'market.example.org'];
+        seo_assert(seo_request_origin($server, $origin, 'production', 'gunindex') === $origin, 'Canonical production HTTPS host rejected.');
+        seo_assert(seo_request_origin(['HTTP_HOST'=>'MARKET.EXAMPLE.ORG:443'] + $server, $origin, 'production', 'gunindex') === $origin, 'Canonical explicit HTTPS port rejected.');
+        foreach (['127.0.0.1', '[2001:db8::1]', 'foreign.example.org', 'market.example.org:444', "market.example.org\r\n"] as $host) {
+            $untrusted = ['HTTP_HOST'=>$host, 'HTTP_X_FORWARDED_HOST'=>'market.example.org'] + $server;
+            seo_assert(seo_request_origin($untrusted, $origin, 'production', 'gunindex') === null, 'A foreign host was allowed to publish metadata.');
+        }
+        seo_assert(seo_request_origin(['HTTPS'=>'off', 'HTTP_X_FORWARDED_PROTO'=>'https'] + $server, $origin, 'production', 'gunindex') === null, 'A proxy header substituted for HTTPS.');
+        foreach ([['development','gunindex'], ['test','gunindex'], ['production','gunindex_test'], ['production','']] as [$environment, $database]) {
+            seo_assert(seo_request_origin($server, $origin, $environment, $database) === null, 'A test or unconfigured instance remained indexable.');
+        }
+        foreach (['https://staging.example.org', 'https://demo.example.org', 'https://server.example.internal'] as $reserved) {
+            seo_assert(seo_origin($reserved) === null, 'A staging or internal origin was accepted.');
+        }
+    },
     'indexing_requires_explicit_gate_and_nonmaintenance_state' => static function () use ($enabled,$origin): void {
         seo_assert(!seo_gate([], $origin), 'Default gate must be closed.');
         seo_assert(seo_gate($enabled,$origin), 'Explicit gate rejected.');
         seo_assert(!seo_gate(array_merge($enabled,['maintenance_enabled'=>'1']),$origin), 'Maintenance did not close indexing.');
+        seo_assert(!seo_gate(array_merge($enabled,['maintenance_enabled'=>'unexpected']),$origin), 'Invalid maintenance configuration opened indexing.');
         seo_assert(!seo_gate($enabled,null), 'Missing origin accepted.');
         seo_assert(!seo_gate(['seo_indexing_enabled'=>true],$origin), 'Noncanonical gate value accepted.');
     },
@@ -55,6 +72,8 @@ $tests = [
             seo_assert(seo_public_route($path)===null,'An unsupported path accepted a prefix.');
         }
         seo_assert(seo_switch_path('/fr/marketplace/view-item.php?id=42&origin_zip=10115#a','it')==='/it/marketplace/view-item.php?id=42&origin_zip=10115#a','Choice lost return context.');
+        seo_assert(seo_switch_path('/marketplace/index.php','it') === '/it/', 'The homepage alias did not switch to a stable language URL.');
+        seo_assert(seo_switch_path('/marketplace/view-item.php?id=42','it') === '/it/marketplace/view-item.php?id=42', 'The item alias did not switch to a stable language URL.');
         seo_assert(seo_switch_path('/auth/login.php','it')==='/auth/login.php','A private path was rewritten.');
         seo_invalid(static fn()=>seo_localized_path('/admin/index.php','en'));
         seo_invalid(static fn()=>seo_localized_path('/','xx'));
@@ -81,6 +100,19 @@ $tests = [
     'auction_bid_is_not_advertised_as_sale_price' => static function () use ($auction,$origin): void {
         $product=seo_product_data($auction,$origin);
         seo_assert($product!==null && !isset($product['offers']),'Auction invents fixed sale offer.');
+    },
+    'breadcrumb_links_and_descriptions_match_localized_public_documents' => static function () use ($fixed, $enabled, $origin): void {
+        $page = seo_page($enabled, '/fr/marketplace/view-item.php', $fixed + ['category_id'=>3, 'seo_category_name'=>'Jardin'], $origin);
+        $crumbs = $page['breadcrumbs'];
+        seo_assert($crumbs['@type'] === 'BreadcrumbList' && count($crumbs['itemListElement']) === 3, 'The listing hierarchy is incomplete.');
+        [$home, $category, $item] = $crumbs['itemListElement'];
+        seo_assert($home['position'] === 1 && $home['item'] === $origin . '/fr/', 'Home breadcrumb does not use the current language.');
+        seo_assert($category['position'] === 2 && $category['name'] === 'Jardin' && $category['item'] === $origin . '/marketplace/search.php?category_id=3', 'Category breadcrumb is incorrect.');
+        seo_assert($item['position'] === 3 && $item['name'] === $fixed['title'] && $item['item'] === $page['canonical'], 'Listing breadcrumb differs from its canonical URL.');
+        seo_assert(seo_page([], '/fr/marketplace/view-item.php', $fixed, $origin)['breadcrumbs'] === null, 'Breadcrumb metadata survives a closed gate.');
+        $phrase = "\nUn   été\t" . str_repeat('é', 170);
+        $description = seo_description($phrase);
+        seo_assert(preg_match_all('/./u', $description) === 160 && str_starts_with($description, 'Un été '), 'Description trimming damaged multibyte text.');
     },
     'json_ld_cannot_escape_its_script_element' => static function (): void {
         $text='</script><script>alert("x")</script>&';

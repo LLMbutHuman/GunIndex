@@ -66,19 +66,25 @@ function manual_order(PDO $pdo,int $userId,int $listingId,string $service,string
   if(!is_string($hash)||!hash_equals($quote['approval_hash'],$hash))throw new InvalidArgumentException(t('consent.changed'));
   if($quote['gross_cents']<1)throw new PaymentConflict(t('billing_customer.free_credits'));
   $quantity=$service==='bump_pack'?3:1;
-  $taxBps=(int)site_setting($pdo,'manual_tax_bps','0');$tax=fees_tax_split($quote['gross_cents'],$taxBps,true);
-  $termsHash=hash('sha256',$quote['receipt']);
-  $q=$pdo->prepare('SELECT COUNT(*) FROM market_manual_orders WHERE user_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 HOUR');$q->execute([$userId]);if((int)$q->fetchColumn()>=10)throw new PaymentConflict(t('billing_customer.hourly_limit'));
-  $reference='GI-'.strtoupper(bin2hex(random_bytes(10)));
-  $q=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,?,?,?,'issued')");$q->execute([$userId,$reference,$service,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
-  $q=$pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,terms_language,request_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
-  $q->execute([$id,$userId,$listingId,$reference,manual_payment_reason($pdo)===null?site_setting($pdo,'manual_paypal_recipient'):'',$quantity,$tax['net_cents'],$tax['tax_cents'],$taxBps,$termsHash,$quote['receipt'],$quote['language'],$requestKey]);
+  $id=manual_store_order($pdo,$userId,$listingId,$service,$requestKey,$quantity,$quote);
   if($promotion)business_reserve_order($pdo,$id,$userId,$listing,$service,$campaignId);
   if(function_exists('finance_prepare_order'))finance_prepare_order($pdo,$id,$userId);
   consent_record($pdo,$userId,'checkout',$id,$contractDocuments);
-  audit_log($pdo,$userId,'payment.manual_ordered',$id,['fee_version'=>$quote['version'],'terms_hash'=>$termsHash,'terms_language'=>$quote['language'],'approval_hash'=>$quote['approval_hash']]);
   $pdo->commit();return$id;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw$e;}
+}
+/** The caller holds the account lock and records the contract documents in this transaction. */
+function manual_store_order(PDO $pdo,int $userId,?int $listingId,string $service,string $requestKey,int $quantity,array $quote): int {
+ if(!$pdo->inTransaction())throw new LogicException('Manual order requires a transaction.');
+ $taxBps=(int)site_setting($pdo,'manual_tax_bps','0');$tax=fees_tax_split($quote['gross_cents'],$taxBps,true);
+ $termsHash=hash('sha256',$quote['receipt']);
+ $q=$pdo->prepare('SELECT COUNT(*) FROM market_manual_orders WHERE user_id=? AND created_at>UTC_TIMESTAMP()-INTERVAL 1 HOUR');$q->execute([$userId]);if((int)$q->fetchColumn()>=10)throw new PaymentConflict(t('billing_customer.hourly_limit'));
+ $reference='GI-'.strtoupper(bin2hex(random_bytes(10)));
+ $q=$pdo->prepare("INSERT INTO market_invoices(user_id,invoice_number,service_code,fee_version,gross_cents,status) VALUES (?,?,?,?,?,'issued')");$q->execute([$userId,$reference,$service,$quote['version'],$quote['gross_cents']]);$id=(int)$pdo->lastInsertId();
+ $q=$pdo->prepare('INSERT INTO market_manual_orders(invoice_id,user_id,listing_id,reference,recipient,quantity,net_cents,tax_cents,tax_bps,terms_hash,terms_text,terms_language,request_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
+ $q->execute([$id,$userId,$listingId,$reference,manual_payment_reason($pdo)===null?site_setting($pdo,'manual_paypal_recipient'):'',$quantity,$tax['net_cents'],$tax['tax_cents'],$taxBps,$termsHash,$quote['receipt'],$quote['language'],$requestKey]);
+ audit_log($pdo,$userId,'payment.manual_ordered',$id,['fee_version'=>$quote['version'],'terms_hash'=>$termsHash,'terms_language'=>$quote['language'],'approval_hash'=>$quote['approval_hash']]);
+ return $id;
 }
 function manual_claim(PDO $pdo,int $userId,int $invoiceId): void {
  $pdo->beginTransaction();

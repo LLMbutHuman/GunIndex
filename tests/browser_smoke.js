@@ -8,12 +8,21 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
 (async()=>{
  fixture('reset_limits');const seller=account(),buyer=account(),admin=account(true);const category=fixture('categories').categories[0].id;
  const browser=await pw.chromium.launch(launchOptions());
- const desktop=await browser.newContext({viewport:{width:1440,height:1000}}),mobile=await browser.newContext({viewport:{width:390,height:844}});
+ const desktop=await browser.newContext({locale:'de-DE',viewport:{width:1440,height:1000}}),mobile=await browser.newContext({locale:'de-DE',viewport:{width:390,height:844}});
  const errors=[],external=[],failures=[],journeys=[];
  const monitor=page=>{page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(!r.url().startsWith(origin+'/'))external.push(r.url())});page.on('response',r=>{if(r.status()>=500)failures.push(new URL(r.url()).pathname)});};
  const page=await desktop.newPage(),phone=await mobile.newPage();monitor(page);monitor(phone);
  try{
   await login(page,seller);journeys.push('login');
+  assert.strictEqual(await page.locator('main a[href="/admin/index.php"]').count(),0);
+  await page.goto(origin+'/');
+  assert(await page.evaluate(()=>{
+    const copy=document.querySelector('.manifesto-copy');
+    const first=copy.firstElementChild.getBoundingClientRect(), last=copy.lastElementChild.getBoundingClientRect();
+    const strip=copy.closest('.manifesto-strip').getBoundingClientRect();
+    return Math.abs((first.left+last.right)/2-(strip.left+strip.right)/2)<4 && document.documentElement.scrollWidth<=innerWidth;
+  }),'Desktop manifesto did not center its visible text');
+  journeys.push('desktop_manifesto_centered');
   await page.goto(origin+'/user/create-listing.php');const title='Fixture '+crypto.randomBytes(8).toString('hex')+' Browser Schreibtisch';
   await page.locator('[name=title]').fill(title);await page.locator('textarea[name=description]').fill('Synthetischer Testartikel für die echte Browserprüfung, ohne reale personenbezogene Daten.');await page.locator('[name=category_id]').selectOption(String(category));await page.locator('[name=price]').fill('45.00');await page.locator('[name=zip]').fill('10115');await page.locator('[name=city]').fill('Teststadt');await page.locator('[name=accept_rules]').check();
   const picture=execFileSync('docker',['--host=unix:///var/run/docker.sock','exec','gunindex-rebuild-app','php','-r',"$i=imagecreatetruecolor(200,160);imagefill($i,0,0,imagecolorallocate($i,46,160,130));imagepng($i);"]);
@@ -37,6 +46,11 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   assert(!(await phone.locator('main section').nth(0).innerText()).includes(title));assert((await phone.locator('table').innerText()).includes(title));
   await phone.locator('form:has([name=action][value=clear_compare]) button').click();await phone.waitForLoadState('networkidle');assert(!(await phone.locator('main').innerText()).includes(title));journeys.push('personal_opt_in_compare_clear');
   await phone.goto(origin+'/marketplace/view-item.php?id='+listing);await phone.getByRole('link',{name:'Verkäufer kontaktieren'}).click();await phone.locator('[name=message]').fill('Synthetische Browsernachricht: Ist der Schreibtisch verfügbar?');await phone.getByRole('button',{name:'Nachricht senden',exact:true}).click();await phone.waitForLoadState('networkidle');assert((await phone.locator('main').innerText()).includes('Synthetische Browsernachricht'));journeys.push('private_chat');
+  assert(await phone.locator('.nav-actions a.mobile-messages[href="/user/messages.php"]').isVisible());
+  await page.goto(origin+'/user/profile.php');
+  assert.strictEqual(await page.locator('.desktop-nav .messages-link .message-count').textContent(),'1');
+  assert.strictEqual(await page.locator('main a[href="/admin/index.php"]').count(),0);
+  journeys.push('messages_navigation_and_unread_badge');
   const auction=fixture('seed_listing',{username:seller.username,title:'Fixture '+crypto.randomBytes(8).toString('hex')+' Browser Bücherpaket',category_id:Number(category)}).id;
   await phone.goto(origin+'/marketplace/view-auction.php?id='+auction);await phone.locator('[name=max_bid]').fill('60.00');await phone.getByRole('button',{name:'Gebot abgeben'}).click();await phone.waitForLoadState('networkidle');assert.strictEqual(Number(fixture('state',{listing_id:Number(auction)}).highest_bidder_id),Number(buyer.id));journeys.push('proxy_bid');
   const profileCopy={
@@ -93,6 +107,11 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   await page.goto(origin+'/');for(const width of [1440,768,390]){await page.setViewportSize({width,height:1000});await page.goto(origin+'/',{waitUntil:'networkidle'});const size=await page.evaluate(()=>({inner:innerWidth,scroll:document.documentElement.scrollWidth}));assert(size.scroll<=size.inner,'Horizontal overflow at '+width);await page.evaluate(async()=>{document.documentElement.style.scrollBehavior='auto';for(let y=0;y<document.documentElement.scrollHeight;y+=500){scrollTo(0,y);await new Promise(r=>setTimeout(r,110));}scrollTo(0,0);});await page.waitForTimeout(350);await page.screenshot({path:__dirname+'/.runtime/browser-'+width+'.png',fullPage:true});}journeys.push('responsive');
   await page.locator('.theme-toggle').click();const theme=await page.locator('html').getAttribute('data-theme');await page.reload();assert.strictEqual(await page.locator('html').getAttribute('data-theme'),theme);journeys.push('theme');
   await desktop.clearCookies();await login(page,admin,true);journeys.push('admin_mfa');
+  await page.goto(origin+'/user/profile.php');
+  const adminProfileLink=page.locator('.profile-actions a[href="/admin/index.php"]');
+  assert(await adminProfileLink.isVisible());
+  await adminProfileLink.click();await page.waitForURL('**/admin/index.php');
+  journeys.push('mfa_admin_profile_link');
   for(const locale of ['en','fr','nl','pl','cs','da','it','de']){
    await page.goto(origin+'/admin/setup.php');await page.locator('.market-switcher summary').click();const language=page.locator('form[action="/user/language.php"]');await language.locator('[name=locale]').selectOption(locale);
    await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),language.locator('button[type=submit]').click()]);
@@ -122,7 +141,7 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),approval.locator('button[type=submit]').click()]);
   await page.goto(origin+'/admin/settings.php');const originalLegalCode=await page.locator('[name=legal_registration_documents]').inputValue();
   const originalPublication=await page.locator('input[type=checkbox][name=legal_publication_enabled]').isChecked();
-  const registrationContext=await browser.newContext({viewport:{width:390,height:844}});
+  const registrationContext=await browser.newContext({locale:'de-DE',viewport:{width:390,height:844}});
   try{
    await page.locator('[name=legal_registration_documents]').fill(legalCode);await page.locator('input[type=checkbox][name=legal_publication_enabled]').check();
    await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();await page.waitForLoadState('networkidle');
@@ -192,7 +211,7 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
    for(const [i,name] of paymentInputs.entries())await control(name).fill(originalInputs[i]);
    await saveSettings();
   }
-  const reduced=await browser.newContext({reducedMotion:'reduce',viewport:{width:390,height:844}});const calm=await reduced.newPage();monitor(calm);await calm.goto(origin+'/');assert(await calm.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches));await reduced.close();journeys.push('reduced_motion');
+  const reduced=await browser.newContext({locale:'de-DE',reducedMotion:'reduce',viewport:{width:390,height:844}});const calm=await reduced.newPage();monitor(calm);await calm.goto(origin+'/');assert(await calm.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches));await reduced.close();journeys.push('reduced_motion');
   assert.deepStrictEqual(errors,[]);assert.deepStrictEqual(failures,[]);assert.deepStrictEqual(external,[]);console.log(JSON.stringify({result:'PASS',journeys,js_errors:0,server_errors:0,external_requests:0}));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e.message);process.exit(1)});

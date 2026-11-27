@@ -7,4 +7,4 @@ if (!in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET', 'HEAD'], true)) {
 }
 header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-store');
-if ($_SERVER['REQUEST_METHOD'] !== 'HEAD') echo seo_robots(seo_enabled($pdo), seo_origin());
+if ($_SERVER['REQUEST_METHOD'] !== 'HEAD') echo seo_robots(seo_enabled($pdo), seo_request_origin($_SERVER));

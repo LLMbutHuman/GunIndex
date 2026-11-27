@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 function profile_image_url(int $owner, string $kind, string $revision, bool $review = false): string
 {
-    return ($review ? '/admin/campaigns.php?logo=1&' : '/marketplace/profile-image.php?')
+    return ($review ? '/admin/dealers.php?logo=1&' : '/marketplace/profile-image.php?')
         . http_build_query(['user_id'=>$owner,'kind'=>$kind,'revision'=>$revision], '', '&', PHP_QUERY_RFC3986);
 }
 

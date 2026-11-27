@@ -7,7 +7,7 @@ $profile=business_dealer_profile($pdo,$userId,false);
 $values=$profile?:['company_name'=>'','address_text'=>'','country_code'=>$user['country_code']??'DE','contact_email'=>'','website'=>'','legal_notice'=>''];
 if(isset($_GET['banner_image'])){
     $id=is_string($_GET['banner_image'])?filter_var($_GET['banner_image'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]):false;
-    if(!$id)abort_request(404,t('dealer_dashboard.banner_not_found'));$q=$pdo->prepare('SELECT storage_key FROM market_campaigns WHERE id=? AND user_id=?');$q->execute([$id,$userId]);$key=$q->fetchColumn();if(!is_string($key))abort_request(404,t('dealer_dashboard.banner_not_found'));business_output_banner($key,true);
+    if(!$id)abort_request(404,t('dealer_dashboard.banner_not_found'));$q=$pdo->prepare("SELECT storage_key FROM market_campaigns WHERE id=? AND user_id=? AND placement='legacy'");$q->execute([$id,$userId]);$key=$q->fetchColumn();if(!is_string($key))abort_request(404,t('dealer_dashboard.banner_not_found'));business_output_banner($key,true);
 }
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
     require_csrf();
@@ -36,7 +36,6 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 $countries=geo_countries();
 $submittedCountry=strtoupper((string)($values['country_code']??'DE'));
 $country=isset($countries[$submittedCountry]) ? $submittedCountry : (string)($profile['country_code']??$user['country_code']??'DE');
-$categories=catalog_categories($pdo,true);
 $q=$pdo->prepare('SELECT status,COUNT(*) AS count FROM market_listings WHERE seller_id=? GROUP BY status');$q->execute([$userId]);$listingStats=array_column($q->fetchAll(),'count','status');
 $q=$pdo->prepare('SELECT COUNT(*) FROM market_watchlist w JOIN market_listings l ON l.id=w.listing_id WHERE l.seller_id=?');$q->execute([$userId]);$watchCount=(int)$q->fetchColumn();
 $q=$pdo->prepare('SELECT COUNT(*) FROM market_bids b JOIN market_listings l ON l.id=b.listing_id WHERE l.seller_id=? AND b.event_type=\'bid\'');$q->execute([$userId]);$bidCount=(int)$q->fetchColumn();
@@ -44,7 +43,6 @@ $q=$pdo->prepare('SELECT COUNT(DISTINCT CONCAT(m.listing_id,\':\',m.sender_id)) 
 $q=$pdo->prepare("SELECT COALESCE(SUM(gross_cents),0) FROM market_invoices WHERE user_id=? AND status='paid'");$q->execute([$userId]);$paid=(int)$q->fetchColumn();
 $page=filter_var($_GET['page']??'1',FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>100000]])?:1;$total=array_sum(array_map('intval',$listingStats));$page=min($page,max(1,(int)ceil($total/25)));
 $q=$pdo->prepare('SELECT l.*,(SELECT COUNT(*) FROM market_proxy_bids b WHERE b.listing_id=l.id) AS has_bids FROM market_listings l WHERE seller_id=? ORDER BY l.id DESC LIMIT 25 OFFSET ?');$q->bindValue(1,$userId,PDO::PARAM_INT);$q->bindValue(2,($page-1)*25,PDO::PARAM_INT);$q->execute();$listings=$q->fetchAll();
-$q=$pdo->prepare('SELECT c.*,COALESCE((SELECT SUM(s.impressions) FROM market_ad_daily_stats s WHERE s.campaign_id=c.id),0) AS impressions,COALESCE((SELECT SUM(s.clicks) FROM market_ad_daily_stats s WHERE s.campaign_id=c.id),0) AS clicks FROM market_campaigns c WHERE c.user_id=? ORDER BY c.id DESC LIMIT 100');$q->execute([$userId]);$campaigns=$q->fetchAll();
 $listingStatusKeys = [
     'draft'=>'dashboard.status_draft','active'=>'Aktiv','paused'=>'dashboard.status_paused','ended'=>'dashboard.status_ended',
     'sold'=>'dashboard.status_sold','archived'=>'dashboard.status_archived','review'=>'dashboard.status_review',
@@ -57,6 +55,7 @@ include __DIR__.'/../includes/header.php';
         <p><?=h(t('dealer_dashboard.summary'))?></p>
         <div class="button-row">
             <a class="button" href="/user/promotions.php"><?=h(t('Premiumplätze & Händlerwerbung'))?></a>
+            <a class="button secondary" href="/user/banner-advertising.php"><?=h(t('banner_ads.dealer_title'))?></a>
             <a class="button secondary" href="/user/dealer-team.php"><?=h(t('dealer_team.title'))?></a>
             <a class="button secondary" href="/user/dealer-stock.php"><?=h(t('dealer_stock.title'))?></a>
         </div>
@@ -95,52 +94,6 @@ include __DIR__.'/../includes/header.php';
             <p><?=h(t('dealer_dashboard.profile_recheck'))?></p>
             <button class="button" type="submit"><?=h(t('dealer_dashboard.save_profile'))?></button>
         </form>
-    </section>
-
-    <section class="panel">
-        <h2><?=h(t('dealer_dashboard.banner'))?></h2>
-        <?php if (!$profile || $profile['status'] !== 'published'): ?>
-            <p><?=h(t('dealer_dashboard.banner_requires_profile'))?></p>
-        <?php else: ?>
-            <form method="post" enctype="multipart/form-data" class="form-grid">
-                <?=csrf_field()?>
-                <input type="hidden" name="action" value="campaign">
-                <label class="field"><?=h(t('Titel'))?><input name="title" minlength="5" maxlength="120" required></label>
-                <label class="field"><?=h(t('dealer_dashboard.target_url'))?><input name="target_url" type="url" maxlength="1000" required placeholder="https://..."></label>
-                <label class="field"><?=h(t('dealer_dashboard.target_market'))?><select name="country_code">
-                    <?php foreach ($countries as $code=>$label): ?>
-                        <option value="<?=h($code)?>" <?=$code===$country?'selected':''?>><?=h(is_array($label)?($label['name']??$code):$label)?></option>
-                    <?php endforeach; ?>
-                </select></label>
-                <label class="field"><?=h(t('Kategorie'))?><select name="category_id">
-                    <?php foreach ($categories as $category): ?>
-                        <option value="<?=(int)$category['id']?>"><?=h(i18n_category($pdo,$category))?></option>
-                    <?php endforeach; ?>
-                </select></label>
-                <label class="field"><?=h(t('dealer_dashboard.banner_image'))?><input type="file" name="banner[]" accept="image/jpeg,image/png,image/webp" required><small><?=h(t('dealer_dashboard.banner_image_help'))?></small></label>
-                <button class="button" type="submit"><?=h(t('dealer_dashboard.save_banner'))?></button>
-            </form>
-        <?php endif; ?>
-    </section>
-
-    <section class="panel">
-        <h2><?=h(t('dealer_dashboard.campaigns'))?></h2>
-        <?php if (!$campaigns): ?>
-            <p><?=h(t('dealer_dashboard.no_campaigns'))?></p>
-        <?php else: ?>
-            <div class="cards">
-                <?php foreach ($campaigns as $campaign): ?>
-                    <article class="panel">
-                        <img src="?banner_image=<?=(int)$campaign['id']?>" alt="<?=h(t('dealer_dashboard.campaign_preview'))?>" width="400" height="180" loading="lazy" style="max-height:180px;object-fit:contain">
-                        <h3><?=h($campaign['title'])?></h3>
-                        <p><?=h($campaign['country_code'].' · '.business_state_label($campaign['status']))?></p>
-                        <p><?=h(t('dealer_dashboard.campaign_metrics',['impressions'=>(int)$campaign['impressions'],'clicks'=>(int)$campaign['clicks']]))?></p>
-                        <p class="muted"><?=h(t('dealer_dashboard.campaign_metrics_help'))?></p>
-                        <?php if ($campaign['moderation_reason']): ?><p><?=h($campaign['moderation_reason'])?></p><?php endif; ?>
-                    </article>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
     </section>
 
     <section class="panel">

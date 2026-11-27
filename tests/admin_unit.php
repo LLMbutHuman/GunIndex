@@ -3,6 +3,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit(1); }
 require_once __DIR__ . '/../config/settings.php';
 require_once __DIR__ . '/../config/catalog.php';
+require_once __DIR__ . '/../config/governance.php';
 function admin_assert(bool $condition, string $message): void { if (!$condition) throw new RuntimeException($message); }
 function admin_invalid(callable $operation): void {
     try { $operation(); } catch (InvalidArgumentException) { return; }
@@ -61,6 +62,31 @@ $tests = [
     'revision_is_order_independent_and_change_sensitive' => static function (): void {
         admin_assert(site_settings_revision(['brand_name' => 'A', 'accent' => '#000000']) === site_settings_revision(['accent' => '#000000', 'brand_name' => 'A']), 'Order must not cause a false edit conflict.');
         admin_assert(site_settings_revision(['brand_name' => 'A']) !== site_settings_revision(['brand_name' => 'B']), 'Changed values must invalidate old revisions.');
+    },
+    'role_matrix_rejects_unknown_permissions_and_self_escalation' => static function (): void {
+        $roles = array_map(static fn(array $role): array => $role['permissions'], governance_roles());
+        $form = array_map(static fn(array $permissions): array => array_merge([''], $permissions), $roles);
+        admin_assert(governance_role_policy_changes($roles,$form,['*'],[]) === [], 'Existing defaults were changed.');
+        $form['moderator'][] = 'finance.manage';
+        admin_assert(governance_role_policy_changes($roles,$form,['*'],[]) === ['moderator'=>['added'=>['finance.manage'],'removed'=>[]]], 'A single permission must be independently editable.');
+        foreach ([[['roles.manage','finance.manage'],['moderator']], [['roles.manage'],[]]] as [$permissions,$actorRoles]) {
+            try { governance_role_policy_changes($roles,$form,$permissions,$actorRoles); }
+            catch (DomainException) { continue; }
+            throw new RuntimeException('The actor exceeded the permitted role editing scope.');
+        }
+        $form['moderator'][] = '*';
+        admin_invalid(static fn() => governance_role_policy_changes($roles,$form,['*'],[]));
+        unset($form['finance']);
+        admin_invalid(static fn() => governance_role_policy_changes($roles,$form,['*'],[]));
+        admin_assert(governance_role_mfa_recent(['auth_started_at'=>1000],1900), 'A recent MFA session was rejected.');
+        admin_assert(!governance_role_mfa_recent(['auth_started_at'=>1000],1901)
+            && !governance_role_mfa_recent(['auth_started_at'=>1001],1000), 'Expired or future MFA evidence was accepted.');
+        foreach (array_keys(i18n_locales()) as $locale) {
+            $dictionary = i18n_dictionary($locale);
+            foreach (governance_permissions() as $permission) {
+                admin_assert(isset($dictionary['admin_roles.permission_'.str_replace('.','_',$permission)]), 'Missing permission label in '.$locale);
+            }
+        }
     },
 ];
 foreach ($tests as $name => $operation) { $operation(); fwrite(STDOUT, 'PASS ' . $name . "\n"); }

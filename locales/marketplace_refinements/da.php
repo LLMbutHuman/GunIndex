@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Beskeder · {count} ulæste',
+    'refine.open_admin' => 'Åbn administrationen',
+    'refine.setup_tab' => 'Opsætning',
+    'refine.seller_type' => 'Sælgertype',
+    'refine.seller_all' => 'Alle sælgere',
+    'refine.seller_private' => 'Kun private sælgere',
+    'refine.seller_dealer' => 'Kun erhvervssælgere',
+    'refine.seller_invalid' => 'Vælg en gyldig sælgertype.',
+    'refine.category_busy' => 'Kategoritræet redigeres. Prøv igen om lidt.',
+    'refine.category_blocked' => 'Denne kategori har tilknyttede oplysninger. Fjern tilknytningerne før permanent sletning.',
+    'refine.category_confirm_required' => 'Vælg en kategori, og bekræft ændringen.',
+    'refine.category_removal' => 'Administrer kategori · {name}',
+    'refine.category_delete_help' => 'Denne kategori er tom. Permanent sletning kan ikke fortrydes.',
+    'refine.category_deactivate_help' => 'Deaktivering bevarer kategorien og dens indhold. Kategorien og dens underkategorier skjules i det offentlige katalog.',
+    'refine.category_confirm' => 'Jeg bekræfter den valgte ændring af denne kategori.',
+    'refine.category_deactivate' => 'Deaktiver',
+    'refine.category_delete' => 'Slet permanent',
+    'refine.category_manage_removal' => 'Slet eller deaktiver',
+    'refine.category_ref_children' => 'Underkategorier',
+    'refine.category_ref_listings' => 'Annoncer',
+    'refine.category_ref_attributes' => 'Kategoriattributter',
+    'refine.category_ref_translations' => 'Oversættelser',
+    'refine.category_ref_wanted' => 'Købsønsker',
+    'refine.category_ref_campaigns' => 'Reklamekampagner',
+    'refine.category_ref_placements' => 'Annoncepladser',
+    'refine.category_ref_bookings' => 'Bookinger',
+    'refine.category_ref_searches' => 'Gemte søgninger',
+    'refine.category_ref_drafts' => 'Annoncekladder',
+];

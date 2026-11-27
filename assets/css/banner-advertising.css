@@ -1,0 +1,19 @@
+.banner-ads{margin-block:1.5rem}
+.banner-ad-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:1rem}
+.banner-ad-card{min-width:0;border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--surface)}
+.banner-ad-link{position:relative;display:block}
+.banner-ad-creative{position:relative;display:grid;place-items:center;overflow:hidden;aspect-ratio:5/2;background:#183832;color:#fff;isolation:isolate}
+.banner-ad-creative picture,.banner-ad-creative img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.banner-ad-overlay{position:relative;margin:.7rem;padding:.38rem .6rem;border-radius:.35rem;background:#17352f;color:#fff;text-align:center;font-weight:700;overflow-wrap:anywhere;max-width:calc(100% - 1.4rem);line-height:1.2}
+.banner-ad-dark{background:#121e2d}
+.banner-ad-dark .banner-ad-overlay{background:#121e2d;color:#fff}
+.banner-ad-light{background:#eef5f2;color:#102822}
+.banner-ad-light .banner-ad-overlay{background:#eef5f2;color:#102822}
+.banner-ad-caption{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;padding:.5rem .75rem;color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
+.banner-ad-caption a{flex-shrink:0;text-decoration:underline}
+.banner-ad-url{overflow-wrap:anywhere}
+.banner-ad-pixel{position:absolute;width:1px;height:1px;bottom:0;left:0}
+.banner-preview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.9rem;margin-block:1rem}
+.banner-preview figure{margin:0}
+.banner-preview-narrow{max-width:20rem}
+.banner-preview figcaption{padding:.35rem 0;color:var(--muted);font-size:.8rem}

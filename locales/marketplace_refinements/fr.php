@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Messages · {count} non lus',
+    'refine.open_admin' => 'Ouvrir l’administration',
+    'refine.setup_tab' => 'Configuration',
+    'refine.seller_type' => 'Type de vendeur',
+    'refine.seller_all' => 'Tous les vendeurs',
+    'refine.seller_private' => 'Particuliers uniquement',
+    'refine.seller_dealer' => 'Professionnels uniquement',
+    'refine.seller_invalid' => 'Choisissez un type de vendeur valide.',
+    'refine.category_busy' => 'L’arborescence des catégories est en cours de modification. Réessayez dans un instant.',
+    'refine.category_blocked' => 'Cette catégorie a des dépendances. Résolvez-les avant de la supprimer définitivement.',
+    'refine.category_confirm_required' => 'Choisissez une catégorie et confirmez la modification.',
+    'refine.category_removal' => 'Gérer la catégorie · {name}',
+    'refine.category_delete_help' => 'Cette catégorie est vide. Sa suppression définitive est irréversible.',
+    'refine.category_deactivate_help' => 'La désactivation conserve la catégorie et son contenu. La catégorie et ses sous-catégories sont masquées dans le catalogue public.',
+    'refine.category_confirm' => 'Je confirme la modification sélectionnée pour cette catégorie.',
+    'refine.category_deactivate' => 'Désactiver',
+    'refine.category_delete' => 'Supprimer définitivement',
+    'refine.category_manage_removal' => 'Supprimer ou désactiver',
+    'refine.category_ref_children' => 'Sous-catégories',
+    'refine.category_ref_listings' => 'Annonces',
+    'refine.category_ref_attributes' => 'Attributs de catégorie',
+    'refine.category_ref_translations' => 'Traductions',
+    'refine.category_ref_wanted' => 'Demandes',
+    'refine.category_ref_campaigns' => 'Campagnes publicitaires',
+    'refine.category_ref_placements' => 'Emplacements publicitaires',
+    'refine.category_ref_bookings' => 'Réservations',
+    'refine.category_ref_searches' => 'Recherches enregistrées',
+    'refine.category_ref_drafts' => 'Brouillons d’annonces',
+];

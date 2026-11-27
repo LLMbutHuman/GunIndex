@@ -4,7 +4,7 @@ declare(strict_types=1);
 function governance_roles(): array
 {
     return [
-        'administrator'=>['label'=>'Administration','permissions'=>['dashboard.read','site.manage','users.manage','categories.manage','reports.read','reports.review','content.moderate','privacy.review','identity.review','legal.manage','finance.manage','campaigns.manage']],
+        'administrator'=>['label'=>'Administration','permissions'=>['dashboard.read','site.manage','users.manage','categories.manage','reports.read','reports.review','content.moderate','privacy.review','identity.review','legal.manage','finance.manage','campaigns.manage','dealers.manage']],
         'moderator'=>['label'=>'Moderation','permissions'=>['dashboard.read','reports.read','reports.review','content.moderate']],
         'support'=>['label'=>'Support','permissions'=>['dashboard.read','reports.read','privacy.review']],
         'verification'=>['label'=>'Identitätsprüfung','permissions'=>['dashboard.read','identity.review']],
@@ -12,15 +12,54 @@ function governance_roles(): array
     ];
 }
 
+function governance_permissions(): array
+{
+    $permissions = array_merge(['roles.manage'], ...array_column(governance_roles(), 'permissions'));
+    $permissions = array_values(array_unique($permissions));
+    sort($permissions, SORT_STRING);
+    return $permissions;
+}
+
+function governance_role_policy(PDO $pdo): array
+{
+    $roles = array_map(static fn(array $role): array => $role['permissions'], governance_roles());
+    $known = array_fill_keys(governance_permissions(), true);
+    $rows = $pdo->query('SELECT s.revision,p.role_code,p.permission_code,p.granted FROM market_role_policy_state s'
+        .' LEFT JOIN market_role_permission_overrides p ON 1=1 WHERE s.id=1')->fetchAll();
+    if ($rows === []) throw new RuntimeException('Role policy state is unavailable.');
+    foreach ($rows as $row) {
+        $role = $row['role_code'];
+        $permission = $row['permission_code'];
+        if (!isset($roles[$role], $known[$permission])) continue;
+        $roles[$role] = array_values(array_diff($roles[$role], [$permission]));
+        if ((int)$row['granted'] === 1) $roles[$role][] = $permission;
+    }
+    foreach ($roles as &$permissions) sort($permissions, SORT_STRING);
+    unset($permissions);
+    return ['revision'=>(string)$rows[0]['revision'], 'roles'=>$roles];
+}
+
+function governance_user_roles(PDO $pdo, int $userId): array
+{
+    try {
+        $query = $pdo->prepare('SELECT role_code FROM market_role_grants WHERE user_id=?');
+        $query->execute([$userId]);
+        return array_values(array_intersect($query->fetchAll(PDO::FETCH_COLUMN), array_keys(governance_roles())));
+    } catch (PDOException $error) {
+        if ($error->getCode() === '42S02') return [];
+        throw $error;
+    }
+}
+
 function rbac_permissions(PDO $pdo,int $userId): array
 {
     $q=$pdo->prepare('SELECT is_admin,is_active FROM users WHERE id=?');$q->execute([$userId]);$user=$q->fetch();
     if(!$user||(int)$user['is_active']!==1)return [];
     if((int)$user['is_admin']===1)return ['*'];
-    try{$q=$pdo->prepare('SELECT role_code FROM market_role_grants WHERE user_id=?');$q->execute([$userId]);$roles=$q->fetchAll(PDO::FETCH_COLUMN);}
-    catch(PDOException $e){if($e->getCode()==='42S02')return [];throw $e;}
-    $permissions=[];foreach($roles as $role)foreach(governance_roles()[$role]['permissions']??[] as $permission)$permissions[$permission]=true;
-    return array_keys($permissions);
+    $roles = governance_user_roles($pdo, $userId);
+    if ($roles === []) return [];
+    $effective = governance_role_policy($pdo)['roles'];
+    return array_values(array_unique(array_merge(...array_intersect_key($effective, array_fill_keys($roles, true)))));
 }
 
 function rbac_has_permission(PDO $pdo,int $userId,string $permission): bool
@@ -30,7 +69,13 @@ function rbac_has_permission(PDO $pdo,int $userId,string $permission): bool
 
 function permission_user_can(PDO $pdo,int $userId,string $permission): bool { return rbac_has_permission($pdo,$userId,$permission); }
 
-function rbac_requires_mfa(PDO $pdo,int $userId): bool { return rbac_permissions($pdo,$userId)!==[]; }
+function rbac_requires_mfa(PDO $pdo,int $userId): bool
+{
+    $query = $pdo->prepare('SELECT is_admin,is_active FROM users WHERE id=?');
+    $query->execute([$userId]);
+    $user = $query->fetch();
+    return $user && (int)$user['is_active'] === 1 && ((int)$user['is_admin'] === 1 || governance_user_roles($pdo, $userId) !== []);
+}
 
 function require_permission(PDO $pdo,string $permission): array
 {
@@ -54,12 +99,98 @@ function governance_assert_actor(PDO $pdo,int $actor,string $permission): void
     if(PHP_SAPI!=='cli'&&((int)($_SESSION['user_id']??0)!==$actor||($_SESSION['admin_mfa_user_id']??null)!==$actor))throw new DomainException('Eine aktuelle Mehrfaktoranmeldung ist erforderlich.');
 }
 
+function governance_role_mfa_recent(array $session, int $now): bool
+{
+    $started = $session['auth_started_at'] ?? null;
+    return is_int($started) && $started > 0 && $started <= $now && $now - $started <= 900;
+}
+
+function governance_lock_role_policy(PDO $pdo, int $actor): void
+{
+    if ($pdo->query('SELECT id FROM market_role_policy_state WHERE id=1 FOR UPDATE')->fetchColumn() === false) {
+        throw new RuntimeException('Role policy state is unavailable.');
+    }
+    governance_assert_actor($pdo, $actor, 'roles.manage');
+    if (PHP_SAPI !== 'cli' && !governance_role_mfa_recent($_SESSION ?? [], time())) {
+        throw new DomainException(t('admin_roles.matrix_mfa'));
+    }
+}
+
+function governance_role_policy_changes(array $current, mixed $submitted, array $actorPermissions, array $actorRoles): array
+{
+    if (!is_array($submitted) || count($submitted) !== count($current) || array_diff_key($submitted, $current) !== []) {
+        throw new InvalidArgumentException(t('admin_roles.matrix_invalid'));
+    }
+    $known = governance_permissions();
+    $full = in_array('*', $actorPermissions, true);
+    $changes = [];
+    foreach ($current as $role => $existing) {
+        $requested = $submitted[$role];
+        if (!is_array($requested) || !array_is_list($requested) || array_shift($requested) !== '' || count($requested) > count($known)) {
+            throw new InvalidArgumentException(t('admin_roles.matrix_invalid'));
+        }
+        foreach ($requested as $permission) {
+            if (!is_string($permission) || !in_array($permission, $known, true)) throw new InvalidArgumentException(t('admin_roles.matrix_invalid'));
+        }
+        if (count(array_unique($requested)) !== count($requested)) throw new InvalidArgumentException(t('admin_roles.matrix_invalid'));
+        $added = array_values(array_diff($requested, $existing));
+        $removed = array_values(array_diff($existing, $requested));
+        if (!$added && !$removed) continue;
+        if (in_array($role, $actorRoles, true)
+            || (!$full && array_diff(array_merge($added, $removed), $actorPermissions) !== [])) {
+            throw new DomainException(t('admin_roles.matrix_scope'));
+        }
+        $changes[$role] = compact('added', 'removed');
+    }
+    return $changes;
+}
+
+function governance_role_policy_save(PDO $pdo, int $actor, string $revision, mixed $submitted): void
+{
+    $pdo->beginTransaction();
+    try {
+        governance_lock_role_policy($pdo, $actor);
+        $policy = governance_role_policy($pdo);
+        if (!hash_equals($policy['revision'], $revision)) throw new DomainException(t('admin_roles.matrix_stale'));
+        $actorRoles = governance_user_roles($pdo, $actor);
+        $changes = governance_role_policy_changes($policy['roles'], $submitted, rbac_permissions($pdo, $actor), $actorRoles);
+        if ($changes !== []) {
+            $defaults = governance_roles();
+            $set = $pdo->prepare('INSERT INTO market_role_permission_overrides (role_code,permission_code,granted) VALUES (?,?,?)'
+                .' ON DUPLICATE KEY UPDATE granted=VALUES(granted)');
+            $reset = $pdo->prepare('DELETE FROM market_role_permission_overrides WHERE role_code=? AND permission_code=?');
+            foreach ($changes as $role => $change) {
+                foreach (['added'=>true, 'removed'=>false] as $kind => $grant) {
+                    foreach ($change[$kind] as $permission) {
+                        if (in_array($permission, $defaults[$role]['permissions'], true) === $grant) $reset->execute([$role, $permission]);
+                        else $set->execute([$role, $permission, (int)$grant]);
+                    }
+                }
+            }
+            $placeholders = implode(',', array_fill(0, count($changes), '?'));
+            $pdo->prepare('UPDATE users u JOIN market_role_grants g ON g.user_id=u.id SET u.auth_version=u.auth_version+1'
+                .' WHERE u.is_admin=0 AND g.role_code IN ('.$placeholders.')')->execute(array_keys($changes));
+            $pdo->exec('UPDATE market_role_policy_state SET revision=revision+1 WHERE id=1');
+            audit_log($pdo, $actor, 'role.permissions_changed', null, ['roles'=>$changes]);
+        }
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
 function governance_role_change(PDO $pdo,int $actor,int $target,string $role,bool $grant): void
 {
     if(!isset(governance_roles()[$role]))throw new InvalidArgumentException('Unbekannte Rolle.');
     $pdo->beginTransaction();
     try{
-        governance_assert_actor($pdo,$actor,'roles.manage');
+        governance_lock_role_policy($pdo, $actor);
+        $permissions = rbac_permissions($pdo, $actor);
+        $rolePermissions = governance_role_policy($pdo)['roles'][$role];
+        if (!in_array('*', $permissions, true) && array_diff($rolePermissions, $permissions) !== []) {
+            throw new DomainException(t('admin_roles.matrix_scope'));
+        }
         $q=$pdo->prepare('SELECT id,is_admin,is_active,mfa_secret FROM users WHERE id=? FOR UPDATE');$q->execute([$target]);$user=$q->fetch();
         if(!$user||(int)$user['is_admin']===1||$actor===$target)throw new DomainException('Das eigene oder ein initiales Administrationskonto wird hier nicht verändert.');
         if($grant&&((int)$user['is_active']!==1||empty($user['mfa_secret'])))throw new DomainException('Das Zielkonto benötigt vor einer Personalrolle eine eingerichtete Zwei-Faktor-Anmeldung.');
@@ -78,7 +209,10 @@ function governance_subject(PDO $pdo,int $reporter,string $type,int $id): int
     elseif($type==='user'){$q=$pdo->prepare('SELECT id FROM users WHERE id=? AND is_active=1');$q->execute([$id]);$owner=(int)$q->fetchColumn();}
     elseif($type==='message'){$q=$pdo->prepare('SELECT sender_id,receiver_id FROM market_messages WHERE id=? AND (sender_id=? OR receiver_id=?)');$q->execute([$id,$reporter,$reporter]);$row=$q->fetch();if(!$row)throw new DomainException('Diese Nachricht ist privat.');$owner=(int)$row['sender_id'];}
     elseif($type==='rating'){$q=$pdo->prepare("SELECT sender_id FROM market_ratings WHERE id=? AND status='active'");$q->execute([$id]);$owner=(int)$q->fetchColumn();}
-    elseif($type==='advertisement'){$q=$pdo->prepare("SELECT user_id FROM market_campaigns WHERE id=? AND status='approved'");$q->execute([$id]);$owner=(int)$q->fetchColumn();}
+    elseif($type==='advertisement'){
+        $q=$pdo->prepare("SELECT user_id,country_code,placement FROM market_campaigns WHERE id=? AND status='approved'");$q->execute([$id]);$campaign=$q->fetch();
+        $owner=$campaign&&($campaign['placement']==='legacy' || banner_ads_public($pdo,$campaign['placement'],$campaign['country_code'],null,$id))?(int)$campaign['user_id']:0;
+    }
     else throw new InvalidArgumentException('Dieses Meldeziel wird nicht unterstützt.');
     if(!$owner||$owner===$reporter)throw new InvalidArgumentException('Dieses Objekt kann so nicht gemeldet werden.');
     return $owner;

@@ -27,6 +27,33 @@ gov_test('role_escalation_and_inactive_staff_fail_closed',static function()use($
     gov_reject(static fn()=>governance_role_change($pdo,$staff['id'],$owner['id'],'administrator',true));gov_reject(static fn()=>governance_role_change($pdo,$admin['id'],$admin['id'],'moderator',true));
     $pdo->prepare('UPDATE users SET is_active=0 WHERE id=?')->execute([$staff['id']]);gov_check(!rbac_requires_mfa($pdo,$staff['id']));$pdo->prepare('UPDATE users SET is_active=1 WHERE id=?')->execute([$staff['id']]);
 });
+gov_test('matrix_persists_effective_roles_atomically_and_protects_full_admin',static function()use($pdo,$admin,$staff):void{
+    $policy = governance_role_policy($pdo);
+    $form = array_map(static fn(array $permissions): array => array_merge([''], $permissions), $policy['roles']);
+    $updated = $form;
+    $updated['moderator'][] = 'roles.manage';
+    $oldLogged = (int)$pdo->query("SELECT COUNT(*) FROM admin_logs WHERE action_type='role.permissions_changed'")->fetchColumn();
+    $query = $pdo->prepare('SELECT auth_version FROM users WHERE id=?');
+    $query->execute([$staff['id']]);
+    $staffVersion = (int)$query->fetchColumn();
+    try {
+        governance_role_policy_save($pdo,$admin['id'],$policy['revision'],$updated);
+        $current = governance_role_policy($pdo);
+        gov_check($current['revision'] !== $policy['revision'] && rbac_has_permission($pdo,$staff['id'],'roles.manage'));
+        $query->execute([$staff['id']]);
+        gov_check((int)$query->fetchColumn() === $staffVersion+1);
+        gov_check((int)$pdo->query("SELECT COUNT(*) FROM admin_logs WHERE action_type='role.permissions_changed'")->fetchColumn() === $oldLogged+1);
+        gov_reject(static fn()=>governance_role_policy_save($pdo,$admin['id'],$policy['revision'],$form));
+        $updated['moderator'] = ['','roles.manage'];
+        gov_reject(static fn()=>governance_role_policy_save($pdo,$staff['id'],$current['revision'],$updated));
+        gov_reject(static fn()=>governance_role_change($pdo,$staff['id'],$admin['id'],'moderator',false));
+        gov_check(rbac_permissions($pdo,$admin['id']) === ['*']);
+    } finally {
+        $current = governance_role_policy($pdo);
+        governance_role_policy_save($pdo,$admin['id'],$current['revision'],$form);
+    }
+    gov_check(!rbac_has_permission($pdo,$staff['id'],'roles.manage'));
+});
 gov_test('report_creation_deduplication_encrypted_optional_evidence',static function()use($pdo,$owner,$reporter,$listing,&$case):void{
     gov_reject(static fn()=>governance_report($pdo,$owner['id'],'listing',$listing,'A sufficiently clear reason.'),InvalidArgumentException::class);
     $case=governance_report($pdo,$reporter['id'],'listing',$listing,'Synthetic check of the offered item.','Private voluntarily submitted evidence.');

@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Nachrichten · {count} ungelesen',
+    'refine.open_admin' => 'Zum Adminbereich',
+    'refine.setup_tab' => 'Einrichtung',
+    'refine.seller_type' => 'Anbietertyp',
+    'refine.seller_all' => 'Alle Anbieter',
+    'refine.seller_private' => 'Nur private Anbieter',
+    'refine.seller_dealer' => 'Nur Händler',
+    'refine.seller_invalid' => 'Wähle einen gültigen Anbietertyp.',
+    'refine.category_busy' => 'Der Kategoriebaum wird gerade bearbeitet. Versuch es gleich erneut.',
+    'refine.category_blocked' => 'Diese Kategorie hat Abhängigkeiten und kann dauerhaft erst nach deren Auflösung gelöscht werden.',
+    'refine.category_confirm_required' => 'Wähle eine Kategorie und bestätige die Änderung.',
+    'refine.category_removal' => 'Kategorie verwalten · {name}',
+    'refine.category_delete_help' => 'Diese Kategorie ist leer. Dauerhaftes Löschen lässt sich nicht rückgängig machen.',
+    'refine.category_deactivate_help' => 'Beim Deaktivieren bleiben die Kategorie und ihre Inhalte erhalten. Die Kategorie und ihre Unterkategorien verschwinden aus dem öffentlichen Katalog.',
+    'refine.category_confirm' => 'Ich bestätige die gewählte Änderung an dieser Kategorie.',
+    'refine.category_deactivate' => 'Deaktivieren',
+    'refine.category_delete' => 'Dauerhaft löschen',
+    'refine.category_manage_removal' => 'Löschen oder deaktivieren',
+    'refine.category_ref_children' => 'Unterkategorien',
+    'refine.category_ref_listings' => 'Inserate',
+    'refine.category_ref_attributes' => 'Kategorieattribute',
+    'refine.category_ref_translations' => 'Übersetzungen',
+    'refine.category_ref_wanted' => 'Gesuche',
+    'refine.category_ref_campaigns' => 'Werbekampagnen',
+    'refine.category_ref_placements' => 'Werbeplätze',
+    'refine.category_ref_bookings' => 'Buchungen',
+    'refine.category_ref_searches' => 'Gespeicherte Suchen',
+    'refine.category_ref_drafts' => 'Inseratsentwürfe',
+];

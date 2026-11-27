@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Messaggi · {count} non letti',
+    'refine.open_admin' => 'Vai all’area amministrativa',
+    'refine.setup_tab' => 'Configurazione',
+    'refine.seller_type' => 'Tipo di venditore',
+    'refine.seller_all' => 'Tutti i venditori',
+    'refine.seller_private' => 'Solo venditori privati',
+    'refine.seller_dealer' => 'Solo venditori professionali',
+    'refine.seller_invalid' => 'Scegli un tipo di venditore valido.',
+    'refine.category_busy' => 'La struttura delle categorie è in modifica. Riprova tra poco.',
+    'refine.category_blocked' => 'Questa categoria ha delle dipendenze. Risolvile prima di eliminarla definitivamente.',
+    'refine.category_confirm_required' => 'Scegli una categoria e conferma la modifica.',
+    'refine.category_removal' => 'Gestisci categoria · {name}',
+    'refine.category_delete_help' => 'Questa categoria è vuota. L’eliminazione definitiva è irreversibile.',
+    'refine.category_deactivate_help' => 'La disattivazione conserva la categoria e i suoi contenuti. La categoria e le sue sottocategorie vengono nascoste nel catalogo pubblico.',
+    'refine.category_confirm' => 'Confermo la modifica selezionata per questa categoria.',
+    'refine.category_deactivate' => 'Disattiva',
+    'refine.category_delete' => 'Elimina definitivamente',
+    'refine.category_manage_removal' => 'Elimina o disattiva',
+    'refine.category_ref_children' => 'Sottocategorie',
+    'refine.category_ref_listings' => 'Annunci',
+    'refine.category_ref_attributes' => 'Attributi della categoria',
+    'refine.category_ref_translations' => 'Traduzioni',
+    'refine.category_ref_wanted' => 'Richieste di acquisto',
+    'refine.category_ref_campaigns' => 'Campagne pubblicitarie',
+    'refine.category_ref_placements' => 'Spazi pubblicitari',
+    'refine.category_ref_bookings' => 'Prenotazioni',
+    'refine.category_ref_searches' => 'Ricerche salvate',
+    'refine.category_ref_drafts' => 'Bozze di annunci',
+];

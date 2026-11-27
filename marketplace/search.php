@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/../config/bootstrap.php';
 require_once __DIR__.'/../includes/classification-fields.php';
 $filters=[];
-foreach(['q','category_id','type','min_price','max_price','sort','country_code','scope','zip','origin_country','radius_km'] as $key){
+foreach(['q','category_id','type','seller_type','min_price','max_price','sort','country_code','scope','zip','origin_country','radius_km'] as $key){
     if(isset($_GET[$key])&&!is_string($_GET[$key]))abort_request(400,t('classification.search_invalid'));
     $filters[$key]=isset($_GET[$key])?trim($_GET[$key]):'';
 }
@@ -24,6 +24,7 @@ $attributeCategory=(int)$filters['category_id'];
 try{$results=market_search($pdo,$filters,(int)$page,24);}catch(InvalidArgumentException $e){http_response_code(422);$error=t($e->getMessage());$results=['items'=>[],'total'=>0];}
 $postcodeSourceCountries = $filters['scope'] === 'international' ? array_keys($countries) : [$filters['country_code'],$filters['origin_country']];
 $pageTitle=$filters['q']?t('Suche: {query}',['query'=>$filters['q']]):t('Entdecken');
+$publicBannerPlacement = true;
 include __DIR__.'/../includes/header.php';
 ?>
 <main class="page-width section search-page">
@@ -31,6 +32,7 @@ include __DIR__.'/../includes/header.php';
 <form action="/marketplace/search.php" method="get" class="search-toolbar panel">
 <div class="search-input"><label class="sr-only" for="query"><?=h(t('Suchbegriff'))?></label><?=ui_icon('search')?><input id="query" name="q" type="search" value="<?=h($filters['q'])?>" maxlength="150" placeholder="<?=h(t('Was möchtest du entdecken?'))?>" data-market-suggest autocomplete="off"></div>
 <div class="search-filter-grid">
+<?php $sellerTypeSelection=$filters['seller_type']; include __DIR__.'/../includes/seller-filter.php'; ?>
 <label class="field"><?=h(t('Ländermarkt'))?><select name="country_code"><?php foreach($countries as $code=>$name):?><option value="<?=h($code)?>" <?=$filters['country_code']===$code?'selected':''?>><?=h($name.' ('.$code.')')?></option><?php endforeach;?></select></label>
 <label class="field"><?=h(t('Suchbereich'))?><select name="scope"><option value="country" <?=$filters['scope']==='country'?'selected':''?>><?=h(t('Nur ausgewähltes Land'))?></option><option value="international" <?=$filters['scope']==='international'?'selected':''?>><?=h(t('International'))?></option></select></label>
 <label class="field"><?=h(t('Kategorie'))?><select name="category_id"><option value=""><?=h(t('Alle Kategorien'))?></option><?php foreach($categories as $category):?><option value="<?=(int)$category['id']?>" <?=(string)$category['id']===$filters['category_id']?'selected':''?>><?=h(str_repeat('— ',min((int)($category['depth']??0),12)).i18n_category($pdo,$category))?></option><?php endforeach;?></select></label>
@@ -51,8 +53,10 @@ include __DIR__.'/../includes/header.php';
 </form>
 <?php if($viewer && $error===''): ?><p><a class="button secondary" href="/user/saved-searches.php?<?=h(http_build_query($filters))?>"><?=h(t('dashboard.alerts'))?></a></p><?php endif; ?>
 <?php if($error):?><div class="notice error" role="alert"><?=h($error)?></div><?php endif;?>
-<?php if(function_exists('ui_country_ads'))ui_country_ads($pdo,geo_country(),ctype_digit($filters['category_id'])?(int)$filters['category_id']:null);?>
-<?php if(ctype_digit($filters['category_id'])&&function_exists('ui_sponsored_cards'))ui_sponsored_cards($pdo,geo_country(),(int)$filters['category_id'],'category_top',3);?>
+<?php if ($error === ''): ?>
+    <?php banner_ads_render($pdo,'search',$filters['country_code'],$attributeCategory > 0 ? $attributeCategory : null); ?>
+    <?php if ($attributeCategory > 0) ui_sponsored_cards($pdo,$filters['country_code'],$attributeCategory,'category_top',3,$filters['seller_type']); ?>
+<?php endif; ?>
 <div class="results-heading"><p><strong><?=(int)$results['total']?></strong> <?=h(t((int)$results['total']===1?'Entdeckung':'Entdeckungen'))?></p><a class="text-link" href="/marketplace/search.php"><?=h(t('Filter zurücksetzen'))?></a></div>
 <?php if($results['items']):?><div class="cards"><?php foreach($results['items'] as $item)ui_listing_card($item);?></div><?php else:ui_empty(t('Noch kein passender Fund.'),t('Probiere einen anderen Suchbegriff oder lockere die Filter. Neue Angebote können jederzeit dazukommen.'));endif;?>
 <?php $pages=max(1,(int)ceil((int)$results['total']/24));if($pages>1):?><nav class="pagination" aria-label="<?=h(t('Ergebnisseiten'))?>"><?php if($page>1):?><a class="button secondary" href="?<?=h(http_build_query(array_merge($filters,['page'=>$page-1])))?>"><?=h(t('Zurück'))?></a><?php endif;?><span><?=h(t('Seite {page} von {pages}',['page'=>(int)$page,'pages'=>$pages]))?></span><?php if($page<$pages):?><a class="button secondary" href="?<?=h(http_build_query(array_merge($filters,['page'=>$page+1])))?>"><?=h(t('Weiter'))?> <?=ui_icon('arrow')?></a><?php endif;?></nav><?php endif;?></main>

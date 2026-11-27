@@ -9,7 +9,7 @@ const paths=['/','/marketplace/search.php','/auth/login.php','/auth/register.php
  const browser=await pw.chromium.launch(launchOptions());const checks=[];
  try{
   for(const width of [1440,390]){
-   const context=await browser.newContext({viewport:{width,height:1000},reducedMotion:'reduce'});const page=await context.newPage();
+   const context=await browser.newContext({locale:'de-DE',viewport:{width,height:1000},reducedMotion:'reduce'});const page=await context.newPage();
    for(const path of paths){
     const response=await page.goto(origin+path,{waitUntil:'networkidle'});assert.strictEqual(response.status(),200,'A11y target unavailable: '+path);
     await page.keyboard.press('Tab');const skip=await page.evaluate(()=>({tag:document.activeElement.tagName,href:document.activeElement.getAttribute('href')}));assert(skip.tag==='A'&&skip.href==='#main-content','Keyboard skip link missing: '+path);

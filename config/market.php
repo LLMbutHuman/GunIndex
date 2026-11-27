@@ -28,6 +28,17 @@ function market_find(PDO $pdo, int $id, bool $includeEnded = true, ?array $origi
     return $row;
 }
 
+function market_seller_type_filter(mixed $value): ?string
+{
+    $published = "EXISTS (SELECT 1 FROM market_dealer_profiles dp WHERE dp.user_id=l.seller_id AND dp.status='published')";
+    return match ($value) {
+        null, '' => null,
+        'dealer' => $published,
+        'private' => 'NOT '.$published,
+        default => throw new InvalidArgumentException(t('refine.seller_invalid')),
+    };
+}
+
 function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPage = 24): array
 {
     $page=max(1,min(10000,$page));$perPage=max(1,min(48,$perPage));
@@ -37,8 +48,10 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     $country=geo_country($countryRaw===''?null:$countryRaw);
     $scope=$filters['scope']??'country';
     if(!is_string($scope)||!in_array($scope,['country','international'],true))throw new InvalidArgumentException(t('Ungültiger Suchbereich.'));
+    $sellerType = market_seller_type_filter($filters['seller_type'] ?? null);
     if(!$categories||($scope==='country'&&!geo_country_enabled($pdo,$country)))return ['items'=>[],'total'=>0,'page'=>$page,'per_page'=>$perPage,'country_code'=>$country,'scope'=>$scope];
     $where=market_public_where($categories);
+    if ($sellerType !== null) $where[] = $sellerType;
     $parameters=$categories;
     if($scope==='country'){$where[]='l.country_code=?';$parameters[]=$country;}
     foreach(['listing_id','seller_id'] as $key){

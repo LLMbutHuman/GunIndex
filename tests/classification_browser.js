@@ -22,7 +22,7 @@ const origin = 'http://127.0.0.1:8081';
     return page;
   }
   try {
-    const context = await browser.newContext({viewport:{width:390,height:844}});
+    const context = await browser.newContext({locale:'de-DE',viewport:{width:390,height:844}});
     const page = await login(context);
     const unauthorized = await page.goto(origin+'/admin/category-attributes.php?category_id='+categories.main);
     assert.equal(unauthorized.status(),403);
@@ -61,7 +61,7 @@ const origin = 'http://127.0.0.1:8081';
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true);
     assertions.push('autocomplete_combined_filters_and_mobile_layout');
 
-    const basic = await browser.newContext({javaScriptEnabled:false});
+    const basic = await browser.newContext({locale:'de-DE',javaScriptEnabled:false});
     const noJs = await login(basic);
     await noJs.goto(origin+'/user/create-listing.php');
     await noJs.locator('[name=title]').fill('Synthetic unsaved draft');

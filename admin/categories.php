@@ -13,12 +13,24 @@ if (!in_array($method, ['GET', 'HEAD', 'POST'], true)) {
 }
 $saved = $method === 'GET' && ($_SESSION['category_saved'] ?? false) === true;
 if ($saved) unset($_SESSION['category_saved']);
+$removalId = null;
 $values = ['id' => '0', 'name' => '', 'slug' => '', 'parent_id' => '0', 'sort_order' => '0', 'is_active' => '1'];
 if ($method === 'POST') {
     require_csrf();
     foreach ($values as $key => $default) if (isset($_POST[$key]) && is_string($_POST[$key])) $values[$key] = $_POST[$key];
     try {
-        catalog_save_category($pdo, (int)$admin['id'], $_POST);
+        $action = $_POST['action'] ?? 'save';
+        if (in_array($action,['deactivate','delete'],true)) {
+            $removalId = filter_var($_POST['id'] ?? null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]) ?: null;
+            if ($removalId === null || ($_POST['confirm_removal'] ?? null) !== '1') {
+                throw new InvalidArgumentException(t('refine.category_confirm_required'));
+            }
+            catalog_remove_category($pdo,(int)$admin['id'],$removalId,$action==='delete');
+        } elseif ($action === 'save') {
+            catalog_save_category($pdo, (int)$admin['id'], $_POST);
+        } else {
+            throw new InvalidArgumentException(t('account.invalid_input'));
+        }
         $_SESSION['category_saved'] = true;
         redirect('/admin/categories.php');
     } catch (InvalidArgumentException | DomainException $exception) {
@@ -28,6 +40,9 @@ if ($method === 'POST') {
         http_response_code(503);
         $error = t('classification.category_unavailable');
     }
+} elseif (isset($_GET['delete'])) {
+    $removalId = filter_var($_GET['delete'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]) ?: null;
+    if ($removalId === null) abort_request(404,t('admin_geography.category_missing'));
 } elseif (isset($_GET['edit'])) {
     $edit = filter_var($_GET['edit'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     $rows = catalog_rows($pdo);
@@ -35,6 +50,9 @@ if ($method === 'POST') {
     foreach ($values as $key => $default) $values[$key] = $key === 'parent_id' ? (string)($rows[$edit][$key] ?? 0) : (string)$rows[$edit][$key];
 }
 $categories = catalog_categories($pdo, false);
+$removal = $removalId === null ? null : (catalog_rows($pdo)[$removalId] ?? null);
+if ($removalId !== null && $removal === null) abort_request(404,t('admin_geography.category_missing'));
+$dependencies = $removal === null ? [] : catalog_category_dependencies($pdo,$removalId);
 include __DIR__ . '/../includes/header.php';
 ?>
 <main class="container admin-page">
@@ -42,6 +60,29 @@ include __DIR__ . '/../includes/header.php';
     <div class="admin-layout"><?php include __DIR__ . '/../includes/admin-nav.php'; ?><div class="admin-content">
         <?php if ($error !== ''): ?><div class="notice error" role="alert"><?= h($error) ?></div><?php endif; ?>
         <?php if ($saved): ?><div class="notice success" role="status"><?=h(t('classification.category_saved'))?></div><?php endif; ?>
+        <?php if ($removal !== null): ?>
+            <section class="panel" id="category-removal">
+                <h2><?=h(t('refine.category_removal',['name'=>i18n_category($pdo,$removal)]))?></h2>
+                <p><?=h(t($dependencies ? 'refine.category_blocked' : 'refine.category_delete_help'))?></p>
+                <?php if ($dependencies): ?><ul>
+                    <?php foreach ($dependencies as $kind=>$count): ?>
+                        <li><?=h(t('refine.category_ref_'.$kind))?> · <?=h((string)$count)?></li>
+                    <?php endforeach; ?>
+                </ul><?php endif; ?>
+                <p><?=h(t('refine.category_deactivate_help'))?></p>
+                <?php if ((int)$removal['is_active']===1 || !$dependencies): ?>
+                <form method="post" action="/admin/categories.php#category-removal" class="form-grid">
+                    <?=csrf_field()?><input type="hidden" name="id" value="<?=$removalId?>">
+                    <label><input type="checkbox" name="confirm_removal" value="1" required> <?=h(t('refine.category_confirm'))?></label>
+                    <div class="button-row">
+                        <?php if ((int)$removal['is_active']===1): ?><button class="button secondary" name="action" value="deactivate"><?=h(t('refine.category_deactivate'))?></button><?php endif; ?>
+                        <?php if (!$dependencies): ?><button class="button danger" name="action" value="delete"><?=h(t('refine.category_delete'))?></button><?php endif; ?>
+                        <a class="button secondary" href="/admin/categories.php"><?=h(t('Abbrechen'))?></a>
+                    </div>
+                </form>
+                <?php else: ?><a class="button secondary" href="/admin/categories.php?edit=<?=$removalId?>"><?=h(t('Bearbeiten'))?></a><?php endif; ?>
+            </section>
+        <?php endif; ?>
         <section class="panel"><h2><?=h(t($values['id'] === '0' ? 'classification.category_new' : 'classification.category_edit'))?></h2>
             <form method="post" action="/admin/categories.php"><?= csrf_field() ?><input type="hidden" name="id" value="<?= h($values['id']) ?>">
                 <div class="form-grid">
@@ -54,7 +95,7 @@ include __DIR__ . '/../includes/header.php';
             </form>
         </section>
         <section class="panel"><h2><?=h(t('classification.category_tree'))?> <span class="muted">· <?= count($categories) ?></span></h2><div class="table-wrap"><table class="data-table"><thead><tr><th><?=h(t('Kategorie'))?></th><th><?=h(t('classification.category_slug'))?></th><th><?=h(t('Status'))?></th><th><?=h(t('dashboard.actions'))?></th></tr></thead><tbody>
-            <?php foreach ($categories as $category): ?><tr><td><?= h(str_repeat('— ', min(20, (int)$category['depth'])) . i18n_category($pdo,$category)) ?></td><td><?= h($category['slug']) ?></td><td><span class="status"><?=h(t($category['available'] ? 'classification.category_available' : ($category['is_active'] ? 'classification.category_parent_blocked' : 'admin_geography.inactive')))?></span></td><td><a href="/admin/categories.php?edit=<?= (int)$category['id'] ?>"><?=h(t('Bearbeiten'))?> ↗</a> · <a href="/admin/category-attributes.php?category_id=<?=(int)$category['id']?>"><?=h(t('classification.admin'))?></a></td></tr><?php endforeach; ?>
+            <?php foreach ($categories as $category): ?><tr><td><?= h(str_repeat('— ', min(20, (int)$category['depth'])) . i18n_category($pdo,$category)) ?></td><td><?= h($category['slug']) ?></td><td><span class="status"><?=h(t($category['available'] ? 'classification.category_available' : ($category['is_active'] ? 'classification.category_parent_blocked' : 'admin_geography.inactive')))?></span></td><td><div class="button-row"><a href="/admin/categories.php?edit=<?= (int)$category['id'] ?>"><?=h(t('Bearbeiten'))?> ↗</a><a href="/admin/category-attributes.php?category_id=<?=(int)$category['id']?>"><?=h(t('classification.admin'))?></a><a class="button secondary small" href="/admin/categories.php?delete=<?=(int)$category['id']?>#category-removal"><?=h(t('refine.category_manage_removal'))?></a></div></td></tr><?php endforeach; ?>
             <?php if ($categories === []): ?><tr><td colspan="4"><?=h(t('classification.category_empty'))?></td></tr><?php endif; ?>
         </tbody></table></div></section>
         <p class="muted"><?=h(t('classification.category_rules'))?></p>

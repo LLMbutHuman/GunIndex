@@ -16,7 +16,7 @@ function runPhp(...args) {
   const title = 'Synthetic autosaved desk '+tag;
   const checks=[];
   async function session(user, options={}) {
-    const context=await browser.newContext(options);
+    const context=await browser.newContext({locale:'de-DE',...options});
     const page=await context.newPage();
     await page.goto(origin+'/auth/login.php');
     await page.locator('[name=login]').fill(user.username);

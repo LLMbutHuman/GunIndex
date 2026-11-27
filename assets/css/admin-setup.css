@@ -1,0 +1,14 @@
+#setup-wizard [hidden] { display: none; }
+.setup-layout { display: grid; grid-template-columns: minmax(14rem, 1fr) minmax(0, 3fr); gap: 1rem; }
+.setup-layout .panel { margin-bottom: 1rem; }
+.setup-step-list summary { cursor: pointer; }
+.setup-step-list li { margin-block: .75rem; }
+.setup-step-list a[aria-current="step"] { font-weight: 700; }
+.setup-step-state { display: block; font-size: .85em; }
+.setup-navigation { display: flex; flex-wrap: wrap; gap: .5rem; }
+.setup-command { margin-block: .75rem; }
+.setup-command pre { padding: .75rem; border: 1px solid currentColor; overflow: auto; }
+.setup-command [role="status"] { display: inline-block; margin-inline-start: .5rem; }
+@media (max-width: 48rem) {
+  .setup-layout { grid-template-columns: 1fr; }
+}

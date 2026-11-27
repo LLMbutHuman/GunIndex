@@ -175,7 +175,15 @@ eine aktivierte PayPal-Weiterleitung können externe Seiten öffnen.
   Backup und Monitoring benötigen kein externes Konto.
   https://man.openbsd.org/sftp
 
-5. Mitgelieferte Postleitzahlendaten
+5. Mitgelieferte Länder- und Postleitzahlendaten
+
+- DB-IP Country Lite, 01.11.2026. CC BY 4.0, IP Geolocation by DB-IP.
+  Aufbereitete IPv4- und IPv6-Bereiche für die lokale Markt- und
+  Sprachvorauswahl. Die Suche erfolgt in den gebündelten Dateien, die
+  verwendete Quelle erscheint als Link in der Oberfläche. Formate,
+  Herkunft, Prüfsummen und Aktualisierung stehen in docs/IP_COUNTRY.md.
+  https://db-ip.com/db/download/ip-to-country-lite
+  https://creativecommons.org/licenses/by/4.0/
 
 GunIndex importiert geprüfte lokale CSV-Bestände. Die Suche ruft Karten- oder
 Geocoding-Dienste zur Laufzeit nicht auf. Koordinaten dienen der Näherung von

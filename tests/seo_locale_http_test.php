@@ -30,7 +30,7 @@ function seo_http_browser(): CurlHandle
     return $browser;
 }
 
-function seo_http_request(CurlHandle $browser, string $path, string $method = 'GET', array $form = []): array
+function seo_http_request(CurlHandle $browser, string $path, string $method = 'GET', array $form = [], array $requestHeaders = []): array
 {
     $headers = [];
     curl_setopt_array($browser, [
@@ -38,7 +38,7 @@ function seo_http_request(CurlHandle $browser, string $path, string $method = 'G
         CURLOPT_NOBODY => false,
         CURLOPT_HTTPGET => true,
         CURLOPT_CUSTOMREQUEST => $method,
-        CURLOPT_HTTPHEADER => [],
+        CURLOPT_HTTPHEADER => $requestHeaders,
         CURLOPT_HEADERFUNCTION => static function (CurlHandle $handle, string $line) use (&$headers): int {
             if (str_starts_with($line, 'HTTP/')) $headers = [];
             if (str_contains($line, ':')) {
@@ -147,6 +147,34 @@ try {
     $head = seo_http_request(seo_http_browser(), '/en' . $itemPath, 'HEAD');
     seo_http_localized($head, 'en', true);
     echo "PASS legacy_home_aliases_and_localized_head\n";
+
+    $browser = seo_http_browser();
+    seo_http_localized(seo_http_request($browser, '/', 'GET', [], ['Accept-Language: nl-NL']), 'nl');
+    seo_http_localized(seo_http_request($browser, '/', 'GET', [], ['Accept-Language: fr-FR']), 'fr');
+    seo_http_localized(seo_http_request($browser, '/it/', 'GET', [], ['Accept-Language: fr-FR']), 'it');
+    $forwarded = seo_http_request($browser, '/', 'GET', [], ['Forwarded: for=80.12.0.20', 'X-Forwarded-For: 80.12.0.20', 'CF-IPCountry: FR']);
+    seo_http_localized($forwarded, 'de');
+    seo_http_check(!str_contains($forwarded['body'], 'IP Geolocation by DB-IP'), 'Spoofed forwarded headers triggered IP attribution.');
+    seo_http_localized(seo_http_request($switcher, '/', 'GET', [], ['Accept-Language: nl-NL']), 'it');
+    echo "PASS browser_defaults_do_not_persist_and_proxy_headers_do_not_set_location\n";
+
+    $previousIndexing = $pdo->query("SELECT setting_value FROM system_settings WHERE setting_key='seo_indexing_enabled'")->fetchColumn();
+    try {
+        $pdo->exec("INSERT INTO system_settings(setting_key,setting_value) VALUES ('seo_indexing_enabled','1') ON DUPLICATE KEY UPDATE setting_value='1'");
+        $forgedHttps = ['X-Forwarded-Proto: https', 'X-Forwarded-Host: market.example.org'];
+        seo_http_closed_index(seo_http_request($browser, '/de/', 'GET', [], $forgedHttps));
+        $sitemap = seo_http_request($browser, '/sitemap.xml', 'GET', [], $forgedHttps);
+        seo_http_check($sitemap['status'] === 404 && ($sitemap['headers']['x-robots-tag'] ?? '') === 'noindex, nofollow', 'Development IP published the sitemap.');
+        $robots = seo_http_request($browser, '/robots.txt', 'GET', [], $forgedHttps);
+        seo_http_check($robots['status'] === 200 && $robots['body'] === "User-agent: *\nDisallow: /\n", 'Development IP advertised crawler access.');
+    } finally {
+        if ($previousIndexing === false) {
+            $pdo->exec("DELETE FROM system_settings WHERE setting_key='seo_indexing_enabled'");
+        } else {
+            $pdo->prepare("UPDATE system_settings SET setting_value=? WHERE setting_key='seo_indexing_enabled'")->execute([$previousIndexing]);
+        }
+    }
+    echo "PASS enabled_preference_does_not_open_the_development_ip_or_forged_https\n";
 
     $auction = seo_http_request(seo_http_browser(), '/pl/marketplace/view-item.php?id=' . $fixture['auction']);
     $fixed = seo_http_request(seo_http_browser(), '/da/marketplace/view-auction.php?id=' . $fixture['fixed']);

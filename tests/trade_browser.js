@@ -18,7 +18,7 @@ function fixture(operation, fields = {}) {
   }).toString('utf8'));
 }
 async function context(browser) {
-  const result = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+  const result = await browser.newContext({locale:'de-DE', viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   await result.route('**/*', route => {
     if (route.request().url().startsWith(origin + '/')) return route.continue();
     external.push(new URL(route.request().url()).protocol); return route.abort();

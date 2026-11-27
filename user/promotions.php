@@ -24,7 +24,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 }
 $country=business_country($user['country_code']??'DE');
 $q=$pdo->prepare("SELECT l.id,l.title,l.country_code,c.name AS category_name FROM market_listings l JOIN market_categories c ON c.id=l.category_id WHERE l.seller_id=? AND l.status='active' ORDER BY l.id DESC LIMIT 100");$q->execute([$user['id']]);$listings=$q->fetchAll();
-$q=$pdo->prepare("SELECT id,title,country_code,category_id FROM market_campaigns WHERE user_id=? AND status='approved' ORDER BY id DESC LIMIT 100");$q->execute([$user['id']]);$campaigns=$q->fetchAll();
+$q=$pdo->prepare("SELECT id,title,country_code,category_id FROM market_campaigns WHERE user_id=? AND status='approved' AND placement='legacy' ORDER BY id DESC LIMIT 100");$q->execute([$user['id']]);$campaigns=$q->fetchAll();
 $page=filter_var($_GET['page']??'1',FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>100000]])?:1;
 $q=$pdo->prepare('SELECT COUNT(*) FROM market_premium_bookings WHERE user_id=?');$q->execute([$user['id']]);$total=(int)$q->fetchColumn();$page=min($page,max(1,(int)ceil($total/25)));
 $q=$pdo->prepare('SELECT b.*,i.invoice_number,i.gross_cents,l.title FROM market_premium_bookings b JOIN market_invoices i ON i.id=b.invoice_id JOIN market_listings l ON l.id=b.listing_id WHERE b.user_id=? ORDER BY b.id DESC LIMIT 25 OFFSET ?');$q->bindValue(1,(int)$user['id'],PDO::PARAM_INT);$q->bindValue(2,($page-1)*25,PDO::PARAM_INT);$q->execute();$bookings=$q->fetchAll();

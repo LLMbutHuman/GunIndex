@@ -210,6 +210,8 @@ function discovery_validate_search(PDO $pdo, array $input): array
     $allowed = ['q','category_id','type','min_price','max_price','country_code','scope','zip','origin_country','radius_km','sort'];
     $filters = [];
     foreach ($allowed as $key) $filters[$key] = discovery_text($input, $key, $key === 'q' ? 200 : 40);
+    $sellerType = discovery_text($input, 'seller_type', 10);
+    if ($sellerType !== '') $filters['seller_type'] = $sellerType;
     $filters += discovery_search_attributes($input);
     $filters['country_code'] = geo_country($filters['country_code'] ?: 'DE');
     $filters['origin_country'] = geo_country($filters['origin_country'] ?: $filters['country_code']);
@@ -230,6 +232,11 @@ function discovery_save_search(PDO $pdo, int $userId, array $input, ?int $id = n
     $json = json_encode($filters, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE); $hash = hash('sha256', $json); $mode = discovery_frequency($input);
     $pdo->beginTransaction();
     try {
+        if ($filters['category_id'] !== '') {
+            $category = $pdo->prepare('SELECT id FROM market_categories WHERE id=? AND is_active=1 FOR SHARE');
+            $category->execute([(int)$filters['category_id']]);
+            if (!$category->fetchColumn()) throw new DomainException(t('admin_geography.category_missing'));
+        }
         discovery_lock_user($pdo,$userId);
         if ($id === null) discovery_quota($pdo, 'search', $userId); else { $previous=discovery_owner_query($pdo, 'search', $id, $userId, true); if($previous['status']==='archived')throw new DomainException('Archivierte Suchaufträge können nicht bearbeitet werden.'); if($previous['status']==='review')discovery_active_quota($pdo,'search',$userId); }
         $target = (int)$pdo->query('SELECT COALESCE(MAX(id),0) FROM market_listings')->fetchColumn(); $event = (int)$pdo->query('SELECT COALESCE(MAX(id),0) FROM market_discovery_events')->fetchColumn();

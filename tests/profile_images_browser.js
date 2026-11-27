@@ -43,9 +43,9 @@ async function login(page, user, admin = false) {
   const publicProfile = origin + '/marketplace/profile.php?user_id=' + owner.id;
   const adminReview = origin + '/admin/campaigns.php?kind=profiles&status=all';
   const browser = await playwright.chromium.launch(launchOptions());
-  const editor = await browser.newPage({viewport:{width:390,height:844}});
-  const guest = await browser.newPage();
-  const admin = await browser.newPage();
+  const editor = await browser.newPage({locale:'de-DE',viewport:{width:390,height:844}});
+  const guest = await browser.newPage({locale:'de-DE'});
+  const admin = await browser.newPage({locale:'de-DE'});
   async function replaceImage() {
     await editor.locator('input[type=file]').setInputFiles(upload);
     await Promise.all([editor.waitForNavigation(), editor.locator('button[value=save]').click()]);

@@ -294,6 +294,9 @@ function trade_details(PDO $pdo,array $row,int $actor): array
     $q=$pdo->prepare('SELECT * FROM market_trade_events WHERE trade_id=? ORDER BY id');$q->execute([$row['id']]);$row['events']=$q->fetchAll();
     foreach($row['events'] as &$event){$event['details']=crypto_decrypt('trade_event',$event['details_cipher']);unset($event['details_cipher'],$event['request_hash'],$event['request_key']);}unset($event);
     $q=$pdo->prepare("SELECT * FROM market_ratings WHERE trade_id=? AND status='active' ORDER BY id");$q->execute([$row['id']]);$row['ratings']=$q->fetchAll();
+    $q=$pdo->prepare('SELECT 1 FROM market_ratings WHERE listing_id=? AND sender_id=?');
+    $q->execute([$row['listing_id'],$actor]);
+    $row['rating_submitted']=$q->fetchColumn()!==false;
     $row['actions']=trade_allowed_actions($row,$actor);unset($row['snapshot_cipher'],$row['request_key'],$row['request_hash']);return $row;
 }
 
@@ -351,7 +354,7 @@ function trade_transition(PDO $pdo,int $actor,int $id,string $action,array $inpu
 
 function trade_rate(PDO $pdo,int $actor,int $id,int $stars,string $comment): void
 {
-    $comment=trim($comment);if($stars<1||$stars>5||!mb_check_encoding($comment,'UTF-8')||mb_strlen($comment)>1000)throw new InvalidArgumentException(t('trade.invalid'));
+    $comment=trim($comment);if($stars<1||$stars>5||!mb_check_encoding($comment,'UTF-8')||mb_strlen($comment)>1000||preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/',$comment))throw new InvalidArgumentException(t('trade.invalid'));
     $hint=trade_row($pdo,$id);
     trade_transaction($pdo,function()use($pdo,$actor,$id,$stars,$comment,$hint):void {
         market_lock_listing($pdo,(int)$hint['listing_id']);$row=trade_row($pdo,$id,true);market_assert_users_active($pdo,[$actor]);
@@ -359,7 +362,63 @@ function trade_rate(PDO $pdo,int $actor,int $id,int $stars,string $comment): voi
         $q=$pdo->prepare('SELECT id FROM market_ratings WHERE listing_id=? AND sender_id=? FOR UPDATE');$q->execute([$row['listing_id'],$actor]);
         if($q->fetchColumn()!==false)throw new DomainException(t('trade.duplicate'));
         $receiver=$actor===(int)$row['seller_id']?(int)$row['buyer_id']:(int)$row['seller_id'];
+        if ($receiver===$actor) throw new DomainException(t('trade.forbidden'));
         $pdo->prepare('INSERT INTO market_ratings(listing_id,trade_id,sender_id,receiver_id,stars,comment) VALUES (?,?,?,?,?,?)')->execute([$row['listing_id'],$id,$actor,$receiver,$stars,$comment]);
+    });
+}
+
+function trade_public_ratings(PDO $pdo, int $user, int $page): array
+{
+    $from = " FROM market_ratings r JOIN market_listings l ON l.id=r.listing_id
+        JOIN users s ON s.id=r.sender_id WHERE r.receiver_id=? AND r.status='active' AND r.sender_id<>r.receiver_id
+        AND ((r.trade_id IS NULL AND l.status IN ('ended','sold')) OR EXISTS (
+            SELECT 1 FROM market_trades rt WHERE rt.id=r.trade_id AND rt.listing_id=r.listing_id AND rt.status='completed'
+            AND ((rt.buyer_id=r.sender_id AND rt.seller_id=r.receiver_id) OR (rt.seller_id=r.sender_id AND rt.buyer_id=r.receiver_id))
+        ))";
+    $summary = $pdo->prepare('SELECT COUNT(*) AS count,AVG(r.stars) AS average'.$from);
+    $summary->execute([$user]);
+    $summary = $summary->fetch();
+    $rows = $pdo->prepare('SELECT r.id,r.sender_id,r.stars,r.comment,r.created_at,s.username'.$from.' ORDER BY r.id DESC LIMIT 20 OFFSET ?');
+    $rows->bindValue(1,$user,PDO::PARAM_INT);
+    $rows->bindValue(2,(max(1,min(10000,$page))-1)*20,PDO::PARAM_INT);
+    $rows->execute();
+    return ['count'=>(int)$summary['count'],'average'=>$summary['average'],'rows'=>$rows->fetchAll()];
+}
+
+function trade_auction_rating_recipient(PDO $pdo, array $listing, int $actor): ?int
+{
+    $seller = (int)$listing['seller_id'];
+    $winner = (int)($listing['highest_bidder_id'] ?? 0);
+    if ($winner < 1 || $seller === $winner || !in_array($actor,[$seller,$winner],true) || $listing['type'] !== 'auction'
+        || !in_array($listing['status'],['ended','sold'],true)) return null;
+    $eventKey = ($listing['status'] === 'sold' ? 'buyout-' : 'close-').$listing['id'];
+    $query = $pdo->prepare('SELECT event_type,idempotency_key,user_id,amount_cents FROM market_bids WHERE listing_id=? AND idempotency_key=?');
+    $query->execute([$listing['id'],$eventKey]);
+    $event = $query->fetch();
+    if (!$event) return null;
+    $proxy = $pdo->prepare('SELECT 1 FROM market_proxy_bids WHERE listing_id=? LIMIT 1');
+    $proxy->execute([$listing['id']]);
+    if (!relisting_auction_sale_eligible($listing,$event,$proxy->fetchColumn()!==false)) return null;
+    return $actor === $seller ? $winner : $seller;
+}
+
+function trade_rate_auction(PDO $pdo, int $actor, int $listingId, int $stars, string $comment): void
+{
+    $comment = trim($comment);
+    if ($stars < 1 || $stars > 5 || strlen($comment) > 3000 || !preg_match('//u',$comment)
+        || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/',$comment)) throw new InvalidArgumentException(t('trade.auction_rating_invalid'));
+    trade_transaction($pdo,static function () use ($pdo,$actor,$listingId,$stars,$comment): void {
+        $listing = market_lock_listing($pdo,$listingId);
+        market_assert_users_active($pdo,[$actor]);
+        $recipient = trade_auction_rating_recipient($pdo,$listing,$actor);
+        if ($recipient === null) throw new MarketAccessException(t('trade.auction_rating_parties'));
+        try {
+            $pdo->prepare('INSERT INTO market_ratings(listing_id,sender_id,receiver_id,stars,comment) VALUES (?,?,?,?,?)')
+                ->execute([$listingId,$actor,$recipient,$stars,$comment]);
+        } catch (PDOException $error) {
+            if ((int)($error->errorInfo[1] ?? 0) !== 1062) throw $error;
+            throw new MarketConflictException(t('trade.duplicate'));
+        }
     });
 }
 

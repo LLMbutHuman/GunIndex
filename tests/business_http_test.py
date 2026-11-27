@@ -91,7 +91,7 @@ class BusinessHTTP(unittest.TestCase):
   self.assertEqual(303,browser.request('/user/language.php',dict(csrf_token=browser.token(route),locale='en',market_country='DE',return_path=route))[0])
   result=browser.request(route,dict(csrf_token=browser.token(route),action='profile',target_id=user['id'],status='published',reason='Synthetic review',revision=old));self.assertEqual(422,result[0]);self.assertIn('The details have changed. Review the current information.',result[2]);self.assertEqual('pending',read(user,'profile')['status'])
   status,headers,body=browser.request('/admin/campaigns.php?status=approved')
-  self.assertEqual(200,status);self.assertIn('no-store',headers['Cache-Control']);self.assertIn('href="?kind=profiles"',body)
+  self.assertEqual(200,status);self.assertIn('no-store',headers['Cache-Control']);self.assertIn('href="/admin/dealers.php"',body)
   status,_,body=browser.request(route+'&reviewed=1')
   self.assertEqual(200,status);self.assertIn('Publish business details',body);self.assertNotIn('The decision was recorded.',body)
   profile=read(user,'profile')

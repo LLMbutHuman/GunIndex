@@ -29,3 +29,58 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 
 /* Version-bound document forms must fit narrow account and checkout columns. */
 .contract-documents{min-width:0;max-width:100%;overflow-wrap:anywhere}.contract-documents legend{max-width:100%}
+
+.manifesto-strip > .manifesto-track {
+    width: 100%;
+    padding: 0;
+    gap: 0;
+    animation: none;
+}
+.manifesto-copy {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(.65rem, 2.5vw, 2.75rem);
+    width: 100%;
+    padding: .9rem 1rem;
+    text-align: center;
+}
+.manifesto-copy + .manifesto-copy { display: none; }
+@keyframes manifesto-loop { to { transform: translateX(-50%); } }
+.messages-link { display: inline-flex; align-items: center; gap: .4rem; }
+.messages-link .icon, .mobile-messages .icon { width: 18px; height: 18px; }
+.message-count {
+    background: var(--accent);
+    color: #09261e;
+    font-size: .7rem;
+    font-weight: 700;
+    line-height: 1.3;
+    min-width: 1.1rem;
+    padding: .1rem .25rem;
+    border-radius: 999px;
+    text-align: center;
+}
+.nav-actions .mobile-messages { display: none; position: relative; flex: 0 0 auto; }
+.mobile-messages .message-count { position: absolute; inset: -.24rem -.35rem auto auto; }
+.profile-actions { display: flex; align-items: stretch; flex-wrap: wrap; gap: .75rem; margin-block: .85rem; }
+.profile-actions .button { min-height: 49px; max-width: 100%; overflow-wrap: anywhere; }
+@media (min-width: 981px) and (max-width: 1280px) {
+    .nav-shell { gap: clamp(.7rem, 2vw, 1.5rem); }
+    .desktop-nav { gap: clamp(.6rem, 1.6vw, 1.4rem); }
+}
+@media (max-width: 980px) {
+    .nav-actions .mobile-messages { display: inline-grid; }
+}
+@media (max-width: 700px) {
+    .nav-actions:has(.mobile-messages) .account-link span { display: none; }
+    .manifesto-copy { gap: .5rem .85rem; }
+}
+@media (max-width: 700px) and (prefers-reduced-motion: no-preference) {
+    html[data-motion=full] .manifesto-strip > .manifesto-track { width: max-content; animation: manifesto-loop 28s linear infinite; }
+    html[data-motion=full] .manifesto-copy { display: flex; width: max-content; min-width: 100vw; flex: 0 0 auto; flex-wrap: nowrap; }
+}
+@media (max-width: 420px) {
+    .profile-actions .button { flex: 1 1 100%; }
+    .nav-actions:has(.mobile-messages) { gap: .45rem; }
+}

@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Zprávy · nepřečtené: {count}',
+    'refine.open_admin' => 'Přejít do administrace',
+    'refine.setup_tab' => 'Nastavení provozu',
+    'refine.seller_type' => 'Typ prodejce',
+    'refine.seller_all' => 'Všichni prodejci',
+    'refine.seller_private' => 'Pouze soukromí prodejci',
+    'refine.seller_dealer' => 'Pouze podnikatelé',
+    'refine.seller_invalid' => 'Vyberte platný typ prodejce.',
+    'refine.category_busy' => 'Strom kategorií se právě upravuje. Zkuste to za chvíli znovu.',
+    'refine.category_blocked' => 'Tato kategorie má závislosti. Odstraňte je před trvalým smazáním kategorie.',
+    'refine.category_confirm_required' => 'Vyberte kategorii a potvrďte změnu.',
+    'refine.category_removal' => 'Správa kategorie · {name}',
+    'refine.category_delete_help' => 'Tato kategorie je prázdná. Trvalé smazání nelze vrátit zpět.',
+    'refine.category_deactivate_help' => 'Deaktivace zachová kategorii i její obsah. Kategorie a její podkategorie se skryjí ve veřejném katalogu.',
+    'refine.category_confirm' => 'Potvrzuji vybranou změnu této kategorie.',
+    'refine.category_deactivate' => 'Deaktivovat',
+    'refine.category_delete' => 'Trvale smazat',
+    'refine.category_manage_removal' => 'Smazat nebo deaktivovat',
+    'refine.category_ref_children' => 'Podkategorie',
+    'refine.category_ref_listings' => 'Inzeráty',
+    'refine.category_ref_attributes' => 'Atributy kategorie',
+    'refine.category_ref_translations' => 'Překlady',
+    'refine.category_ref_wanted' => 'Poptávky',
+    'refine.category_ref_campaigns' => 'Reklamní kampaně',
+    'refine.category_ref_placements' => 'Reklamní plochy',
+    'refine.category_ref_bookings' => 'Rezervace',
+    'refine.category_ref_searches' => 'Uložená hledání',
+    'refine.category_ref_drafts' => 'Koncepty inzerátů',
+];

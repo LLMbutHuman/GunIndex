@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/banner_ads.php';
+require_once __DIR__.'/../includes/banner-advertising.php';
 
 const BUSINESS_PAID_START_DAYS = 7;
+const BUSINESS_BANNER_REVIEW_DAYS = 14;
 
 function business_country(?string $country): string
 {
@@ -56,23 +59,28 @@ function business_assert_manager(PDO $pdo,int $actorId):void
     else settings_assert_admin($pdo,$actorId);
 }
 
+function business_assert_dealer_manager(PDO $pdo,int $actorId):void
+{
+    governance_assert_actor($pdo,$actorId,'dealers.manage');
+}
+
 function business_profile_revision(array $profile):string
 {
-    return hash('sha256',json_encode(array_intersect_key($profile,array_flip(['user_id','company_name','address_text','country_code','contact_email','website','legal_notice','logo_revision'])),JSON_THROW_ON_ERROR));
+    return hash('sha256',json_encode(array_intersect_key($profile,array_flip(['user_id','company_name','address_text','country_code','contact_email','website','legal_notice','logo_revision','status'])),JSON_THROW_ON_ERROR));
 }
 
 function business_review_dealer(PDO $pdo,int $actorId,int $userId,string $status,string $reason,string $revision):void
 {
-    business_assert_manager($pdo,$actorId);
-    if(!in_array($status,['published','rejected'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException(t('admin_campaigns.review_validation'));
-    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_dealer_profiles WHERE user_id=? FOR UPDATE');$q->execute([$userId]);$profile=$q->fetch();if(!$profile)throw new DomainException(t('admin_campaigns.profile_missing'));if(!hash_equals(business_profile_revision($profile),$revision))throw new DomainException(t('admin_campaigns.profile_changed'));$pdo->prepare('UPDATE market_dealer_profiles SET status=?,moderation_reason=? WHERE user_id=?')->execute([$status,trim($reason),$userId]);audit_log($pdo,$actorId,'dealer.reviewed',$userId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
+    business_assert_dealer_manager($pdo,$actorId);
+    if(!in_array($status,['published','rejected','disabled'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException(t('admin_campaigns.review_validation'));
+    $pdo->beginTransaction();try{business_assert_dealer_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_dealer_profiles WHERE user_id=? FOR UPDATE');$q->execute([$userId]);$profile=$q->fetch();if(!$profile)throw new DomainException(t('admin_campaigns.profile_missing'));if(!hash_equals(business_profile_revision($profile),$revision))throw new DomainException(t('admin_campaigns.profile_changed'));$pdo->prepare('UPDATE market_dealer_profiles SET status=?,moderation_reason=? WHERE user_id=?')->execute([$status,trim($reason),$userId]);audit_log($pdo,$actorId,'dealer.reviewed',$userId,['old_status'=>$profile['status'],'status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
 }
 
 function business_review_campaign(PDO $pdo,int $actorId,int $campaignId,string $status,string $reason):void
 {
     business_assert_manager($pdo,$actorId);
     if(!in_array($status,['approved','rejected','disabled'],true)||mb_strlen(trim($reason))<10||mb_strlen($reason)>1000)throw new InvalidArgumentException(t('admin_campaigns.review_validation'));
-    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare('SELECT * FROM market_campaigns WHERE id=? FOR UPDATE');$q->execute([$campaignId]);$campaign=$q->fetch();if(!$campaign)throw new DomainException(t('admin_campaigns.campaign_missing'));if($status==='approved'&&(!business_dealer_profile($pdo,(int)$campaign['user_id'])||!catalog_category_allowed($pdo,(int)$campaign['category_id'])))throw new DomainException(t('admin_campaigns.approval_required'));$pdo->prepare('UPDATE market_campaigns SET status=?,moderation_reason=?,moderated_by=? WHERE id=?')->execute([$status,trim($reason),$actorId,$campaignId]);audit_log($pdo,$actorId,'campaign.reviewed',$campaignId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
+    $pdo->beginTransaction();try{business_assert_manager($pdo,$actorId);$q=$pdo->prepare("SELECT * FROM market_campaigns WHERE id=? AND placement='legacy' FOR UPDATE");$q->execute([$campaignId]);$campaign=$q->fetch();if(!$campaign)throw new DomainException(t('admin_campaigns.campaign_missing'));if($status==='approved'&&(!business_dealer_profile($pdo,(int)$campaign['user_id'])||!catalog_category_allowed($pdo,(int)$campaign['category_id'])))throw new DomainException(t('admin_campaigns.approval_required'));$pdo->prepare('UPDATE market_campaigns SET status=?,moderation_reason=?,moderated_by=? WHERE id=?')->execute([$status,trim($reason),$actorId,$campaignId]);audit_log($pdo,$actorId,'campaign.reviewed',$campaignId,['status'=>$status,'reason'=>trim($reason)]);$pdo->commit();}catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw$error;}
 }
 
 function business_output_banner(string $key,bool $thumbnail=false,?callable $onServe=null):never
@@ -158,7 +166,7 @@ function business_lock_inventory(PDO $pdo, int $id): array
 
 function business_inventory_busy(PDO $pdo, int $inventoryId, ?int $exceptBooking = null, bool $locking = true): bool
 {
-    $q = $pdo->prepare("SELECT id FROM market_premium_bookings WHERE inventory_id=? AND id<>? AND ((status IN ('reserved','awaiting_start') AND reserved_until>UTC_TIMESTAMP()) OR (status='active' AND ends_at>UTC_TIMESTAMP())) LIMIT 1" . ($locking ? ' FOR UPDATE' : ''));
+    $q = $pdo->prepare("SELECT id FROM market_premium_bookings WHERE inventory_id=? AND id<>? AND ((status IN ('reserved','awaiting_start','awaiting_review') AND reserved_until>UTC_TIMESTAMP()) OR (status='active' AND ends_at>UTC_TIMESTAMP())) LIMIT 1" . ($locking ? ' FOR UPDATE' : ''));
     $q->execute([$inventoryId,$exceptBooking ?? 0]); return (bool)$q->fetchColumn();
 }
 
@@ -178,7 +186,7 @@ function business_reserve_order(PDO $pdo, int $invoiceId, int $userId, array $li
     $spec = business_scope($scope); $country = business_country($listing['country_code'] ?? 'DE'); $categoryId = $scope === 'home_top' ? 0 : (int)$listing['category_id'];
     if (!business_country_enabled($pdo,$country)) throw new DomainException(t('promotion.country_disabled'));
     if ($scope === 'banner_monthly') {
-        $q = $pdo->prepare("SELECT c.id FROM market_campaigns c JOIN market_dealer_profiles p ON p.user_id=c.user_id JOIN users u ON u.id=c.user_id WHERE c.id=? AND c.user_id=? AND c.status='approved' AND p.status='published' AND u.is_active=1 AND c.country_code=? AND c.category_id=?");
+        $q = $pdo->prepare("SELECT c.id FROM market_campaigns c JOIN market_dealer_profiles p ON p.user_id=c.user_id JOIN users u ON u.id=c.user_id WHERE c.id=? AND c.user_id=? AND c.status='approved' AND c.placement='legacy' AND p.status='published' AND u.is_active=1 AND c.country_code=? AND c.category_id=?");
         $q->execute([$campaignId,$userId,$country,$categoryId]); if (!$q->fetchColumn()) throw new DomainException(t('promotion.banner_invalid'));
     } else $campaignId = null;
     $q = $pdo->prepare("SELECT id FROM market_premium_bookings WHERE user_id=? AND country_code=? AND scope=? AND category_id=? AND status IN ('reserved','awaiting_start') AND reserved_until>UTC_TIMESTAMP() LIMIT 1 FOR UPDATE");
@@ -209,16 +217,28 @@ function business_fulfill_manual(PDO $pdo, int $invoiceId): void
 {
     if (!$pdo->inTransaction()) throw new LogicException('Fulfillment requires transaction.');
     $booking = business_locked_booking($pdo,$invoiceId); if (!$booking) throw new DomainException('Die Platzreservierung fehlt.');
-    if (in_array($booking['status'],['active','awaiting_start'],true)) return;
+    if (in_array($booking['status'],['active','awaiting_start','awaiting_review'],true)) return;
     $valid = $booking['status'] === 'reserved' && strtotime($booking['reserved_until'].' UTC') > time()
         && !business_inventory_busy($pdo,(int)$booking['inventory_id'],(int)$booking['id']);
     $state = $valid ? 'awaiting_start' : 'paid_unfulfilled'; $until = $valid ? gmdate('Y-m-d H:i:s',time()+BUSINESS_PAID_START_DAYS*86400) : $booking['reserved_until'];
+    if ($valid && in_array($booking['scope'],['banner_home','banner_search'],true)) {
+        $q = $pdo->prepare('SELECT status FROM market_campaigns WHERE id=? FOR SHARE');
+        $q->execute([$booking['campaign_id']]);
+        $review = $q->fetchColumn();
+        if ($review==='pending') {
+            $state='awaiting_review';
+            $until=gmdate('Y-m-d H:i:s',time()+BUSINESS_BANNER_REVIEW_DAYS*86400);
+        } elseif ($review!=='approved') {
+            $state='paid_unfulfilled';
+        }
+    }
     $pdo->prepare('UPDATE market_premium_bookings SET status=?,reserved_until=? WHERE id=?')->execute([$state,$until,$booking['id']]);
     if (function_exists('notify_user')) {
         $user=(int)$booking['user_id'];
-        $notice=$valid?'promotion.paid_':'promotion.review_';
+        $notice=match($state){'awaiting_review'=>'banner_ads.review_payment_','awaiting_start'=>'promotion.paid_',default=>'promotion.review_'};
         notify_user($pdo,$user,'booking:'.$booking['id'].':'.$state,i18n_user_text($pdo,$user,$notice.'title'),
-            i18n_user_text($pdo,$user,$notice.'body',['days'=>BUSINESS_PAID_START_DAYS]),'/user/promotions.php',true);
+            i18n_user_text($pdo,$user,$notice.'body',['days'=>BUSINESS_PAID_START_DAYS]),
+            in_array($booking['scope'],['banner_home','banner_search'],true)?'/user/banner-advertising.php':'/user/promotions.php',true);
     }
 }
 
@@ -244,8 +264,12 @@ function business_resume_promotions(PDO $pdo, string $pausedAt, string $resumedA
         SET reserved_until=LEAST(TIMESTAMPADD(SECOND,?,reserved_until),TIMESTAMPADD(DAY,?,?))
         WHERE status='awaiting_start' AND reserved_until>?");
     $q->execute([$seconds,BUSINESS_PAID_START_DAYS,substr($resumedAt,0,19),$pausedAt]);
+    $deadlines=$q->rowCount();
+    $q=$pdo->prepare("UPDATE market_premium_bookings SET reserved_until=LEAST(TIMESTAMPADD(SECOND,?,reserved_until),TIMESTAMPADD(DAY,?,?))
+        WHERE status='awaiting_review' AND reserved_until>?");
+    $q->execute([$seconds,BUSINESS_BANNER_REVIEW_DAYS,substr($resumedAt,0,19),$pausedAt]);
 
-    return ['promotions_extended'=>$active,'paid_start_deadlines_extended'=>$q->rowCount()];
+    return ['promotions_extended'=>$active,'paid_start_deadlines_extended'=>$deadlines+$q->rowCount()];
 }
 
 function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $immediate, array $consent=[]): void
@@ -261,15 +285,21 @@ function business_start_booking(PDO $pdo, int $userId, int $bookingId, bool $imm
         $booking = business_locked_booking($pdo,(int)$invoiceId);
         if (!$booking || (int)$booking['user_id'] !== $userId || $booking['status'] !== 'awaiting_start' || strtotime($booking['reserved_until'].' UTC') <= time()) throw new DomainException(t('promotion.start_unavailable'));
         if(!(function_exists('geo_country_locked_enabled')?geo_country_locked_enabled($pdo,$booking['country_code']):business_country_enabled($pdo,$booking['country_code'])))throw new DomainException(t('promotion.country_review'));
-        $listing = market_find($pdo,(int)$booking['listing_id'],false);
-        if (!$listing || (int)$listing['seller_id'] !== $userId || business_country($listing['country_code'] ?? 'DE') !== $booking['country_code'] || ($booking['scope'] !== 'home_top' && (int)$listing['category_id'] !== (int)$booking['category_id']) || ($listing['type'] === 'auction' && market_expired($listing))) throw new DomainException(t('promotion.listing_review'));
         if ($paidStatus !== 'paid') throw new DomainException(t('promotion.not_paid'));
+        $campaign = null;
+        if (in_array($booking['scope'],['banner_home','banner_search'],true)) {
+            $campaign = banner_ads_booking_start($pdo,$booking);
+        } else {
+            $listing = market_find($pdo,(int)$booking['listing_id'],false);
+            if (!$listing || (int)$listing['seller_id'] !== $userId || business_country($listing['country_code'] ?? 'DE') !== $booking['country_code'] || ($booking['scope'] !== 'home_top' && (int)$listing['category_id'] !== (int)$booking['category_id']) || ($listing['type'] === 'auction' && market_expired($listing))) throw new DomainException(t('promotion.listing_review'));
+        }
         if ($booking['scope'] === 'banner_monthly') {
             $q = $pdo->prepare("SELECT c.id FROM market_campaigns c JOIN market_dealer_profiles p ON p.user_id=c.user_id WHERE c.id=? AND c.status='approved' AND p.status='published' FOR SHARE"); $q->execute([$booking['campaign_id']]); if (!$q->fetchColumn()) throw new DomainException(t('promotion.banner_review'));
         }
         if (business_inventory_busy($pdo,(int)$booking['inventory_id'],(int)$booking['id'])) throw new DomainException(t('promotion.fully_booked'));
         $declaration=consent_start_check('promotion',$consent);
-        $start = gmdate('Y-m-d H:i:s'); $end = business_end_time($start,$booking['scope']);
+        $start = gmdate('Y-m-d H:i:s'); $end = $campaign === null ? business_end_time($start,$booking['scope'])
+            : (new DateTimeImmutable($start,new DateTimeZone('UTC')))->modify('+'.(int)$campaign['term_days'].' days')->format('Y-m-d H:i:s');
         $pdo->prepare("UPDATE market_premium_bookings SET status='active',starts_at=?,ends_at=?,immediate_start_at=UTC_TIMESTAMP() WHERE id=?")->execute([$start,$end,$booking['id']]);
         audit_log($pdo,$userId,'booking.started',$bookingId,['scope'=>$booking['scope'],'country'=>$booking['country_code'],'explicit_start'=>true,'ends_at'=>$end]+$declaration); $pdo->commit();
     } catch (Throwable $error) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $error; }
@@ -303,7 +333,7 @@ function business_banners(PDO $pdo, string $country, ?int $category = null, int 
 {
     $country = business_country($country); if (!business_country_enabled($pdo,$country)) return [];
     $limit=max(1,min(2,$limit));
-    $q=$pdo->prepare("SELECT DISTINCT c.id,c.title,c.country_code,c.category_id FROM market_campaigns c JOIN market_premium_bookings b ON b.campaign_id=c.id JOIN market_invoices i ON i.id=b.invoice_id JOIN users u ON u.id=c.user_id JOIN market_dealer_profiles p ON p.user_id=c.user_id WHERE c.country_code=? AND c.status='approved' AND p.status='published' AND u.is_active=1 AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP() AND i.status='paid'".($category!==null?' AND c.category_id=?':'').' ORDER BY c.id LIMIT '.$limit);
+    $q=$pdo->prepare("SELECT DISTINCT c.id,c.title,c.country_code,c.category_id,c.target_url FROM market_campaigns c JOIN market_premium_bookings b ON b.campaign_id=c.id JOIN market_invoices i ON i.id=b.invoice_id JOIN users u ON u.id=c.user_id JOIN market_dealer_profiles p ON p.user_id=c.user_id WHERE c.country_code=? AND c.status='approved' AND c.placement='legacy' AND p.status='published' AND u.is_active=1 AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP() AND i.status='paid'".($category!==null?' AND c.category_id=?':'').' ORDER BY c.id LIMIT '.$limit);
     $q->execute($category!==null?[$country,$category]:[$country]); $out=[];
     foreach($q->fetchAll() as $row)if(catalog_category_allowed($pdo,(int)$row['category_id'])){$row['image_url']='/marketplace/banner.php?id='.$row['id'].'&country='.$country;$row['click_url']='/marketplace/banner-click.php?id='.$row['id'].'&country='.$country;$out[]=$row;}
     return $out;
@@ -311,8 +341,8 @@ function business_banners(PDO $pdo, string $country, ?int $category = null, int 
 
 function business_public_campaign(PDO $pdo,int $id,string $country):?array
 {
-    $country=business_country($country);if(!business_country_enabled($pdo,$country))return null;
-    $q=$pdo->prepare("SELECT c.* FROM market_campaigns c JOIN users u ON u.id=c.user_id JOIN market_dealer_profiles p ON p.user_id=c.user_id WHERE c.id=? AND c.country_code=? AND c.status='approved' AND u.is_active=1 AND p.status='published' AND EXISTS(SELECT 1 FROM market_premium_bookings b JOIN market_invoices i ON i.id=b.invoice_id WHERE b.campaign_id=c.id AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP() AND i.status='paid')");$q->execute([$id,$country]);$row=$q->fetch();
+    $country=business_country($country);if(!business_country_enabled($pdo,$country)||site_setting($pdo,'business_promotions_enabled','0')!=='1')return null;
+    $q=$pdo->prepare("SELECT c.* FROM market_campaigns c JOIN users u ON u.id=c.user_id JOIN market_dealer_profiles p ON p.user_id=c.user_id WHERE c.id=? AND c.country_code=? AND c.status='approved' AND c.placement='legacy' AND u.is_active=1 AND p.status='published' AND EXISTS(SELECT 1 FROM market_premium_bookings b JOIN market_invoices i ON i.id=b.invoice_id WHERE b.campaign_id=c.id AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP() AND i.status='paid')");$q->execute([$id,$country]);$row=$q->fetch();
     return $row&&catalog_category_allowed($pdo,(int)$row['category_id'])?$row:null;
 }
 
@@ -331,7 +361,7 @@ function business_record_metric(PDO $pdo,int $campaignId,string $kind):void
 
 function business_worker_once(PDO $pdo,int $limit=200):array
 {
-    $limit=max(1,min(1000,$limit));$ids=$pdo->query("SELECT invoice_id FROM market_premium_bookings WHERE (status IN ('reserved','awaiting_start') AND reserved_until<=UTC_TIMESTAMP()) OR (status='active' AND ends_at<=UTC_TIMESTAMP()) ORDER BY id LIMIT ".$limit)->fetchAll(PDO::FETCH_COLUMN);$changed=0;$review=0;
+    $limit=max(1,min(1000,$limit));$ids=$pdo->query("SELECT invoice_id FROM market_premium_bookings WHERE (status IN ('reserved','awaiting_start','awaiting_review') AND reserved_until<=UTC_TIMESTAMP()) OR (status='active' AND ends_at<=UTC_TIMESTAMP()) ORDER BY id LIMIT ".$limit)->fetchAll(PDO::FETCH_COLUMN);$changed=0;$review=0;
     $paidQuery=$pdo->prepare('SELECT status FROM market_invoices WHERE id=? FOR SHARE');
     $update=$pdo->prepare('UPDATE market_premium_bookings SET status=? WHERE id=?');
     foreach($ids as $id){
@@ -343,7 +373,7 @@ function business_worker_once(PDO $pdo,int $limit=200):array
             $booking=business_locked_booking($pdo,(int)$id);
             $state=null;
             if($booking&&$booking['status']==='active'&&strtotime($booking['ends_at'].' UTC')<=time())$state='expired';
-            if($booking&&in_array($booking['status'],['reserved','awaiting_start'],true)&&strtotime($booking['reserved_until'].' UTC')<=time())$state=$paid?'paid_unfulfilled':'expired';
+            if($booking&&in_array($booking['status'],['reserved','awaiting_start','awaiting_review'],true)&&strtotime($booking['reserved_until'].' UTC')<=time())$state=$paid?'paid_unfulfilled':'expired';
             if($state!==null)$update->execute([$state,$booking['id']]);
             $pdo->commit();
             if($state!==null)$changed++;

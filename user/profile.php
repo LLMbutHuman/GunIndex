@@ -69,7 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = t('account.profile_title'); require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container"><header class="page-heading"><p class="eyebrow"><?=h(t('account.account_label'))?></p><h1><?=h(t('account.profile_heading'))?></h1><p><?=h(t('Benutzername'))?>: <?= h($user['username']) ?></p></header>
-<p><a class="button secondary" href="/user/profile-image.php"><?=h(t('profile_images.avatar'))?></a></p>
+<div class="profile-actions">
+    <a class="button secondary" href="/user/profile-image.php"><?=h(t('profile_images.avatar'))?></a>
+    <a class="button secondary" href="/marketplace/profile.php?user_id=<?=(int)$user['id']?>#reviews"><?=h(t('public_profile.reviews'))?></a>
+    <?php if ($canOpenAdmin): ?><a class="button" href="/admin/index.php"><?=ui_icon('shield')?><?=h(t('refine.open_admin'))?></a><?php endif; ?>
+</div>
 <?php if ($error !== ''): ?><p class="notice error" role="alert"><?= h($error) ?></p><?php endif; ?>
 <?php if ($success !== ''): ?><p class="notice success" role="status"><?= h($success) ?></p><?php endif; ?>
 <section class="panel"><h2><?=h(t('account.profile_section'))?></h2><form method="post" class="form-grid"><?= csrf_field() ?><input type="hidden" name="action" value="save">
@@ -82,9 +86,9 @@ $pageTitle = t('account.profile_title'); require __DIR__ . '/../includes/header.
 <label class="field"><?=h(t('Neues Passwort'))?> <small><?=h(t('account.new_password_optional'))?></small><input type="password" name="new_password" autocomplete="new-password" maxlength="1024"></label>
 <label class="field"><?=h(t('account.repeat_new_password'))?><input type="password" name="password_confirm" autocomplete="new-password" maxlength="1024"></label>
 <label class="field"><?=h(t('Aktuelles Passwort'))?> <small><?=h(t('account.password_required_help'))?></small><input type="password" name="current_password" autocomplete="current-password" maxlength="1024"></label>
-<button class="button" type="submit"><?=h(t('Änderungen speichern'))?></button></form></section>
-<section class="panel"><h2><?=h(t('account.email_news'))?></h2><p><?=h(t($user['email_verified_at']!==null?'account.email_verified':'account.email_unverified'))?></p><a class="button secondary" href="/auth/verify-email.php"><?=h(t('account.verify_title'))?></a> <a class="button secondary" href="/user/notifications.php"><?=h(t('account.notifications'))?></a> <a class="button secondary" href="/user/notification-settings.php"><?=h(t('Benachrichtigungen einstellen'))?></a></section><section class="panel"><h2><?=h(t('Andere Sitzungen beenden'))?></h2><p><?=h(t('account.revoke_help'))?></p>
+<div class="profile-actions"><button class="button" type="submit"><?=h(t('Änderungen speichern'))?></button></div></form></section>
+<section class="panel"><h2><?=h(t('account.email_news'))?></h2><p><?=h(t($user['email_verified_at']!==null?'account.email_verified':'account.email_unverified'))?></p><div class="profile-actions"><a class="button secondary" href="/auth/verify-email.php"><?=h(t('account.verify_title'))?></a> <a class="button secondary" href="/user/notifications.php"><?=h(t('account.notifications'))?></a> <a class="button secondary" href="/user/notification-settings.php"><?=h(t('Benachrichtigungen einstellen'))?></a></div></section><section class="panel"><h2><?=h(t('Andere Sitzungen beenden'))?></h2><p><?=h(t('account.revoke_help'))?></p>
 <form method="post" class="form-grid"><?= csrf_field() ?><input type="hidden" name="action" value="revoke">
 <label class="field"><?=h(t('Aktuelles Passwort'))?><input type="password" name="current_password" autocomplete="current-password" maxlength="1024" required></label>
-<button class="button secondary" type="submit"><?=h(t('Andere Sitzungen beenden'))?></button></form></section></main>
+<div class="profile-actions"><button class="button secondary" type="submit"><?=h(t('Andere Sitzungen beenden'))?></button></div></form></section></main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

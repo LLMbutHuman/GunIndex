@@ -11,6 +11,46 @@ function setup_status_labels(): array
     return $labels;
 }
 
+function setup_wizard_pick(array $steps, mixed $requested, ?string $checkpoint): string
+{
+    $statuses = array_column($steps, 'status', 'id');
+    if (is_string($requested) && isset($statuses[$requested])) return $requested;
+    if ($checkpoint !== null && isset($statuses[$checkpoint])) return $checkpoint;
+    foreach ($statuses as $step => $status) {
+        if (in_array($status, ['missing', 'error'], true)) return $step;
+    }
+    return 'acceptance';
+}
+
+function setup_wizard_checkpoint(PDO $pdo, int $actor, ?string $step = null): ?string
+{
+    governance_assert_actor($pdo, $actor, 'site.manage');
+    if ($step !== null) {
+        if (!in_array($step, array_column(setup_steps([]), 'id'), true)) throw new InvalidArgumentException('Unknown setup step.');
+        $pdo->prepare('INSERT INTO market_admin_setup_checkpoints (user_id,step_code) VALUES (?,?)'
+            .' ON DUPLICATE KEY UPDATE step_code=VALUES(step_code)')->execute([$actor, $step]);
+        return $step;
+    }
+    $query = $pdo->prepare('SELECT step_code FROM market_admin_setup_checkpoints WHERE user_id=?');
+    $query->execute([$actor]);
+    $result = $query->fetchColumn();
+    return is_string($result) ? $result : null;
+}
+
+/** Shell commands are fixed operator references. They never run on the web server. */
+function setup_wizard_commands(bool $production): array
+{
+    if (!$production) return ['tests'=>['php tests/setup_test.php', 'python3 tests/runtime_platform_test.py']];
+    $compose = 'sudo /srv/gunindex/compose.sh';
+    return [
+        'https'=>[$compose.' exec -T web nginx -t', 'sudo systemctl status certbot.timer --no-pager'],
+        'workers'=>[$compose.' ps', $compose.' exec -T php php ops/health.php --installation'],
+        'backups'=>['sudo systemctl status gunindex-backup.timer --no-pager'],
+        'monitoring'=>['sudo systemctl status gunindex-monitor.timer --no-pager'],
+        'acceptance'=>[$compose.' exec -T php php ops/health.php --installation'],
+    ];
+}
+
 /** realpath resolves symlinked ancestors; lexical prefix alone is insufficient. */
 function setup_private_directory(string $directory, string $webroot): bool
 {

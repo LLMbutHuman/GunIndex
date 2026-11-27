@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Berichten · {count} ongelezen',
+    'refine.open_admin' => 'Naar beheer',
+    'refine.setup_tab' => 'Configuratie',
+    'refine.seller_type' => 'Type verkoper',
+    'refine.seller_all' => 'Alle verkopers',
+    'refine.seller_private' => 'Alleen particuliere verkopers',
+    'refine.seller_dealer' => 'Alleen zakelijke verkopers',
+    'refine.seller_invalid' => 'Kies een geldig type verkoper.',
+    'refine.category_busy' => 'De categoriestructuur wordt bewerkt. Probeer het zo opnieuw.',
+    'refine.category_blocked' => 'Deze categorie heeft afhankelijkheden. Los ze op voordat je de categorie definitief verwijdert.',
+    'refine.category_confirm_required' => 'Kies een categorie en bevestig de wijziging.',
+    'refine.category_removal' => 'Categorie beheren · {name}',
+    'refine.category_delete_help' => 'Deze categorie is leeg. Definitief verwijderen kan niet ongedaan worden gemaakt.',
+    'refine.category_deactivate_help' => 'Bij deactivering blijven de categorie en de inhoud behouden. De categorie en subcategorieën verdwijnen uit de openbare catalogus.',
+    'refine.category_confirm' => 'Ik bevestig de gekozen wijziging voor deze categorie.',
+    'refine.category_deactivate' => 'Deactiveren',
+    'refine.category_delete' => 'Definitief verwijderen',
+    'refine.category_manage_removal' => 'Verwijderen of deactiveren',
+    'refine.category_ref_children' => 'Subcategorieën',
+    'refine.category_ref_listings' => 'Advertenties',
+    'refine.category_ref_attributes' => 'Categoriekenmerken',
+    'refine.category_ref_translations' => 'Vertalingen',
+    'refine.category_ref_wanted' => 'Gezocht',
+    'refine.category_ref_campaigns' => 'Reclamecampagnes',
+    'refine.category_ref_placements' => 'Advertentieplaatsen',
+    'refine.category_ref_bookings' => 'Boekingen',
+    'refine.category_ref_searches' => 'Opgeslagen zoekopdrachten',
+    'refine.category_ref_drafts' => 'Conceptadvertenties',
+];

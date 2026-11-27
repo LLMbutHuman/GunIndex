@@ -101,6 +101,7 @@ try {
             setup_integration_login($client, $ordinary);
             $result = setup_integration_request($client, '/admin/setup.php');
             setup_integration_check($result['status'] === 403 && !str_contains($result['body'], 'id="setup-'));
+            setup_integration_check(setup_integration_request($client, '/admin/roles.php')['status'] === 403);
             try { setup_collect($pdo, $ordinary['id']); }
             catch (DomainException) { return; }
             throw new RuntimeException('Unprivileged fact collection was allowed.');
@@ -133,6 +134,7 @@ try {
             setup_integration_mfa($client, $finance);
             $result = setup_integration_request($client, '/admin/setup.php');
             setup_integration_check($result['status'] === 403 && !str_contains($result['body'], 'id="setup-'));
+            setup_integration_check(setup_integration_request($client, '/admin/roles.php')['status'] === 403);
         } finally { curl_close($client); }
     });
 
@@ -145,11 +147,46 @@ try {
         $result = setup_integration_request($browser, $path, ['action'=>'activate', 'confirm'=>'1', 'csrf_token'=>$token]);
         setup_integration_check($result['status'] === 409);
         $result = setup_integration_request($browser, $path, ['action'=>'run_checks', 'csrf_token'=>$token, 'manual_paypal_enabled'=>'1', 'finance_enabled'=>'1']);
-        setup_integration_check($result['status'] === 303 && ($result['headers']['location'] ?? '') === '/admin/setup.php#installation');
+        setup_integration_check($result['status'] === 303 && ($result['headers']['location'] ?? '') === '/admin/setup.php?step=acceptance#installation');
         $result = setup_integration_request($browser, $path);
         setup_integration_check($result['status'] === 200 && str_contains($result['body'], 'data-installation-check="database" data-status="passed"'));
         setup_integration_check(str_contains($result['body'], 'data-installation-check="https" data-status="failed"') && !str_contains($result['body'], 'value="activate"'));
         setup_integration_check($before === $pdo->query('SELECT setting_key,setting_value,updated_at FROM system_settings ORDER BY setting_key')->fetchAll());
+    });
+
+    setup_integration_test('wizard_saves_and_resumes_an_account_scoped_step', static function () use ($pdo,$browser,$admin): void {
+        $path = '/admin/setup.php';
+        $token = setup_integration_csrf(setup_integration_request($browser,$path)['body']);
+        setup_integration_check(setup_integration_request($browser,$path,['action'=>'save_step','step'=>'workers'])['status'] === 403);
+        $fields = ['action'=>'save_step','step'=>'workers','csrf_token'=>$token];
+        $result = setup_integration_request($browser,$path,$fields);
+        setup_integration_check($result['status'] === 303 && ($result['headers']['location'] ?? '') === '/admin/setup.php?step=workers#setup-workers');
+        $result = setup_integration_request($browser,$path);
+        setup_integration_check(str_contains($result['body'],'href="/admin/setup.php?step=workers#setup-workers" aria-current="step"'));
+        setup_integration_check(setup_wizard_checkpoint($pdo,$admin['id']) === 'workers');
+        $fields['step'] = 'unrecognized';
+        setup_integration_check(setup_integration_request($browser,$path,$fields)['status'] === 422);
+        setup_integration_check(setup_wizard_checkpoint($pdo,$admin['id']) === 'workers');
+    });
+
+    setup_integration_test('role_matrix_is_mfa_protected_and_rejects_untrusted_posts', static function () use ($pdo,$browser,$finance): void {
+        $path = '/admin/roles.php';
+        $other = setup_integration_browser();
+        try {
+            setup_integration_login($other,$finance);
+            // Password-only sessions have no staff access.
+            setup_integration_check(setup_integration_request($other,$path)['status'] === 303);
+        } finally { curl_close($other); }
+        $result = setup_integration_request($browser,$path);
+        setup_integration_check($result['status'] === 200 && str_contains($result['body'],'id="permission-matrix"'));
+        $policy = governance_role_policy($pdo);
+        $form = array_map(static fn(array $permissions): array => array_merge([''],$permissions), $policy['roles']);
+        $fields = ['action'=>'save_permissions','revision'=>$policy['revision'],'roles'=>$form];
+        setup_integration_check(setup_integration_request($browser,$path,$fields)['status'] === 403);
+        $fields['csrf_token'] = setup_integration_csrf($result['body']);
+        $fields['roles']['finance'][] = '*';
+        setup_integration_check(setup_integration_request($browser,$path,$fields)['status'] === 422);
+        setup_integration_check(governance_role_policy($pdo) === $policy);
     });
 
     setup_integration_test('mail_setup_http_mfa_csrf_settings_and_personal_test_queue', static function () use ($pdo, $browser, $admin, $ordinary): void {

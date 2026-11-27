@@ -187,6 +187,23 @@ $tests = [
         setup_assert(!setup_private_directory($public, $public), 'Webroot accepted as private storage.');
         setup_assert(!setup_private_directory($public.'/missing-synthetic', $public), 'Missing storage accepted.');
     },
+    'wizard_only_resumes_known_steps_and_commands_match_environment' => static function (): void {
+        $steps = [['id'=>'brand','status'=>'configured'],['id'=>'operator','status'=>'missing'],['id'=>'acceptance','status'=>'external']];
+        setup_assert(setup_wizard_pick($steps,null,null)==='operator','Resume ignored the first unresolved setup item.');
+        setup_assert(setup_wizard_pick($steps,null,'brand')==='brand','Stored step was not restored.');
+        setup_assert(setup_wizard_pick($steps,'acceptance','brand')==='acceptance','Selected setup step did not take precedence.');
+        setup_assert(setup_wizard_pick($steps,['invalid'],'unrecognized')==='operator','Invalid checkpoint did not fall back.');
+        setup_assert(isset(setup_wizard_commands(false)['tests']) && !isset(setup_wizard_commands(true)['tests']), 'Sandbox commands leaked into production.');
+        foreach (setup_wizard_commands(true) as $commands) foreach ($commands as $command) {
+            setup_assert(preg_match('~\Asudo [a-zA-Z0-9. /-]+\z~',$command)===1,'Production commands cannot include shell syntax or injected values.');
+        }
+        $base = require __DIR__.'/../locales/setup_wizard/de.php';
+        foreach (array_keys(i18n_locales()) as $locale) {
+            $catalog = require __DIR__.'/../locales/setup_wizard/'.$locale.'.php';
+            setup_assert(array_keys($catalog)===array_keys($base) && array_intersect_key(i18n_dictionary($locale),$catalog)===$catalog,
+                'Invalid setup wizard translation for '.$locale);
+        }
+    },
 ];
 foreach ($tests as $name=>$test) { $test(); fwrite(STDOUT, 'PASS '.$name.PHP_EOL); }
 fwrite(STDOUT, 'Setup checks passed: '.count($tests).PHP_EOL);

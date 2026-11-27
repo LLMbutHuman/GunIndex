@@ -19,7 +19,7 @@ const origin='http://127.0.0.1:8081';
    da:['Markedspladsens regler','Betalinger og gebyrer','Databeskyttelse','Operatøroplysninger'],
    it:['Regole del mercato','Pagamenti e commissioni','Privacy','Dati del gestore'],
   };
-  const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  const context=await browser.newContext({locale:'de-DE',viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   for(const [locale,country] of [['de','DE'],['en','AT'],['fr','FR'],['nl','NL'],['pl','PL'],['cs','CZ'],['da','DK'],['it','CH']]){
    await page.goto(origin+'/',{waitUntil:'networkidle'});await page.locator('.market-switcher summary').click();const form=page.locator('form[action="/user/language.php"]');await form.locator('[name=locale]').selectOption(locale);await form.locator('[name=market_country]').selectOption(country);
    await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),form.locator('button[type=submit]').click()]);

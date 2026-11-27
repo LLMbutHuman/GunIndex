@@ -27,8 +27,7 @@ if($method==='POST'){
 try{$trade=trade_get($pdo,$actor,$id);}
 catch(MarketAccessException){abort_request(403,t('trade.forbidden'));}
 catch(MarketNotFoundException|DomainException){abort_request(404,t('trade.unavailable'));}
-$snapshot=$trade['snapshot'];$rated=false;
-foreach($trade['ratings'] as $rating){if((int)$rating['sender_id']===$actor)$rated=true;}
+$snapshot=$trade['snapshot'];$rated=$trade['rating_submitted'];
 $pageTitle=t('trade.transaction',['reference'=>$trade['reference']]);include __DIR__.'/../includes/header.php';
 ?>
 <link rel="stylesheet" href="/assets/css/trade.css">

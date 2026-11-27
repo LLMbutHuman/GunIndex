@@ -347,6 +347,7 @@ function payments_status_label(string $status,?string $mode=null):string {
 function payments_service_label(string $service): string
 {
     if ($service === 'dealer_subscription') return t('dealer_subscription.title');
+    if ($service === 'banner_advertising') return t('banner_ads.dealer_title');
     $key = 'payment_customer.service_' . $service;
     $title = t($key);
     return $title === $key ? $service : $title;

@@ -47,13 +47,25 @@ $allowed=array_merge($allowed,['user/dealer-team.php','user/dealer-stock.php']);
 $allowed=array_merge($allowed,['user/dealer-api-keys.php','api/dealer/v1.php']);
 $allowed=array_merge($allowed,['user/dealer-subscription.php','user/dealer-stock-export.php']);
 $allowed[]='user/account-consent.php';
+$allowed=array_merge($allowed,['admin/dealers.php','user/banner-advertising.php']);
 $route=match($path){'/', '/index.php'=>'marketplace/index.php','/robots.txt'=>'marketplace/robots.php','/sitemap.xml'=>'marketplace/sitemap.php',default=>ltrim($path,'/')};
 $static=['/assets/css/international.css'=>'text/css; charset=utf-8','/assets/js/chat.js'=>'application/javascript; charset=utf-8','/assets/css/app.css'=>'text/css; charset=utf-8','/assets/js/app.js'=>'application/javascript; charset=utf-8','/assets/img/no-image.png'=>'image/png'];
 $static+=['/assets/css/e2ee.css'=>'text/css; charset=utf-8','/assets/js/e2ee-ui.mjs'=>'application/javascript; charset=utf-8','/assets/js/e2ee-crypto.mjs'=>'application/javascript; charset=utf-8','/assets/vendor/openpgp/openpgp.min.mjs'=>'application/javascript; charset=utf-8'];
 $static['/assets/css/trade.css']='text/css; charset=utf-8';
 $static['/assets/js/listing-draft.js']='application/javascript; charset=utf-8';
 $static['/assets/js/passkeys.js']='application/javascript; charset=utf-8';
-if(isset($static[$path])&&is_file($root.$path)){header('Content-Type: '.$static[$path]);header('X-Content-Type-Options: nosniff');if(($_SERVER['REQUEST_METHOD']??'GET')!=='HEAD')readfile($root.$path);exit;}
+$static['/assets/js/admin-setup.js']='application/javascript; charset=utf-8';
+$static['/assets/css/admin-setup.css']='text/css; charset=utf-8';
+$static['/assets/css/banner-advertising.css']='text/css; charset=utf-8';
+if (isset($static[$path]) && is_file($root.$path)) {
+    $method=$_SERVER['REQUEST_METHOD']??'GET';
+    if (!in_array($method,['GET','HEAD'],true)) public_route_error(405,$path);
+    header('Content-Type: '.$static[$path]);
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: public, max-age=300');
+    if ($method==='GET') readfile($root.$path);
+    exit;
+}
 if(!in_array($route,$allowed,true)||!is_file($root.'/'.$route))public_route_error(404,$path);
 if ($route === 'api/dealer/v1.php') define('GUNINDEX_STATELESS_REQUEST', true);
 require_once $root.'/config/bootstrap.php';
@@ -61,4 +73,8 @@ require_once $root.'/config/setup.php';
 setup_enforce_installation_http($pdo,$route);
 maintenance_enforce_http($pdo,$route);
 consent_account_gate_http($pdo,$route);
+if (in_array($route,['marketplace/index.php','marketplace/search.php','marketplace/view-item.php','marketplace/view-auction.php',
+    'marketplace/profile.php','marketplace/policy.php','marketplace/legal.php','marketplace/wanted.php','auth/login.php','auth/register.php'],true)) {
+    i18n_initialize_visitor($pdo);
+}
 require $root.'/'.$route;

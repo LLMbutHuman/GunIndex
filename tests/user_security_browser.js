@@ -20,7 +20,7 @@ function totp(base32) {
   const account=JSON.parse(execFileSync('docker',['--host=unix:///var/run/docker.sock','exec','gunindex-rebuild-app','php',
     'tests/user_security_test.php','--browser-fixture'],{encoding:'utf8'}));
   const browser=await playwright.chromium.launch(launchOptions());
-  const context=await browser.newContext();
+  const context=await browser.newContext({locale:'de-DE'});
   const page=await context.newPage();
   const cdp=await context.newCDPSession(page);
   await cdp.send('WebAuthn.enable');

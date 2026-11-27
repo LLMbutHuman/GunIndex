@@ -14,4 +14,4 @@ try {
 }
 header('Content-Type: application/xml; charset=utf-8');
 header('Cache-Control: no-store');
-if ($_SERVER['REQUEST_METHOD'] !== 'HEAD') echo seo_sitemap_document(seo_origin(), $page, $data);
+if ($_SERVER['REQUEST_METHOD'] !== 'HEAD') echo seo_sitemap_document(seo_request_origin($_SERVER), $page, $data);

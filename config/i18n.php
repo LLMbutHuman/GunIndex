@@ -1,13 +1,74 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/ip-country.php';
+
 function i18n_locales():array {return ['de'=>'Deutsch','en'=>'English','fr'=>'Français','nl'=>'Nederlands','pl'=>'Polski','cs'=>'Čeština','da'=>'Dansk','it'=>'Italiano'];}
-function i18n_locale():string {$locale=defined('GUNINDEX_PUBLIC_LOCALE')?GUNINDEX_PUBLIC_LOCALE:($_SESSION['locale']??'de');return is_string($locale)&&isset(i18n_locales()[$locale])?$locale:'de';}
+function i18n_locale(): string
+{
+    if (defined('GUNINDEX_PUBLIC_LOCALE')) return GUNINDEX_PUBLIC_LOCALE;
+    $saved = $_SESSION['locale'] ?? null;
+    if (is_string($saved) && isset(i18n_locales()[$saved])) return $saved;
+    return defined('GUNINDEX_VISITOR_LOCALE') ? GUNINDEX_VISITOR_LOCALE : 'de';
+}
+
+function i18n_browser_preference(mixed $header): array
+{
+    $preference = ['locale'=>null, 'country'=>null];
+    if (!is_string($header) || strlen($header) > 1024) return $preference;
+    $locales = i18n_locales();
+    $highest = 0.0;
+    foreach (explode(',', $header) as $entry) {
+        if (!preg_match('/\A([a-z]{2,3})((?:-[a-z0-9]{1,8}){0,4})(?:\s*;\s*q=(0(?:\.[0-9]{0,3})?|1(?:\.0{0,3})?))?\z/i', trim($entry), $parts)) continue;
+        $locale = strtolower($parts[1]);
+        $weight = isset($parts[3]) ? (float)$parts[3] : 1.0;
+        if (!isset($locales[$locale]) || $weight <= $highest) continue;
+        $country = null;
+        if (preg_match('/\A(?:-[a-z]{4})?-([a-z]{2})(?:-|\z)/i', $parts[2], $region)) $country = strtoupper($region[1]);
+        $preference = ['locale'=>$locale, 'country'=>$country];
+        $highest = $weight;
+    }
+    return $preference;
+}
+
+/** Automatic hints never become saved browser or account preferences. */
+function i18n_visitor_defaults(array $server, array $saved, array $activeCountries, ?string $pathLocale = null): array
+{
+    $locales = i18n_locales();
+    $browser = i18n_browser_preference($server['HTTP_ACCEPT_LANGUAGE'] ?? null);
+    $savedLocale = $saved['locale'] ?? null;
+    $savedCountry = $saved['market_country'] ?? null;
+    $locale = isset($locales[$pathLocale ?? '']) ? $pathLocale
+        : (is_string($savedLocale) && isset($locales[$savedLocale]) ? $savedLocale : $browser['locale']);
+    $country = is_string($savedCountry) && in_array($savedCountry, $activeCountries, true) ? $savedCountry : null;
+    $ipCountry = $locale === null || $country === null ? ip_country_lookup($server) : null;
+    $fromIp = $ipCountry !== null && ($locale === null || ($country === null && in_array($ipCountry, $activeCountries, true)));
+    $locale ??= ip_country_locales()[$ipCountry ?? ''] ?? 'de';
+    $country ??= in_array($ipCountry, $activeCountries, true) ? $ipCountry
+        : (in_array($browser['country'], $activeCountries, true) ? $browser['country']
+            : (in_array('DE', $activeCountries, true) ? 'DE' : ($activeCountries[0] ?? 'DE')));
+    return ['locale'=>$locale, 'country'=>$country, 'ip_attribution'=>$fromIp];
+}
+
+function i18n_initialize_visitor(PDO $pdo): void
+{
+    if (defined('GUNINDEX_VISITOR_LOCALE')) return;
+    $defaults = i18n_visitor_defaults($_SERVER, $_SESSION ?? [], array_keys(geo_active_countries($pdo)),
+        defined('GUNINDEX_PUBLIC_LOCALE') ? GUNINDEX_PUBLIC_LOCALE : null);
+    define('GUNINDEX_VISITOR_LOCALE', $defaults['locale']);
+    define('GUNINDEX_VISITOR_MARKET_COUNTRY', $defaults['country']);
+    define('GUNINDEX_VISITOR_IP_ATTRIBUTION', $defaults['ip_attribution']);
+}
+
+function i18n_ip_attribution_needed(): bool
+{
+    return defined('GUNINDEX_VISITOR_IP_ATTRIBUTION') && GUNINDEX_VISITOR_IP_ATTRIBUTION;
+}
 function i18n_dictionary(?string $locale=null):array {
     static $cache=[];$locale=$locale??i18n_locale();if(!isset(i18n_locales()[$locale]))$locale='de';
     if(!isset($cache[$locale])){
         $path=dirname(__DIR__).'/locales/'.$locale.'.php';$loaded=is_file($path)?require $path:[];$cache[$locale]=is_array($loaded)?$loaded:[];
         // Explicit trusted modules only; never discover PHP catalogs from user-controlled paths.
-        foreach (['setup','personal','consent','account','shared','dashboard','auction_billing','auction_correction','maintenance','relisting','e2ee','trade','classification','listing_draft','listing_alert','sessions','user_security','profile_images','paypal_refunds','bank','bitcoin','mail_setup','escrow','dealer_team','dealer_stock','dealer_api','dealer_checkout','dealer_subscription','account_consent','payment_customer','finance_customer','billing_customer','finance_admin','promotion','admin_nav','admin_audit','admin_privacy','admin_settings','saved_search','legal_ui','wanted','admin_overview','identity','admin_listings','admin_users','admin_campaigns','market_policy','dealer_dashboard','listing_validation','auction_actions'] as $moduleName) {
+        foreach (['setup','personal','consent','account','shared','dashboard','auction_billing','auction_correction','maintenance','relisting','e2ee','trade','classification','listing_draft','listing_alert','sessions','user_security','profile_images','paypal_refunds','bank','bitcoin','mail_setup','escrow','dealer_team','dealer_stock','dealer_api','dealer_checkout','dealer_subscription','account_consent','payment_customer','finance_customer','billing_customer','finance_admin','promotion','admin_nav','admin_audit','admin_privacy','admin_settings','saved_search','legal_ui','wanted','admin_overview','identity','admin_listings','admin_users','admin_campaigns','market_policy','dealer_dashboard','listing_validation','auction_actions','banner_ads','marketplace_refinements','admin_roles_matrix','setup_wizard'] as $moduleName) {
             $modulePath=dirname(__DIR__).'/locales/'.$moduleName.'/'.$locale.'.php';
             $module=is_file($modulePath)?require $modulePath:[];
             if(is_array($module))$cache[$locale]=array_replace($cache[$locale],$module);

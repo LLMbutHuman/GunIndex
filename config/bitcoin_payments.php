@@ -80,7 +80,7 @@ function bitcoin_start(PDO $pdo,int $invoiceId,int $userId): void
         $q=$pdo->prepare('SELECT customer_claimed_at FROM market_manual_orders WHERE invoice_id=? FOR SHARE');
         $q->execute([$invoiceId]);
         if ($q->fetchColumn()) throw new PaymentConflict(t('bitcoin.conflict'));
-        if (in_array($invoice['service_code'],['category_top','home_top','banner_monthly'],true)) {
+        if (in_array($invoice['service_code'],['category_top','home_top','banner_monthly','banner_advertising'],true)) {
             $booking=business_locked_booking($pdo,$invoiceId);
             if (!$booking||$booking['status']!=='reserved'||strtotime($booking['reserved_until'].' UTC')<=time()||business_reason($pdo)!==null) throw new PaymentConflict(t('bitcoin.conflict'));
         }

@@ -1,5 +1,12 @@
 <?php
 declare(strict_types=1);
+
+function chat_unread_count(PDO $pdo, int $userId): int
+{
+    $query = $pdo->prepare('SELECT COUNT(*) FROM (SELECT id FROM market_messages WHERE receiver_id=? AND is_read=0 LIMIT 100) AS unread');
+    $query->execute([$userId]);
+    return (int)$query->fetchColumn();
+}
 function chat_message_plain(string $stored,int $version=0):string {
  if($version===0)return$stored;if($version!==1)throw new RuntimeException('Unsupported message encryption version.');return crypto_decrypt('chat',$stored);
 }

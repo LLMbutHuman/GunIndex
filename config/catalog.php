@@ -61,6 +61,71 @@ function catalog_categories(PDO $pdo, bool $activeOnly = true): array
     return $result;
 }
 
+function catalog_category_write_lock(PDO $pdo): string
+{
+    $name = 'gunindex.categories.'.substr(hash('sha256', (string)$pdo->query('SELECT DATABASE()')->fetchColumn()), 0, 24);
+    $statement = $pdo->prepare('SELECT GET_LOCK(?, 5)');
+    $statement->execute([$name]);
+    if ((int)$statement->fetchColumn() !== 1) throw new DomainException(t('refine.category_busy'));
+    return $name;
+}
+
+function catalog_category_dependencies(PDO $pdo, int $id): array
+{
+    $references = [
+        'children'=>['market_categories','parent_id'],
+        'listings'=>['market_listings','category_id'],
+        'attributes'=>['market_category_attributes','category_id'],
+        'translations'=>['market_category_translations','category_id'],
+        'wanted'=>['market_wanted','category_id'],
+        'campaigns'=>['market_campaigns','category_id'],
+        'placements'=>['market_business_inventory','category_id'],
+        'bookings'=>['market_premium_bookings','category_id'],
+    ];
+    $dependencies = [];
+    foreach ($references as $name=>[$table,$column]) {
+        $query = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE $column=?");
+        $query->execute([$id]);
+        $count = (int)$query->fetchColumn();
+        if ($count > 0) $dependencies[$name] = $count;
+    }
+    $searches = $pdo->prepare("SELECT COUNT(*) FROM market_saved_searches WHERE JSON_UNQUOTE(JSON_EXTRACT(CASE WHEN JSON_VALID(criteria_json) THEN criteria_json ELSE '{}' END, '$.category_id'))=?");
+    $searches->execute([(string)$id]);
+    $count = (int)$searches->fetchColumn();
+    if ($count > 0) $dependencies['searches'] = $count;
+    $drafts = $pdo->prepare("SELECT COUNT(*) FROM market_listing_drafts WHERE JSON_UNQUOTE(JSON_EXTRACT(payload,'$.category_id'))=?");
+    $drafts->execute([(string)$id]);
+    $count = (int)$drafts->fetchColumn();
+    if ($count > 0) $dependencies['drafts'] = $count;
+    return $dependencies;
+}
+
+function catalog_remove_category(PDO $pdo, int $actor, int $id, bool $permanent): void
+{
+    governance_assert_actor($pdo,$actor,'categories.manage');
+    $lock = catalog_category_write_lock($pdo);
+    try {
+        $pdo->beginTransaction();
+        governance_assert_actor($pdo,$actor,'categories.manage');
+        $query = $pdo->prepare('SELECT is_active FROM market_categories WHERE id=? FOR UPDATE');
+        $query->execute([$id]);
+        $active = $query->fetchColumn();
+        if ($active === false) throw new DomainException(t('admin_geography.category_missing'));
+        if ($permanent && catalog_category_dependencies($pdo,$id)) throw new DomainException(t('refine.category_blocked'));
+        if ($permanent || (int)$active === 1) {
+            $pdo->prepare($permanent ? 'DELETE FROM market_categories WHERE id=?' : 'UPDATE market_categories SET is_active=0 WHERE id=?')->execute([$id]);
+            audit_log($pdo,$actor,$permanent ? 'category.deleted' : 'category.deactivated',$id);
+        }
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        if ($error instanceof PDOException && (int)($error->errorInfo[1] ?? 0) === 1451) throw new DomainException(t('refine.category_blocked'));
+        throw $error;
+    } finally {
+        $pdo->prepare('SELECT RELEASE_LOCK(?)')->execute([$lock]);
+    }
+}
+
 function catalog_save_category(PDO $pdo, int $actorId, array $data): int
 {
     function_exists('governance_assert_actor')?governance_assert_actor($pdo,$actorId,'categories.manage'):settings_assert_admin($pdo,$actorId);
@@ -77,10 +142,7 @@ function catalog_save_category(PDO $pdo, int $actorId, array $data): int
     }
     $name = trim($name);
     if (!catalog_text_allowed($name . ' ' . str_replace('-', ' ', $slug))) throw new InvalidArgumentException(t('classification.category_restricted'));
-    $lockName = 'gunindex.categories.' . substr(hash('sha256', (string)$pdo->query('SELECT DATABASE()')->fetchColumn()), 0, 24);
-    $statement = $pdo->prepare('SELECT GET_LOCK(?, 5)');
-    $statement->execute([$lockName]);
-    if ((int)$statement->fetchColumn() !== 1) throw new RuntimeException('Der Kategoriebaum wird gerade bearbeitet. Bitte erneut versuchen.');
+    $lockName = catalog_category_write_lock($pdo);
     try {
         $pdo->beginTransaction();
         function_exists('governance_assert_actor')?governance_assert_actor($pdo,$actorId,'categories.manage'):settings_assert_admin($pdo,$actorId);

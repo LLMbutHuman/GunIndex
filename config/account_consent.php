@@ -51,7 +51,7 @@ function consent_account_required_route(string $route, string $method, array $in
     if (in_array($route,consent_account_forms(),true)) return in_array($method,['GET','HEAD','POST'],true);
     if ($method !== 'POST') return false;
     return match ($route) {
-        'actions/place-bid.php','marketplace/buyout-request.php','user/dealer-subscription.php' => true,
+        'actions/place-bid.php','marketplace/buyout-request.php','user/dealer-subscription.php','user/banner-advertising.php' => true,
         'actions/manage-auction.php' => ($input['action'] ?? null) === 'publish',
         'user/billing.php','user/promotions.php' => ($input['action'] ?? null) === 'order',
         'user/offers.php' => ($input['action'] ?? null) === 'create_offer',
@@ -63,7 +63,7 @@ function consent_account_required_route(string $route, string $method, array $in
 function consent_account_return(mixed $return): string
 {
     $allowed = array_merge(consent_account_forms(), ['user/dashboard.php','user/billing.php','user/promotions.php','user/offers.php',
-        'user/dealer.php','user/dealer-subscription.php','marketplace/view-item.php','marketplace/view-auction.php']);
+        'user/dealer.php','user/dealer-subscription.php','user/banner-advertising.php','marketplace/view-item.php','marketplace/view-auction.php']);
     if (!is_string($return) || strlen($return)>1024 || !str_starts_with($return,'/') || str_starts_with($return,'//')
         || preg_match('/[\x00-\x20\x7f\\\\]/',rawurldecode($return))) return '/user/dashboard.php';
     $path = parse_url($return,PHP_URL_PATH);

@@ -3,8 +3,11 @@
 `seo_indexing_enabled` ist standardmäßig aus. Erst nach der tatsächlichen
 Freigabe der öffentlichen Inhalte aktiviert ein berechtigter MFA-Administrator
 diese Einstellung. Ein gültiger, fest konfigurierter HTTPS-Ursprung in `APP_URL`
-ist erforderlich; Request-Host, Weiterleitungsheader und Formularwerte bestimmen
-keine Canonical-, Sitemap- oder strukturierten URLs. Wartung schließt die Freigabe.
+ist erforderlich. Die aktuelle Anfrage muss über HTTPS denselben konfigurierten
+Host erreichen. `APP_ENV=production` und eine reguläre Datenbank sind erforderlich.
+Für neue Installationen gilt zusätzlich die Erstfreigabe. Vorschau-, Testhosts und direkte IP-Zugriffe bleiben
+geschlossen. Canonical-, Sitemap- und strukturierte URLs stammen vom konfigurierten
+Ursprung. Wartung schließt die Freigabe.
 
 ## Verhalten
 
@@ -32,6 +35,14 @@ keine Canonical-, Sitemap- oder strukturierten URLs. Wartung schließt die Freig
   Zustand und bei Festpreisangeboten den centgenauen EUR-Angebotspreis. Es
   enthält keine privaten Gebotsgrenzen, Kontaktadressen oder erfundene Bewertungen.
   Auktionen erhalten keinen festen Offer-Preis aus dem aktuellen Gebot.
+- Angebotsseiten ergänzen `BreadcrumbList` mit lokalisierter Startseite,
+  öffentlichem Kategoriefilter und kanonischer Angebotsseite. Der Beschreibungstext
+  wird sauber an Unicode-Zeichengrenzen gekürzt. Das Hauptfoto lädt priorisiert,
+  zusätzliche Vorschaubilder laden bedarfsgerecht.
+- Nach einer früheren Veröffentlichung kann eine bereits bekannte URL in
+  Suchergebnissen verbleiben, wenn `robots.txt` den Abruf ihres `noindex`-Signals
+  verhindert. Für die Entfernung bereits bekannter URLs eignet sich die jeweilige
+  Indexierungsverwaltung der Suchmaschine. [Google Search Central zu `noindex`](https://developers.google.com/search/docs/crawling-indexing/block-indexing)
 
 ## Sitemap
 

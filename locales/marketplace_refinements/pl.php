@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Wiadomości · nieprzeczytane: {count}',
+    'refine.open_admin' => 'Przejdź do panelu administracyjnego',
+    'refine.setup_tab' => 'Konfiguracja',
+    'refine.seller_type' => 'Typ sprzedawcy',
+    'refine.seller_all' => 'Wszyscy sprzedawcy',
+    'refine.seller_private' => 'Tylko sprzedawcy prywatni',
+    'refine.seller_dealer' => 'Tylko sprzedawcy zawodowi',
+    'refine.seller_invalid' => 'Wybierz poprawny typ sprzedawcy.',
+    'refine.category_busy' => 'Trwa edycja drzewa kategorii. Spróbuj ponownie za chwilę.',
+    'refine.category_blocked' => 'Ta kategoria ma powiązania. Usuń powiązania przed jej trwałym usunięciem.',
+    'refine.category_confirm_required' => 'Wybierz kategorię i potwierdź zmianę.',
+    'refine.category_removal' => 'Zarządzaj kategorią · {name}',
+    'refine.category_delete_help' => 'Ta kategoria jest pusta. Trwałego usunięcia nie można cofnąć.',
+    'refine.category_deactivate_help' => 'Dezaktywacja zachowuje kategorię i jej zawartość. Kategoria i jej podkategorie znikają z publicznego katalogu.',
+    'refine.category_confirm' => 'Potwierdzam wybraną zmianę tej kategorii.',
+    'refine.category_deactivate' => 'Dezaktywuj',
+    'refine.category_delete' => 'Usuń na stałe',
+    'refine.category_manage_removal' => 'Usuń lub dezaktywuj',
+    'refine.category_ref_children' => 'Podkategorie',
+    'refine.category_ref_listings' => 'Ogłoszenia',
+    'refine.category_ref_attributes' => 'Atrybuty kategorii',
+    'refine.category_ref_translations' => 'Tłumaczenia',
+    'refine.category_ref_wanted' => 'Ogłoszenia kupna',
+    'refine.category_ref_campaigns' => 'Kampanie reklamowe',
+    'refine.category_ref_placements' => 'Miejsca reklamowe',
+    'refine.category_ref_bookings' => 'Rezerwacje',
+    'refine.category_ref_searches' => 'Zapisane wyszukiwania',
+    'refine.category_ref_drafts' => 'Szkice ogłoszeń',
+];

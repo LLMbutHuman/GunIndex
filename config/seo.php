@@ -21,11 +21,15 @@ function seo_localized_path(string $path, string $locale): string
 function seo_switch_path(string $return, string $locale): string
 {
     $parts = parse_url($return);
-    $route = is_array($parts) && isset($parts['path']) ? seo_public_route(rawurldecode($parts['path'])) : null;
-    if ($route === null) return $return;
+    if (!is_array($parts) || !isset($parts['path']) || !isset(i18n_locales()[$locale])) return $return;
+    $path = rawurldecode($parts['path']);
+    $route = seo_public_route($path);
+    if ($route !== null) $path = $route['path'];
+    if (in_array($path, ['/', '/index.php', '/marketplace/index.php'], true)) $path = '/';
+    if (!in_array($path, ['/', '/marketplace/view-item.php', '/marketplace/view-auction.php'], true)) return $return;
     $query = isset($parts['query']) ? '?' . $parts['query'] : '';
     $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
-    return '/' . $locale . $route['path'] . $query . $fragment;
+    return '/' . $locale . $path . $query . $fragment;
 }
 
 function seo_alternates(string $origin, string $path): array
@@ -46,20 +50,34 @@ function seo_origin(?string $configured = null): ?string
         || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])
         || !in_array($parts['path'] ?? '', ['', '/'], true) || (isset($parts['port']) && $parts['port'] !== 443)) return null;
     $host = strtolower($parts['host'] ?? '');
-    if (!str_contains($host, '.') || !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
-        || filter_var($host, FILTER_VALIDATE_IP) || preg_match('/\.(?:localhost|test|invalid|example|local)\z/', $host)) return null;
+    if (!preg_match('/\.[a-z]{2,63}\z/', $host) || !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
+        || preg_match('/\.(?:localhost|test|invalid|example|local|internal)\z/', $host)
+        || preg_match('/\A(?:local|localhost|dev|development|test|testing|stage|staging|preview|demo|sandbox)[.-]/', $host)) return null;
     return 'https://' . $host;
+}
+
+/** Index only HTTPS requests on the configured production hostname. */
+function seo_request_origin(array $server, ?string $configured = null, ?string $environment = null, ?string $database = null): ?string
+{
+    $origin = seo_origin($configured);
+    $environment ??= (string)getenv('APP_ENV');
+    $database ??= (string)getenv('DB_DATABASE');
+    $host = $server['HTTP_HOST'] ?? null;
+    if ($origin === null || $environment !== 'production' || $database === '' || str_ends_with(strtolower($database), '_test')
+        || ($server['HTTPS'] ?? '') !== 'on' || !is_string($host)) return null;
+    $configuredHost = parse_url($origin, PHP_URL_HOST);
+    return in_array(strtolower($host), [$configuredHost, $configuredHost . ':443'], true) ? $origin : null;
 }
 
 function seo_gate(array $settings, ?string $origin): bool
 {
     return $origin !== null && ($settings['seo_indexing_enabled'] ?? '0') === '1'
-        && ($settings['maintenance_enabled'] ?? '0') !== '1';
+        && ($settings['maintenance_enabled'] ?? '0') === '0';
 }
 
 function seo_enabled(PDO $pdo): bool
 {
-    return seo_gate(site_settings($pdo), seo_origin());
+    return seo_gate(site_settings($pdo), seo_request_origin($_SERVER)) && setup_installation_state($pdo) !== 'pending';
 }
 
 function seo_listing_path(array $listing): ?string
@@ -114,10 +132,33 @@ function seo_json(array $data): string
     return json_encode($data, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
+function seo_description(string $description): string
+{
+    $description = trim(preg_replace('/\s+/u', ' ', $description) ?? '');
+    preg_match('/\A.{0,160}/u', $description, $excerpt);
+    return $excerpt[0] ?? '';
+}
+
+function seo_listing_breadcrumbs(array $listing, string $origin, string $locale, string $canonical): array
+{
+    $dictionary = i18n_dictionary($locale);
+    $items = [['name'=>$dictionary['Entdecken'] ?? 'Entdecken', 'item'=>$origin . seo_localized_path('/', $locale)]];
+    $category = $listing['category_id'] ?? null;
+    $categoryName = $listing['seo_category_name'] ?? null;
+    if ((is_int($category) || is_string($category)) && preg_match('/\A[1-9][0-9]{0,9}\z/', (string)$category)
+        && is_string($categoryName) && $categoryName !== '') {
+        $items[] = ['name'=>$categoryName, 'item'=>$origin . '/marketplace/search.php?category_id=' . $category];
+    }
+    $items[] = ['name'=>(string)$listing['title'], 'item'=>$canonical];
+    $elements = [];
+    foreach ($items as $position => $item) $elements[] = ['@type'=>'ListItem', 'position'=>$position + 1] + $item;
+    return ['@context'=>'https://schema.org', '@type'=>'BreadcrumbList', 'itemListElement'=>$elements];
+}
+
 function seo_page(array $settings, string $requestPath, ?array $listing = null, ?string $configured = null, string $locale = 'de'): array
 {
     $origin = seo_origin($configured);
-    $result = ['index' => false, 'canonical' => null, 'structured' => null, 'alternates' => []];
+    $result = ['index'=>false, 'canonical'=>null, 'structured'=>null, 'alternates'=>[], 'breadcrumbs'=>null];
     if (!seo_gate($settings, $origin)) return $result;
     $route = seo_public_route($requestPath);
     if ($route !== null) {
@@ -127,13 +168,15 @@ function seo_page(array $settings, string $requestPath, ?array $listing = null, 
     if (!isset(i18n_locales()[$locale])) return $result;
     if (in_array($requestPath, ['/', '/index.php', '/marketplace/index.php'], true)) {
         $alternates = seo_alternates($origin, '/');
-        return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>null, 'alternates'=>$alternates];
+        return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>null, 'alternates'=>$alternates, 'breadcrumbs'=>null];
     }
     if ($listing !== null && seo_listing_current($listing)) {
         $path = seo_listing_path($listing);
         if ($requestPath === parse_url($path, PHP_URL_PATH)) {
             $alternates = seo_alternates($origin, $path);
-            return ['index'=>true, 'canonical'=>$alternates[$locale], 'structured'=>seo_product_data($listing, $origin, $locale), 'alternates'=>$alternates];
+            $canonical = $alternates[$locale];
+            return ['index'=>true, 'canonical'=>$canonical, 'structured'=>seo_product_data($listing, $origin, $locale),
+                'alternates'=>$alternates, 'breadcrumbs'=>seo_listing_breadcrumbs($listing, $origin, $locale, $canonical)];
         }
     }
     return $result;

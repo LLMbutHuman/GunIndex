@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'refine.messages_unread' => 'Messages · {count} unread',
+    'refine.open_admin' => 'Open admin area',
+    'refine.setup_tab' => 'Setup',
+    'refine.seller_type' => 'Seller type',
+    'refine.seller_all' => 'All sellers',
+    'refine.seller_private' => 'Private sellers only',
+    'refine.seller_dealer' => 'Business sellers only',
+    'refine.seller_invalid' => 'Choose a valid seller type.',
+    'refine.category_busy' => 'The category tree is being edited. Try again shortly.',
+    'refine.category_blocked' => 'This category has dependencies. Resolve them before deleting it permanently.',
+    'refine.category_confirm_required' => 'Choose a category and confirm the change.',
+    'refine.category_removal' => 'Manage category · {name}',
+    'refine.category_delete_help' => 'This category is empty. Permanent deletion cannot be undone.',
+    'refine.category_deactivate_help' => 'Deactivation keeps the category and its contents. The category and its subcategories are hidden from the public catalogue.',
+    'refine.category_confirm' => 'I confirm the selected change to this category.',
+    'refine.category_deactivate' => 'Deactivate',
+    'refine.category_delete' => 'Delete permanently',
+    'refine.category_manage_removal' => 'Delete or deactivate',
+    'refine.category_ref_children' => 'Subcategories',
+    'refine.category_ref_listings' => 'Listings',
+    'refine.category_ref_attributes' => 'Category attributes',
+    'refine.category_ref_translations' => 'Translations',
+    'refine.category_ref_wanted' => 'Wanted listings',
+    'refine.category_ref_campaigns' => 'Advertising campaigns',
+    'refine.category_ref_placements' => 'Ad placements',
+    'refine.category_ref_bookings' => 'Bookings',
+    'refine.category_ref_searches' => 'Saved searches',
+    'refine.category_ref_drafts' => 'Listing drafts',
+];

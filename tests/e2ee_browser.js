@@ -104,7 +104,7 @@ async function login(context, user, path) {
   await enabled(page, '#e2ee-passphrase'); return page;
 }
 async function context(browser) {
-  const result = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', acceptDownloads: true });
+  const result = await browser.newContext({locale:'de-DE', viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', acceptDownloads: true });
   await result.route('**/*', route => {
     const request=route.request();
     if (freezeApiRequests&&isE2eeApi(request.url())) {

@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/bootstrap.php';
 if (site_setting($pdo,'registration_enabled','1') !== '1') { abort_request(503,t('account.registration_unavailable')); }
 if (current_user($pdo)) { redirect('/user/dashboard.php'); }
-$error = ''; $values = ['username' => '', 'email' => '', 'zip' => '', 'city' => '', 'country_code'=>'DE','preferred_locale'=>i18n_locale()];
+$error = ''; $values = ['username' => '', 'email' => '', 'zip' => '', 'city' => '', 'country_code'=>geo_country(),'preferred_locale'=>i18n_locale()];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf(); auth_rate_limit('register-ip', auth_ip(), 12, 3600);
     try {
