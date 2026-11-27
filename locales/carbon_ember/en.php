@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'ember.origin_market' => 'Same as market country',
     'ember.imprint' => 'Legal notice',
     'ember.dealer_link' => 'Business listings',
     'ember.about_long-guns' => 'Terminology for long guns varies by jurisdiction.',

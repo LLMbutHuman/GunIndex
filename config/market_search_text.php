@@ -48,12 +48,9 @@ function market_suggestions(PDO $pdo, string $query, array $filters): array
     $scope=$filters['scope']??'country';
     if (!in_array($scope,['country','international'],true)) throw new InvalidArgumentException(t('classification.search_invalid'));
     $country=geo_country(($filters['country_code']??'')?:null);
-    $categories=market_category_ids($pdo);
     $category=$filters['category_id']??'';
-    if ($category!=='') {
-        if (!ctype_digit($category)||!in_array((int)$category,$categories,true)) return [];
-        $categories=[(int)$category];
-    }
+    if ($category !== '' && (!is_string($category) || !ctype_digit($category))) return [];
+    $categories = market_category_ids($pdo, $category === '' ? null : (int)$category);
     if (!$categories) return [];
     $where=market_public_where($categories);
     $parameters=$categories;

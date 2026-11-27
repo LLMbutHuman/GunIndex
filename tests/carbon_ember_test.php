@@ -85,6 +85,20 @@ try {
         ember_check(isset($categories[$parent],$categories[$child]) && $categories[$child]['parent_id']===$categories[$parent]['id'],'Missing additive equipment categories.');
     }
     ember_check(isset($categories['buecher-medien']) && !isset($categories['ammunition']) && !isset($categories['long-guns']),'Legacy catalog or commerce boundary changed.');
+    $pdo->beginTransaction();
+    try {
+        $listing = 'Synthetic outdoor backpack '.bin2hex(random_bytes(6));
+        $pdo->prepare("INSERT INTO market_listings (seller_id,category_id,title,description,type,price_cents,status,zip,city,country_code)
+            VALUES (?,?,?,'Synthetic test equipment','fixed',2500,'active','10115','Synthetic town','DE')")
+            ->execute([$ids[0],$categories['rucksaecke']['id'],$listing]);
+        $scope = ['country_code'=>'DE','category_id'=>(string)$categories['outdoor-camping']['id']];
+        ember_check(market_search($pdo,$scope + ['q'=>$listing,'seller_type'=>'private','min_price'=>'20.00'])['total']===1,'Parent search missed a valid child listing.');
+        ember_check(in_array($listing, market_suggestions($pdo,$listing,$scope), true),'Parent suggestions missed a valid child listing.');
+        $pdo->prepare('UPDATE market_categories SET is_active=0 WHERE id=?')->execute([$categories['rucksaecke']['id']]);
+        ember_check(market_search($pdo,$scope + ['q'=>$listing])['total']===0 && market_suggestions($pdo,$listing,$scope)===[],'Inactive child leaked through parent search.');
+    } finally {
+        $pdo->rollBack();
+    }
     echo "PASS isolated MySQL reviews, permissions, MFA, audit, concurrency guard and additive taxonomy\n";
 } finally {
     if (isset($ids[1])) {

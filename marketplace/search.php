@@ -60,7 +60,7 @@ include __DIR__.'/../includes/header.php';
         <div class="search-filter-grid search-advanced">
         <label class="field"><?=h(t('Suchbereich'))?><select name="scope"><option value="country" <?=$filters['scope']==='country'?'selected':''?>><?=h(t('Nur ausgewähltes Land'))?></option><option value="international" <?=$filters['scope']==='international'?'selected':''?>><?=h(t('International'))?></option></select></label>
         <label class="field"><?=h(t('Angebotstyp'))?><select name="type"><option value=""><?=h(t('Alle Angebote'))?></option><option value="negotiated" <?=$filters['type']==='negotiated'?'selected':''?>><?=h(t('trade.negotiated'))?></option><option value="fixed" <?=$filters['type']==='fixed'?'selected':''?>><?=h(t('Festpreis'))?></option><option value="auction" <?=$filters['type']==='auction'?'selected':''?>><?=h(t('Auktion'))?></option></select></label>
-        <label class="field"><?=h(t('Bezugsland'))?><select name="origin_country"><?php foreach($countries as $code=>$name):?><option value="<?=h($code)?>" <?=$filters['origin_country']===$code?'selected':''?>><?=h($name.' ('.$code.')')?></option><?php endforeach;?></select></label>
+            <label class="field"><?=h(t('Bezugsland'))?><select name="origin_country"><option value=""><?=h(t('ember.origin_market'))?></option><?php foreach($countries as $code=>$name):?><option value="<?=h($code)?>" <?=$filters['origin_country']===$code&&$filters['origin_country']!==$filters['country_code']?'selected':''?>><?=h($name.' ('.$code.')')?></option><?php endforeach;?></select></label>
         <label class="field"><?=h(t('Suchradius'))?><select name="radius_km"><option value=""><?=h(t('Exakte PLZ'))?></option><?php foreach([5,10,25,50,100,250,500,1000,2000] as $radius):?><option value="<?=$radius?>" <?=$filters['radius_km']===(string)$radius?'selected':''?>><?=$radius?> km</option><?php endforeach;?></select></label>
         <label class="field"><?=h(t('Sortierung'))?><select name="sort"><?php foreach(['relevance'=>'classification.relevance','newest'=>'Neueste zuerst','price_asc'=>'Preis aufsteigend','price_desc'=>'Preis absteigend','ending'=>'Bald endende Auktionen','distance'=>'Nächste zuerst'] as $value=>$label):?><option value="<?=h($value)?>" <?=$filters['sort']===$value?'selected':''?>><?=h(t($label))?></option><?php endforeach;?></select></label>
         </div>
@@ -78,6 +78,7 @@ include __DIR__.'/../includes/header.php';
     <?php foreach ($groups as $label => $keys):
         $removed = array_fill_keys($keys,true);
         if (array_intersect_key($active,$removed) === []) continue;
+        if ($label === 'ember.location' && $filters['sort'] === 'distance') $removed['sort'] = true;
         $query = http_build_query(array_diff_key($filters,$removed));
     ?>
     <li><a class="button small secondary" href="<?=h('/marketplace/search.php?'.$query)?>" aria-label="<?=h(t('ember.remove_filter',['filter'=>t($label)]))?>"><?=h(t($label))?> <span aria-hidden="true">×</span></a></li>

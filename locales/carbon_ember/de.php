@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'ember.origin_market' => 'Wie Ländermarkt',
     'ember.imprint' => 'Impressum',
     'ember.dealer_link' => 'Angebote von Händlern',
     'ember.about_long-guns' => 'Welche Begriffe das Waffenrecht für Langwaffen verwendet, hängt vom jeweiligen Land ab.',

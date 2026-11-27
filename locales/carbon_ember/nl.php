@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'ember.origin_market' => 'Zelfde als het marktland',
     'ember.imprint' => 'Colofon',
     'ember.dealer_link' => 'Zakelijke aanbiedingen',
     'ember.about_long-guns' => 'De wettelijke begrippen voor lange vuurwapens verschillen per land.',

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'ember.origin_market' => 'Samme som markedslandet',
     'ember.imprint' => 'Impressum',
     'ember.dealer_link' => 'Forhandlerannoncer',
     'ember.about_long-guns' => 'De retlige begreber for lange våben varierer fra land til land.',

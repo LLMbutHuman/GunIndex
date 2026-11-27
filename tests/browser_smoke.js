@@ -46,6 +46,7 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
   await phone.setViewportSize({width:390,height:844});
   await phone.goto(origin+'/marketplace/search.php');
   assert(await phone.locator('.search-primary select[name=category_id]').isVisible());
+  assert.match(await phone.locator('.search-primary').ariaSnapshot(),/combobox "Kategorie"/);
   assert(!(await phone.locator('.search-more select[name=sort]').isVisible()));
   await phone.locator('.search-more summary').focus();
   await phone.keyboard.press('Enter');

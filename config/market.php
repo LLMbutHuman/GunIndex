@@ -6,9 +6,15 @@ final class MarketAccessException extends RuntimeException {}
 final class MarketConflictException extends RuntimeException {}
 
 /** All commerce reads use the new tables. Historical listings are never imported. */
-function market_category_ids(PDO $pdo): array
+function market_category_ids(PDO $pdo, ?int $root = null): array
 {
-    return array_map(static fn(array $row):int=>(int)$row['id'],catalog_categories($pdo,true));
+    $visible = [];
+    foreach (catalog_categories($pdo) as $row) {
+        if ($root === null || $row['id'] === $root || isset($visible[$row['parent_id']])) {
+            $visible[$row['id']] = true;
+        }
+    }
+    return array_keys($visible);
 }
 
 function market_find(PDO $pdo, int $id, bool $includeEnded = true, ?array $origin = null): ?array
@@ -42,7 +48,9 @@ function market_seller_type_filter(mixed $value): ?string
 function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPage = 24): array
 {
     $page=max(1,min(10000,$page));$perPage=max(1,min(48,$perPage));
-    $categories=market_category_ids($pdo);
+    $category = $filters['category_id'] ?? '';
+    if ($category !== '' && (!is_scalar($category) || !ctype_digit((string)$category))) throw new InvalidArgumentException(t('market_search.category_invalid'));
+    $categories = market_category_ids($pdo, $category === '' ? null : (int)$category);
     $countryRaw=$filters['country_code']??null;
     if($countryRaw!==null&&!is_string($countryRaw))throw new InvalidArgumentException(t('market_search.market_invalid'));
     $country=geo_country($countryRaw===''?null:$countryRaw);
@@ -65,8 +73,6 @@ function market_search(PDO $pdo, array $filters = [], int $page = 1, int $perPag
     [$textWhere,$textParameters,$ranking,$rankingParameters]=market_text_search($query);
     array_push($where,...$textWhere);
     array_push($parameters,...$textParameters);
-    $category=$filters['category_id']??'';
-    if($category!==''&&$category!==null){if(!is_scalar($category)||!ctype_digit((string)$category))throw new InvalidArgumentException(t('market_search.category_invalid'));$where[]='l.category_id=?';$parameters[]=(int)$category;}
     $type=$filters['type']??'';
     if($type!==''&&$type!==null){if(!is_string($type)||!in_array($type,['fixed','auction','negotiated'],true))throw new InvalidArgumentException(t('Ungültige Angebotsart.'));$where[]='l.type=?';$parameters[]=$type;}
     foreach(['min_price'=>'>=','max_price'=>'<='] as $key=>$operator){

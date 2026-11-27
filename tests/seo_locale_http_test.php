@@ -115,8 +115,15 @@ try {
         $listing = seo_http_request(seo_http_browser(), $localizedListing);
         seo_http_localized($listing, $locale);
         seo_http_check(str_contains($listing['body'], $fixture['title']), "The $locale listing did not preserve its original title.");
+        $editorialPath = '/' . $locale . '/fachwissen';
+        $editorial = seo_http_request($browser, $editorialPath . '?country=DE&status=pending');
+        seo_http_localized($editorial, $locale);
+        seo_http_check(str_contains($home['body'], 'href="' . $editorialPath . '"')
+            && substr_count($editorial['body'], 'class="panel editorial-topic"') === 7, 'Localized editorial route is incomplete.');
     }
-    echo "PASS eight_independent_locale_homes_and_listings\n";
+    $editorialPost = seo_http_request(seo_http_browser(), '/de/fachwissen', 'POST', ['status'=>'exempt']);
+    seo_http_check($editorialPost['status'] === 405, 'The editorial route accepted a write request.');
+    echo "PASS eight_independent_locale_homes_listings_and_editorial_pages\n";
 
     $switcher = seo_http_browser();
     $before = '/fr' . $itemPath . '&origin_country=DE';

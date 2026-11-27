@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'ember.origin_market' => 'Tak jak kraj rynku',
     'ember.imprint' => 'Informacje prawne',
     'ember.dealer_link' => 'Oferty firmowe',
     'ember.about_long-guns' => 'Terminologia prawna dotycząca broni długiej zależy od kraju.',

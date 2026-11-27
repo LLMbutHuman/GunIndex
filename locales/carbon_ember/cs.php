@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'ember.origin_market' => 'Stejné jako země trhu',
     'ember.imprint' => 'Údaje o provozovateli',
     'ember.dealer_link' => 'Nabídky prodejců',
     'ember.about_long-guns' => 'Právní pojmy pro dlouhé zbraně se v jednotlivých zemích liší.',
