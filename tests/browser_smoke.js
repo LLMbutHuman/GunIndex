@@ -23,7 +23,7 @@ async function login(page,user,admin=false){await page.goto(origin+'/auth/login.
     return Math.abs((first.left+last.right)/2-(strip.left+strip.right)/2)<4 && document.documentElement.scrollWidth<=innerWidth;
   }),'Desktop manifesto did not center its visible text');
   journeys.push('desktop_manifesto_centered');
-  for(const width of [320,820,981,1024,1440]){
+  for(const width of [320,820,981,1024,1280,1440]){
    await page.setViewportSize({width,height:1000});
    assert(await page.evaluate(()=>[...document.querySelector('.nav-shell').children].every(el=>el.getBoundingClientRect().right<=innerWidth)), 'Signed-in navigation overflow at '+width);
    const inbox=page.locator(width<=980?'.nav-actions .mobile-messages':'.desktop-nav .messages-link');

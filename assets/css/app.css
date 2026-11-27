@@ -111,6 +111,7 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 .listing-meta, .listing-bottom > span { font-size: .8rem; }
 .listing-meta > span { min-width: 0; overflow-wrap: anywhere; }
 .section-heading .text-link, .footer-top nav { font-size: .9rem; }
+.desktop-nav { min-width: 0; flex-wrap: wrap; row-gap: 0; }
 .desktop-nav a { font-size: .875rem; }
 .footer-top nav a:hover { text-decoration: underline; }
 .prose .button.secondary { color: var(--ink); }
@@ -172,8 +173,18 @@ html[data-motion=reduced] *,html[data-motion=off] *{animation:none!important;tra
 }
 @media (min-width: 981px) and (max-width: 1280px) {
     .desktop-nav a { font-size: .825rem; }
-    .nav-shell.has-inbox { gap: .85rem; }
-    .has-inbox .desktop-nav { gap: .85rem; }
+    .nav-shell.has-inbox {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "brand actions" "navigation navigation";
+        gap: 0 1rem;
+        padding-block: .5rem .2rem;
+    }
+    .has-inbox > .brand { grid-area: brand; }
+    .has-inbox > .nav-actions { grid-area: actions; }
+    .has-inbox .desktop-nav { grid-area: navigation; flex-wrap: wrap; gap: 0 1.4rem; margin: 0; }
+    .has-inbox .desktop-nav a { min-height: 44px; padding-block: .6rem; align-content: center; }
+    .has-inbox .desktop-nav a::after { bottom: .4rem; }
 }
 @media (max-width: 700px) {
     .hero, .listing-layout { grid-template-columns: minmax(0, 1fr); }
