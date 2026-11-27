@@ -59,7 +59,7 @@ return [
     'banner_ads.media_help' => 'JPEG, PNG or WebP up to 5 MB, GIF up to 1 MB. A banner without an image requires text.',
     'banner_ads.invalid_media' => 'Choose a valid supported image or enter banner text.',
     'banner_ads.invalid_details' => 'Check the title, text, placement, country and category.',
-    'banner_ads.invalid_url' => 'Enter a valid public HTTPS address.',
+    'banner_ads.invalid_url' => 'Enter a public HTTPS address or the path to an allowed GunIndex page.',
     'banner_ads.invalid_dates' => 'Choose a valid period ending in the future.',
     'banner_ads.changed' => 'The banner has changed. Open the current preview before reviewing it.',
     'banner_ads.pause' => 'Pause',

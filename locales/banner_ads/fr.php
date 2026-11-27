@@ -59,7 +59,7 @@ return [
     'banner_ads.media_help' => 'JPEG, PNG ou WebP jusquʼà 5 Mo, GIF jusquʼà 1 Mo. Une bannière sans image nécessite du texte.',
     'banner_ads.invalid_media' => 'Choisissez une image valide prise en charge ou saisissez le texte de la bannière.',
     'banner_ads.invalid_details' => 'Vérifiez le titre, le texte, lʼemplacement, le pays et la catégorie.',
-    'banner_ads.invalid_url' => 'Saisissez une adresse HTTPS publique valide.',
+    'banner_ads.invalid_url' => 'Saisissez une adresse HTTPS publique ou le chemin d’une page GunIndex autorisée.',
     'banner_ads.invalid_dates' => 'Choisissez une période valide se terminant dans le futur.',
     'banner_ads.changed' => 'La bannière a changé. Ouvrez lʼaperçu actuel avant de la valider.',
     'banner_ads.pause' => 'Mettre en pause',

@@ -59,7 +59,7 @@ return [
     'banner_ads.media_help' => 'JPEG, PNG of WebP tot 5 MB, GIF tot 1 MB. Een banner zonder afbeelding vereist tekst.',
     'banner_ads.invalid_media' => 'Kies een geldige ondersteunde afbeelding of voer bannertekst in.',
     'banner_ads.invalid_details' => 'Controleer de titel, tekst, plaatsing, het land en de categorie.',
-    'banner_ads.invalid_url' => 'Voer een geldig openbaar HTTPS-adres in.',
+    'banner_ads.invalid_url' => 'Voer een openbaar HTTPS-adres of het pad naar een toegestane GunIndex-pagina in.',
     'banner_ads.invalid_dates' => 'Kies een geldige periode die in de toekomst eindigt.',
     'banner_ads.changed' => 'De banner is gewijzigd. Open het huidige voorbeeld voordat je deze beoordeelt.',
     'banner_ads.pause' => 'Pauzeren',

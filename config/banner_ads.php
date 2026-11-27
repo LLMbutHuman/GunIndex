@@ -16,6 +16,7 @@ function banner_ads_selection(string $placement, string $days): array
 
 function banner_ads_url(string $value): string
 {
+    $value = trim($value);
     if (preg_match('~\A/(?:|marketplace/index\.php|marketplace/search\.php(?:\?(?:type=auction|category_id=[1-9][0-9]{0,18}))?|marketplace/(?:profile\.php\?user_id|view-(?:item|auction)\.php\?id)=[1-9][0-9]{0,18})\z~', $value)) return $value;
     $url = business_validate_url($value);
     if (!str_starts_with($url, 'https://')) throw new InvalidArgumentException(t('banner_ads.invalid_url'));
@@ -324,6 +325,7 @@ function banner_ads_state(array $campaign): string
         if ($booking === 'active' && $campaign['ends_at'] <= gmdate('Y-m-d H:i:s')) return 'expired';
         if ($campaign['invoice_status'] !== 'paid') return 'awaiting_payment';
         if ($campaign['status'] === 'pending') return 'pending';
+        if ($booking === 'active' && $campaign['starts_at'] > gmdate('Y-m-d H:i:s')) return 'scheduled';
         return $booking;
     }
     if ($campaign['placement'] === 'legacy') return $campaign['status'];
@@ -398,6 +400,7 @@ function banner_ads_candidates(PDO $pdo, string $country): array
 
 function banner_ads_public(PDO $pdo, string $country): array
 {
+    // Preserve paid bookings ahead of unbilled campaigns during a historical overlap.
     return array_slice(banner_ads_candidates($pdo,$country),0,BANNER_COUNTRY_CAPACITY);
 }
 

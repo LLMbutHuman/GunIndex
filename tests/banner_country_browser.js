@@ -15,7 +15,8 @@ function fixture(operation, data = {}) {
   let browser;
   try {
     browser=await playwright.chromium.launch(launchOptions());
-    const page=await browser.newPage({locale:'de-DE',viewport:{width:1440,height:1050},reducedMotion:'reduce'});
+    const context=await browser.newContext({locale:'de-DE',viewport:{width:1440,height:1050},reducedMotion:'reduce'});
+    const page=await context.newPage();
     const urls=['/','/marketplace/search.php','/marketplace/search.php?type=auction',
       '/marketplace/search.php?category_id='+seed.category,'/marketplace/search.php?scope=international&country_code=AT',
       '/marketplace/profile.php?user_id='+seed.profile];

@@ -59,7 +59,7 @@ return [
     'banner_ads.media_help' => 'JPEG, PNG eller WebP op til 5 MB, GIF op til 1 MB. Et banner uden billede kræver tekst.',
     'banner_ads.invalid_media' => 'Vælg et gyldigt understøttet billede, eller indtast bannertekst.',
     'banner_ads.invalid_details' => 'Kontrollér titel, tekst, placering, land og kategori.',
-    'banner_ads.invalid_url' => 'Indtast en gyldig offentlig HTTPS-adresse.',
+    'banner_ads.invalid_url' => 'Indtast en offentlig HTTPS-adresse eller stien til en tilladt GunIndex-side.',
     'banner_ads.invalid_dates' => 'Vælg en gyldig periode, der slutter i fremtiden.',
     'banner_ads.changed' => 'Banneret er ændret. Åbn den aktuelle visning før gennemgang.',
     'banner_ads.pause' => 'Sæt på pause',

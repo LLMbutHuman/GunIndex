@@ -59,7 +59,7 @@ return [
     'banner_ads.media_help' => 'JPEG, PNG lub WebP do 5 MB, GIF do 1 MB. Baner bez obrazu wymaga tekstu.',
     'banner_ads.invalid_media' => 'Wybierz prawidłowy obsługiwany obraz lub wpisz tekst banera.',
     'banner_ads.invalid_details' => 'Sprawdź tytuł, tekst, miejsce, kraj i kategorię.',
-    'banner_ads.invalid_url' => 'Wpisz prawidłowy publiczny adres HTTPS.',
+    'banner_ads.invalid_url' => 'Wpisz publiczny adres HTTPS lub ścieżkę do dozwolonej strony GunIndex.',
     'banner_ads.invalid_dates' => 'Wybierz prawidłowy okres, który kończy się w przyszłości.',
     'banner_ads.changed' => 'Baner się zmienił. Otwórz aktualny podgląd przed zatwierdzeniem.',
     'banner_ads.pause' => 'Wstrzymaj',

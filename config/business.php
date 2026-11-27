@@ -163,7 +163,7 @@ function business_create_campaign(PDO $pdo, int $userId, array $input, array $fi
     $category = market_input($input, 'category_id'); $title = trim(market_input($input, 'title'));
     if (!ctype_digit($category) || !catalog_category_allowed($pdo, (int)$category) || !business_country_enabled($pdo, $country)
         || mb_strlen($title) < 5 || mb_strlen($title) > 120 || !catalog_text_allowed($title)) throw new InvalidArgumentException(t('dealer_dashboard.invalid_banner'));
-    $url = business_validate_url(market_input($input, 'target_url'));
+    $url = banner_ads_url(market_input($input, 'target_url'));
     $images = market_prepare_images($files);
     try {
         if (count($images) !== 1) throw new InvalidArgumentException(t('dealer_dashboard.one_banner'));

@@ -59,7 +59,7 @@ return [
     'banner_ads.media_help' => 'JPEG, PNG nebo WebP do 5 MB, GIF do 1 MB. Banner bez obrázku vyžaduje text.',
     'banner_ads.invalid_media' => 'Vyberte platný podporovaný obrázek nebo zadejte text banneru.',
     'banner_ads.invalid_details' => 'Zkontrolujte název, text, umístění, zemi a kategorii.',
-    'banner_ads.invalid_url' => 'Zadejte platnou veřejnou adresu HTTPS.',
+    'banner_ads.invalid_url' => 'Zadejte veřejnou adresu HTTPS nebo cestu k povolené stránce GunIndex.',
     'banner_ads.invalid_dates' => 'Vyberte platné období, které končí v budoucnosti.',
     'banner_ads.changed' => 'Banner byl změněn. Před kontrolou otevřete aktuální náhled.',
     'banner_ads.pause' => 'Pozastavit',

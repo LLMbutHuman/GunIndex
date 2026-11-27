@@ -87,7 +87,7 @@ function banner_ads_fields(PDO $pdo, array $values = [], bool $operator = false)
     $value = static fn(string $key,string $fallback=''): string => (string)($values[$key]??$fallback);
     $countries = geo_countries();
     ?><label class="field"><?=h(t('Titel'))?><input name="title" value="<?=h($value('title'))?>" minlength="5" maxlength="120" required></label>
-    <label class="field"><?=h(t('dealer_dashboard.target_url'))?><input name="target_url" value="<?=h($value('target_url'))?>" type="text" inputmode="url" maxlength="1000" placeholder="https://" required></label>
+    <label class="field"><?=h(t('dealer_dashboard.target_url'))?><input name="target_url" value="<?=h($value('target_url'))?>" type="text" inputmode="url" maxlength="1000" placeholder="https://" required><small><?=h(t('banner_ads.invalid_url'))?></small></label>
     <label class="field"><?=h(t('dealer_dashboard.target_market'))?><select name="country_code" required>
     <?php foreach ($countries as $code=>$label): if (!business_country_enabled($pdo,$code)) continue; ?>
         <option value="<?=h($code)?>" <?=($value('country_code','DE')===$code)?'selected':''?>><?=h($label)?></option>
