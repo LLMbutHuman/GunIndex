@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Het aantal plaatsen is beperkt per land en categorie. Betaalde plaatsingen zijn gemarkeerd als Gesponsord.',
     'promotion.dealer_link' => 'Verkopersprofiel en banners',
     'promotion.reserve' => 'Plaatsing reserveren',
-    'promotion.capacity' => 'Categorieën hebben maximaal drie plaatsen per land en categorie. De startpagina biedt er maximaal twee per land en verkopersbanners maximaal twee per land en categorie.',
+    'promotion.capacity' => 'Er zijn drie gedeelde bannerplaatsen per land. Uitgelichte categorieën hebben drie plaatsen per land en categorie. De startpagina heeft er twee per land.',
     'promotion.listing_required' => 'Je hebt een eigen actieve advertentie nodig. Verkopersbanners moeten ook worden goedgekeurd.',
     'promotion.approved_banner' => 'Goedgekeurde banner',
     'promotion.banner_help' => 'Alleen nodig voor verkopersbanners. Land en categorie moeten overeenkomen met de advertentie.',

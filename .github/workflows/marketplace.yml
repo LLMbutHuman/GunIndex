@@ -49,6 +49,7 @@ jobs:
           fi
       - name: Browser, international controls and automated accessibility
         run: |
+          node tests/banner_country_browser.js
           node tests/browser_smoke.js
           node tests/auction_billing_browser.js
           node tests/trade_browser.js

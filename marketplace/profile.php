@@ -18,6 +18,7 @@ if ($reviewsPage === false) abort_request(422,t('public_profile.invalid_page'));
 $summary = trade_public_ratings($pdo,(int)$id,$reviewsPage);
 $ratings = $summary['rows'];
 $reviewsPages = max(1,(int)ceil($summary['count']/20));
+$publicBannerPlacement = true;
 $pageTitle = (string)$seller['username']; require __DIR__ . '/../includes/header.php';
 ?>
 <main class="page-width section"><header class="page-heading">
@@ -30,6 +31,7 @@ $pageTitle = (string)$seller['username']; require __DIR__ . '/../includes/header
 <?php if($dealer): ?><section class="panel"><p class="eyebrow"><?= h(t('public_profile.dealer')) ?></p>
 <?php if($dealer['logo_revision']!==null): ?><img src="<?=h(profile_image_url($id,'logo',$dealer['logo_revision']))?>" alt="" width="120" height="120" style="object-fit:contain"><?php endif; ?>
 <h2><?= h($dealer['company_name']) ?></h2><p><?= nl2br(h($dealer['address_text'])) ?> · <?= h(geo_countries()[$dealer['country_code']] ?? $dealer['country_code']) ?></p><p><a href="mailto:<?= h($dealer['contact_email']) ?>"><?= h($dealer['contact_email']) ?></a><?php if($dealer['website']): ?> · <a href="<?= h($dealer['website']) ?>" rel="nofollow noopener noreferrer"><?= h(t('public_profile.website')) ?></a><?php endif; ?></p><details><summary><?= h(t('public_profile.company_info')) ?></summary><p><?= nl2br(h($dealer['legal_notice'])) ?></p></details></section><?php endif; ?>
+<?php banner_ads_render($pdo,geo_country()); ?>
 <section class="section"><h2><?= h(t('public_profile.listings')) ?></h2><?php if ($items): ?><div class="cards"><?php foreach ($items as $item) { ui_listing_card($item); } ?></div><?php else: ?><p class="panel"><?= h(t('public_profile.no_listings')) ?></p><?php endif; ?>
 <?php if ($total > 24): ?><nav class="pagination" aria-label="<?= h(t('public_profile.listing_pages')) ?>"><?php if ($page > 1): ?><a class="button secondary" href="?user_id=<?= (int)$id ?>&amp;page=<?= $page - 1 ?>"><?= h(t('Zurück')) ?></a><?php endif; ?><span><?= h(t('public_profile.page', ['page'=>$page])) ?></span><?php if ($page * 24 < $total): ?><a class="button secondary" href="?user_id=<?= (int)$id ?>&amp;page=<?= $page + 1 ?>"><?= h(t('Weiter')) ?></a><?php endif; ?></nav><?php endif; ?></section>
 <section class="section" id="reviews"><h2><?=h(t('public_profile.reviews'))?></h2>

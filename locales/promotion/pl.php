@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Liczba miejsc jest ograniczona według kraju i kategorii. Płatne miejsca mają oznaczenie „Sponsorowane”.',
     'promotion.dealer_link' => 'Profil sprzedawcy i banery',
     'promotion.reserve' => 'Zarezerwuj miejsce',
-    'promotion.capacity' => 'Wyróżnienie kategorii ma do trzech miejsc na kraj i kategorię. Strona główna ma do dwóch miejsc na kraj, a banery mają do dwóch miejsc na kraj i kategorię.',
+    'promotion.capacity' => 'Są trzy wspólne miejsca na banery w każdym kraju. Wyróżnienia kategorii mają po trzy miejsca na kraj i kategorię. Strona główna ma po dwa na kraj.',
     'promotion.listing_required' => 'Musisz mieć własne aktywne ogłoszenie. Baner sprzedawcy dodatkowo wymaga zatwierdzenia.',
     'promotion.approved_banner' => 'Zatwierdzony baner',
     'promotion.banner_help' => 'Wymagany tylko dla banerów sprzedawcy. Kraj i kategoria muszą odpowiadać ogłoszeniu.',

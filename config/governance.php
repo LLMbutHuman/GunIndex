@@ -212,7 +212,7 @@ function governance_subject(PDO $pdo,int $reporter,string $type,int $id): int
     elseif($type==='rating'){$q=$pdo->prepare("SELECT sender_id FROM market_ratings WHERE id=? AND status='active'");$q->execute([$id]);$owner=(int)$q->fetchColumn();}
     elseif($type==='advertisement'){
         $q=$pdo->prepare("SELECT user_id,country_code,placement FROM market_campaigns WHERE id=? AND status='approved'");$q->execute([$id]);$campaign=$q->fetch();
-        $owner=$campaign&&($campaign['placement']==='legacy' || banner_ads_public($pdo,$campaign['placement'],$campaign['country_code'],null,$id))?(int)$campaign['user_id']:0;
+        $owner=$campaign&&banner_ads_public_campaign($pdo,$id,$campaign['country_code'])?(int)$campaign['user_id']:0;
     }
     else throw new InvalidArgumentException('Dieses Meldeziel wird nicht unterstützt.');
     if(!$owner||$owner===$reporter)throw new InvalidArgumentException('Dieses Objekt kann so nicht gemeldet werden.');

@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Platzierungen sind nach Land und Kategorie begrenzt. Bezahlte Platzierungen werden als „Gesponsert“ gekennzeichnet.',
     'promotion.dealer_link' => 'Händlerprofil und Banner',
     'promotion.reserve' => 'Platzierung reservieren',
-    'promotion.capacity' => 'Kategorie-Top bietet bis zu drei Plätze je Land und Kategorie. Für die Startseite gibt es bis zu zwei Plätze je Land, für Händlerbanner bis zu zwei je Land und Kategorie.',
+    'promotion.capacity' => 'Es gibt drei gemeinsame Bannerplätze pro Land. Kategorie-Top hat drei Plätze je Land und Kategorie. Startseiten-Top hat zwei Plätze je Land.',
     'promotion.listing_required' => 'Für eine Platzierung brauchst du ein eigenes aktives Angebot. Bei Händlerbannern muss auch das Banner freigegeben sein.',
     'promotion.approved_banner' => 'Freigegebenes Banner',
     'promotion.banner_help' => 'Nur für Händlerbanner erforderlich. Land und Kategorie müssen dem Angebot entsprechen.',

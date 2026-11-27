@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Počet míst je omezen podle země a kategorie. Placené pozice jsou označené jako sponzorované.',
     'promotion.dealer_link' => 'Profil prodejce a bannery',
     'promotion.reserve' => 'Rezervovat pozici',
-    'promotion.capacity' => 'Kategorie mají až tři pozice na zemi a kategorii. Domovská stránka nabízí až dvě místa na zemi a bannery až dvě místa na zemi a kategorii.',
+    'promotion.capacity' => 'V každé zemi jsou tři společná místa pro bannery. Zvýraznění kategorií mají tři místa na zemi a kategorii. Domovská stránka má dvě místa na zemi.',
     'promotion.listing_required' => 'Potřebujete vlastní aktivní inzerát. Banner prodejce musí být navíc schválený.',
     'promotion.approved_banner' => 'Schválený banner',
     'promotion.banner_help' => 'Povinné pouze pro bannery prodejců. Země a kategorie musí odpovídat inzerátu.',

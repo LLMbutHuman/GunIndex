@@ -6,8 +6,6 @@ if(!in_array($_SERVER['REQUEST_METHOD']??'',['GET','HEAD'],true))abort_request(4
 $id=is_string($_GET['id']??null)?filter_var($_GET['id'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]):false;
 $raw=$_GET['country']??null;if(!$id||!is_string($raw))abort_request(404,t('admin_campaigns.banner_missing'));
 try{$country=business_country($raw);}catch(InvalidArgumentException){abort_request(404,t('admin_campaigns.banner_missing'));}
-$place=$_GET['placement']??null;
-$campaign=$place===null ? business_public_campaign($pdo,(int)$id,$country)
-    : (is_string($place) ? (banner_ads_public($pdo,$place,$country,null,(int)$id)[0]??null) : null);
+$campaign=banner_ads_public_campaign($pdo,(int)$id,$country);
 if(!$campaign)abort_request(404,t('admin_campaigns.banner_missing'));
 banner_ads_serve($campaign,($_GET['still']??null)==='1',static fn()=>business_record_metric($pdo,(int)$id,'impression'));

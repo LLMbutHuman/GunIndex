@@ -1,19 +1,31 @@
 .banner-ads{margin-block:1.5rem}
-.banner-ad-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:1rem}
-.banner-ad-card{min-width:0;border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--surface)}
-.banner-ad-link{position:relative;display:block}
-.banner-ad-creative{position:relative;display:grid;place-items:center;overflow:hidden;aspect-ratio:5/2;background:#183832;color:#fff;isolation:isolate}
+main.page-width>.banner-ads{width:100%}
+.banner-ad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.banner-ad-grid[data-count="1"]{grid-template-columns:minmax(0,32rem)}
+.banner-ad-grid[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.banner-ad-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}
+.banner-ad-link{position:relative;display:block;flex:1;min-height:44px;border-radius:inherit;transition:background .2s}
+.banner-ad-link:hover{background:var(--surface-raised)}
+.banner-ad-link:focus-visible,.banner-ad-report:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.banner-ad-creative{position:relative;display:grid;place-items:center;overflow:hidden;aspect-ratio:5/2;background:var(--carbon-panel);color:var(--carbon-ink);isolation:isolate;border-radius:.95rem .95rem 0 0}
 .banner-ad-creative picture,.banner-ad-creative img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.banner-ad-overlay{position:relative;margin:.7rem;padding:.38rem .6rem;border-radius:.35rem;background:#17352f;color:#fff;text-align:center;font-weight:700;overflow-wrap:anywhere;max-width:calc(100% - 1.4rem);line-height:1.2}
-.banner-ad-dark{background:#121e2d}
-.banner-ad-dark .banner-ad-overlay{background:#121e2d;color:#fff}
+.banner-ad-overlay{position:relative;margin:.45rem;padding:.35rem .65rem;border-radius:.4rem;background:var(--carbon-panel);color:var(--carbon-ink);text-align:center;font-weight:650;overflow-wrap:anywhere;max-width:calc(100% - .9rem);line-height:1.22}
+.banner-ad-dark,.banner-ad-dark .banner-ad-overlay{background:var(--carbon-bg);color:var(--carbon-ink)}
 .banner-ad-light{background:#F5F5F3;color:var(--on-accent)}
 .banner-ad-light .banner-ad-overlay{background:#F5F5F3;color:var(--on-accent)}
-.banner-ad-caption{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;padding:.5rem .75rem;color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
-.banner-ad-caption a{flex-shrink:0;text-decoration:underline}
+.banner-ad-caption{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .65rem;padding:.75rem;color:var(--ink);font-size:.95rem;overflow-wrap:anywhere}
+.banner-ad-label{color:var(--accent-text);font-size:.85rem;font-weight:650}
+.banner-ad-report{align-self:flex-start;display:inline-flex;align-items:center;min-height:44px;padding:.2rem .75rem;color:var(--muted);font-size:.875rem;text-decoration:underline;text-underline-offset:.2em}
 .banner-ad-url{overflow-wrap:anywhere}
 .banner-ad-pixel{position:absolute;width:1px;height:1px;bottom:0;left:0}
 .banner-preview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.9rem;margin-block:1rem}
 .banner-preview figure{margin:0}
 .banner-preview-narrow{max-width:20rem}
 .banner-preview figcaption{padding:.35rem 0;color:var(--muted);font-size:.8rem}
+.banner-country-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:1rem}
+.banner-country-grid article{border:1px solid var(--line);border-radius:.8rem;padding:.75rem;overflow-wrap:anywhere}
+.banner-country-grid article a{display:inline-flex;align-items:center;min-height:44px}
+.banner-country-grid ol{margin:.35rem 0 .65rem;padding-inline-start:1.5rem}
+@media (max-width:1000px){.banner-ad-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:650px){.banner-ad-grid,.banner-ad-grid[data-count="2"]{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.banner-ad-link{transition:none}}

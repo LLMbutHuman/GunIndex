@@ -14,6 +14,7 @@ if($r['operation']==='category'){$slug='business-http-'.bin2hex(random_bytes(8))
 elseif($r['operation']==='profile'){$p=business_dealer_profile($pdo,(int)$id,false);$out=$p?['status'=>$p['status'],'revision'=>business_profile_revision($p)]:null;}
 elseif($r['operation']==='campaigns'){$q=$pdo->prepare('SELECT id,status FROM market_campaigns WHERE user_id=? ORDER BY id DESC LIMIT 100');$q->execute([$id]);$out=$q->fetchAll();}
 elseif($r['operation']==='bookings'){$q=$pdo->prepare('SELECT b.id,b.invoice_id,o.reference,i.gross_cents FROM market_premium_bookings b JOIN market_manual_orders o ON o.invoice_id=b.invoice_id JOIN market_invoices i ON i.id=b.invoice_id WHERE b.user_id=? ORDER BY b.id DESC LIMIT 100');$q->execute([$id]);$out=$q->fetchAll();}
+elseif($r['operation']==='expire_test_banners'){$q=$pdo->prepare("UPDATE market_premium_bookings SET status='expired' WHERE user_id=? AND scope='banner_monthly' AND status='active'");$q->execute([$id]);$out=$q->rowCount();}
 elseif($r['operation']==='stats'){$q=$pdo->prepare('SELECT COALESCE(SUM(s.impressions),0) AS impressions,COALESCE(SUM(s.clicks),0) AS clicks FROM market_ad_daily_stats s JOIN market_campaigns c ON c.id=s.campaign_id WHERE c.user_id=?');$q->execute([$id]);$out=$q->fetch();}
 elseif($r['operation']==='listings'){$q=$pdo->prepare('SELECT COUNT(*) FROM market_listings WHERE seller_id=?');$q->execute([$id]);$out=['count'=>(int)$q->fetchColumn()];}
 else exit(2);
@@ -110,6 +111,7 @@ class BusinessHTTP(unittest.TestCase):
   self.assertEqual(303,admin['browser'].request('/admin/campaigns.php',moderation)[0]);listing=self.seed_listing(user,type='fixed');browser=user['browser'];body=browser.request('/user/promotions.php')[2];key=re.search(r'name="order_key" value="([a-f0-9]{64})"',body).group(1)
   self.assertIn('Ein Kalendermonat',body)
   result=browser.request('/user/promotions.php',dict(csrf_token=browser.token('/user/promotions.php'),action='order',order_key=key,service='banner_monthly',listing_id=listing,campaign_id=campaign['id'],accept_terms='1',**service_terms_fields(body,'banner_monthly')));self.assertEqual(303,result[0]);booking=read(user,'bookings')[0]
+  self.addCleanup(read,user,'expire_test_banners')
   self.assertEqual(404,Browser().request('/marketplace/banner.php?id='+str(campaign['id'])+'&country=DE')[0])
   cents=int(booking['gross_cents']);approval=dict(csrf_token=admin['browser'].token('/admin/settings.php'),invoice_id=booking['invoice_id'],transaction_id='SYNTHETIC'+secrets.token_hex(8).upper(),reference=booking['reference'],received_amount=f'{cents//100}.{cents%100:02}',decision='approve',reason='Synthetic direct account verification',review_confirmed='1')
   self.assertEqual(200,admin['browser'].request('/admin/payments.php',approval)[0])

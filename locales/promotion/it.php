@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'I posti sono limitati per paese e categoria. I posizionamenti a pagamento sono contrassegnati come sponsorizzati.',
     'promotion.dealer_link' => 'Profilo del rivenditore e banner',
     'promotion.reserve' => 'Prenota un posizionamento',
-    'promotion.capacity' => 'Le categorie offrono fino a tre posti per paese e categoria. La pagina iniziale ne offre fino a due per paese e i banner dei rivenditori fino a due per paese e categoria.',
+    'promotion.capacity' => 'Ci sono tre spazi banner condivisi per paese. La visibilità in categoria ha tre spazi per paese e categoria. La pagina iniziale ne ha due per paese.',
     'promotion.listing_required' => 'Devi avere un tuo annuncio attivo. Per pubblicare un banner serve anche la relativa approvazione.',
     'promotion.approved_banner' => 'Banner approvato',
     'promotion.banner_help' => 'Obbligatorio solo per i banner dei rivenditori. Paese e categoria devono corrispondere all’annuncio.',

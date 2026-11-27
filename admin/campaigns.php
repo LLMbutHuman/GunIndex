@@ -29,7 +29,12 @@ if (isset($_GET['image'])) {
 $states = ['all','pending','awaiting_payment','awaiting_review','awaiting_start','scheduled','active','approved','disabled','rejected','removed','expired','cancelled','paid_unfulfilled'];
 $filter = $_GET['status']??'pending';
 if (!is_string($filter) || !in_array($filter,$states,true)) abort_request(422,t('admin_listings.invalid_filter'));
+$countryFilter = $_GET['country']??'';
+if (!is_string($countryFilter) || ($countryFilter!=='' && !isset(geo_countries()[$countryFilter]))) abort_request(422,t('admin_listings.invalid_filter'));
+$countryFilter = $countryFilter==='' ? null : $countryFilter;
 $before = filter_var($_GET['before']??'0',FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])?:null;
+$caseBefore = filter_var($_GET['case_before']??'0',FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])?:null;
+$viewQuery = ['status'=>$filter,'country'=>$countryFilter,'before'=>$before,'case_before'=>$caseBefore];
 if ($method==='POST') {
     require_csrf();
     try {
@@ -46,11 +51,13 @@ if ($method==='POST') {
             business_review_campaign($pdo,$actor,$id,post_string('status',20),post_string('reason',1000));
         } elseif ($id!==null && $action==='review') {
             banner_ads_review($pdo,$actor,$id,post_string('status',20),post_string('reason',1000),post_string('revision',64));
+        } elseif ($id!==null && $action==='resolve_capacity') {
+            banner_ads_resolve_capacity($pdo,$actor,$id,post_string('reason',1000),post_string('replacement',16),post_string('agreed',1)==='1');
         } else {
             throw new InvalidArgumentException(t('admin_campaigns.invalid_decision'));
         }
         $_SESSION['campaign_reviewed'] = true;
-        redirect('/admin/campaigns.php?'.http_build_query(['status'=>$filter,'before'=>$before]));
+        redirect('/admin/campaigns.php?'.http_build_query($viewQuery));
     } catch (InvalidArgumentException|DomainException $exception) {
         http_response_code(422);
         $error = $exception->getMessage();
@@ -62,11 +69,16 @@ if ($method==='POST') {
 }
 $reviewed = $method==='GET' && ($_SESSION['campaign_reviewed']??false)===true;
 if ($reviewed) unset($_SESSION['campaign_reviewed']);
-$rows = banner_ads_rows($pdo,null,$before,$filter);
+$rows = banner_ads_rows($pdo,null,$before,$filter,$countryFilter);
 $more = count($rows)>25;
 if ($more) array_pop($rows);
 $canReviewPayments = rbac_has_permission($pdo,$actor,'finance.manage');
 $reviews = $canReviewPayments ? (int)$pdo->query("SELECT COUNT(*) FROM market_premium_bookings WHERE status='paid_unfulfilled'")->fetchColumn() : 0;
+$cases = banner_ads_capacity_cases($pdo,$countryFilter,$caseBefore);
+$moreCases = count($cases)>25;
+if ($moreCases) array_pop($cases);
+$countries = geo_active_countries($pdo);
+$clock = gmdate('Y-m-d H:i:s');
 include __DIR__.'/../includes/header.php';
 ?>
 <link rel="stylesheet" href="/assets/css/banner-advertising.css">
@@ -75,6 +87,47 @@ include __DIR__.'/../includes/header.php';
     <div class="admin-layout"><?php include __DIR__.'/../includes/admin-nav.php'; ?><div class="admin-content">
         <?php if ($error!==''): ?><p class="notice error" role="alert"><?=h($error)?></p><?php endif; ?>
         <?php if ($reviewed): ?><p class="notice success" role="status"><?=h(t('admin_privacy.saved'))?></p><?php endif; ?>
+        <section class="panel" aria-labelledby="banner-country-inventory">
+            <h2 id="banner-country-inventory"><?=h(t('banner_ads.country_inventory'))?></h2>
+            <p><?=h(t('banner_ads.country_help'))?></p>
+            <div class="banner-country-grid">
+                <?php foreach ($countries as $code=>$label):
+                    $public = banner_ads_candidates($pdo,$code);
+                    $reserved = count(array_filter(banner_ads_capacity_claims($pdo,$code),static fn(array $claim):bool=>$claim[0]<=$clock && $claim[1]>$clock));
+                ?>
+                <article><h3><?=h($label.' ('.$code.')')?></h3><ol>
+                    <?php for ($slot=0;$slot<BANNER_COUNTRY_CAPACITY;$slot++): ?>
+                        <li><?php if (isset($public[$slot])): $id=(int)$public[$slot]['id']; ?>
+                            <a href="?<?=h(http_build_query(['country'=>$code,'status'=>'all','before'=>$id+1]))?>#campaign-<?=$id?>"><?=h($public[$slot]['title'])?></a>
+                        <?php else: ?><?=h(t($slot<$reserved?'banner_ads.slot_reserved':'banner_ads.slot_free'))?><?php endif; ?></li>
+                    <?php endfor; ?></ol>
+                    <?php if (max(count($public),$reserved)>BANNER_COUNTRY_CAPACITY): ?><p class="notice"><?=h(t('banner_ads.over_capacity'))?></p><?php endif; ?>
+                    <a href="?<?=h(http_build_query(['country'=>$code,'status'=>'all']))?>"><?=h(t('banner_ads.country_campaigns',['country'=>$label]))?></a>
+                </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php if ($cases || $caseBefore!==null): ?><section class="panel" id="capacity-cases">
+            <h2><?=h(t('banner_ads.capacity_cases'))?></h2><p><?=h(t('banner_ads.capacity_case_help'))?></p>
+            <ul><?php foreach ($cases as $case): ?>
+                <li><strong><?=h($case['country_code'].' · '.$case['title'])?></strong>
+                    <p><?=h($case['invoice_number'].' · '.payments_status_label($case['invoice_status']).' · '.banner_ads_status_label($case['status']))?></p>
+                    <?php if ($canReviewPayments): ?><details><summary><?=h(t('banner_ads.capacity_resolve'))?></summary>
+                        <form method="post" class="form-grid">
+                            <?=csrf_field()?><input name="action" value="resolve_capacity" type="hidden"><input name="target_id" value="<?=(int)$case['booking_id']?>" type="hidden">
+                            <?php if ($case['invoice_status']==='paid' && $case['immediate_start_at']!==null): ?>
+                                <label class="field"><?=h(t('banner_ads.capacity_replacement'))?><input name="replacement" type="datetime-local"></label>
+                            <?php endif; ?>
+                            <label class="field"><?=h(t('admin_campaigns.reason'))?><textarea name="reason" minlength="10" maxlength="1000" required></textarea></label>
+                            <label><input name="agreed" type="checkbox" value="1" required> <?=h(t('banner_ads.capacity_agreement'))?></label>
+                            <div><button class="button" type="submit"><?=h(t('banner_ads.capacity_resolve'))?></button></div>
+                        </form>
+                    </details><?php endif; ?>
+                </li>
+            <?php endforeach; ?></ul>
+            <?php if ($caseBefore!==null): ?><a class="button secondary" href="?<?=h(http_build_query(array_replace($viewQuery,['case_before'=>null])))?>#capacity-cases"><?=h(t('Zurück'))?></a><?php endif; ?>
+            <?php if ($moreCases): ?><a class="button secondary" href="?<?=h(http_build_query(array_replace($viewQuery,['case_before'=>(int)$cases[array_key_last($cases)]['booking_id']])))?>#capacity-cases"><?=h(t('Weiter'))?></a><?php endif; ?>
+        </section><?php endif; ?>
         <?php if ($reviews): ?><section class="panel"><h2><?=h(t('admin_campaigns.unfulfilled',['count'=>$reviews]))?></h2><p><?=h(t('admin_campaigns.fulfilment_help'))?></p><a class="button secondary" href="/admin/payments.php?status=all"><?=h(t('admin_overview.review_payments'))?></a></section><?php endif; ?>
         <section class="panel">
             <?php if (rbac_has_permission($pdo,$actor,'dealers.manage')): ?><p><a href="/admin/dealers.php"><?=h(t('banner_ads.dealers_title'))?></a></p><?php endif; ?>
@@ -97,6 +150,9 @@ include __DIR__.'/../includes/header.php';
                 <?php endforeach; endforeach; ?>
             </details>
             <form method="get" action="/admin/campaigns.php" class="form-grid">
+                <label class="field"><?=h(t('Land'))?><select name="country"><option value=""><?=h(t('banner_ads.all_markets'))?></option>
+                    <?php foreach (geo_countries() as $code=>$label): ?><option value="<?=h($code)?>" <?=$code===$countryFilter?'selected':''?>><?=h($label)?></option><?php endforeach; ?>
+                </select></label>
                 <label class="field"><?=h(t('dashboard.status'))?><select name="status">
                     <?php foreach ($states as $state): ?><option value="<?=h($state)?>" <?=$state===$filter?'selected':''?>><?=h(banner_ads_status_label($state))?></option><?php endforeach; ?>
                 </select></label><button class="button secondary" type="submit"><?=h(t('admin_listings.apply'))?></button>
@@ -106,7 +162,7 @@ include __DIR__.'/../includes/header.php';
             $id = (int)$row['id'];
             $legacy = $row['placement']==='legacy';
             $removed = $row['status']==='removed'; ?>
-            <section class="panel">
+            <section class="panel" id="campaign-<?=$id?>">
                 <p class="eyebrow"><?=h($row['country_code'].' · '.$row['username'].' · '.banner_ads_status_label($row['view_state']))?></p>
                 <h2><?=h($row['title'])?></h2>
                 <?php if (!$removed) banner_ads_preview($row,'/admin/campaigns.php?image='.$id); ?>
@@ -138,8 +194,8 @@ include __DIR__.'/../includes/header.php';
         <?php endforeach; ?>
         <?php if (!$rows): ?><section class="panel"><p><?=h(t('admin_campaigns.empty'))?></p></section><?php endif; ?>
         <?php if ($more || $before!==null): ?><nav class="pagination" aria-label="<?=h(t('dashboard.pages'))?>">
-            <?php if ($before!==null): ?><a href="?status=<?=h($filter)?>"><?=h(t('Zurück'))?></a><?php endif; ?>
-            <?php if ($more): ?><a href="?status=<?=h($filter)?>&amp;before=<?=(int)$rows[array_key_last($rows)]['id']?>"><?=h(t('Weiter'))?></a><?php endif; ?>
+            <?php if ($before!==null): ?><a href="?<?=h(http_build_query(array_replace($viewQuery,['before'=>null])))?>"><?=h(t('Zurück'))?></a><?php endif; ?>
+            <?php if ($more): ?><a href="?<?=h(http_build_query(array_replace($viewQuery,['before'=>(int)$rows[array_key_last($rows)]['id']])))?>"><?=h(t('Weiter'))?></a><?php endif; ?>
         </nav><?php endif; ?>
     </div></div>
 </main>

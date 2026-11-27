@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Der er et begrænset antal pladser pr. land og kategori. Betalte placeringer er markeret som sponsorerede.',
     'promotion.dealer_link' => 'Forhandlerprofil og bannere',
     'promotion.reserve' => 'Reservér en placering',
-    'promotion.capacity' => 'Kategorioversigter har op til tre pladser pr. land og kategori. Forsiden har op til to pr. land, og forhandlerbannere har op til to pr. land og kategori.',
+    'promotion.capacity' => 'Der er tre fælles bannerpladser pr. land. Kategorifremhævning har tre pr. land og kategori. Forsidefremhævning har to pr. land.',
     'promotion.listing_required' => 'Du skal have din egen aktive annonce. Forhandlerbannere skal også være godkendt.',
     'promotion.approved_banner' => 'Godkendt banner',
     'promotion.banner_help' => 'Kun påkrævet for forhandlerbannere. Land og kategori skal passe til annoncen.',

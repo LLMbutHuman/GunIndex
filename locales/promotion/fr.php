@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Les places sont limitées par pays et par catégorie. Les placements payants portent la mention « Sponsorisé ».',
     'promotion.dealer_link' => 'Profil professionnel et bannières',
     'promotion.reserve' => 'Réserver une mise en avant',
-    'promotion.capacity' => 'Les catégories proposent jusqu’à trois places par pays et par catégorie. L’accueil offre jusqu’à deux places par pays, et les bannières professionnelles jusqu’à deux par pays et par catégorie.',
+    'promotion.capacity' => 'Il existe trois emplacements de bannière par pays. Les mises en avant de catégorie en ont trois par pays et catégorie. L’accueil en a deux par pays.',
     'promotion.listing_required' => 'Vous devez avoir une annonce active. Une bannière publicitaire doit également être approuvée.',
     'promotion.approved_banner' => 'Bannière approuvée',
     'promotion.banner_help' => 'Obligatoire uniquement pour les bannières professionnelles. Le pays et la catégorie doivent correspondre à l’annonce.',

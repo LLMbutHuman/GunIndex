@@ -88,7 +88,7 @@ include __DIR__.'/../includes/header.php';
 <?php if($viewer && $error===''): ?><p><a class="button secondary" href="/user/saved-searches.php?<?=h(http_build_query($filters))?>"><?=h(t('dashboard.alerts'))?></a></p><?php endif; ?>
 <?php if($error):?><div class="notice error" role="alert"><?=h($error)?></div><?php endif;?>
 <?php if ($error === ''): ?>
-    <?php banner_ads_render($pdo,'search',$filters['country_code'],$attributeCategory > 0 ? $attributeCategory : null); ?>
+    <?php banner_ads_render($pdo,geo_country()); ?>
     <?php if ($attributeCategory > 0) ui_sponsored_cards($pdo,$filters['country_code'],$attributeCategory,'category_top',3,$filters['seller_type']); ?>
 <?php endif; ?>
 <div class="results-heading"><p><strong><?=(int)$results['total']?></strong> <?=h(t((int)$results['total']===1?'Entdeckung':'Entdeckungen'))?></p></div>

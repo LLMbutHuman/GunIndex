@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/banner_media.php';
+require_once __DIR__.'/banner_inventory.php';
 
-const BANNER_AD_PLACEMENTS = ['home', 'search'];
+const BANNER_AD_PLACEMENTS = ['country'];
 const BANNER_AD_TERMS = [7, 14, 30];
 
 function banner_ads_selection(string $placement, string $days): array
@@ -15,9 +16,16 @@ function banner_ads_selection(string $placement, string $days): array
 
 function banner_ads_url(string $value): string
 {
+    if (preg_match('~\A/(?:|marketplace/index\.php|marketplace/search\.php(?:\?(?:type=auction|category_id=[1-9][0-9]{0,18}))?|marketplace/(?:profile\.php\?user_id|view-(?:item|auction)\.php\?id)=[1-9][0-9]{0,18})\z~', $value)) return $value;
     $url = business_validate_url($value);
     if (!str_starts_with($url, 'https://')) throw new InvalidArgumentException(t('banner_ads.invalid_url'));
     return $url;
+}
+
+function banner_ads_destination(array $campaign): string
+{
+    return $campaign['placement'] === 'legacy' && str_starts_with($campaign['target_url'],'http://')
+        ? business_validate_url($campaign['target_url']) : banner_ads_url($campaign['target_url']);
 }
 
 function banner_ads_input(PDO $pdo, array $input): array
@@ -96,7 +104,7 @@ function banner_ads_time(string $value): string
 function banner_ads_operator_save(PDO $pdo, int $actor, ?int $id, array $input, array $upload): int
 {
     business_assert_manager($pdo, $actor);
-    [$placement] = banner_ads_selection(market_input($input,'placement'), '7');
+    $placement = 'country';
     $details = banner_ads_input($pdo, $input);
     $start = banner_ads_time(market_input($input, 'scheduled_from'));
     $end = banner_ads_time(market_input($input, 'scheduled_until'));
@@ -108,6 +116,15 @@ function banner_ads_operator_save(PDO $pdo, int $actor, ?int $id, array $input, 
     try {
         $pdo->beginTransaction();
         business_assert_manager($pdo, $actor);
+        $countries = [$details['country_code']];
+        if ($id !== null) {
+            $q = $pdo->prepare('SELECT country_code FROM market_campaigns WHERE id=? AND operator_owned=1');
+            $q->execute([$id]);
+            if (($previousCountry = $q->fetchColumn()) === false) throw new DomainException(t('admin_campaigns.campaign_missing'));
+            $countries[] = $previousCountry;
+        }
+        sort($countries,SORT_STRING);
+        foreach (array_unique($countries) as $country) banner_ads_lock_country($pdo,$country,$country===$details['country_code']);
         if ($id === null) {
             $id = banner_ads_insert($pdo,$actor,$details,$media,$placement,true,(int)$priority,$start,$end,null,null,null);
             $action = 'campaign.operator_created';
@@ -116,6 +133,7 @@ function banner_ads_operator_save(PDO $pdo, int $actor, ?int $id, array $input, 
             $q->execute([$id]);
             $previous = $q->fetch();
             if (!$previous || $previous['status'] === 'removed') throw new DomainException(t('admin_campaigns.campaign_missing'));
+            if ($previous['country_code'] !== $previousCountry) throw new DomainException(t('banner_ads.changed'));
             $mediaFormat = $media['format'] ?? $previous['creative_format'];
             if ($mediaFormat === 'text' && $details['overlay_text'] === '') throw new InvalidArgumentException(t('banner_ads.invalid_media'));
             $q = $pdo->prepare("UPDATE market_campaigns SET country_code=?,category_id=?,title=?,target_url=?,placement=?,priority=?,overlay_text=?,overlay_style=?,scheduled_from=?,scheduled_until=?,storage_key=?,creative_format=?,status='pending' WHERE id=?");
@@ -134,23 +152,12 @@ function banner_ads_operator_save(PDO $pdo, int $actor, ?int $id, array $input, 
     }
 }
 
-/** Reserve from three country/placement slots regardless of category. */
-function banner_ads_reserve(PDO $pdo, int $invoice, int $user, int $campaign, string $country, string $placement): void
+function banner_ads_reserve(PDO $pdo, int $invoice, int $user, int $campaign, string $country, int $days): void
 {
-    if (!$pdo->inTransaction()) throw new LogicException('Advertising reservation requires a transaction.');
-    $scope = 'banner_'.$placement;
-    $insert = $pdo->prepare('INSERT INTO market_business_inventory(country_code,scope,category_id,slot_no) VALUES (?,?,0,?) ON DUPLICATE KEY UPDATE id=id');
-    for ($slot = 1; $slot <= 3; $slot++) $insert->execute([$country,$scope,$slot]);
-    $q = $pdo->prepare('SELECT id FROM market_business_inventory WHERE country_code=? AND scope=? AND category_id=0 ORDER BY slot_no FOR UPDATE');
-    $q->execute([$country,$scope]);
-    foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $slot) {
-        if (business_inventory_busy($pdo,(int)$slot)) continue;
-        $until = gmdate('Y-m-d H:i:s', time() + business_reservation_minutes($pdo)*60);
-        $q = $pdo->prepare('INSERT INTO market_premium_bookings(invoice_id,user_id,inventory_id,listing_id,campaign_id,country_code,scope,category_id,reserved_until) VALUES (?,?,?,NULL,?,?,?,0,?)');
-        $q->execute([$invoice,$user,$slot,$campaign,$country,$scope,$until]);
-        return;
-    }
-    throw new DomainException(t('promotion.fully_booked'));
+    $until = gmdate('Y-m-d H:i:s',time()+business_reservation_minutes($pdo)*60);
+    $slot = banner_ads_reservation_inventory($pdo,$country,$until,$days,true);
+    $pdo->prepare("INSERT INTO market_premium_bookings(invoice_id,user_id,inventory_id,listing_id,campaign_id,country_code,scope,category_id,reserved_until)
+        VALUES (?,?,?,NULL,?,?,'banner_country',0,?)")->execute([$invoice,$user,$slot,$campaign,$country,$until]);
 }
 
 function banner_ads_submit(PDO $pdo, int $userId, array $input, array $upload): array
@@ -192,10 +199,11 @@ function banner_ads_submit(PDO $pdo, int $userId, array $input, array $upload): 
             if (($reason = business_reason($pdo)) !== null) throw new PaymentUnavailable($reason);
             $documents = consent_check($pdo,'checkout',$input,$quote['language']);
         }
+        banner_ads_lock_country($pdo,$details['country_code'],true);
         $id = banner_ads_insert($pdo,$userId,$details,$media,$place,false,0,null,null,$days,$gross,$request);
         if ($gross > 0) {
             $invoice = manual_store_order($pdo,$userId,null,'banner_advertising',$request,1,$quote);
-            banner_ads_reserve($pdo,$invoice,$userId,$id,$details['country_code'],$place);
+            banner_ads_reserve($pdo,$invoice,$userId,$id,$details['country_code'],$days);
             finance_prepare_order($pdo,$invoice,$userId);
             consent_record($pdo,$userId,'checkout',$invoice,$documents);
         }
@@ -237,10 +245,15 @@ function banner_ads_review(PDO $pdo, int $actor, int $campaignId, string $decisi
             $invoiceStatus = $q->fetchColumn();
             $booking = business_locked_booking($pdo,(int)$invoiceId);
         }
+        $q = $pdo->prepare('SELECT country_code FROM market_campaigns WHERE id=?');
+        $q->execute([$campaignId]);
+        $country = $q->fetchColumn();
+        if ($country === false) throw new DomainException(t('admin_campaigns.campaign_missing'));
+        banner_ads_lock_country($pdo,$country,$decision==='approved');
         $q = $pdo->prepare('SELECT * FROM market_campaigns WHERE id=? FOR UPDATE');
         $q->execute([$campaignId]);
         $campaign = $q->fetch();
-        if (!$campaign || $campaign['placement'] === 'legacy' || $campaign['status'] === 'removed') {
+        if (!$campaign || $campaign['country_code'] !== $country || $campaign['placement'] === 'legacy' || $campaign['status'] === 'removed') {
             throw new DomainException(t('admin_campaigns.campaign_missing'));
         }
         if (!hash_equals(banner_ads_revision($campaign),$revision)) throw new DomainException(t('banner_ads.changed'));
@@ -258,6 +271,10 @@ function banner_ads_review(PDO $pdo, int $actor, int $campaignId, string $decisi
                 $end = (new DateTimeImmutable($start,new DateTimeZone('UTC')))->modify('+'.(int)$campaign['term_days'].' days')->format('Y-m-d H:i:s');
             }
             if ($end !== null && $end <= gmdate('Y-m-d H:i:s')) throw new DomainException(t('banner_ads.invalid_dates'));
+            if ((bool)$campaign['operator_owned'] || ($campaign['agreed_gross_cents'] !== null && (int)$campaign['agreed_gross_cents'] === 0)) {
+                if ($start === null || $end === null) throw new DomainException(t('banner_ads.invalid_dates'));
+                banner_ads_assert_capacity($pdo,$country,max($start,gmdate('Y-m-d H:i:s')),$end,null,$campaignId);
+            }
         }
         $q = $pdo->prepare('UPDATE market_campaigns SET status=?,moderation_reason=?,moderated_by=?,scheduled_from=?,scheduled_until=? WHERE id=?');
         $q->execute([$decision,$reason,$actor,$start,$end,$campaignId]);
@@ -316,12 +333,13 @@ function banner_ads_state(array $campaign): string
     return $campaign['scheduled_from'] > $now ? 'scheduled' : 'active';
 }
 
-function banner_ads_rows(PDO $pdo, ?int $owner = null, ?int $before = null, ?string $state = null): array
+function banner_ads_rows(PDO $pdo, ?int $owner = null, ?int $before = null, ?string $state = null, ?string $country = null): array
 {
     $conditions = [];
     $params = [];
     if ($owner !== null) { $conditions[] = 'c.user_id=? AND c.operator_owned=0'; $params[] = $owner; }
     if ($before !== null) { $conditions[] = 'c.id<?'; $params[] = $before; }
+    if ($country !== null) { $conditions[] = 'c.country_code=?'; $params[] = $country; }
     $where = $conditions ? ' WHERE '.implode(' AND ',$conditions) : '';
     $filter = '';
     if ($state !== null && $state !== 'all') { $filter = ' HAVING view_state=?'; $params[] = $state; }
@@ -334,6 +352,7 @@ function banner_ads_rows(PDO $pdo, ?int $owner = null, ?int $before = null, ?str
           WHEN b.id IS NOT NULL AND i.status<>\'paid\' THEN \'awaiting_payment\'
           WHEN b.status=\'awaiting_review\' THEN b.status
           WHEN c.status=\'pending\' THEN c.status
+          WHEN b.status=\'active\' AND b.starts_at>UTC_TIMESTAMP() THEN \'scheduled\'
           WHEN b.id IS NOT NULL THEN b.status
           WHEN c.placement=\'legacy\' THEN c.status
           WHEN c.scheduled_until<=UTC_TIMESTAMP() THEN \'expired\'
@@ -347,37 +366,47 @@ function banner_ads_rows(PDO $pdo, ?int $owner = null, ?int $before = null, ?str
     return $q->fetchAll();
 }
 
-function banner_ads_public(PDO $pdo, string $place, string $country, ?int $category = null, ?int $id = null): array
+function banner_ads_candidates(PDO $pdo, string $country): array
 {
-    if (!in_array($place,BANNER_AD_PLACEMENTS,true) || !business_country_enabled($pdo,$country)
-        || site_setting($pdo,'business_promotions_enabled','0') !== '1') return [];
-    $params = [$place,$country];
-    $scope = $id === null ? ' AND (c.category_id IS NULL OR ? IS NULL OR c.category_id=?)' : ' AND c.id=?';
-    $params = array_merge($params,$id===null ? [$category,$category] : [$id]);
-    $q = $pdo->prepare("SELECT c.*,EXISTS(SELECT 1 FROM market_premium_bookings b JOIN market_invoices i ON i.id=b.invoice_id
-        WHERE b.campaign_id=c.id AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP()
-          AND i.status='paid' AND i.gross_cents=c.agreed_gross_cents) AS paid_active
+    if (!business_country_enabled($pdo,$country) || site_setting($pdo,'business_promotions_enabled','0')!=='1') return [];
+    $dealerEnabled = site_setting($pdo,'dealer_profiles_enabled','1')==='1';
+    $q = $pdo->prepare("SELECT c.*, (SELECT MIN(b.starts_at) FROM market_premium_bookings b
+        JOIN market_invoices i ON i.id=b.invoice_id AND i.user_id=b.user_id AND i.status='paid'
+        WHERE b.campaign_id=c.id AND b.country_code=c.country_code AND b.user_id=c.user_id
+          AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP()
+          AND ((c.placement='legacy' AND b.scope='banner_monthly' AND i.service_code='banner_monthly')
+            OR (c.placement IN ('home','search','country') AND b.scope=CONCAT('banner_',c.placement)
+              AND i.service_code='banner_advertising' AND i.gross_cents=c.agreed_gross_cents))) AS paid_since
         FROM market_campaigns c JOIN users u ON u.id=c.user_id AND u.is_active=1
         LEFT JOIN market_dealer_profiles p ON p.user_id=c.user_id
-        WHERE c.placement=? AND c.country_code=? AND c.status='approved' AND (c.operator_owned=1 OR p.status='published')".$scope.
-        " AND (EXISTS(SELECT 1 FROM market_premium_bookings b JOIN market_invoices i ON i.id=b.invoice_id
-          WHERE b.campaign_id=c.id AND b.status='active' AND b.starts_at<=UTC_TIMESTAMP() AND b.ends_at>UTC_TIMESTAMP()
-            AND i.status='paid' AND i.gross_cents=c.agreed_gross_cents)
-          OR ((c.operator_owned=1 OR c.agreed_gross_cents=0) AND c.scheduled_from<=UTC_TIMESTAMP() AND c.scheduled_until>UTC_TIMESTAMP()))
-        ORDER BY paid_active DESC,c.priority DESC,c.id DESC LIMIT 100");
-    $q->execute($params);
-    $rows = [];
-    $enabled = site_setting($pdo,'dealer_profiles_enabled','1') === '1';
+        WHERE c.country_code=? AND c.status='approved' AND (c.operator_owned=1 OR (?=1 AND p.status='published'))
+        HAVING paid_since IS NOT NULL OR ((c.operator_owned=1 OR c.agreed_gross_cents=0)
+          AND c.scheduled_from<=UTC_TIMESTAMP() AND c.scheduled_until>UTC_TIMESTAMP())
+        ORDER BY (paid_since IS NULL), paid_since, c.priority DESC, c.id");
+    $q->execute([$country,(int)$dealerEnabled]);
     $candidates = $q->fetchAll();
     if (!$candidates) return [];
     $categories = catalog_rows($pdo);
-    foreach ($candidates as $campaign) {
-        if ((!$enabled && !(bool)$campaign['operator_owned']) || ($campaign['category_id'] !== null && !catalog_row_allowed($categories,(int)$campaign['category_id']))) continue;
-        try { banner_ads_url($campaign['target_url']); } catch (InvalidArgumentException) { continue; }
-        $rows[] = $campaign;
-        if (count($rows) === 3) break;
+    $public = [];
+    foreach ($candidates as $row) {
+        if ($row['category_id'] !== null && !catalog_row_allowed($categories,(int)$row['category_id'])) continue;
+        try { banner_ads_destination($row); } catch (InvalidArgumentException) { continue; }
+        $public[] = $row;
     }
-    return $rows;
+    return $public;
+}
+
+function banner_ads_public(PDO $pdo, string $country): array
+{
+    return array_slice(banner_ads_candidates($pdo,$country),0,BANNER_COUNTRY_CAPACITY);
+}
+
+function banner_ads_public_campaign(PDO $pdo, int $id, string $country): ?array
+{
+    foreach (banner_ads_public($pdo,$country) as $row) {
+        if ((int)$row['id'] === $id) return $row;
+    }
+    return null;
 }
 
 function banner_ads_serve(array $campaign, bool $thumbnail = false, ?callable $onServe = null): never

@@ -12,7 +12,7 @@ return [
     'promotion.intro' => 'Slots are limited by country and category. Paid placements are marked as Sponsored.',
     'promotion.dealer_link' => 'Dealer profile and banners',
     'promotion.reserve' => 'Reserve a placement',
-    'promotion.capacity' => 'Category features have up to three slots per country and category. The home page has up to two per country, and dealer banners have up to two per country and category.',
+    'promotion.capacity' => 'There are three shared banner slots per country. Category features have three slots per country and category. Home features have two per country.',
     'promotion.listing_required' => 'You need an active listing of your own. Dealer banners also require an approved banner.',
     'promotion.approved_banner' => 'Approved banner',
     'promotion.banner_help' => 'Only required for dealer banners. The country and category must match the listing.',

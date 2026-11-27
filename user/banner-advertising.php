@@ -24,7 +24,7 @@ if ($method==='POST') {
         $action = post_string('action',12);
         if ($action==='submit') {
             $offer = post_string('offer',16);
-            if (!preg_match('/\A(home|search)_(7|14|30)\z/',$offer,$selection)) throw new InvalidArgumentException(t('promotion.invalid_selection'));
+            if (!preg_match('/\A(country)_(7|14|30)\z/',$offer,$selection)) throw new InvalidArgumentException(t('promotion.invalid_selection'));
             $submitted = ['placement'=>$selection[1],'term_days'=>$selection[2]]+$_POST;
             [$campaign,$invoice] = banner_ads_submit($pdo,$userId,$submitted,$_FILES['creative']??[]);
             if ($invoice!==null) redirect('/user/billing.php?order='.$invoice);
@@ -33,7 +33,7 @@ if ($method==='POST') {
         } elseif ($action==='start') {
             $id = post_string('booking_id',20);
             if (!ctype_digit($id) || (int)$id<1) throw new InvalidArgumentException(t('promotion.booking_missing'));
-            $q = $pdo->prepare("SELECT 1 FROM market_premium_bookings WHERE id=? AND user_id=? AND scope IN ('banner_home','banner_search')");
+            $q = $pdo->prepare("SELECT 1 FROM market_premium_bookings WHERE id=? AND user_id=? AND scope IN ('banner_country','banner_home','banner_search')");
             $q->execute([(int)$id,$userId]);
             if (!$q->fetchColumn()) throw new DomainException(t('promotion.booking_missing'));
             business_start_booking($pdo,$userId,(int)$id,post_string('immediate_start')==='1',$_POST);

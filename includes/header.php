@@ -122,12 +122,7 @@ if (!function_exists('ui_icon')) {
 
 
 <?php
-if(!function_exists('ui_country_ads')){
-    function ui_country_ads(PDO $pdo,string $country,?int $category=null):void {
-        if(!function_exists('business_banners'))return;
-        $campaigns=business_banners($pdo,$country,$category,2);if(!$campaigns)return;
-        ?><section class="page-width country-advertisements" aria-label="<?=h(t('Werbung'))?>"><p class="eyebrow"><?=h(t('Werbung'))?> · <?=h(geo_countries()[$country]??$country)?></p><div class="country-banner-grid"><?php foreach($campaigns as $campaign):?><a class="country-banner" href="<?=h($campaign['click_url']??('/marketplace/banner-click.php?id='.(int)$campaign['id'].'&country='.rawurlencode($country)))?>"><img src="<?=h($campaign['image_url']??('/marketplace/banner.php?id='.(int)$campaign['id'].'&country='.rawurlencode($country)))?>" alt="<?=h($campaign['title'])?>" loading="lazy" width="1200" height="300"><span><?=h(t('Gesponsert'))?> · <?=h($campaign['title'])?></span></a><?php endforeach;?></div></section><?php
-    }
+if(!function_exists('ui_sponsored_cards')){
     function ui_sponsored_cards(PDO $pdo,string $country,?int $category,string $kind,int $limit,string $sellerType=''):void {
         if(!function_exists('business_sponsored'))return;$items=business_sponsored($pdo,$country,$category,$kind,$limit);if(!$items)return;
         if (in_array($sellerType,['private','dealer'],true)) {
