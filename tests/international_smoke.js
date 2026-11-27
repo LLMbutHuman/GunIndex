@@ -10,14 +10,14 @@ const origin='http://127.0.0.1:8081';
  try{
   const policySections=['rules','payments','privacy','operator'];
   const policyHeadings={
-   de:['Plattformregeln','Zahlungen und Gebühren','Datenschutz','Betreiberangaben'],
-   en:['Marketplace rules','Payments and fees','Privacy','Operator details'],
-   fr:['Règles de la place de marché','Paiements et frais','Confidentialité','Informations sur l’exploitant'],
-   nl:['Marktplaatsregels','Betalingen en kosten','Privacy','Gegevens van de exploitant'],
-   pl:['Zasady rynku','Płatności i opłaty','Prywatność','Dane operatora'],
+   de:['Plattformregeln','Zahlungen und Gebühren','Datenschutz','Impressum'],
+   en:['Marketplace rules','Payments and fees','Privacy','Legal notice'],
+   fr:['Règles de la place de marché','Paiements et frais','Confidentialité','Mentions légales'],
+   nl:['Marktplaatsregels','Betalingen en kosten','Privacy','Colofon'],
+   pl:['Zasady rynku','Płatności i opłaty','Prywatność','Informacje prawne'],
    cs:['Pravidla tržiště','Platby a poplatky','Ochrana údajů','Údaje o provozovateli'],
-   da:['Markedspladsens regler','Betalinger og gebyrer','Databeskyttelse','Operatøroplysninger'],
-   it:['Regole del mercato','Pagamenti e commissioni','Privacy','Dati del gestore'],
+   da:['Markedspladsens regler','Betalinger og gebyrer','Databeskyttelse','Impressum'],
+   it:['Regole del mercato','Pagamenti e commissioni','Privacy','Note legali'],
   };
   const context=await browser.newContext({locale:'de-DE',viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   for(const [locale,country] of [['de','DE'],['en','AT'],['fr','FR'],['nl','NL'],['pl','PL'],['cs','CZ'],['da','DK'],['it','CH']]){
@@ -55,8 +55,8 @@ const origin='http://127.0.0.1:8081';
    }
    checks.push('localized_public_information_'+locale);
   }
-  await page.goto(origin+'/marketplace/search.php',{waitUntil:'networkidle'});const search=page.locator('form.search-toolbar');await search.locator('[name=scope]').selectOption('international');await search.locator('[name=country_code]').selectOption('DE');
-  await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),search.locator('button[type=submit]').click()]);assert.strictEqual(new URL(page.url()).searchParams.get('scope'),'international');assert.strictEqual(await page.locator('form.search-toolbar [name=scope]').inputValue(),'international');checks.push('international_search_control');
+  await page.goto(origin+'/marketplace/search.php',{waitUntil:'networkidle'});const search=page.locator('form.search-toolbar');await search.locator('.search-more summary').click();await search.locator('[name=scope]').selectOption('international');await search.locator('[name=country_code]').selectOption('DE');
+  await Promise.all([page.waitForNavigation({waitUntil:'networkidle'}),search.locator('.search-more button[type=submit]').click()]);assert.strictEqual(new URL(page.url()).searchParams.get('scope'),'international');assert.strictEqual(await page.locator('form.search-toolbar [name=scope]').inputValue(),'international');checks.push('international_search_control');
   assert.deepStrictEqual(errors,[]);console.log(JSON.stringify({result:'PASS',checks,js_errors:0,scope:'Eight mobile language/country, login, registration and error journeys plus international search; exact distances covered by synthetic DB tests'}));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error.message);process.exit(1)});
