@@ -25,7 +25,7 @@ function banner_ads_render(PDO $pdo, string $placement, string $country, ?int $c
     $items = banner_ads_public($pdo,$placement,$country,$category);
     if (count($items) < 3) {
         foreach (business_banners($pdo,$country,$category,3-count($items)) as $legacy) {
-            try { banner_ads_url($legacy['target_url']); } catch (InvalidArgumentException) { continue; }
+            try { business_validate_url($legacy['target_url']); } catch (InvalidArgumentException) { continue; }
             $items[] = $legacy + ['placement'=>'legacy','creative_format'=>'webp','overlay_style'=>'plain','overlay_text'=>''];
             if (count($items) === 3) break;
         }

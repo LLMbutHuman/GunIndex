@@ -10,6 +10,6 @@ $place=$_GET['placement']??null;
 $campaign=$place===null ? business_public_campaign($pdo,(int)$id,$country)
     : (is_string($place) ? (banner_ads_public($pdo,$place,$country,null,(int)$id)[0]??null) : null);
 if(!$campaign)abort_request(404,t('admin_campaigns.banner_missing'));
-try{$url=banner_ads_url($campaign['target_url']);}catch(InvalidArgumentException){abort_request(404,t('admin_campaigns.banner_missing'));}
+try{$url=$place===null?business_validate_url($campaign['target_url']):banner_ads_url($campaign['target_url']);}catch(InvalidArgumentException){abort_request(404,t('admin_campaigns.banner_missing'));}
 if(($_SERVER['REQUEST_METHOD']??'GET')==='GET')business_record_metric($pdo,(int)$id,'click');
 header('Cache-Control: private, no-store');header('Referrer-Policy: no-referrer');header('Location: '.$url,true,303);exit;

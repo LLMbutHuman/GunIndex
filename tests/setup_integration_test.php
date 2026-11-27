@@ -120,7 +120,7 @@ try {
         setup_integration_check($result['status'] === 200);
         setup_integration_check(str_contains($result['headers']['cache-control'] ?? '', 'no-store'));
         setup_integration_check(str_contains($result['headers']['x-robots-tag'] ?? '', 'noindex'));
-        setup_integration_check(preg_match_all('/id="setup-[a-z]+"/', $result['body']) === 18);
+        setup_integration_check(preg_match_all('/<section\b[^>]*\bid="setup-[a-z]+"/', $result['body']) === 18);
         foreach(['paypal','paypal_refund','bank','bitcoin','escrow'] as $provider){
             setup_integration_check(str_contains($result['body'],'data-provider="'.$provider.'"'));
         }
