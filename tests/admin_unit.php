@@ -44,6 +44,8 @@ $tests = [
         admin_assert(!catalog_text_allowed('Waffen und Munition'), 'Restricted category terms must be rejected.');
         admin_assert(!catalog_text_allowed('Camping PISTOLE'), 'Case changes cannot bypass platform rules.');
         admin_assert(catalog_text_allowed('Waffeleisen und Glockenspiel'), 'Ordinary household words must remain available.');
+        admin_assert(catalog_text_allowed('Patronen für Tintenstrahldrucker'), 'Printer supplies must remain available.');
+        admin_assert(!catalog_text_allowed('Patronen für Drucker und Munition'), 'Printer supplies must not override other restrictions.');
     },
     'color_and_scalar_injection_rejected' => static function (): void {
         admin_assert(site_setting_validate('accent', '#ABCDEF') === '#abcdef', 'Colors must normalize safely.');

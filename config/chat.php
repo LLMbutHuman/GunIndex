@@ -20,7 +20,7 @@ function chat_context(PDO $pdo,int $user,int $listing,int $peer):array {
  $q=$pdo->prepare('SELECT id,username,is_active,preferred_locale FROM users WHERE id=?');$q->execute([$peer]);$person=$q->fetch();if(!$person)throw new MarketNotFoundException(t('e2ee.legacy_not_found'));
  $pair=[$listing,$user,$peer,$peer,$user];$where='listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?))';
  $q=$pdo->prepare('SELECT 1 FROM market_messages WHERE '.$where.' LIMIT 1');$q->execute($pair);$exists=(bool)$q->fetchColumn();
- $public=($item['seller_active']==1)&&catalog_category_allowed($pdo,(int)$item['category_id'])&&geo_country_enabled($pdo,$item['country_code']);
+ $public=($item['seller_active']==1)&&(int)$item['ewb_required']===0&&catalog_category_allowed($pdo,(int)$item['category_id'])&&geo_country_enabled($pdo,$item['country_code']);
  $winner=$item['type']==='auction'&&in_array($item['status'],['ended','sold'],true)&&(int)($item['highest_bidder_id']??0)>0&&in_array((int)$item['highest_bidder_id'],[$user,$peer],true);
  $trade=false;
  if(!$exists&&!$winner&&$item['status']==='sold'&&in_array($item['type'],['fixed','negotiated'],true)){

@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Splněno',
     'setup.launch.failed' => 'Čeká na vyřešení',
     'setup.launch.open' => 'Otevřít tržiště',
-    'setup.launch.confirm' => 'Ověřil jsem doménu a HTTPS zvenčí, obdržel zkušební e-mail a ověřil požadovaná schválení. Chci tržiště zpřístupnit veřejnosti.',
+    'setup.launch.confirm' => 'Ověřil jsem doménu a HTTPS zvenčí. Chci tržiště zpřístupnit veřejnosti.',
     'setup.launch.recheck' => 'Proveďte provozní kontroly znovu. Před spuštěním musí být všechny kontroly úspěšné během posledních 15 minut.',
     'setup.check.database' => 'Databáze a tabulky nastavení',
     'setup.check.https' => 'HTTPS v této relaci a zabezpečené soubory cookie',

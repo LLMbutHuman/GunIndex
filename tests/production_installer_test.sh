@@ -12,6 +12,7 @@ trap '[[ ! -x "$compose" ]] || sudo "$compose" stop >/dev/null 2>&1 || true' EXI
 
 bash tests/production_package_test.sh
 bash ops/production/build-ubuntu-installer.sh "$GITHUB_SHA" "$installer"
+sha256sum "$installer"
 "$installer" --verify
 
 legacy_directory=/srv/gunindex-legacy-ci
@@ -33,6 +34,7 @@ for timer in gunindex-monitor.timer gunindex-backup.timer; do
     sudo systemctl is-active --quiet "$timer"
 done
 sudo "$compose" exec -T php php ops/health.php --installation
+sudo "$compose" exec -T php sh -ec '! command -v git && ! command -v composer && php ops/production/verify-composer-vendor.php'
 db_security="$(sudo "$compose" exec -T db sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --batch --skip-column-names -uroot' <<'SQL'
 SELECT VERSION(), @@global.local_infile,
     (SELECT COUNT(*) FROM information_schema.plugins WHERE plugin_name='mysqlx' AND plugin_status='ACTIVE');

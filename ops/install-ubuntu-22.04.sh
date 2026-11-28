@@ -215,9 +215,11 @@ if [[ -n "$archive_sha256" ]]; then
 else
  bash "$source_dir/ops/production/archive-release.sh" "$source_dir" "$commit" "$release_dir"
 fi
-for file in public/index.php sql/schema.sql composer.lock assets/vendor/openpgp/openpgp.min.mjs; do
+for file in public/index.php sql/schema.sql composer.lock assets/vendor/openpgp/openpgp.min.mjs \
+ ops/production/composer-vendor.tar.gz ops/production/composer-vendor.sha256; do
  test -f "$release_dir/$file"
 done
+(cd -- "$release_dir" && sha256sum -c ops/production/composer-vendor.sha256)
 docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \
  --file "$release_dir/ops/production/Dockerfile" --tag "gunindex-production:$release" "$release_dir"
 docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt \

@@ -17,7 +17,7 @@ done
 printf '%s\n' '/admin/retired.php export-ignore' > "$source/.gitattributes"
 printf '%s\n' '.env' > "$source/.gitignore"
 printf 'fixture\n' > "$source/admin/retired.php"
-for file in sql/schema.sql public/index.php composer.lock assets/vendor/openpgp/openpgp.min.mjs ops/production/Dockerfile ops/production/Dockerfile.mailer; do
+for file in sql/schema.sql public/index.php composer.lock assets/vendor/openpgp/openpgp.min.mjs ops/production/Dockerfile ops/production/Dockerfile.mailer ops/production/composer-vendor.tar.gz ops/production/composer-vendor.sha256; do
     printf 'fixture\n' > "$source/$file"
 done
 

@@ -205,13 +205,9 @@ function setup_launch_checks(array $facts): array
         'maintenance' => ($facts['maintenance_clear'] ?? false) === true,
         'storage' => ($facts['storage_probe'] ?? false) === true,
         'workers' => $steps['workers'] === 'tested',
-        'operator' => $steps['operator'] === 'configured' && $steps['brand'] === 'configured',
-        'catalog' => $steps['categories'] === 'configured' && $steps['geography'] === 'configured',
-        'mail' => $steps['mail'] === 'external' && ($facts['mail_failed'] ?? null) === 0,
-        'legal' => $steps['legal'] === 'external',
-        'recovery' => $steps['backups'] === 'tested',
-        'payment_gates' => $steps['providers'] !== 'error' && $steps['finance'] !== 'error'
-            && (($facts['manual_enabled'] ?? false) === false || $steps['paypal'] === 'external'),
+        // Provider, operator and recovery details keep their own status in the wizard.
+        // Launching the general marketplace cannot grant payment or invoice capabilities.
+        'catalog' => ($facts['categories'] ?? 0) > 0 && ($facts['countries'] ?? 0) > 0,
     ];
 }
 

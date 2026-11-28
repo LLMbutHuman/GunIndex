@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Bestanden',
     'setup.launch.failed' => 'Offen',
     'setup.launch.open' => 'Marktplatz freischalten',
-    'setup.launch.confirm' => 'Ich habe Domain und HTTPS von außen, den Empfang einer Testmail und die erforderlichen Freigaben geprüft. Ich möchte den Marktplatz öffentlich zugänglich machen.',
+    'setup.launch.confirm' => 'Ich habe Domain und HTTPS von außen geprüft. Ich möchte den Marktplatz öffentlich zugänglich machen.',
     'setup.launch.recheck' => 'Führe die Betriebsprüfungen erneut aus. Für die Freischaltung müssen alle Prüfungen innerhalb der letzten 15 Minuten bestanden worden sein.',
     'setup.check.database' => 'Datenbank und Einrichtungstabellen',
     'setup.check.https' => 'HTTPS dieser Sitzung und sichere Cookies',

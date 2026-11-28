@@ -44,7 +44,7 @@ if (!defined('GUNINDEX_HEALTH_LIBRARY')) {
  if ($installation) {
   $ready = $result['status'] !== 'unavailable'
    && $result['workers'] !== []
-   && array_diff($result['warnings'], ['mail_not_configured']) === [];
+   && !in_array(false, array_column($result['workers'], 'ready'), true);
   exit($ready ? 0 : 1);
  }
  exit($result['status'] === 'ok' ? 0 : ($result['status'] === 'degraded' ? 2 : 1));

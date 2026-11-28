@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Zaliczono',
     'setup.launch.failed' => 'Do wykonania',
     'setup.launch.open' => 'Otwórz platformę',
-    'setup.launch.confirm' => 'Sprawdziłem domenę i HTTPS z zewnątrz, odebrałem wiadomość testową i zweryfikowałem wymagane zgody. Chcę udostępnić platformę publicznie.',
+    'setup.launch.confirm' => 'Sprawdziłem domenę i HTTPS z zewnątrz. Chcę udostępnić platformę publicznie.',
     'setup.launch.recheck' => 'Wykonaj ponownie kontrole działania. Aby uruchomić platformę, wszystkie kontrole muszą zakończyć się pomyślnie w ciągu ostatnich 15 minut.',
     'setup.check.database' => 'Baza danych i tabele konfiguracji',
     'setup.check.https' => 'HTTPS w tej sesji i bezpieczne pliki cookie',

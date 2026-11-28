@@ -53,7 +53,7 @@ function dealer_checkout_change_binding(PDO $pdo, int $actor, int $owner, int $i
             if ((int)$bound['id'] === $item) return;
             throw new MarketConflictException(t('dealer_checkout.changed'));
         }
-        if (!in_array($offer['status'], ['active','draft','paused'], true) || (int)$offer['trade_checkout_enabled'] !== 1
+        if ((int)$offer['ewb_required'] !== 0 || !in_array($offer['status'], ['active','draft','paused'], true) || (int)$offer['trade_checkout_enabled'] !== 1
             || !market_category_locked_allowed($pdo,(int)$offer['category_id']) || !geo_country_locked_enabled($pdo,$offer['country_code'])) {
             throw new MarketAccessException(t('dealer_checkout.unavailable'));
         }

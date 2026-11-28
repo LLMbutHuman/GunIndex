@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Superata',
     'setup.launch.failed' => 'In sospeso',
     'setup.launch.open' => 'Apri il mercato',
-    'setup.launch.confirm' => 'Ho verificato dall’esterno il dominio e HTTPS, ricevuto un’e-mail di prova e verificato le approvazioni necessarie. Voglio rendere il mercato accessibile al pubblico.',
+    'setup.launch.confirm' => 'Ho verificato dall’esterno il dominio e HTTPS. Voglio rendere il mercato accessibile al pubblico.',
     'setup.launch.recheck' => 'Esegui nuovamente le verifiche operative. Per l’apertura, devono essere state tutte superate negli ultimi 15 minuti.',
     'setup.check.database' => 'Database e tabelle di configurazione',
     'setup.check.https' => 'HTTPS per questa sessione e cookie sicuri',

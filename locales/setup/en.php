@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Passed',
     'setup.launch.failed' => 'Pending',
     'setup.launch.open' => 'Open the marketplace',
-    'setup.launch.confirm' => 'I have checked the domain and HTTPS externally, received a test email, and verified the required approvals. I want to make the marketplace publicly accessible.',
+    'setup.launch.confirm' => 'I have checked the domain and HTTPS externally. I want to make the marketplace publicly accessible.',
     'setup.launch.recheck' => 'Run the operational checks again. All checks must have passed within the last 15 minutes to launch.',
     'setup.check.database' => 'Database and setup tables',
     'setup.check.https' => 'HTTPS for this session and secure cookies',

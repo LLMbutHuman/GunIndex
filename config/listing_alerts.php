@@ -42,7 +42,7 @@ function listing_alert_due(PDO $pdo,int $limit=100): int
 
 function listing_alert_current(PDO $pdo,array $listing,array $event): bool
 {
-    if (!market_category_locked_allowed($pdo,(int)$listing['category_id'])||!geo_country_locked_enabled($pdo,$listing['country_code'])) return false;
+    if ((int)$listing['ewb_required']!==0||!market_category_locked_allowed($pdo,(int)$listing['category_id'])||!geo_country_locked_enabled($pdo,$listing['country_code'])) return false;
     $seller=$pdo->prepare('SELECT is_active FROM users WHERE id=? FOR SHARE');
     $seller->execute([$listing['seller_id']]);
     if ((int)$seller->fetchColumn()!==1) return false;

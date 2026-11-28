@@ -10,7 +10,7 @@ release_directory="$3"
 [[ -d "$release_directory" && ! -L "$release_directory" ]]
 [[ -z "$(find "$release_directory" -mindepth 1 -maxdepth 1 -print -quit)" ]]
 
-git -c safe.directory="$source_directory" -C "$source_directory" archive --format=tar "$commit" \
+git -c core.autocrlf=false -c safe.directory="$source_directory" -C "$source_directory" archive --format=tar "$commit" \
  | tar --extract --file=- --directory="$release_directory" --no-same-owner --no-same-permissions
 test -f "$release_directory/public/index.php"
 test -f "$release_directory/composer.lock"

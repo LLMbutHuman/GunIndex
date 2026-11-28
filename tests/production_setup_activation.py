@@ -72,30 +72,10 @@ with tempfile.TemporaryDirectory(dir=runner_temp) as temp:
     assert request(panel, staff, {'action': 'activate', 'confirm': '1', 'csrf_token': token})[0] == 409
     assert request(panel, staff, {'action': 'run_checks', 'csrf_token': token})[0] == 303
     status, body = request(panel, staff)
-    assert status == 200 and 'data-installation-check="legal" data-status="failed"' in body
-    assert 'value="activate"' not in body and request('/', anonymous)[0] == 503
-
-    subprocess.run(compose + ['-e', 'GUNINDEX_CI_FIXTURE=installer-activation', 'php', 'php',
-                               'tests/production_setup_fixture.php'], check=True)
-    # This fixture supplies the read-only status marker. The deployment test separately rehearses the actual restore.
-    stamp = Path(temp) / 'restore.verified'
-    stamp.write_text(f'{int(time.time())}\n')
-    subprocess.run(['sudo', 'install', '-m', '0644', str(stamp), '/srv/gunindex/ops-status/restore.verified'], check=True)
-    assert request(panel, staff, {'action': 'run_checks', 'csrf_token': token})[0] == 303
-    status, body = request(panel, staff)
     check_results = dict(re.findall(r'data-installation-check="([a-z_]+)" data-status="(passed|failed)"', body))
-    assert status == 200 and len(check_results) == 12 and set(check_results.values()) == {'passed'}, check_results
+    assert status == 200 and len(check_results) == 7 and set(check_results.values()) == {'passed'}, check_results
     assert 'value="activate"' in body and request('/', anonymous)[0] == 503
     assert request(panel, staff, {'action': 'activate', 'csrf_token': token})[0] == 422
-    update_legal = '''require "config/db.php"; $update=$pdo->prepare("UPDATE system_settings SET setting_value=?
-        WHERE setting_key='legal_publication_enabled'"); $update->execute([$argv[1]]);'''
-    subprocess.run(compose + ['php', 'php', '-r', update_legal, '0'], check=True)
-    assert request(panel, staff, {'action': 'activate', 'confirm': '1', 'csrf_token': token})[0] == 303
-    status, body = request(panel, staff)
-    assert status == 200 and 'data-installation-check="legal" data-status="failed"' in body
-    assert 'value="activate"' not in body and request('/', anonymous)[0] == 503
-    subprocess.run(compose + ['php', 'php', '-r', update_legal, '1'], check=True)
-    assert request(panel, staff, {'action': 'run_checks', 'csrf_token': token})[0] == 303
     assert request(panel, staff, {'action': 'activate', 'confirm': '1', 'csrf_token': token})[0] == 303
     assert request('/', anonymous)[0] == 200
     status, body = request(panel, staff)
@@ -105,6 +85,7 @@ with tempfile.TemporaryDirectory(dir=runner_temp) as temp:
 invariants = r'''require "config/bootstrap.php";
 if ((int)$pdo->query("SELECT COUNT(*) FROM admin_logs WHERE action_type='installation.activated'")->fetchColumn() !== 1) exit(1);
 if (payments_config()['enabled'] || bank_config()['enabled'] || bitcoin_config()['enabled']) exit(1);
+if (site_setting($pdo,'operator_vat_id')!=='' || site_setting($pdo,'operator_tax_number')!=='' || site_setting($pdo,'legal_publication_enabled')!=='0') exit(1);
 foreach (['manual_paypal_enabled','finance_enabled'] as $key) if (site_setting($pdo,$key) !== '0') exit(1);'''
 subprocess.run(compose + ['php', 'php', '-r', invariants], check=True)
 print('Installation gate, password and TOTP, CSRF, technical checks, one-time audited launch and disabled payments verified over HTTPS.')

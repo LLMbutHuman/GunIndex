@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Bestået',
     'setup.launch.failed' => 'Afventer',
     'setup.launch.open' => 'Åbn markedspladsen',
-    'setup.launch.confirm' => 'Jeg har kontrolleret domæne og HTTPS udefra, modtaget en testmail og kontrolleret de nødvendige godkendelser. Jeg vil åbne markedspladsen for offentligheden.',
+    'setup.launch.confirm' => 'Jeg har kontrolleret domæne og HTTPS udefra. Jeg vil åbne markedspladsen for offentligheden.',
     'setup.launch.recheck' => 'Kør driftskontrollerne igen. Før åbning skal alle kontroller være bestået inden for de seneste 15 minutter.',
     'setup.check.database' => 'Database og opsætningstabeller',
     'setup.check.https' => 'HTTPS for denne session og sikre cookies',

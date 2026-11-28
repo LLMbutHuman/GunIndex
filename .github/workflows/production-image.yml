@@ -50,5 +50,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check readiness timeouts
+        run: bash tests/production_readiness_test.sh
       - name: Run the executable production installer on an isolated Ubuntu host
         run: bash tests/production_installer_test.sh

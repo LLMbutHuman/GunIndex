@@ -170,8 +170,10 @@ $tests = [
         setup_assert(!setup_recent_success(['time'=>$now, 'checks'=>['fake'=>true]], $now), 'Incomplete forged result accepted.');
         foreach (['mail_transport'=>'test', 'legal_enabled'=>false, 'paypal_enabled'=>true, 'manual_enabled'=>true, 'restore_verified_at'=>null] as $key=>$value) {
             $result['checks'] = setup_launch_checks(array_replace($facts, [$key=>$value]));
-            setup_assert(!setup_recent_success($result, $now), 'Unsafe launch condition accepted for '.$key);
+            setup_assert(setup_recent_success($result, $now), 'An unrelated setting blocked technical launch: '.$key);
         }
+        $result['checks'] = setup_launch_checks(array_replace($facts, ['operator'=>false,'brand'=>false]));
+        setup_assert(setup_recent_success($result,$now),'Pending operator details blocked technical launch.');
     },
     'no_secret_values_or_claimed_final_acceptance' => static function (): void {
         $facts = ['APP_KEY'=>'synthetic-secret-marker','operator_email'=>'private@example.invalid','database'=>true,'query_errors'=>[]];

@@ -2,10 +2,14 @@
 declare(strict_types=1);
 
 require_once __DIR__.'/i18n.php';
+require_once __DIR__.'/ewb.php';
 
 /** An additional platform rule, not a complete legal classification. */
 function catalog_text_allowed(string $text): bool
 {
+    // These terms identify ink consumables; unrelated prohibited terms are still evaluated.
+    $text = preg_replace('/\bPatronen?\s+für\s+(?:Tintenstrahl)?drucker\b/iu', 'Druckertinte', $text);
+    if ($text === null) return false;
     return preg_match('/(?<![\p{L}\p{N}])(?:schusswaffen?|waffen?|munition|patronen?|pistolen?|revolver|gewehre?|airsoft|schreckschuss|pfefferspray|sprengstoff)(?![\p{L}\p{N}])/iu', $text) === 0;
 }
 
@@ -49,6 +53,7 @@ function catalog_row_allowed(array $rows, int $id): bool
             isset($seen[$id])
             || !isset($rows[$id])
             || $rows[$id]['is_active'] !== 1
+            || (int)($rows[$id]['ewb_required'] ?? 0) !== 0
             || !catalog_text_allowed($rows[$id]['name'])
         ) {
             return false;
@@ -105,6 +110,9 @@ function catalog_categories(PDO $pdo, bool $activeOnly = true): array
                     $rows,
                     $row['id']
                 );
+                if (!$activeOnly) {
+                    $row['effective_ewb_required'] = ewb_category_inherits($rows, $row['id']);
+                }
 
                 $result[] = $row;
             }
@@ -336,7 +344,7 @@ function catalog_save_category(
     $name = $data['name'] ?? null;
     $slug = $data['slug'] ?? null;
     $active = $data['is_active'] ?? null;
-    $ewb = $data['ewb_required'] ?? '0';
+    $ewb = $data['ewb_required'] ?? null;
 
     if (
         $id === false
@@ -352,7 +360,7 @@ function catalog_save_category(
         )
         || strlen($slug) > 100
         || !in_array($active, ['0', '1'], true)
-        || !in_array($ewb, ['0', '1'], true)
+        || ($ewb !== null && !in_array($ewb, ['0', '1'], true))
     ) {
         throw new InvalidArgumentException(
             t('classification.category_invalid')
@@ -385,6 +393,7 @@ function catalog_save_category(
             : settings_assert_admin($pdo, $actorId);
 
         $rows = catalog_rows($pdo);
+        $ewb ??= (string)($rows[$id]['ewb_required'] ?? 0);
 
         if (
             ($id !== 0 && !isset($rows[$id]))
@@ -470,7 +479,10 @@ function catalog_save_category(
             $action = 'category.updated';
         }
 
-        // Protokolliert auch die EWB-Einstellung.
+        $beforeEwb = (int)($rows[$id]['ewb_required'] ?? 0);
+        $beforeParent = (int)($rows[$id]['parent_id'] ?? 0);
+        $rows[$id] = ['parent_id'=>$parent ?: null,'ewb_required'=>(int)$ewb];
+        $held = ($beforeEwb !== (int)$ewb || $beforeParent !== $parent) ? ewb_hold_existing_listings($pdo,$rows,$id) : 0;
         audit_log(
             $pdo,
             $actorId,
@@ -480,6 +492,9 @@ function catalog_save_category(
                 'parent_id' => $parent ?: null,
                 'active' => (int)$active,
                 'ewb_required' => (int)$ewb,
+                'previous_ewb_required' => $beforeEwb,
+                'effective_ewb_required' => ewb_category_inherits($rows,$id),
+                'listings_held_for_review' => $held,
             ]
         );
 

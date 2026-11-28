@@ -428,7 +428,7 @@ include __DIR__ . '/../includes/header.php';
                         <div class="field">
 
                             <label for="category-ewb">
-                                Erwerbsberechtigung (EWB)
+                                <?= h(t('ember.ewb_label')) ?>
                             </label>
 
                             <select
@@ -443,7 +443,7 @@ include __DIR__ . '/../includes/header.php';
                                         ? ' selected'
                                         : '' ?>
                                 >
-                                    Keine EWB-Kennzeichnung
+                                    <?= h(t('ember.ewb_inherit')) ?>
                                 </option>
 
                                 <option
@@ -452,17 +452,13 @@ include __DIR__ . '/../includes/header.php';
                                         ? ' selected'
                                         : '' ?>
                                 >
-                                    EWB erforderlich
+                                    <?= h(t('ember.status_permit')) ?>
                                 </option>
 
                             </select>
 
                             <small>
-                                Die EWB-Kennzeichnung dient der Information.
-                                Sie ersetzt weder die rechtliche Einstufung
-                                noch die Prüfung der Erwerbsberechtigung.
-                                Gesperrte Kategorien werden dadurch
-                                nicht freigeschaltet.
+                                <?= h(t('ember.ewb_help')) ?>
                             </small>
 
                         </div>
@@ -517,6 +513,13 @@ include __DIR__ . '/../includes/header.php';
                         <tbody>
 
                             <?php foreach ($categories as $category): ?>
+                                <?php $categoryStatus = match (true) {
+                                    $category['ewb_required'] !== 0 => 'ember.status_permit',
+                                    $category['effective_ewb_required'] => 'ember.ewb_inherited',
+                                    $category['available'] => 'classification.category_available',
+                                    $category['is_active'] !== 0 => 'classification.category_parent_blocked',
+                                    default => 'admin_geography.inactive',
+                                }; ?>
 
                                 <tr>
 
@@ -536,15 +539,7 @@ include __DIR__ . '/../includes/header.php';
 
                                     <td>
                                         <span class="status">
-                                            <?= h(t(
-                                                $category['available']
-                                                    ? 'classification.category_available'
-                                                    : (
-                                                        $category['is_active']
-                                                            ? 'classification.category_parent_blocked'
-                                                            : 'admin_geography.inactive'
-                                                    )
-                                            )) ?>
+                                            <?= h(t($categoryStatus)) ?>
                                         </span>
                                     </td>
 

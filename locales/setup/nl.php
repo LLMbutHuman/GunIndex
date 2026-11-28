@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Geslaagd',
     'setup.launch.failed' => 'Openstaand',
     'setup.launch.open' => 'Marktplaats openen',
-    'setup.launch.confirm' => 'Ik heb het domein en HTTPS extern gecontroleerd, een testmail ontvangen en de vereiste goedkeuringen gecontroleerd. Ik wil de marktplaats openbaar toegankelijk maken.',
+    'setup.launch.confirm' => 'Ik heb het domein en HTTPS extern gecontroleerd. Ik wil de marktplaats openbaar toegankelijk maken.',
     'setup.launch.recheck' => 'Voer de bedrijfscontroles opnieuw uit. Voor openstelling moeten alle controles in de afgelopen 15 minuten zijn geslaagd.',
     'setup.check.database' => 'Database en instellingstabellen',
     'setup.check.https' => 'HTTPS voor deze sessie en beveiligde cookies',

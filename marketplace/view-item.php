@@ -51,12 +51,6 @@ include __DIR__ . '/../includes/header.php';
 ?>
 <main class="page-width page detail-page"><nav class="breadcrumbs" aria-label="<?=h(t('auction_actions.breadcrumbs'))?>"><a href="<?=h(seo_localized_path('/', i18n_locale()))?>"> <?=h(t('Entdecken'))?> </a><?= ui_icon('chevron') ?><a href="/marketplace/search.php?category_id=<?= (int)$item['category_id'] ?>"><?= h($seoListing['seo_category_name']) ?></a><?= ui_icon('chevron') ?><span aria-current="page"><?=h($item['title'])?></span></nav>
 <h1 class="detail-title"><?=h($item['title'])?></h1>
-<?php if ((int)($item['ewb_required'] ?? 0) === 1): ?>
-<p class="notice" role="note">
-    <strong>EWB erforderlich.</strong>
-    Abgabe nur an Inhaber einer Erwerbserlaubnis.
-</p>
-<?php endif; ?>
 <div class="listing-layout"><section class="listing-gallery" aria-label="<?=h(t('Produktbilder'))?>" data-gallery><div class="gallery-main"><img src="/marketplace/image.php?id=<?= (int)$id ?>&amp;position=0&amp;size=large" width="1000" height="800" alt="<?= h($item['title']) ?> – <?=h(t('Ansicht'))?> 1" data-gallery-main fetchpriority="high" loading="eager"></div><?php if ($imageCount > 1): ?><div class="gallery-thumbs"><?php for ($position=0; $position<$imageCount; $position++): ?><a href="/marketplace/image.php?id=<?= (int)$id ?>&amp;position=<?= $position ?>&amp;size=large" data-gallery-src="/marketplace/image.php?id=<?= (int)$id ?>&amp;position=<?= $position ?>&amp;size=large" data-gallery-alt="<?= h($item['title']) ?> – <?=h(t('Ansicht'))?> <?= $position+1 ?>" <?= $position === 0 ? 'aria-current="true"' : '' ?>><img src="/marketplace/image.php?id=<?= (int)$id ?>&amp;position=<?= $position ?>&amp;size=thumb" alt="<?=h(t('auction_actions.image_open', ['number'=>$position+1]))?>" width="100" height="100" loading="lazy" decoding="async"></a><?php endfor; ?></div><?php endif; ?></section>
 <aside class="listing-information reveal"><span class="badge <?= $isAuction ? 'accent' : 'muted' ?>"><?= $isAuction ? t('Auktion') : t($item['type']==='negotiated'?'trade.negotiated':'Festpreis') ?></span><div class="detail-location"><?= ui_icon('pin') ?><?= h($item['country_code'].' · '.$item['zip'] . ' ' . $item['city']) ?></div><p class="country-summary"><?=h(geo_countries()[$item['country_code']]??$item['country_code'])?></p>
 <?php if ($auctionNotice !== null):?><p class="notice success" role="status"><?=h(t($auctionNotice))?></p><?php endif;?>

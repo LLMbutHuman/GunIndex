@@ -35,7 +35,7 @@ function market_text_search(string $query): array
 function market_public_where(array $categories): array
 {
     if (!$categories) return ['1=0'];
-    return ["l.status='active'","(l.ends_at IS NULL OR l.ends_at>UTC_TIMESTAMP())",
+    return ["l.status='active'",'l.ewb_required=0',"(l.ends_at IS NULL OR l.ends_at>UTC_TIMESTAMP())",
         'EXISTS(SELECT 1 FROM users seller WHERE seller.id=l.seller_id AND seller.is_active=1)',
         'EXISTS(SELECT 1 FROM market_countries mc WHERE mc.code=l.country_code AND mc.is_active=1)',
         'l.category_id IN ('.implode(',',array_fill(0,count($categories),'?')).')'];

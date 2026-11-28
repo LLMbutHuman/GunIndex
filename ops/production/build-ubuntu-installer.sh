@@ -33,17 +33,18 @@ while IFS= read -r -d '' entry; do
         exit 2
     fi
     case "/${name,,}" in
-        /.env.example|/sql/schema.sql|/sql/structure.sql|/sql/migrations/*.sql|/zip/plz.csv|/zip/plz-[a-z][a-z].csv) ;;
+        /.env.example|/sql/schema.sql|/sql/structure.sql|/sql/migrations/*.sql|/zip/plz.csv|/zip/plz-[a-z][a-z].csv|/ops/production/composer-vendor.tar.gz) ;;
         */.git/*|*/.git|*/.env|*/.env.*|*/.runtime/*|*/uploads/*|*/private/*|*/data/*|*/datenbank/*|*/var/*|*/node_modules/*|*/keys/*|*/backups/*|*/logs/*|*/gunindex_codex_fortsetzung.md|/gunindex-install-ubuntu.sh|*.sql|*.csv|*.dump|*.bak|*.pem|*.key|*.pfx|*.p12|*.log|*.zip|*.tar|*.gz|*/id_rsa*|*/id_ed25519*)
             printf 'Private or generated path in release commit: %q\n' "$name" >&2
             exit 2;;
     esac
 done < "$work/tree"
 
-git -C "$repository" archive --format=tar "$commit" | gzip -n > "$work/release.tar.gz"
+git -c core.autocrlf=false -C "$repository" archive --format=tar "$commit" | gzip -n > "$work/release.tar.gz"
 tar --list --gzip --file="$work/release.tar.gz" > "$work/members"
 for name in ops/install-ubuntu-22.04.sh ops/production/Dockerfile ops/production/Dockerfile.mailer \
-    public/index.php sql/schema.sql composer.lock assets/vendor/openpgp/openpgp.min.mjs; do
+    public/index.php sql/schema.sql composer.lock assets/vendor/openpgp/openpgp.min.mjs \
+    ops/production/composer-vendor.tar.gz ops/production/composer-vendor.sha256; do
     if ! grep -Fxq -- "$name" "$work/members"; then
         printf 'Required release file missing: %s\n' "$name" >&2
         exit 2

@@ -25,7 +25,7 @@ function market_find(PDO $pdo, int $id, bool $includeEnded = true, ?array $origi
     $q = $pdo->prepare('SELECT l.*,u.username AS seller_username,u.username AS seller_name,c.name AS category_name,(SELECT COUNT(*) FROM market_images i WHERE i.listing_id=l.id) AS image_count FROM market_listings l JOIN users u ON u.id=l.seller_id JOIN market_categories c ON c.id=l.category_id WHERE l.id=? AND u.is_active=1');
     $q->execute([$id]);
     $row = $q->fetch();
-    if (!$row || !in_array($row['status'], $includeEnded ? ['active','ended','sold'] : ['active'], true)
+    if (!$row || (int)$row['ewb_required'] !== 0 || !in_array($row['status'], $includeEnded ? ['active','ended','sold'] : ['active'], true)
         || !catalog_category_allowed($pdo, (int)$row['category_id']) || !geo_country_enabled($pdo, $row['country_code'])) {
         return null;
     }
@@ -226,6 +226,7 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             if ((int)$existing['seller_id'] !== $sellerId) {
                 throw new MarketAccessException(t('listing_validation.own'));
             }
+            if ((int)$existing['ewb_required'] !== 0) throw new MarketAccessException(t('listing_validation.category_closed'));
             relisting_assert_target($pdo,$sellerId,$listingId,$data);
             if(!trade_listing_available($pdo,$listingId))throw new MarketConflictException(t('trade.unavailable'));
             if (!in_array($existing['status'], ['draft','active','paused'], true) || market_has_bids($pdo, $listingId)
@@ -280,7 +281,6 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             $q->execute(array_merge($values,[$listingId]));
         }
         if($definitions||!empty($existing['attribute_digest']))classification_store($pdo,$listingId,$data['category_id'],$definitions,$attributeValues);
-        $pdo->prepare('UPDATE market_listings SET ewb_required=? WHERE id=?')->execute([ewb_category_required($pdo, (int)$data['category_id']) ? 1 : 0, $listingId]);
         if($existing&&$existing['type']==='negotiated'){
             $current=market_lock_listing($pdo,$listingId);
             if(!$data['trade_checkout_enabled']||$current['status']!=='active'||trade_listing_hash($existing)!==trade_listing_hash($current)){
@@ -353,23 +353,20 @@ function market_assert_users_active(PDO $pdo, array $ids): void
 
 function market_category_locked_allowed(PDO $pdo, int $id): bool
 {
-    $q=$pdo->query('SELECT id,parent_id,name,is_active FROM market_categories ORDER BY id LIMIT 1001 FOR SHARE');
+    $q=$pdo->query('SELECT id,parent_id,name,is_active,ewb_required FROM market_categories ORDER BY id LIMIT 1001 FOR SHARE');
     $rows=[];
-    foreach ($q->fetchAll() as $row) $rows[(int)$row['id']]=$row;
-    if (count($rows)>1000) return false;
-    $seen=[];
-    while ($id!==0) {
-        if (isset($seen[$id]) || !isset($rows[$id]) || (int)$rows[$id]['is_active']!==1 || !catalog_text_allowed($rows[$id]['name'])) return false;
-        $seen[$id]=true;
-        $id=(int)($rows[$id]['parent_id'] ?? 0);
+    foreach ($q->fetchAll() as $row) {
+        $row['is_active']=(int)$row['is_active'];
+        $rows[(int)$row['id']]=$row;
     }
-    return true;
+    if (count($rows)>1000) return false;
+    return catalog_row_allowed($rows,$id);
 }
 
 function market_assert_auction(PDO $pdo, array $listing): void
 {
     if(!geo_country_locked_enabled($pdo,$listing['country_code']))throw new MarketAccessException(t('listing_validation.country_closed'));
-    if (!market_category_locked_allowed($pdo,(int)$listing['category_id'])) {
+    if ((int)$listing['ewb_required']!==0 || !market_category_locked_allowed($pdo,(int)$listing['category_id'])) {
         throw new MarketAccessException(t('listing_validation.category_closed'));
     }
     if ($listing['type'] !== 'auction' || $listing['status'] !== 'active' || market_expired($listing)) {
@@ -491,11 +488,10 @@ function market_transition(PDO $pdo, int $listingId, int $userId, string $action
             if($listing['ends_at']!==null&&strtotime($listing['ends_at'].' UTC')<=time())throw new MarketConflictException(t('trade.expired'));
             if($listing['status']==='draft'&&$listing['type']!=='auction')$pdo->prepare('UPDATE market_listings SET ends_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 30 DAY) WHERE id=?')->execute([$listingId]);
             if(!geo_country_locked_enabled($pdo,$listing['country_code']))throw new MarketAccessException(t('listing_validation.country_closed'));
-            if (!market_category_locked_allowed($pdo,(int)$listing['category_id']) || !catalog_text_allowed($listing['title'].' '.$listing['description'])) throw new MarketAccessException(t('listing_validation.cannot_publish'));
+            if ((int)$listing['ewb_required']!==0 || !market_category_locked_allowed($pdo,(int)$listing['category_id']) || !catalog_text_allowed($listing['title'].' '.$listing['description'])) throw new MarketAccessException(t('listing_validation.cannot_publish'));
             if ($listing['type']==='auction') throw new MarketConflictException(t('listing_validation.edit_auction'));
             $definitions=classification_definitions($pdo,(int)$listing['category_id'],true,true);
             classification_values($definitions,array_column(classification_entries($pdo,$listingId),'value','id'),true);
-            $pdo->prepare('UPDATE market_listings SET ewb_required=? WHERE id=?')->execute([ewb_category_required($pdo, (int)$listing['category_id']) ? 1 : 0, $listingId]);
         }
         $q=$pdo->prepare('UPDATE market_listings SET status=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
         $q->execute([$states[$action],$listingId]);
@@ -528,7 +524,7 @@ function market_close_due(PDO $pdo, int $limit = 100): int
                 continue;
             }
             if (!geo_country_locked_enabled($pdo,$listing['country_code'])) throw new MarketConflictException('Ländermarkt deaktiviert; manuelle Prüfung.');
-            if (!market_category_locked_allowed($pdo,(int)$listing['category_id'])) throw new MarketConflictException('Kategorie deaktiviert; manuelle Prüfung.');
+            if ((int)$listing['ewb_required']!==0 || !market_category_locked_allowed($pdo,(int)$listing['category_id'])) throw new MarketConflictException('Kategorie deaktiviert; manuelle Prüfung.');
             $leaders=market_leaders($pdo,(int)$id);
             try {
                 market_assert_users_active($pdo,$leaders?[(int)$listing['seller_id'],(int)$leaders[0]['user_id']]:[(int)$listing['seller_id']]);

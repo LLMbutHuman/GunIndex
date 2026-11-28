@@ -91,7 +91,7 @@ function seo_listing_path(array $listing): ?string
 /** Caller must first establish public visibility through market_find or sitemap SQL. */
 function seo_listing_current(array $listing, ?int $now = null): bool
 {
-    if (seo_listing_path($listing) === null || ($listing['status'] ?? '') !== 'active'
+    if (seo_listing_path($listing) === null || ($listing['status'] ?? '') !== 'active' || (int)($listing['ewb_required'] ?? 0)!==0
         || !catalog_text_allowed(($listing['title'] ?? '') . ' ' . ($listing['description'] ?? ''))) return false;
     if ($listing['type'] === 'auction' || ($listing['ends_at']??null)!==null) {
         $end = $listing['ends_at'] ?? null;
@@ -204,7 +204,7 @@ function seo_sitemap_condition(PDO $pdo): array
 {
     $categories = market_category_ids($pdo);
     if (!$categories) return ['1=0', []];
-    $sql = "l.status='active' AND l.type IN ('fixed','auction','negotiated') AND u.is_active=1 AND mc.is_active=1"
+    $sql = "l.status='active' AND l.ewb_required=0 AND l.type IN ('fixed','auction','negotiated') AND u.is_active=1 AND mc.is_active=1"
         . " AND ((l.type<>'auction' AND l.ends_at IS NULL) OR l.ends_at>UTC_TIMESTAMP())"
         . ' AND l.category_id IN (' . implode(',', array_fill(0, count($categories), '?')) . ')';
     return [$sql, $categories];

@@ -80,6 +80,28 @@ $checkLog=$pdo->prepare("SELECT COUNT(*) FROM admin_logs WHERE admin_id=? AND ((
 $checkLog->execute([$ids['admin'],$empty,$category]);
 refine_check((int)$checkLog->fetchColumn()===2,'Category changes need audit entries.');
 
+$parent = $newCategory('ewb-parent');
+$child = $newCategory('ewb-child',$parent);
+$list->execute([$ids['private'],$child,'Synthetic held item '.$token,1600]);
+$heldId = (int)$pdo->lastInsertId();
+$parentForm = ['id'=>(string)$parent, 'parent_id'=>'0', 'name'=>'Synthetic parent '.$token,
+    'slug'=>'refine-ewb-parent-'.$token, 'is_active'=>'1', 'sort_order'=>'0'];
+catalog_save_category($pdo,$ids['admin'],$parentForm+['ewb_required'=>'1']);
+$categoryRows = array_column(catalog_categories($pdo,false),null,'id');
+refine_check(!catalog_category_allowed($pdo,$child) && $categoryRows[$child]['effective_ewb_required']
+    && $categoryRows[$child]['ewb_required']===0,'A child category did not inherit the hold.');
+$held = $pdo->prepare('SELECT ewb_required,status,title FROM market_listings WHERE id=?');
+$held->execute([$heldId]);
+$heldRow = $held->fetch();
+refine_check((int)$heldRow['ewb_required']===1 && $heldRow['status']==='review' && $heldRow['title']==='Synthetic held item '.$token,
+    'Applying a category hold must preserve and quarantine the existing listing.');
+$audit = $pdo->prepare("SELECT COUNT(*) FROM admin_logs WHERE admin_id=? AND action_type='category.updated' AND target_id=?");
+$audit->execute([$ids['admin'],$parent]);
+refine_check((int)$audit->fetchColumn()===1,'Applying a category hold requires an audit entry.');
+catalog_save_category($pdo,$ids['admin'],$parentForm+['ewb_required'=>'0']);
+refine_check(catalog_category_allowed($pdo,$child) && market_find($pdo,$heldId)===null,
+    'Removing a category label must not release a previously held listing.');
+
 $category = $newCategory('auction');
 $pdo->prepare("INSERT INTO market_listings(seller_id,category_id,title,description,type,price_cents,status,zip,city,country_code,ends_at,highest_bidder_id,current_bid_cents) VALUES (?,?,?,'Synthetic auction','auction',1200,'ended','10115','Synthetic city','DE',UTC_TIMESTAMP()-INTERVAL 1 HOUR,?,1300)")
     ->execute([$ids['private'],$category,'Synthetic auction '.$token,$ids['dealer']]);
@@ -94,4 +116,4 @@ $ratings = trade_public_ratings($pdo,$ids['private'],1);
 refine_check($ratings['count']===1 && (float)$ratings['average']===5.0 && $ratings['rows'][0]['comment']==='', 'Public rating statistics or optional comment failed.');
 $pdo->prepare("UPDATE market_ratings SET status='hidden' WHERE listing_id=? AND sender_id=?")->execute([$auction,$ids['dealer']]);
 refine_check(trade_public_ratings($pdo,$ids['private'],1)['count']===0,'Hidden rating leaked into the public total.');
-echo "Database checks passed for seller filters, category removal and auction ratings.\n";
+echo "Database checks passed for seller filters, category removal, EWB review holds and auction ratings.\n";

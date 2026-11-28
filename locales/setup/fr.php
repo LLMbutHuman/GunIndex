@@ -10,7 +10,7 @@ return [
     'setup.launch.passed' => 'Réussi',
     'setup.launch.failed' => 'En attente',
     'setup.launch.open' => 'Ouvrir le marché',
-    'setup.launch.confirm' => 'J’ai vérifié le domaine et HTTPS depuis l’extérieur, reçu un e-mail de test et vérifié les autorisations requises. Je souhaite rendre le marché accessible au public.',
+    'setup.launch.confirm' => 'J’ai vérifié le domaine et HTTPS depuis l’extérieur. Je souhaite rendre le marché accessible au public.',
     'setup.launch.recheck' => 'Relancez les vérifications opérationnelles. Elles doivent toutes avoir réussi au cours des 15 dernières minutes pour mettre le marché en ligne.',
     'setup.check.database' => 'Base de données et tables de configuration',
     'setup.check.https' => 'HTTPS pour cette session et cookies sécurisés',

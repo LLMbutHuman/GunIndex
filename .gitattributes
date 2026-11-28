@@ -3,9 +3,11 @@ assets/vendor/openpgp/* -text
 # Installer seeds are verified byte-for-byte on each platform.
 ZIP/PLZ*.csv -text
 config/ip-country/*.bin -text
+ops/production/composer-vendor.tar.gz -text
 
 # The installation bundle can be built in Git Bash on Windows.
 ops/install-ubuntu-22.04.sh text eol=lf
+*.sh text eol=lf
 ops/production/build-ubuntu-installer.sh text eol=lf
 ops/production/ubuntu-installer-wrapper.sh.in text eol=lf
 tests/production_package_test.sh text eol=lf
