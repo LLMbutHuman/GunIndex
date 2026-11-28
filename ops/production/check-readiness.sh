@@ -4,7 +4,7 @@ set -euo pipefail
 compose="${1:?Provide the path to the managed Compose wrapper}"
 
 for ((attempt=0; attempt<45; attempt++)); do
-    if report="$(timeout 8s "$compose" exec -T php php ops/health.php --installation)"; then
+    if report="$(timeout --foreground 8s "$compose" exec -T php php ops/health.php --installation)"; then
         printf '%s\n' "$report"
         exit 0
     fi
