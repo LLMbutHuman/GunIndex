@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/db.php';
 require_once __DIR__.'/functions.php';
 require_once __DIR__.'/classification.php';
+require_once __DIR__.'/ewb.php';
 require_once __DIR__.'/listing_drafts.php';
 require_once __DIR__.'/listing_alerts.php';
 require_once __DIR__.'/user_security.php';

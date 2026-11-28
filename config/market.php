@@ -280,6 +280,7 @@ function market_save_listing(PDO $pdo, int $sellerId, array $input, array $files
             $q->execute(array_merge($values,[$listingId]));
         }
         if($definitions||!empty($existing['attribute_digest']))classification_store($pdo,$listingId,$data['category_id'],$definitions,$attributeValues);
+        $pdo->prepare('UPDATE market_listings SET ewb_required=? WHERE id=?')->execute([ewb_category_required($pdo, (int)$data['category_id']) ? 1 : 0, $listingId]);
         if($existing&&$existing['type']==='negotiated'){
             $current=market_lock_listing($pdo,$listingId);
             if(!$data['trade_checkout_enabled']||$current['status']!=='active'||trade_listing_hash($existing)!==trade_listing_hash($current)){
@@ -494,6 +495,7 @@ function market_transition(PDO $pdo, int $listingId, int $userId, string $action
             if ($listing['type']==='auction') throw new MarketConflictException(t('listing_validation.edit_auction'));
             $definitions=classification_definitions($pdo,(int)$listing['category_id'],true,true);
             classification_values($definitions,array_column(classification_entries($pdo,$listingId),'value','id'),true);
+            $pdo->prepare('UPDATE market_listings SET ewb_required=? WHERE id=?')->execute([ewb_category_required($pdo, (int)$listing['category_id']) ? 1 : 0, $listingId]);
         }
         $q=$pdo->prepare('UPDATE market_listings SET status=?,updated_at=UTC_TIMESTAMP() WHERE id=?');
         $q->execute([$states[$action],$listingId]);
